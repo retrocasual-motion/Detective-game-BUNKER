@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "planning-with-files": {
+      "source": {
+        "source": "github",
+        "repo": "OthmanAdi/planning-with-files"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "planning-with-files@planning-with-files": true
+  }
+}
