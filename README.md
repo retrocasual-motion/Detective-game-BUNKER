@@ -9,3 +9,13 @@
 (маркетплейс `OthmanAdi/planning-with-files`). Он включается автоматически
 в каждой сессии Claude Code, открытой в этом репозитории, в том числе в
 облачных сессиях и во всех новых ветках.
+
+## Skills Claude Code
+
+В `.claude/skills/` лежат 14 project skills, отобранных по одному из
+[story-skills](https://github.com/danjdewhurst/story-skills),
+[claude-skills](https://github.com/alirezarezvani/claude-skills) и
+[claude-cto-team](https://github.com/alirezarezvani/claude-cto-team)
+(все MIT). Источники, коммиты и локальные изменения описаны в
+`.claude/skills/SOURCES.md`, правила совместного использования в `CLAUDE.md`.
+`reader-panel` запускается только командой `/reader-panel`.
