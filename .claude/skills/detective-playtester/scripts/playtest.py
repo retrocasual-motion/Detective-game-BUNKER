@@ -9,9 +9,12 @@
   lint    --pack DIR                       проверка пакета на авторские утечки
   probe                                    проверка изоляции (канарейка вне песочницы)
   init    --pack DIR --profile NAME --runs-dir DIR [--model M] [--request TEXT]
-  round   --run DIR [--rounds N] [--budget-usd X] [--timeout SEC]
+  round   --run DIR [--rounds N] [--budget-usd X] [--max-total-usd X] [--timeout SEC]
   status  --run DIR
   cleanup --run DIR                        удалить песочницу (записи прогона остаются)
+  metrics --run DIR [--suspect ИМЯ]        уверенность по раундам из журнала игрока
+  compare --runs DIR DIR ... --suspect ИМЯ сравнение прогонов (версии пакета, профили, люди)
+  export  --pack DIR --out DIR             комплект для живых тестеров и ведущего-человека
   selftest [--model M]                     технический тест на игрушечном деле
 
 Только стандартная библиотека Python 3.9+.
@@ -197,13 +200,14 @@ def child_env():
     return env
 
 
-def claude_cmd(prompt, *, session_id=None, resume=None, system_prompt=None, model=None, budget=None):
+def claude_cmd(prompt, *, session_id=None, resume=None, system_prompt=None, model=None, budget=None,
+               tools="Read,Glob,Grep,Write,Edit"):
     cmd = [
         "claude", "-p", prompt,
         "--restricted",            # файлы только в рабочей папке, без Bash/WebFetch, без settings
         "--safe-mode",             # без CLAUDE.md, skills, plugins, hooks, MCP, памяти
         "--strict-mcp-config",
-        "--tools", "Read,Glob,Grep,Write,Edit",
+        "--tools", tools,
         "--disallowedTools", "Bash,WebFetch,WebSearch,Agent,Task",
         "--permission-mode", "acceptEdits",
         "--permission-prompts", "none",
@@ -278,6 +282,53 @@ def probe(model=None, timeout=600, verbose=True):
     return report
 
 
+ARCHIVIST_BRIEF = """Ты — сотрудник архива в детективной игре. Ты не знаешь, что произошло в деле,
+и не помогаешь игроку. Твоя единственная задача: решить, соответствует ли запрос
+игрока одному из правил выдачи. Правило описывает, какой запрос архив выполняет.
+
+Принимай запрос, только если он по смыслу просит именно то, что описано в правиле,
+и содержит все уточнения из списка «обязательные уточнения» этого правила (номер, имя,
+дата, адрес). Если список пуст, уточнения не требуются: достаточно попросить нужный документ.
+Не принимай расплывчатые запросы («пришлите всё», «что у вас есть»), запросы о другом
+документе или запросы, где обязательное уточнение отсутствует или неверно. Сомневаешься —
+отказывай. Не объясняй игроку ничего: ответ только для журнала ведущего."""
+
+ARCHIVIST_SCHEMA = json.dumps({
+    "type": "object",
+    "properties": {"rule_id": {"type": ["string", "null"]}, "reason": {"type": "string"}},
+    "required": ["rule_id", "reason"],
+})
+
+
+def archivist(action, target, value, candidates, model="sonnet", timeout=600):
+    """Смысловое сопоставление ЗАПРОС/ПОИСК с правилами, у которых есть intent.
+
+    Изолирован так же, как игрок: пустая папка, без инструментов, без CLAUDE.md и
+    памяти. Видит только действие игрока и описания правил, не материалы и не решение.
+    """
+    rules = [{"id": r["id"], "куда": r.get("target_label", r.get("target", "")), "что выдаётся по правилу": r["intent"],
+              "обязательные уточнения": r.get("required", [])} for r in candidates]
+    prompt = (f"Действие игрока: {action}\nЦель: {target}\nТекст: {value}\n\n"
+              f"Правила выдачи:\n{json.dumps(rules, ensure_ascii=False, indent=1)}\n\n"
+              "Верни rule_id подходящего правила или null и короткую причину.")
+    box = Path(tempfile.mkdtemp(prefix="desk-", dir=os.environ.get("PLAYTEST_SANDBOX_BASE", "/tmp")))
+    cmd = claude_cmd(prompt, system_prompt=ARCHIVIST_BRIEF, model=model, budget=0.5, tools="")
+    cmd += ["--json-schema", ARCHIVIST_SCHEMA]
+    data = run_child(cmd, box, timeout)
+    shutil.rmtree(box, ignore_errors=True)
+    out = data.get("structured_output")
+    if not isinstance(out, dict):
+        try:
+            out = json.loads(re.search(r"\{.*\}", str(data.get("result", "")), re.S).group(0))
+        except Exception:
+            out = {"rule_id": None, "reason": "архивариус не ответил по схеме"}
+    ids = {r["id"] for r in candidates}
+    if out.get("rule_id") not in ids:
+        out["rule_id"] = None
+    out["cost"] = data.get("total_cost_usd") or 0
+    return out
+
+
 def load_run(run):
     return json.loads((Path(run) / "run.json").read_text(encoding="utf-8"))
 
@@ -291,7 +342,8 @@ def gm_log(run, line):
         f.write(line + "\n")
 
 
-def init(pack, profile, runs_dir, model=None, request="", selftest=False, skip_probe=False):
+def init(pack, profile, runs_dir, model=None, request="", selftest=False, skip_probe=False,
+         archivist_model="sonnet", no_archivist=False):
     pack = Path(pack).resolve()
     prof = PROFILES_DIR / f"{profile}.md"
     if not prof.exists():
@@ -322,6 +374,7 @@ def init(pack, profile, runs_dir, model=None, request="", selftest=False, skip_p
         "model": model, "sandbox": str(sandbox), "session_id": str(uuid.uuid4()),
         "round": 0, "released": [], "finished": None, "requested_by_user": request,
         "lint_warnings": warn, "isolation_probe": "skipped" if skip_probe else "ok",
+        "archivist": None if no_archivist else archivist_model, "cost_usd": 0.0,
         "created": dt.datetime.now().isoformat(timespec="seconds"),
     }
     save_run(run, state)
@@ -349,11 +402,23 @@ def apply_actions(run, state, pack, sandbox):
             continue
         cand = [r for r in acc.get("rules", []) if r.get("action") == action
                 and re.search(r.get("target", ".*"), norm(target), flags=re.IGNORECASE)]
-        hit = None
+        hit, via = None, ""
         for r in cand:
             if any(re.search(p, norm(value), flags=re.IGNORECASE) for p in r.get("accept", [])):
                 hit = r
                 break
+        if not hit and action in ("ЗАПРОС", "ПОИСК") and state.get("archivist"):
+            pool = cand or [r for r in acc.get("rules", []) if r.get("action") == action]
+            pool = [r for r in pool if r.get("intent")]
+            if pool:
+                verdict = archivist(action, target, value, pool, model=state["archivist"])
+                state["cost_usd"] = state.get("cost_usd", 0) + verdict.get("cost", 0)
+                with open(Path(run) / "archivist-log.md", "a", encoding="utf-8") as f:
+                    f.write(f"- раунд {state['round']} · {action} | {target} | {value} → "
+                            f"{verdict['rule_id'] or 'отказ'}: {verdict.get('reason', '')}\n")
+                if verdict["rule_id"]:
+                    hit = next(r for r in pool if r["id"] == verdict["rule_id"])
+                    via = " (архивариус)"
         if hit:
             files = []
             for rid in hit.get("release", []):
@@ -364,7 +429,7 @@ def apply_actions(run, state, pack, sandbox):
                         files.append(f.name)
             released_now += files
             msg = hit.get("ok", "Готово.") if files else hit.get("again", "Уже получено.")
-            res, rule = ("успех" if files else "повтор"), hit.get("id")
+            res, rule = ("успех" if files else "повтор"), hit.get("id") + via
         elif cand:
             msg, res, rule = cand[0].get("fail", defaults.get(action, "Нет результата.")), "отказ", cand[0].get("id")
             files = []
@@ -380,7 +445,7 @@ def apply_actions(run, state, pack, sandbox):
     return released_now, final, len(replies)
 
 
-def do_round(run, rounds=1, budget=3.0, timeout=1800):
+def do_round(run, rounds=1, budget=3.0, timeout=1800, max_total=None):
     run = Path(run).resolve()
     state = load_run(run)
     pack, sandbox = Path(state["pack"]), Path(state["sandbox"])
@@ -392,6 +457,9 @@ def do_round(run, rounds=1, budget=3.0, timeout=1800):
     for _ in range(rounds):
         if state["finished"]:
             print("Прогон уже завершён:", state["finished"])
+            break
+        if max_total and state.get("cost_usd", 0) >= max_total:
+            print(f"Лимит стоимости прогона достигнут: {state['cost_usd']:.2f} USD >= {max_total}")
             break
         state["round"] += 1
         n = state["round"]
@@ -409,6 +477,7 @@ def do_round(run, rounds=1, budget=3.0, timeout=1800):
         data = run_child(claude_cmd(prompt, system_prompt=system_prompt, model=state.get("model"),
                                     budget=budget, **kw), sandbox, timeout)
         (run / "rounds" / f"{n:02d}.json").write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        state["cost_usd"] = state.get("cost_usd", 0) + (data.get("total_cost_usd") or 0)
         shutil.copy2(sandbox / "journal.md", run / "player-log" / f"journal-{n:02d}.md")
         released, final, n_actions = apply_actions(run, state, pack, sandbox)
         state["last_released"] = released
@@ -418,7 +487,7 @@ def do_round(run, rounds=1, budget=3.0, timeout=1800):
         if idle >= 2 and not state["finished"]:
             state["finished"] = {"type": "ОСТАНОВ", "text": "два раунда без действий"}
         save_run(run, state)
-        print(f"раунд {n}: rc={data.get('_returncode')} cost={data.get('total_cost_usd')} "
+        print(f"раунд {n}: rc={data.get('_returncode')} cost={data.get('total_cost_usd')} всего={state['cost_usd']:.2f} "
               f"действий={n_actions} открыто={released} финал={state['finished']}")
         if data.get("_returncode") != 0:
             print("Дочерний процесс завершился с ошибкой — смотри rounds/%02d.json" % n)
@@ -427,7 +496,8 @@ def do_round(run, rounds=1, budget=3.0, timeout=1800):
 
 def status(run):
     s = load_run(run)
-    print(json.dumps({k: s[k] for k in ("run_id", "profile", "round", "released", "finished", "isolation_probe")},
+    print(json.dumps({k: s.get(k) for k in ("run_id", "profile", "model", "archivist", "round", "released",
+                                            "finished", "isolation_probe", "cost_usd")},
                      ensure_ascii=False, indent=2))
 
 
@@ -435,6 +505,120 @@ def cleanup(run):
     s = load_run(run)
     shutil.rmtree(s["sandbox"], ignore_errors=True)
     print("Песочница удалена:", s["sandbox"])
+
+
+# --- Метрики и сравнение прогонов -----------------------------------------
+
+ROUND_RE = re.compile(r"^##\s*Раунд\s*(\d+)", re.M)
+
+
+def parse_journal(text):
+    """Раунд → {подозреваемые: {имя: %}, уверенность: %}. Берёт последнюю версию журнала."""
+    rounds = {}
+    parts = ROUND_RE.split(text)
+    for i in range(1, len(parts) - 1, 2):
+        n, body = int(parts[i]), parts[i + 1]
+        sus = {}
+        m = re.search(r"###\s*Подозреваемые(.*?)(?=\n###|\Z)", body, re.S)
+        if m:
+            for row in m.group(1).splitlines():
+                cells = [c.strip() for c in row.strip().strip("|").split("|")]
+                if len(cells) >= 2 and not set(cells[0]) <= set("-: ") and cells[0].lower() != "кто":
+                    pm = re.search(r"(\d+(?:[.,]\d+)?)", cells[1])
+                    if pm:
+                        sus[cells[0]] = float(pm.group(1).replace(",", "."))
+        cm = re.search(r"###\s*Уверенность в версии:?\s*(\d+)", body)
+        rounds[n] = {"suspects": sus, "confidence": int(cm.group(1)) if cm else None}
+    return rounds
+
+
+def run_journal(run):
+    logs = sorted((Path(run) / "player-log").glob("journal-*.md"))
+    return logs[-1].read_text(encoding="utf-8") if logs else ""
+
+
+def metrics(run, suspect=None, quiet=False):
+    run = Path(run)
+    state = load_run(run) if (run / "run.json").exists() else {"run_id": run.name}
+    rounds = parse_journal(run_journal(run))
+    res = {"run_id": state.get("run_id", run.name), "profile": state.get("profile"),
+           "rounds": len(rounds), "finished": state.get("finished"), "cost_usd": state.get("cost_usd"),
+           "by_round": rounds}
+    if suspect:
+        def pct(r):
+            vals = [v for k, v in rounds[r]["suspects"].items() if suspect.lower() in k.lower()]
+            return max(vals) if vals else 0.0
+        order = sorted(rounds)
+        first = lambda cond: next((r for r in order if cond(pct(r))), None)
+        res["suspect"] = suspect
+        res["first_mentioned"] = first(lambda v: v > 0)
+        res["first_over_50"] = first(lambda v: v > 50)
+        res["first_over_80"] = first(lambda v: v > 80)
+        res["curve"] = {r: pct(r) for r in order}
+        top_wrong = {}
+        for r in order:
+            for k, v in rounds[r]["suspects"].items():
+                if suspect.lower() not in k.lower() and v >= 30:
+                    top_wrong[k] = max(top_wrong.get(k, 0), v)
+        res["wrong_suspects_over_30"] = top_wrong
+    (run / "metrics.json").write_text(json.dumps(res, ensure_ascii=False, indent=2), encoding="utf-8")
+    if not quiet:
+        print(json.dumps({k: v for k, v in res.items() if k != "by_round"}, ensure_ascii=False, indent=2))
+    return res
+
+
+def compare(runs, suspect):
+    rows = [metrics(r, suspect, quiet=True) for r in runs]
+    print(f"| Прогон | Профиль | Раундов | Впервые | >50% | >80% | Кривая | Ложные ≥30% | Итог | USD |")
+    print("|---|---|---|---|---|---|---|---|---|---|")
+    for m in rows:
+        curve = " ".join(f"{int(v)}" for v in m["curve"].values())
+        wrong = ", ".join(f"{k} {int(v)}" for k, v in m["wrong_suspects_over_30"].items()) or "—"
+        fin = (m["finished"] or {}).get("type", "—") if isinstance(m["finished"], dict) else "—"
+        cost = f"{m['cost_usd']:.2f}" if m.get("cost_usd") else "—"
+        print(f"| {m['run_id']} | {m['profile'] or 'человек'} | {m['rounds']} | {m['first_mentioned'] or '—'} | "
+              f"{m['first_over_50'] or '—'} | {m['first_over_80'] or '—'} | {curve} | {wrong} | {fin} | {cost} |")
+
+
+# --- Комплект для живых тестеров -------------------------------------------
+
+def export(pack, out):
+    pack, out = Path(pack).resolve(), Path(out).resolve()
+    hard, _ = lint(pack, quiet=True)
+    if hard:
+        sys.exit("Пакет не прошёл lint — экспорт для людей тоже не делаем.")
+    if out.exists():
+        sys.exit(f"{out} уже существует")
+    shutil.copytree(pack / "player", out / "ИГРОКУ")
+    shutil.copytree(pack / "locked", out / "ВЕДУЩЕМУ" / "закрытые_материалы")
+    acc = json.loads((pack / "gm" / "access.json").read_text(encoding="utf-8"))
+    lines = ["# Ведущему: правила выдачи", "",
+             "Выдавай закрытый материал, только когда действие тестера подходит под правило.",
+             "Не подсказывай, не говори «почти», не объясняй смысл материалов. На неподходящее",
+             "действие отвечай текстом «при отказе» или ответом по умолчанию. Записывай каждое",
+             "действие тестера в журнал ведущего (таблица ниже) — это данные для сравнения.", "",
+             "| Действие | Цель | Что принимается | Открывает | Ответ при успехе | Ответ при отказе |",
+             "|---|---|---|---|---|---|"]
+    for r in acc.get("rules", []):
+        accepts = r.get("intent") or " / ".join(r.get("accept", []))
+        lines.append(f"| {r['action']} | {r.get('target_label', r.get('target', ''))} | {accepts} | "
+                     f"{', '.join(r.get('release', []))} | {r.get('ok', '')} | {r.get('fail', '')} |")
+    lines += ["", "Ответ по умолчанию: " + "; ".join(f"{k}: «{v}»" for k, v in acc.get("default_reply", {}).items()),
+              "", "## Журнал ведущего", "", "| Время | Действие | Цель | Значение | Правило | Результат | Открыто |",
+              "|---|---|---|---|---|---|---|"]
+    (out / "ВЕДУЩЕМУ" / "ПРАВИЛА_И_ЖУРНАЛ.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    brief = BRIEF.read_text(encoding="utf-8")
+    jt = brief[brief.index("## Журнал"):] if "## Журнал" in brief else ""
+    (out / "ИГРОКУ" / "ЖУРНАЛ_ТЕСТЕРА.md").write_text(
+        "# Журнал тестера\n\nПосле каждых 20–30 минут игры допиши раздел по образцу ниже.\n"
+        "Пиши честно, что думаешь сейчас, — правильных ответов здесь нет.\n\n" + jt, encoding="utf-8")
+    (out / "README.md").write_text(
+        "# Комплект для живого теста\n\n- `ИГРОКУ/` — отдать тестеру (материалы старта и журнал).\n"
+        "- `ВЕДУЩЕМУ/` — только ведущему: закрытые материалы и правила выдачи.\n\n"
+        "После теста положи журнал тестера как `player-log/journal-01.md` в папку "
+        "`playtest/runs/<дата>-<версия>-human-<имя>/` — тогда `playtest.py metrics` и `compare` "
+        "сравнят людей и симуляцию на одном пакете.\n", encoding="utf-8")
+    print(out)
 
 
 def selftest(model):
@@ -445,11 +629,22 @@ def selftest(model):
     rep = probe(model=model)
     if not rep["ok"]:
         sys.exit("ИЗОЛЯЦИЯ НЕ ПОДТВЕРЖДЕНА")
-    print("3) два раунда игрока на игрушечном деле")
+    print("3) архивариус: перефразированный запрос принимает, расплывчатый — нет")
+    rules = json.loads((SELFTEST_PACK / "gm" / "access.json").read_text(encoding="utf-8"))["rules"]
+    pool = [r for r in rules if r.get("intent")]
+    ok_v = archivist("ЗАПРОС", "архив музея", "пришлите, пожалуйста, кто ночью входил и выходил по картам", pool)
+    no_v = archivist("ЗАПРОС", "архив музея", "пришлите всё, что у вас есть", pool)
+    print("   перефраз:", ok_v, "\n   расплывчатый:", no_v)
+    if ok_v["rule_id"] != "req-log" or no_v["rule_id"] is not None:
+        sys.exit("АРХИВАРИУС РЕШИЛ НЕВЕРНО")
+    print("4) два раунда игрока на игрушечном деле")
     runs = Path(tempfile.mkdtemp(prefix="selftest-runs-"))
     run = init(SELFTEST_PACK, "speedrunner", runs, model=model, request="selftest", selftest=True, skip_probe=True)
-    do_round(run, rounds=2, budget=1)
+    do_round(run, rounds=2, budget=1, max_total=2)
     status(run)
+    print("5) метрики и экспорт для людей")
+    metrics(run, suspect="Лисин")
+    export(SELFTEST_PACK, runs / "human-kit")
     cleanup(run)
     print("Записи selftest:", run)
 
@@ -463,11 +658,17 @@ def main():
     a.add_argument("--pack", required=True); a.add_argument("--profile", required=True)
     a.add_argument("--runs-dir", required=True); a.add_argument("--model")
     a.add_argument("--request", default="", help="дословная просьба автора о запуске")
+    a.add_argument("--archivist-model", default="sonnet")
+    a.add_argument("--no-archivist", action="store_true", help="только строгие regex-правила")
     a = sub.add_parser("round")
     a.add_argument("--run", required=True); a.add_argument("--rounds", type=int, default=1)
     a.add_argument("--budget-usd", type=float, default=3.0); a.add_argument("--timeout", type=int, default=1800)
+    a.add_argument("--max-total-usd", type=float, help="остановиться, когда прогон потратил столько")
     a = sub.add_parser("status"); a.add_argument("--run", required=True)
     a = sub.add_parser("cleanup"); a.add_argument("--run", required=True)
+    a = sub.add_parser("metrics"); a.add_argument("--run", required=True); a.add_argument("--suspect")
+    a = sub.add_parser("compare"); a.add_argument("--runs", nargs="+", required=True); a.add_argument("--suspect", required=True)
+    a = sub.add_parser("export"); a.add_argument("--pack", required=True); a.add_argument("--out", required=True)
     a = sub.add_parser("selftest"); a.add_argument("--model", default="haiku")
     args = ap.parse_args()
     if args.cmd == "lint":
@@ -476,13 +677,20 @@ def main():
     elif args.cmd == "probe":
         sys.exit(0 if probe(args.model)["ok"] else 1)
     elif args.cmd == "init":
-        init(args.pack, args.profile, args.runs_dir, args.model, args.request)
+        init(args.pack, args.profile, args.runs_dir, args.model, args.request,
+             archivist_model=args.archivist_model, no_archivist=args.no_archivist)
     elif args.cmd == "round":
-        do_round(args.run, args.rounds, args.budget_usd, args.timeout)
+        do_round(args.run, args.rounds, args.budget_usd, args.timeout, args.max_total_usd)
     elif args.cmd == "status":
         status(args.run)
     elif args.cmd == "cleanup":
         cleanup(args.run)
+    elif args.cmd == "metrics":
+        metrics(args.run, args.suspect)
+    elif args.cmd == "compare":
+        compare(args.runs, args.suspect)
+    elif args.cmd == "export":
+        export(args.pack, args.out)
     elif args.cmd == "selftest":
         selftest(args.model)
 
