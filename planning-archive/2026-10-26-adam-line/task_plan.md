@@ -40,8 +40,8 @@ Phase 5
 - [x] Копии в /mnt/project-files/adam-line/
 - [x] Коммит, пуш, ответ с «решить»
 - [x] Решение автора (18:36: Y-a, K1, K+ Дэн; + Габриэль) → CANON UPDATE A-209…A-216
-- [ ] PR → мёрж по «мёржим»
-- **Status:** in_progress
+- [x] PR → мёрж по «мёржим» (22:15 «принято, мерджим»)
+- **Status:** complete
 
 ## Decisions Made
 | Decision | Rationale |
