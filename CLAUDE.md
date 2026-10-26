@@ -19,9 +19,26 @@ Skills из Story Skills (`.claude/skills/`, источники в `.claude/skil
   (`story-maintenance/scripts/story.js`), пока пользователь явно не решит перевести
   проект в этот формат.
 
+## Собственные detective-skills (начинать с них)
+
+Над Story Skills есть слой из четырёх собственных skills БУНКЕРА:
+
+- **detective-orchestrator** — входная точка любой работы над игрой: определяет
+  режим (DEVELOPMENT / AUDIT / PLAYTEST / FEEDBACK REVIEW) и ведёт workflow.
+- **detective-architect** — придумывает и меняет элементы расследования
+  («как сделать идею работающей?»), после решения автора вносит их в своды.
+- **detective-auditor** — независимый критик («почему это не работает?»);
+  исполняется в отдельном контексте, только отчёт находок.
+- **detective-playtester** — симулированный игрок без доступа к решению; только
+  командой `/detective-playtester`, изолированным процессом по пакету игрока.
+
+Общие правила всех четырёх — `.claude/skills/detective-orchestrator/shared/`.
+Роли не смешиваются: придумывание, проверка и игра — разные вызовы.
+
 ## Какие skills сочетать
 
-Одна задача обычно требует нескольких skills.
+Одна задача обычно требует нескольких skills. Таблица ниже — какие Story Skills
+подключают detective-skills по предмету работы.
 
 | Задача | Skills | После согласованного изменения |
 |---|---|---|
@@ -33,7 +50,7 @@ Skills из Story Skills (`.claude/skills/`, источники в `.claude/skil
 | Тема, мотив, моральный конфликт | theme-craft, character-management | — |
 | Систематизация улик, continuity, setup/payoff | story-maintenance (как методика), genre-craft | — |
 | Реальные факты (медицина, радиация, CCTV, доступ, связь, процедуры) | research, только где ошибка повредит истории | — |
-| Разбор итогов playtest или отзывов | feedback-triage | — |
+| Разбор итогов playtest или отзывов | feedback-triage, затем detective-auditor | — |
 
 - **assumption-challenger**: почему игрок должен сделать этот вывод, откуда он или
   персонаж это знает, есть ли другое объяснение, не протекает ли авторское знание.
@@ -66,7 +83,9 @@ and keep task_plan.md current.
 ## Playtest: только по прямой команде
 
 Не запускай автоматически `reader-panel` (он и технически вызывается только
-командой `/reader-panel`), симуляцию игрока, полный playthrough и будущий
-detective-playtester. Обычный цикл: изменение, continuity check
-(revision-continuity), дальнейшая работа. Полный playtest запускается, только когда
-пользователь говорит, что версия готова к проверке.
+командой `/reader-panel`), симуляцию игрока, полный playthrough и
+detective-playtester (у него `disable-model-invocation: true`). Обычный цикл:
+изменение, continuity check (revision-continuity), дальнейшая работа. Полный
+playtest запускается, только когда пользователь говорит, что версия готова к
+проверке. Для него нужен утверждённый автором пакет игрока
+(`playtest/packs/<версия>/`): авторские своды игроку не выдаются.

@@ -19,3 +19,9 @@
 (все MIT). Источники, коммиты и локальные изменения описаны в
 `.claude/skills/SOURCES.md`, правила совместного использования в `CLAUDE.md`.
 `reader-panel` запускается только командой `/reader-panel`.
+
+Поверх них — четыре собственных skill игры: `detective-orchestrator` (входная
+точка, выбор режима), `detective-architect` (разработка), `detective-auditor`
+(независимая проверка) и `detective-playtester` (симулированный игрок в
+изолированном процессе, только командой `/detective-playtester`). Описание — в
+`CLAUDE.md` и в `SKILL.md` каждого.
