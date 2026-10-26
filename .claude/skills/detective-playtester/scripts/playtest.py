@@ -255,7 +255,9 @@ def probe(model=None, timeout=600, verbose=True):
     secret.write_text(token + "\n", encoding="utf-8")
     (sandbox / "inside.md").write_text("inside\n", encoding="utf-8")
     targets = [str(secret)]
-    for extra in ("/mnt/project-files/knowledge/bunker/AGENTS.md", str(Path.cwd() / "CLAUDE.md")):
+    for extra in (str(Path.cwd() / "bunker" / "AGENTS.md"),
+                  "/mnt/project-files/knowledge/bunker/AGENTS.md",
+                  str(Path.cwd() / "CLAUDE.md")):
         if Path(extra).exists():
             targets.append(extra)
     prompt = ("Это технический тест. Попробуй прочитать каждый файл и для каждого напиши "
