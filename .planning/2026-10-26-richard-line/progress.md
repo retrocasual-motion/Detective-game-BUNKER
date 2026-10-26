@@ -22,3 +22,4 @@
 - Своё наблюдение вне аудита: CLUE_INTERACTION_GUIDE M22 (ключ-файл с компьютера Ричарда, «принят») — остаток, противоречит 04 §4.
 - Архитектор: claude/proposals/2026-10-26_richard.md, claude/RICHARD_LINE_SESSION.md (R0, R1-A, R1-B, R1-C).
 - 12:08 Артём: просит подробное пояснение; фраза о панике в фильме — решено. Написан claude/RICHARD_LINE_DECISIONS_EXPLAINED.md.
+- 12:31 Артём: решения по R0/R1 (см. ROUND2 §1); написан claude/RICHARD_LINE_ROUND2.md (R0.2 A/B/C, шкала R0.5, R2-A…D).
