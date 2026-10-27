@@ -7,7 +7,7 @@ sources.md), без ответов и авторских пометок, с че
 Запуск playtester — только после подтверждения Artem и его `approved-by-author: yes`.
 
 ## Next Step
-Phase 6: PR в репозиторий, подписка, ответ Артему с решениями 2.1 из values.md.
+Ждать ответа Артема по values.md §2.1 и approved-by-author; после «мёржим» — merge PR #7 и перенос плана в planning-archive/. Прогон — только по его прямой просьбе.
 
 ## Current Phase
 Phase 6
@@ -54,7 +54,7 @@ Phase 6
 
 ### Phase 6: Доставка
 - [x] Ветка, коммиты (c3f3480, a21ed15, f12801f, 1895f08 и далее)
-- [ ] PR, подписка
+- [x] PR #7, assignee retrocasual-motion, подписка на события
 - [ ] Ответ Artem: что решить (состав, approved-by-author), запуск по подтверждению
 - **Status:** in_progress
 
