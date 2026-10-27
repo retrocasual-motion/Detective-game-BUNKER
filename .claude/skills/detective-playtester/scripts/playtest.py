@@ -180,6 +180,9 @@ def lint(pack, quiet=False):
             rules = json.loads(acc.read_text(encoding="utf-8"))
             locked = [f.name for f in (pack / "locked").glob("*")] if (pack / "locked").is_dir() else []
             reachable, seen = set(), set()
+            for a, n in rules.get("attempt_limit", {}).items():
+                if a not in ACTIONS or not isinstance(n, int) or n < 1:
+                    hard.append(f"access.json: attempt_limit {a}: {n} — нужно действие из списка и целое ≥ 1")
             for r in rules.get("rules", []):
                 if r.get("id") in seen:
                     hard.append(f"access.json: повторяется id правила {r.get('id')}")
@@ -453,6 +456,41 @@ def resolve(acc, action, target, value, released, ask=None):
     return {"hit": None, "msg": defaults.get(action, "Нет результата."), "res": "нет правила", "rule": "—"}
 
 
+LIMIT_REPLY = "Слишком много неверных попыток: поле ввода снова примет значение в следующем раунде."
+
+
+def field_key(acc, action, target):
+    """Поле ввода, к которому относится действие: id первого правила с подходящей целью."""
+    for r in acc.get("rules", []):
+        if r.get("action") == action and re.search(r.get("target", ".*"), norm(target), flags=re.IGNORECASE):
+            return r.get("id")
+    return norm(target)
+
+
+class AttemptLimit:
+    """Лимит неверных попыток в одно поле за раунд (`attempt_limit` в access.json, например
+    {"ПАРОЛЬ": 3}). Удачные попытки не считаются. Сверх лимита значение не проверяется."""
+
+    def __init__(self, acc):
+        self.acc, self.limits, self.fails = acc, acc.get("attempt_limit", {}), {}
+
+    def reset(self):
+        self.fails = {}
+
+    def blocked(self, action, target):
+        if action not in self.limits:
+            return False
+        return self.fails.get((action, field_key(self.acc, action, target)), 0) >= self.limits[action]
+
+    def record(self, action, target, hit):
+        if action in self.limits and not hit:
+            k = (action, field_key(self.acc, action, target))
+            self.fails[k] = self.fails.get(k, 0) + 1
+
+    def reply(self):
+        return self.acc.get("attempt_limit_reply", LIMIT_REPLY)
+
+
 def to_release(pack, hit, released):
     """Имена файлов locked/, которые правило выдаёт сейчас (ещё не выданные)."""
     names = []
@@ -476,11 +514,16 @@ def apply_actions(run, state, pack, sandbox):
     text = (sandbox / "actions.md").read_text(encoding="utf-8")
     body = text.split("\n---\n", 1)[1] if "\n---\n" in text else text
     replies, released_now, final = [], [], None
+    limit = AttemptLimit(acc)
     for line in body.splitlines():
         m = ACTION_RE.match(line)
         if not m:
             continue
         action, target, value = m.group(1), m.group(2), m.group(3)
+        if limit.blocked(action, target):
+            replies.append(f"- {action} | {target} | {value} → {limit.reply()}")
+            gm_log(run, f"| {state['round']} | {action} | {target} | {value} | {field_key(acc, action, target)} | лимит | — |")
+            continue
         if action in ("ФИНАЛ", "СТОП"):
             final = {"type": action, "target": target, "text": value}
             replies.append(f"- {action}: принято. Игра завершена.")
@@ -496,6 +539,7 @@ def apply_actions(run, state, pack, sandbox):
             return verdict["rule_id"]
 
         r = resolve(acc, action, target, value, state["released"], ask=ask if state.get("archivist") else None)
+        limit.record(action, target, r["hit"])
         files = []
         if r["hit"]:
             files = to_release(pack, r["hit"], state["released"])
@@ -705,15 +749,19 @@ def walk(pack, script, quiet=False):
     Строка сценария: `ДЕЙСТВИЕ | ЦЕЛЬ | ЗНАЧЕНИЕ => ОЖИДАНИЕ`.
     ОЖИДАНИЕ: префиксы через запятую (L214, L387) — должны открыться ровно они;
     `ответ` — правило сработало без материала; `отказ`, `нет доступа`, `нет правила`,
-    `повтор` — соответствующий результат. Без `=>` строка выполняется без проверки.
-    `#` — комментарий. В конце — какие файлы locked/ так и не открылись.
+    `повтор`, `лимит` — соответствующий результат. Без `=>` строка выполняется без проверки.
+    `---` — граница раунда (сбрасывает лимит попыток). `#` — комментарий. В конце — какие файлы locked/ так и не открылись.
     Возвращает число несовпадений.
     """
     pack = Path(pack).resolve()
     acc = json.loads((pack / "gm" / "access.json").read_text(encoding="utf-8"))
     released, bad, n = [], 0, 0
+    limit = AttemptLimit(acc)
     for ln, raw in enumerate(Path(script).read_text(encoding="utf-8").splitlines(), 1):
         line = raw.split(" #", 1)[0].rstrip() if not raw.lstrip().startswith("#") else ""
+        if line.strip() == "---":
+            limit.reset()
+            continue
         if not line.strip():
             continue
         em = WALK_EXPECT_RE.match(line)
@@ -725,7 +773,11 @@ def walk(pack, script, quiet=False):
             continue
         n += 1
         action, target, value = m.groups()
-        r = resolve(acc, action, target, value, released)
+        if limit.blocked(action, target):
+            r = {"hit": None, "res": "лимит", "rule": field_key(acc, action, target)}
+        else:
+            r = resolve(acc, action, target, value, released)
+            limit.record(action, target, r["hit"])
         files = to_release(pack, r["hit"], released) if r["hit"] else []
         released += files
         res = hit_reply(r["hit"], files)[1] if r["hit"] else r["res"]
@@ -734,7 +786,7 @@ def walk(pack, script, quiet=False):
         ok = True
         if expect is not None:
             e = expect.strip().lower()
-            if e in ("ответ", "отказ", "нет доступа", "нет правила", "повтор"):
+            if e in ("ответ", "отказ", "нет доступа", "нет правила", "повтор", "лимит"):
                 ok = res == e
             else:
                 want = sorted(x.strip() for x in expect.split(",") if x.strip())

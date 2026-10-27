@@ -42,13 +42,11 @@ rule(id="req-bureau-mail", action="ЗАПРОС", target=BUREAU, target_label="z
 VL = r"documents@vaultline-program\.com"
 FAIL_VL = "VAULTLINE: «Запрос не рассмотрен. Укажите номер дела, точное наименование документа и номер программы.»"
 rule(id="req-vl-registry", action="ЗАПРОС", target=VL, target_label="documents@vaultline-program.com (VAULTLINE, запросы документов)",
-     accept=[r"(?=.*учет\w*\s+анкет)(?=.*vl\s*-?\s*31)"],
-     intent="выписка из учёта анкет набора программы VL-31",
-     required=["наименование документа «учёт анкет набора»", "номер программы VL-31"], release=["L618"],
+     accept=[r"(?=.*учет\w*\s+(анкет\w*\s+)?набор)(?=.*vl\s*-?\s*31)"], release=["L618"],
      ok="VAULTLINE прислал ответ с вложением: выписка из учёта анкет набора программы № VL-31.",
      fail=FAIL_VL)
 rule(id="req-vl-archive", action="ЗАПРОС", target=VL, target_label="documents@vaultline-program.com (VAULTLINE, запросы документов)",
-     accept=[r"(?=.*архив\w*\s+(проект|р\.|ричард|хейл))(?=.*vl\s*-?\s*31)"], release=["L735"],
+     accept=[r"(?=.*архив\w*\s+(проект|р\.|р\b))(?=.*vl\s*-?\s*31)"], release=["L735"],
      ok="VAULTLINE прислал ответ с вложением: архив проекта программы № VL-31 (зашифрован).",
      fail=FAIL_VL)
 rule(id="req-vl-contracts", action="ЗАПРОС", target=VL, target_label="documents@vaultline-program.com (VAULTLINE, запросы документов)",
@@ -158,7 +156,7 @@ o("prop-voicemail", r"^21|голосов\w* почт|vm_", P, ["L972"], "Сво�
 o("prop-camera", r"^24|камер|кадр", P, ["L973"], "Свойства кадров камеры инженера.")
 o("prop-recorder", r"^49|диктофон|ручк|rec0", P, ["L974"], "Свойства файлов ручки-диктофона.")
 o("prop-radio", r"^50|радио|регистратор|radiopost|rl-?2", P, ["L975"], "Свойства файла записи радиопоста.")
-o("prop-other", r".*", P, [], "Свойства: файл дела, приобщён 16.11.2009. Других сведений о файле нет.")
+o("prop-other", r".*", P, [], "Свойства: копия в архиве дела, приобщена 16.11.2009. Дата съёмки и устройство при копировании не сохранились.")
 
 # увеличение
 o("zoom-film", r"^13|вводн\w* фильм|фильм vaultline", Z, ["L913"], "Крупный план кадров вводного фильма.")
@@ -205,6 +203,8 @@ o("join-halves", r"^51|^42|половин|лист\w* с площадк|обго
 
 acc = {
     "version": 1,
+    "attempt_limit": {"ПАРОЛЬ": 3},
+    "attempt_limit_reply": "Три неверные попытки за раунд: поле ввода снова примет значение в следующем раунде.",
     "default_reply": {
         "ЗАПРОС": "Письмо не доставлено: адрес не найден.",
         "АДРЕС": NF,
