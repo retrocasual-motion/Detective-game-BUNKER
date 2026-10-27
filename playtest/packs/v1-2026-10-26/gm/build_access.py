@@ -50,12 +50,11 @@ VL31 = r"[vв]\s*[lл]\s*-?\s*31"
 # первые источники — обложка дела в П-02 (L981) и копия экспорта L388. Порядок: код A-24 →
 # прочие коды этапа A → неизвестный код → общий запрос по VL-31.
 REG = r"(учет|анкет|набор)"
-CODE = lambda c: rf"\b[aа]\s*-?\s*{c}\b"
+CODE = lambda c: rf"(?<![/\w])[aа](\s*-\s*|-?){c}\b"  # «A-24», «A24», «А - 24»; не «VL-31/A-01», не союз «а 24»
 VL_LABEL = "documents@vaultline-program.com (VAULTLINE, запросы документов)"
 rule(id="req-vl-registry-a24", action="ЗАПРОС", target=VL, target_label=VL_LABEL,
-     accept=[rf"(?=.*{REG})(?=.*{CODE(24)})"],
-     intent="анкета из учёта набора по коду конкретного выбывшего участника прошлого этапа: код A-24",
-     required=["код участника A-24"], release=["L619"],
+     # AUD-102: без intent — архивариус не сопоставляет расплывчатые просьбы с анкетой A-24
+     accept=[rf"(?=.*({REG}|данн|сведени|участник))(?=.*{CODE(24)})"], release=["L619"],
      ok="VAULTLINE прислал ответ с вложением: анкета участника A-24 из учёта анкет набора программы № VL-31.",
      fail=FAIL_VL)
 for code, row in [("11", "Рауль Варгас, 1969, водитель, женат. Домашний телефон: +7 916 555-11-63"),
@@ -68,7 +67,7 @@ for code, row in [("11", "Рауль Варгас, 1969, водитель, же�
          ok=f"VAULTLINE: «Учёт анкет набора программы № VL-31, этап A, код A-{code}: {row}. Медицинские сведения в учёт не входят.»",
          fail=FAIL_VL)
 rule(id="req-vl-registry-nocode", action="ЗАПРОС", target=VL, target_label=VL_LABEL,
-     accept=[rf"(?=.*{REG})(?=.*\b[aа]\s*-\s*\d\d\b)"], release=[],
+     accept=[rf"(?=.*{REG})(?=.*(?<![/\w])[aа]\s*-\s*\d\d\b)"], release=[],
      ok="VAULTLINE: «Участник с таким кодом в учёте анкет набора программы № VL-31 не значится.»",
      fail=FAIL_VL)
 rule(id="req-vl-registry", action="ЗАПРОС", target=VL, target_label=VL_LABEL,
