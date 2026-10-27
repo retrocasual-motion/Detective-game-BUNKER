@@ -7,7 +7,7 @@ sources.md), без ответов и авторских пометок, с че
 Запуск playtester — только после подтверждения Artem и его `approved-by-author: yes`.
 
 ## Next Step
-Ждать выбора Артема по трём вопросам (G-1…G-3, E-1…E-3, C-1…C-4; документ https://claude.ai/artifact/86kzX7WxsgZ39K3SGJexSc, карточка claude/proposals/2026-10-27_gabriel-emblem-corporate.md). После выбора: новые A-номера, правки 01–04 и пакета, lint + walk, continuity. Прогоны — только по его слову.
+Ждать слова Артема: прогон после правок (A-225…A-227), аудитор/self-eval по правкам или «мёржим» PR #7. После мёржа перенести папку плана в planning-archive/. Эпилог (A6-D) — позже, по его слову.
 
 ## Current Phase
 Phase 8
@@ -74,11 +74,11 @@ Phase 8
 - [x] Канон: A-191, A-197, A-200, A-213, 02 «Замки», 03 §5, §7–§9; пакет 07, 26, 34, 50, L214, L947, L163
 - [x] Варианты с impact check: G-1…G-3, E-1…E-3, C-1…C-4; рекомендация G-2, E-2, C-1 (C-3 позже, A6-D)
 - [x] Карточка claude/proposals/2026-10-27_gabriel-emblem-corporate.md; документ для Артема
-- [ ] Выбор Артема
-- [ ] CANON UPDATE: A-225+ в DECISIONS_LOG, 01–04, 04 §3 отвергнутое
-- [ ] Пакет: 07, L214, 26, L915, L947, values, sources, walkthrough; lint + walk
-- [ ] revision-continuity по затронутым узлам; коммит, PR #7
-- **Status:** in_progress
+- [x] Выбор Артема: G-2, E-2, пятый пункт формы вместо C-1; фраза в письме бюро отменена — форма с возвратом; эпилог потом
+- [x] CANON UPDATE: A-225, A-226, A-227 в DECISIONS_LOG, 01–04, 04 §3 отвергнутое
+- [x] Пакет: 07, L214, 26, L915, L947, L999, 00_ВВОДНАЯ, build_access (return_allowed), values, sources, walkthrough, RUNBOOK, PACK; playtest.py form_gate; lint + walk
+- [x] revision-continuity по затронутым узлам; коммит 4eb849a, PR #7
+- **Status:** complete
 
 ## Decisions Made
 | Decision | Rationale |
