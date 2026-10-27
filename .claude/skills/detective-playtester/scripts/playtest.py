@@ -469,7 +469,9 @@ def field_key(acc, action, target):
 
 class AttemptLimit:
     """Лимит неверных попыток в одно поле за раунд (`attempt_limit` в access.json, например
-    {"ПАРОЛЬ": 3}). Удачные попытки не считаются. Сверх лимита значение не проверяется."""
+    {"ПАРОЛЬ": 3}). Удачные попытки не считаются. Сверх лимита значение не проверяется.
+    Правило поля (первое с подходящей целью) может задать свой `attempt_limit`
+    (число; 0 — без лимита) и свой `attempt_limit_reply`."""
 
     def __init__(self, acc):
         self.acc, self.limits, self.fails = acc, acc.get("attempt_limit", {}), {}
@@ -477,17 +479,33 @@ class AttemptLimit:
     def reset(self):
         self.fails = {}
 
+    def _field(self, action, target):
+        for r in self.acc.get("rules", []):
+            if r.get("action") == action and re.search(r.get("target", ".*"), norm(target), flags=re.IGNORECASE):
+                return r
+        return None
+
+    def _limit(self, action, target):
+        r = self._field(action, target)
+        if r is not None and "attempt_limit" in r:
+            return r["attempt_limit"] or None
+        return self.limits.get(action)
+
     def blocked(self, action, target):
-        if action not in self.limits:
+        n = self._limit(action, target)
+        if not n:
             return False
-        return self.fails.get((action, field_key(self.acc, action, target)), 0) >= self.limits[action]
+        return self.fails.get((action, field_key(self.acc, action, target)), 0) >= n
 
     def record(self, action, target, hit):
-        if action in self.limits and not hit:
+        if self._limit(action, target) and not hit:
             k = (action, field_key(self.acc, action, target))
             self.fails[k] = self.fails.get(k, 0) + 1
 
-    def reply(self):
+    def reply(self, action=None, target=None):
+        r = self._field(action, target) if action else None
+        if r is not None and r.get("attempt_limit_reply"):
+            return r["attempt_limit_reply"]
         return self.acc.get("attempt_limit_reply", LIMIT_REPLY)
 
 
@@ -521,7 +539,7 @@ def apply_actions(run, state, pack, sandbox):
             continue
         action, target, value = m.group(1), m.group(2), m.group(3)
         if limit.blocked(action, target):
-            replies.append(f"- {action} | {target} | {value} → {limit.reply()}")
+            replies.append(f"- {action} | {target} | {value} → {limit.reply(action, target)}")
             gm_log(run, f"| {state['round']} | {action} | {target} | {value} | {field_key(acc, action, target)} | лимит | — |")
             continue
         if action in ("ФИНАЛ", "СТОП"):
