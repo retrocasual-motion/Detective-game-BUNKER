@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 340381,
+  "stop_reason": "end_turn",
+  "session_id": "c6711def-3aad-4744-b555-0711e10c1cf4",
+  "total_cost_usd": 0.7847436999999999,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 13064,
+    "cache_read_input_tokens": 246690,
+    "output_tokens": 7969,
+    "output_tokens_details": {
+      "thinking_tokens": 4171
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13064,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 934,
+        "cache_read_input_tokens": 85933,
+        "cache_creation_input_tokens": 6834,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 6834
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 361,
+      "thinkingTokens": 340,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00030500000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 48,
+      "outputTokens": 31138,
+      "thinkingTokens": 14633,
+      "cacheReadInputTokens": 1146467,
+      "cacheCreationInputTokens": 89579,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 89579,
+      "webSearchRequests": 0,
+      "costUSD": 0.7844386999999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 3 закончен. Дело не решено, уверенность в версии около 35%. Журнал дописан, действия записаны в `actions.md`.\n\n**Что дали ответы архива:**\n- **Материалы пользователя 05 (Пирс) и три экспорта.** Программа оказалась клиническим испытанием компании HEXON BIO, а не психологическим исследованием.\n  - Участник A-24 в 2008 году выбыл на 15-й день из-за «реакции на компонент основы», со смертельным исходом.\n  - В текущем этапе партия 0417 названа «активной», партия 0418 — «контролем». Сопоставив время выдачи с таблицей из файла 37, я вывел, что «активную» партию пьют Харт, Моро и Силва, а контрольную — Сато, Уолш и Миллер.\n  - У Харта и Силвы тревожность за дни растёт с 3 до 7. Видимо, о них Коул и говорил в голосовой почте Хейлу в 07:35 («срочно, по двум участникам»).\n- **Пирс.** Она отправляла эти экспорты на внешний маршрут 14 и после каждой отправки входила в личную почту `e.pierce.uk@mailbridge.net`. Коул в 08:02 скопировал её сеанс, в 08:05 ограничил отправку, а в 08:41 ограничение снял. Поэтому мотив «убрать Коула за разоблачение» у неё слабее. Скорее она утекала данные, чем была виновата в его смерти.\n- **Радиопост.** С 07:54 до 08:48 шагов по восточной лестнице нет. Значит, человек на площадке в 08:48 пришёл с верхнего уровня, а не снизу.\n\n**Подозреваемые.** Уолш поднимается на первое место (около 30%): она ведёт выдачу партий, сама осматривала участников прошлого этапа, по времени могла добраться до площадки, а её рассказ о времени не сходится с записью. Пирс — 25%, остальные ниже. Вариант несчастного случая оставляю на 15%.\n\nАрхив газеты за 2008 год не оцифрован, так что идея про Тома Бернара как A-24 пока ничем не подтверждена. По пользователям 01 и 04 сохранённых файлов нет.\n\n**Действия на следующий раунд:**\n- Открыть в браузере сайт компании (`vaultline-program.com`) и почтовый сервис (`mailbridge.net`).\n- Увеличить ноутбук (файл 47) и знак на бланке Hexon Bio в файле 26: нужна подсказка к графическому ключу.\n- Позвонить на горячую линию NorthCare по партиям: +7 800 555-31-20.",
+  "ttft_ms": 6941,
+  "type": "result",
+  "duration_ms": 79687,
+  "uuid": "dd18228e-7841-4428-ac81-37f05d20420f",
+  "ttft_stream_ms": 6176,
+  "time_to_request_ms": 111,
+  "time_to_request_phases_ms": {
+    "other": 17,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 23,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 1,
+    "init_message": 10,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 5,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 0,
+    "tool_schema_build": 11,
+    "message_normalization": 8,
+    "client_creation": 9,
+    "request_build": 12
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 61,
+  "time_to_request_cpu_ms": 119,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 229,
+  "process_anon_mib_turn_start": 137,
+  "process_rss_mib_result": 218,
+  "process_anon_mib_result": 120,
+  "process_peak_rss_mib": 253,
+  "process_cpu_ms_turn": 1637,
+  "process_wall_ms_turn": 79686,
+  "process_cpu_ms_streaming": 885,
+  "process_wall_ms_streaming": 58000,
+  "main_stream_count": 3,
+  "main_stream_event_count": 758,
+  "main_stream_chunk_count": 92,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 17,
+    "cpu_ms": 31,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 6177,
+  "time_to_request_from_spawn_ms": 2299137,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793115862377.924,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

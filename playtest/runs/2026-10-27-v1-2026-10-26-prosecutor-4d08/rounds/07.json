@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 461823,
+  "stop_reason": "end_turn",
+  "session_id": "c6711def-3aad-4744-b555-0711e10c1cf4",
+  "total_cost_usd": 1.1173159,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 4544,
+    "cache_read_input_tokens": 329148,
+    "output_tokens": 3541,
+    "output_tokens_details": {
+      "thinking_tokens": 346
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4544,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 811,
+        "cache_read_input_tokens": 110425,
+        "cache_creation_input_tokens": 2833,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2833
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 361,
+      "thinkingTokens": 340,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00030500000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 72,
+      "outputTokens": 43962,
+      "thinkingTokens": 16960,
+      "cacheReadInputTokens": 2369669,
+      "cacheCreationInputTokens": 110070,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 110070,
+      "webSearchRequests": 0,
+      "costUSD": 1.1170109,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Заключение по пяти пунктам формы я отправил: в `actions.md` стоит `ФИНАЛ | заключение | см. журнал`, полный текст — в `journal.md` в разделе «Заключение». Версия остаётся обвинительной, но не доказанной: уверенность около 55%.\n\n1. **Что произошло.** По регистратору радиопоста Коул упал с верхней площадки восточной лестницы около 08:48:42. Скорее всего, там его застала Эмма Пирс.\n   - С 08:02 Коул просматривал её сеанс на сервере, а в 08:30–08:40 был у неё.\n   - Её почта показывает, что с 28 августа она продавала данные программы лаборатории Sentinel Labs.\n   - Её слова «не знала, что он что-то нашёл» противоречат журналу сервера.\n   - Она знала о падении раньше, чем ей могли сообщить, и взяла у тела папку Коула и ключи.\n   - Слабые места: прямых свидетелей нет, и я не объяснил, как верхняя половина листа Харта попала на площадку. Роль Уолш я не исключил.\n2. **Умысел.** Не установлен. Эксперт не нашёл признаков умышленного повреждения крепления, а возня наверху говорит скорее о стычке.\n3. **Дефект ограждения.** Плита была с старой трещиной, а отчёт Миллера о замене, видимо, ложный. Дефект был условием падения, но не доказанной причиной. Несчастный случай я оцениваю примерно в 12%.\n4. **Почему группу не выпустили.** Защищённый режим включила команда офиса в 09:24, и снять его мог только офис. В 10:40 был реальный внешний удар, связь с офисом пропала, Хейл погиб на шоссе. Намеренное удержание я не доказал.\n5. **Что за программа.** Под видом программы по изоляции шло закрытое клиническое испытание HEXON BIO. Партия 0417 была активной, 0418 — контрольной. На этапе A участник A-24 умер на 15-й день. Состав вещества установить нельзя: компания протокол и досье не выдала.\n\nВ заключении я прямо указал, чего установить не удалось: точное участие Пирс в самом падении, роль Уолш, происхождение листа Харта, ключ ноутбука и PIN телефона.",
+  "ttft_ms": 4669,
+  "type": "result",
+  "duration_ms": 36786,
+  "uuid": "91a7f260-6ba7-4432-8d4d-7d8e279fab22",
+  "ttft_stream_ms": 4204,
+  "time_to_request_ms": 127,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 26,
+    "input_hooks": 2,
+    "transcript_persist": 6,
+    "tool_pool_refresh": 1,
+    "init_message": 6,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 8,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 11,
+    "message_normalization": 15,
+    "client_creation": 8,
+    "request_build": 17
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 77,
+  "time_to_request_cpu_ms": 138,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 232,
+  "process_anon_mib_turn_start": 141,
+  "process_rss_mib_result": 225,
+  "process_anon_mib_result": 127,
+  "process_peak_rss_mib": 257,
+  "process_cpu_ms_turn": 1398,
+  "process_wall_ms_turn": 36785,
+  "process_cpu_ms_streaming": 621,
+  "process_wall_ms_streaming": 21669,
+  "main_stream_count": 3,
+  "main_stream_event_count": 664,
+  "main_stream_chunk_count": 64,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 18,
+    "cpu_ms": 31,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 4204,
+  "time_to_request_from_spawn_ms": 2489526,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793116052817.372,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

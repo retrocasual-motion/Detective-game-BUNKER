@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 366285,
+  "stop_reason": "end_turn",
+  "session_id": "c6711def-3aad-4744-b555-0711e10c1cf4",
+  "total_cost_usd": 0.8682015,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 5901,
+    "cache_read_input_tokens": 283318,
+    "output_tokens": 3151,
+    "output_tokens_details": {
+      "thinking_tokens": 616
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 5901,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 624,
+        "cache_read_input_tokens": 96341,
+        "cache_creation_input_tokens": 2327,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2327
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 361,
+      "thinkingTokens": 340,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00030500000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 54,
+      "outputTokens": 34289,
+      "thinkingTokens": 15249,
+      "cacheReadInputTokens": 1429785,
+      "cacheCreationInputTokens": 95480,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 95480,
+      "webSearchRequests": 0,
+      "costUSD": 0.8678965,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 закончен. Дело не решено, уверенность в версии осталась около 35%. Журнал дописан, действия записаны в `actions.md`.\n\n**Что открыл этот раунд:**\n- **Сайт VAULTLINE.** Документы компании выдают по адресу `documents@vaultline-program.com`. В запросе нужны номер дела, наименование документа и номер программы.\n- **Mailbridge.** Запросы органов принимает `lawful-requests@mailbridge.net`. Нужны номер дела и точный адрес ящика. Содержимое выдают в зашифрованном виде, пароль владельца там не хранят.\n- **Ноутбук.** На картинке учётной записи видны две линии под прямым углом: горизонталь идёт влево от угла, вертикаль вниз. Похоже на верхний правый угол знака.\n- **Бланк Hexon Bio.** Знак в шапке при увеличении слился в серое пятно, форму не разобрать.\n- **Горячая линия NorthCare.** Автоответчик просит ввести номер партии с упаковки.\n\n**Действия этого раунда:**\n- Запрос в компанию на протокол этапа C (состав партий 0417 и 0418, схема выдачи).\n- Запрос в компанию на договор между VAULTLINE и HEXON BIO.\n- Запрос в Mailbridge на экспорт ящика `e.pierce.uk@mailbridge.net`.\n- Две попытки ввести графический ключ ноутбука: 1-2-3-6-9 и 1-2-3-6. Это догадка по форме угла.\n\nПодозреваемые прежние: Уолш около 30%, Пирс около 25%, остальные ниже.\n\nЗвонок на горячую линию NorthCare с номерами партий (0417, 0418) отложил на следующий раунд.",
+  "ttft_ms": 1461,
+  "type": "result",
+  "duration_ms": 30336,
+  "uuid": "865bd31d-ea46-40fc-8e26-97ca22161357",
+  "ttft_stream_ms": 1121,
+  "time_to_request_ms": 107,
+  "time_to_request_phases_ms": {
+    "other": 17,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 24,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 1,
+    "init_message": 11,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 7,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 0,
+    "tool_schema_build": 9,
+    "message_normalization": 8,
+    "client_creation": 6,
+    "request_build": 10
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 56,
+  "time_to_request_cpu_ms": 121,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 230,
+  "process_anon_mib_turn_start": 139,
+  "process_rss_mib_result": 225,
+  "process_anon_mib_result": 127,
+  "process_peak_rss_mib": 253,
+  "process_cpu_ms_turn": 1295,
+  "process_wall_ms_turn": 30336,
+  "process_cpu_ms_streaming": 541,
+  "process_wall_ms_streaming": 15879,
+  "main_stream_count": 3,
+  "main_stream_event_count": 423,
+  "main_stream_chunk_count": 44,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 18,
+    "cpu_ms": 33,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1121,
+  "time_to_request_from_spawn_ms": 2380236,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793115943487.5898,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

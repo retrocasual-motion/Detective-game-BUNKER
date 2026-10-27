@@ -1,0 +1,167 @@
+{
+  "duration_api_ms": 196325,
+  "stop_reason": "end_turn",
+  "session_id": "c6711def-3aad-4744-b555-0711e10c1cf4",
+  "total_cost_usd": 0.4661221,
+  "usage": {
+    "input_tokens": 30,
+    "cache_creation_input_tokens": 62423,
+    "cache_read_input_tokens": 468251,
+    "output_tokens": 16924,
+    "output_tokens_details": {
+      "thinking_tokens": 8729
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 62423,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 872,
+        "cache_read_input_tokens": 62114,
+        "cache_creation_input_tokens": 3497,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3497
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 361,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00030500000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 340,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 30,
+      "outputTokens": 16924,
+      "cacheReadInputTokens": 468251,
+      "cacheCreationInputTokens": 62423,
+      "webSearchRequests": 0,
+      "costUSD": 0.4658171,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 8729,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 62423,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 56,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 1 закончен. Дело я пока не решил: моя главная версия держится примерно на 25%. Журнал записан в `journal.md`, действия — в `actions.md`.\n\n**Что показали материалы**\n- **Время падения.** Регистратор радиопоста фиксирует шаги и возню наверху в 08:48:26–08:48:32 и удар внизу в 08:48:42. В постановлении стоит «около 08:45», а три свидетельницы (Сато, Моро и Уолш) называют 08:46.\n- **Плита крепления.** Миллер в отчёте пишет, что заменил плиту на новую. Эксперт и кадры камеры показывают старую плиту с окисленным изломом и старыми анкерами. Это противоречие остаётся без объяснения.\n- **Харт.** Коул шантажировал его у переговорного окна в 07:37. В вещах Харта — обгоревшая нижняя половина листа с его психологическим интервью, а верхняя половина лежала на верхней площадке. До подножия ему около двух минут пути, так что наверху в 08:48 он быть не мог.\n- **Уолш.** Она и Пирс говорят, что Харт сообщил ей о падении около 08:50. Но Харт стоял у тела до 08:52:20 и только потом пошёл наверх, то есть Уолш знала о падении раньше. В медкабинете пропал аварийный дубликат ключа от кабинета Коула. На бланке из его папки, оформленном на участника прошлого заезда, стоит её подпись.\n- **Пирс.** Она взяла папку Коула у тела и отдала ключи Миллеру. Её голос похож на голос в записях тревоги и на REC004 из диктофона.\n\n**Подозреваемые.** Главный подозреваемый — Кейт Уолш (около 30%), потом Эмма Пирс (20%) и Ник Харт (15%). Остальных на ранней стадии не отбрасываю: Моро, Миллер, Силва и несчастный случай.\n\n**Действия на следующий раунд**\n- Запрос в бюро на приложение № 7, журналы сервера объекта за 13.10.\n- Просмотр сканов пачек П-09 (кабинет Коула), П-05 (медкабинет), П-04 (техническая) и П-06 (радиопост).\n\nНоутбук и телефон из кабинета Коула заблокированы, подобрать ключ и PIN пока нечем. Газетные разделы «Объявления» и «Архив номеров» (файлы 16 и 17) я не открывал.",
+  "ttft_ms": 2645,
+  "type": "result",
+  "duration_ms": 197518,
+  "uuid": "c3f616f0-fe77-4585-a2db-3e19a133c93b",
+  "ttft_stream_ms": 1962,
+  "time_to_request_ms": 237,
+  "time_to_request_phases_ms": {
+    "other": 29,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 11,
+    "input_attachments": 11,
+    "input_hooks": 4,
+    "transcript_persist": 12,
+    "tool_pool_refresh": 3,
+    "init_message": 7,
+    "engine_pickup": 27,
+    "message_prep": 2,
+    "model_config_wait": 107,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 9,
+    "message_normalization": 2,
+    "client_creation": 3,
+    "request_build": 5
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 83,
+  "time_to_request_cpu_ms": 264,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 225,
+  "process_anon_mib_turn_start": 133,
+  "process_rss_mib_result": 222,
+  "process_anon_mib_result": 123,
+  "process_peak_rss_mib": 239,
+  "process_cpu_ms_turn": 4046,
+  "process_wall_ms_turn": 197518,
+  "process_cpu_ms_streaming": 2234,
+  "process_wall_ms_streaming": 120630,
+  "main_stream_count": 15,
+  "main_stream_event_count": 1492,
+  "main_stream_chunk_count": 240,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 7,
+    "cpu_ms": 11,
+    "major_faults": 0
+  },
+  "first_content_frame_ms": 1962,
+  "time_to_request_from_spawn_ms": 2027004,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793115590091.7449,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
