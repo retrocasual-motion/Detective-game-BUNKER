@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 492523,
+  "stop_reason": "end_turn",
+  "session_id": "3b6cb914-e0d4-42c9-9d97-66ae22c0a59f",
+  "total_cost_usd": 1.2627147000000003,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 17472,
+    "cache_read_input_tokens": 486988,
+    "output_tokens": 12136,
+    "output_tokens_details": {
+      "thinking_tokens": 7606
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 17472,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1049,
+        "cache_read_input_tokens": 130343,
+        "cache_creation_input_tokens": 3370,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3370
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 256,
+      "thinkingTokens": 235,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002525,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 52,
+      "outputTokens": 57331,
+      "thinkingTokens": 33110,
+      "cacheReadInputTokens": 1669482,
+      "cacheCreationInputTokens": 130525,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 130525,
+      "webSearchRequests": 0,
+      "costUSD": 1.2624622000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 11,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 разобран. В `actions.md` записал действия, в `journal.md` дописал «Раунд 4». Версия пока не доказана, уверенность около 45%.\n\n**Что открылось**\n- **Ноутбук Коула.** Графический ключ 5-1-2-3-6-9-8-7-4 подошёл — это старый знак HEXON BIO.\n- **Доклад Коула «Р. — срочно».** Он написан в 08:12 и не отправлен. В нём Коул обвиняет Сато (журналистка), Силву (личный телефон) и Рид.\n  - У Рид он называет три отправки по маршруту 14 и её личный ящик e.reed.uk@mailbridge.net, а выписку по ней — «у меня».\n  - Моро в докладе нет. Вероятно, Коул не подозревал её.\n- **Исчезла выписка.** Выписка по Рид напечатана в 08:06, но в папке и в описи кабинета её нет.\n- **Инсценировка тревоги.** Записи «Тревога» от 15.09: женский голос, похожий на Рид, читает ложное «внешнее сообщение», мужской басовитый режиссирует. То есть ложный удар 12.10 — дело рук Коула и Рид, а Рид следователю сказала, что голос не узнала.\n- **Деньги.** Коул платил наличными за «обслуживание» от Fieldworks Radio, хотя фирма закрылась в декабре 2007. Инженеру он выплатил наличными премию 3 000 через неделю после гибели A-24.\n- **Плита.** Colton Supply изготовил плиту, но она не доставлена и возвращена на склад 26.10. Значит, на объекте её не меняли, а отчёт Миллера о замене ложный.\n- **Харт.** Его признание психологу: в 1998 в Германии он пьяный разбил машину, погиб Колдер, а вину Харт свалил на погибшего. Это рычаг Коула. Файл интервью Коул открывал на ноутбуке 10.10, но распечатки в журнале принтера нет.\n- **Отказы VAULTLINE.** На запросы про маршрут 14 и протокол этапа C пришёл отказ: нужно точное наименование документа.\n\n**Подозреваемые** (мои оценки)\n\n| Кто | % |\n|---|---|\n| Рид | 28 |\n| Моро | 28 |\n| Миллер | 10 |\n| Харт | 8 |\n| Несчастный случай | 14 |\n| Остальные | 12 |\n\nРид сместилась вверх: у неё явный мотив и нет алиби на 08:43–08:50.\n\n**Что отправил**\n- **Осмотры:** блокнот Моро, страницы 14–16 (увеличить); обгоревший лист Харта; лист с площадки; ручка-диктофон (свойства).\n- **Запросы в VAULTLINE:** листы учёта персонала на Рид и на Коула.\n- **«Решить дело»:** чтобы увидеть форму заключения. Расследование после этого можно продолжать.",
+  "ttft_ms": 6394,
+  "type": "result",
+  "duration_ms": 112959,
+  "uuid": "2c34e12e-7031-459f-b599-979ff122077d",
+  "ttft_stream_ms": 5580,
+  "time_to_request_ms": 211,
+  "time_to_request_phases_ms": {
+    "other": 29,
+    "system_prompt": 5,
+    "resume_other": 0,
+    "process_user_input": 7,
+    "input_attachments": 80,
+    "input_hooks": 5,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 3,
+    "init_message": 11,
+    "engine_pickup": 2,
+    "message_prep": 2,
+    "model_config_wait": 1,
+    "autocompact": 5,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 17,
+    "message_normalization": 15,
+    "client_creation": 9,
+    "request_build": 17
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 108,
+  "time_to_request_cpu_ms": 233,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 238,
+  "process_anon_mib_turn_start": 143,
+  "process_rss_mib_result": 229,
+  "process_anon_mib_result": 128,
+  "process_peak_rss_mib": 245,
+  "process_cpu_ms_turn": 2470,
+  "process_wall_ms_turn": 112958,
+  "process_cpu_ms_streaming": 1272,
+  "process_wall_ms_streaming": 90537,
+  "main_stream_count": 4,
+  "main_stream_event_count": 878,
+  "main_stream_chunk_count": 125,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 53,
+    "cpu_ms": 97,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 5580,
+  "time_to_request_from_spawn_ms": 1144060,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793092111678.2285,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 521746,
+  "stop_reason": "end_turn",
+  "session_id": "f0b8bf43-68c2-4da3-a712-e62b05262f39",
+  "total_cost_usd": 2.6216197999999995,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 7727,
+    "cache_read_input_tokens": 367919,
+    "output_tokens": 5920,
+    "output_tokens_details": {
+      "thinking_tokens": 2730
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 7727,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1090,
+        "cache_read_input_tokens": 124270,
+        "cache_creation_input_tokens": 4853,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 4853
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 267,
+      "thinkingTokens": 246,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000258,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 86,
+      "outputTokens": 52120,
+      "thinkingTokens": 21737,
+      "cacheReadInputTokens": 2857049,
+      "cacheCreationInputTokens": 125901,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 125901,
+      "webSearchRequests": 0,
+      "costUSD": 2.6213618,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Почта Рид открылась паролем «Тоффи». Теперь понятно, что Рид продавала данные испытаний, но кто был с Коулом на площадке, по-прежнему не доказано.\n\n**Что показала почта:**\n- **Рид продавала данные конкуренту.** Данные программы VL-31 она передавала Дж. Мерсеру из Sentinel Labs. Маршрут 14 — это их адрес, внесённый в список маршрутов офиса как адрес поставщика. Деньги шли за каждый этап, а остаток обещан за «досье вещества». Досье лежит в архиве у Хейла, и архив заперт номером активной партии — судя по всему, это 0417.\n- **Силву взяли в группу по заказу Sentinel.** Им нужен был участник с ограниченным английским, который узнаёт о тревоге не из эфира, а по лицам других. Рид сама устроила для него место. В итоге Силва получал активную партию 0417 и при этом был главным зрителем инсценировки.\n- **14.09 Рид «передала ключ» Мерсеру.** От чего этот ключ, неизвестно.\n- **Мотив Рид теперь сильный.** Утром 13.10 Коул всё это раскрыл и готовил доклад Хейлу. Для Рид это означало потерю денег и уголовное дело.\n\n**Пересмотр маршрутов по плану объекта:**\n- **Моро, видимо, лжёт о том, откуда шла.** Сато в 08:46 ушла из медкабинета на запад, в общую зону, и никого не встретила. Жилой блок лежит ещё западнее. Значит, Моро, которая пришла к медику через 1–2 минуты после удара, скорее всего, шла с востока — от комнаты анкет у площадки. С этим сходятся её оборванный рисунок двери кабинета Коула и то, что Уолш не записала её визит в журнал.\n- **Рид могла вернуться незаметно.** Её кабинет рядом с медкабинетом, и Сато её бы не увидела.\n\n**Подозреваемые:**\n\n| Кто | % |\n|---|---|\n| Рид | 35 |\n| Моро | 22 |\n| Несчастный случай | 15 |\n| Силва | 13 |\n| Миллер | 7 |\n| Уолш | 5 |\n| Харт | 3 |\n\nУверенность в версии — 38%. Моро может оказаться как исполнителем, так и свидетелем.\n\n**Что не сходится:**\n- Почему Коул в 08:41 снова открыл Рид маршрут 14, если только что её разоблачил?\n- Кто тянул лист с интервью Харта, что он порвался пополам?\n- Моро говорит, что «кто-то быстро сбежал по лестнице». А на записи радиопоста перед ударом слышны только 3–4 шага вниз.\n\n**Действия на этот раунд:** листаю оставшиеся пачки документов — анкеты и бланки из комнаты анкет (рабочего места Моро), а также бумаги радиопоста, общей зоны и кухни. Ищу следы утра 13.10 и связь Моро с погибшим участником A-24. The Signal на письмо не ответила.",
+  "ttft_ms": 1778,
+  "type": "result",
+  "duration_ms": 62971,
+  "uuid": "6a37b643-fdf2-4fea-8fc5-7bd9fc9db5c0",
+  "ttft_stream_ms": 1032,
+  "time_to_request_ms": 153,
+  "time_to_request_phases_ms": {
+    "other": 22,
+    "system_prompt": 3,
+    "resume_other": 1,
+    "process_user_input": 4,
+    "input_attachments": 38,
+    "input_hooks": 3,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 2,
+    "init_message": 7,
+    "engine_pickup": 11,
+    "message_prep": 1,
+    "model_config_wait": 2,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 13,
+    "message_normalization": 16,
+    "client_creation": 7,
+    "request_build": 18
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 103,
+  "time_to_request_cpu_ms": 165,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 222,
+  "process_anon_mib_turn_start": 129,
+  "process_rss_mib_result": 224,
+  "process_anon_mib_result": 126,
+  "process_peak_rss_mib": 227,
+  "process_cpu_ms_turn": 2087,
+  "process_wall_ms_turn": 62970,
+  "process_cpu_ms_streaming": 1360,
+  "process_wall_ms_streaming": 52714,
+  "main_stream_count": 3,
+  "main_stream_event_count": 585,
+  "main_stream_chunk_count": 471,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 28,
+    "cpu_ms": 44,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 1033,
+  "time_to_request_from_spawn_ms": 706362,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793091673857.876,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

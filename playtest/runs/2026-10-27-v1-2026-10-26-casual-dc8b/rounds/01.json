@@ -1,0 +1,167 @@
+{
+  "duration_api_ms": 51682,
+  "stop_reason": "end_turn",
+  "session_id": "d8b6a73c-3455-4794-a866-785046800857",
+  "total_cost_usd": 0.19773369999999998,
+  "usage": {
+    "input_tokens": 20,
+    "cache_creation_input_tokens": 31223,
+    "cache_read_input_tokens": 176917,
+    "output_tokens": 5483,
+    "output_tokens_details": {
+      "thinking_tokens": 998
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 31223,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 592,
+        "cache_read_input_tokens": 32607,
+        "cache_creation_input_tokens": 1804,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1804
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 311,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00028000000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 290,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 20,
+      "outputTokens": 5483,
+      "cacheReadInputTokens": 176917,
+      "cacheCreationInputTokens": 31223,
+      "webSearchRequests": 0,
+      "costUSD": 0.1974537,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 998,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 31223,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 29,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 1 закончен. Журнал дописан, в `actions.md` стоит один запрос: приложение № 7, то есть журналы сервера объекта за 13.10.\n\nПока моя версия такая: Коул шантажировал Ника Харта, и Харт столкнулся с ним на верхней площадке. Подозреваю Харта примерно на 60%, в версии уверен на 50%. Вот на чём это держится:\n- **Шантаж:** на записи радиопоста в 07:37 мужской голос говорит у окна: «Харт, ты же не хочешь, чтобы миссис Колдер об этом узнала?». Чей это голос, в материалах не названо. Я думаю, что Коула, потому что он похож на голос в `REC001.wav`.\n- **Борьба:** в 08:48 на записи шаги вниз по маршу, потом возня и скрежет, потом удар. Значит, на площадке с Коулом кто-то был.\n- **Бумага:** нижняя обгоревшая половина интервью Харта лежала у него в нагрудном кармане. Верхняя половина была на площадке. Силва видел, как Харт что-то спрятал в карман.\n- **Ложь:** Харт говорит, что первым оказался у тела, но на записи первые шаги внизу только в 08:50:55.\n\nПротив этой версии:\n- Эксперт не нашёл признаков умышленного повреждения крепления.\n- Время удара у свидетелей (08:45–08:46) не сходится с регистратором (08:48:42).\n- Я не знаю, кто такая миссис Колдер и что случилось в 1998 году.\n\nСледом посмотрю ноутбук и телефон Коула и документы компании, но сначала дождусь ответа на запрос.",
+  "ttft_ms": 1930,
+  "type": "result",
+  "duration_ms": 51988,
+  "uuid": "c76aa01c-8a2f-4500-8d7c-54627e616d33",
+  "ttft_stream_ms": 1262,
+  "time_to_request_ms": 243,
+  "time_to_request_phases_ms": {
+    "other": 44,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 48,
+    "input_attachments": 22,
+    "input_hooks": 6,
+    "transcript_persist": 12,
+    "tool_pool_refresh": 3,
+    "init_message": 9,
+    "engine_pickup": 2,
+    "message_prep": 2,
+    "model_config_wait": 51,
+    "autocompact": 3,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 15,
+    "message_normalization": 3,
+    "client_creation": 7,
+    "request_build": 13
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 192,
+  "time_to_request_cpu_ms": 339,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 196,
+  "process_anon_mib_turn_start": 102,
+  "process_rss_mib_result": 206,
+  "process_anon_mib_result": 106,
+  "process_peak_rss_mib": 213,
+  "process_cpu_ms_turn": 3267,
+  "process_wall_ms_turn": 51987,
+  "process_cpu_ms_streaming": 1540,
+  "process_wall_ms_streaming": 30523,
+  "main_stream_count": 10,
+  "main_stream_event_count": 780,
+  "main_stream_chunk_count": 130,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 12,
+    "cpu_ms": 84,
+    "major_faults": 0
+  },
+  "first_content_frame_ms": 1262,
+  "time_to_request_from_spawn_ms": 220050,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793091185553.5596,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

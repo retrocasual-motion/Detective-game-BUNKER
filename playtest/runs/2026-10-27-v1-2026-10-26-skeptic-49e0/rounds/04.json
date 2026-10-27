@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 576312,
+  "stop_reason": "end_turn",
+  "session_id": "0e4ec851-7042-49e3-9c50-d100ba5e4e29",
+  "total_cost_usd": 2.5981805000000002,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 10082,
+    "cache_read_input_tokens": 500404,
+    "output_tokens": 5626,
+    "output_tokens_details": {
+      "thinking_tokens": 1740
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 10082,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1096,
+        "cache_read_input_tokens": 129171,
+        "cache_creation_input_tokens": 2102,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2102
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 264,
+      "thinkingTokens": 243,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002565,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 78,
+      "outputTokens": 52516,
+      "thinkingTokens": 24998,
+      "cacheReadInputTokens": 2614420,
+      "cacheCreationInputTokens": 128051,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 128051,
+      "webSearchRequests": 0,
+      "costUSD": 2.5979240000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 закончен. Я выяснил, кто такой участник A-24 и, вероятно, кто такая Моро. Главной подозреваемой стала она. Уверенность в версии — 55%. Прямого доказательства того, что произошло на площадке, по-прежнему нет.\n\n**Что выяснилось:**\n- **A-24 — Томас Бернар, 1974 года рождения, механик.** Об этом говорит выписка VAULTLINE из учёта анкет. Он женат, жена — преподаватель рисования, контакт — сестра Клэр Бернар. Всё совпадает с некрологом в газете и с датой справки о выбытии, 06.10.2008.\n- **Моро, скорее всего, его вдова.** Документа о браке нет, но совпадений много:\n  - она тоже преподаватель рисования и пришла в программу «из статьи» — видимо, из статьи The Signal 2008 года о погибшем участнике;\n  - на последнем рисунке в её блокноте — бородатый мужчина, а на фото A-24 видна щетина;\n  - папка A-24 лежала в её комнате анкет, на копии записки — графитовая пыль.\n- **Предпоследний рисунок Моро резко оборван.** Это вид из комнаты анкет на дверь кабинета Коула, на которой висит листок «РЕЖИМ ТРЕВОГИ». Значит, рисунок сделан уже после начала тревоги, а линия оборвана и смазана. Даты на рисунке нет, поэтому утро 13.10 — моё предположение.\n- **Партии 0417 нет в реестре NorthCare.** Это та самая «активная» партия, то есть участникам под видом витаминов давали незарегистрированный препарат.\n\n**Версия.** Бернар умер на этапе A от аллергии на сою. Он письменно предупреждал медика Уолш, а компания записала его как «эвакуированного». Моро пришла в программу под девичьей фамилией, работала в комнате анкет напротив кабинета Коула и добыла папку A-24. Около 08:44 Коул начал спускаться к узлу связи, и на площадке случилась короткая борьба: лист интервью Харта при этом разорвался. Ограждение не выдержало, потому что плиту так и не поменяли. Моро ушла к медику по верхнему коридору, а Уолш не записала её приход в журнал.\n\n**Подозреваемые сейчас:** Моро 55%, несчастный случай 20%, Рид 12%, Силва 5%, Харт 4%, Уолш, Миллер и Сато вместе 4%.\n\n**Что не доказано.** Неизвестно, как Моро попала в запертый кабинет: аварийный дубликат ключа висел на поясе у Коула. И по материалам нельзя отличить толчок от падения во время ссоры.\n\n**Отправлено:** нажал «Решить дело», чтобы увидеть пункты формы заключения. Ещё запросил в Mailbridge содержимое ящика Рид, чтобы прояснить её утечки по маршруту 14. Экспорт придёт зашифрованным, пароль известен только владельцу; попробую варианты с кличкой её собаки, Тоффи.",
+  "ttft_ms": 2118,
+  "type": "result",
+  "duration_ms": 58670,
+  "uuid": "30ebec95-c3e3-4828-a603-f38029daecf8",
+  "ttft_stream_ms": 1138,
+  "time_to_request_ms": 161,
+  "time_to_request_phases_ms": {
+    "other": 23,
+    "system_prompt": 5,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 55,
+    "input_hooks": 4,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 2,
+    "init_message": 7,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 13,
+    "message_normalization": 14,
+    "client_creation": 7,
+    "request_build": 16
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 110,
+  "time_to_request_cpu_ms": 179,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 221,
+  "process_anon_mib_turn_start": 126,
+  "process_rss_mib_result": 228,
+  "process_anon_mib_result": 126,
+  "process_peak_rss_mib": 228,
+  "process_cpu_ms_turn": 2268,
+  "process_wall_ms_turn": 58669,
+  "process_cpu_ms_streaming": 1334,
+  "process_wall_ms_streaming": 47020,
+  "main_stream_count": 4,
+  "main_stream_event_count": 689,
+  "main_stream_chunk_count": 528,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 31,
+    "cpu_ms": 61,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1138,
+  "time_to_request_from_spawn_ms": 1123508,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793092090869.657,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

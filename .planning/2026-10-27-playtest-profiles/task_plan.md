@@ -4,10 +4,10 @@
 Предложить Артему набор профилей игроков (действующие 7 и новые) с описанием, как играет каждый, что проверяет в БУНКЕРЕ и какая модель; после его выбора — дописать профили и запустить прогоны только по его слову.
 
 ## Next Step
-Запустить пять прогонов первой волны (по 2–3 параллельно), затем отчёт.
+Запустить detective-auditor по synthesis.md (проблемные места C1–C5, C9, C10, D1, D2, S1, S2, S5, S6), затем итог Артему и PR.
 
 ## Current Phase
-Phase 4
+Phase 5
 
 ## Phases
 
@@ -30,18 +30,19 @@ Phase 4
 - **Status:** complete
 
 ### Phase 4: Прогоны первой волны
-- [ ] experienced (opus, --budget-usd 4, --max-total-usd 15)
-- [ ] speedrunner (opus, 4 / 15)
-- [ ] casual (sonnet, 3 / 10)
-- [ ] skeptic (opus, 4 / 15)
-- [ ] completionist (sonnet, 3 / 12)
-- **Status:** in_progress
+- [x] experienced-d34e (opus, 4 / 15): 8 раундов, 17,57 USD, нет ФИНАЛА (потолок; РЕШИТЬ в р.8) — один доп. раунд ждёт решения Артема (карточка)
+- [x] speedrunner-72da (opus, 4 / 15): ФИНАЛ р.5, верен (Лея 70 %), 8,54 USD
+- [x] casual-dc8b (sonnet, 3 / 10): ФИНАЛ р.8, неверен (Ник 65 %), 4,11 USD
+- [x] skeptic-49e0 (opus, 4 / 15): ФИНАЛ р.6, верен (Лея 55 %), 13,47 USD
+- [x] completionist-2690 (sonnet, 3 / 12): ФИНАЛ р.6, виновный не назван, 6,66 USD
+- **Status:** complete
 
 ### Phase 5: Отчёт
-- [ ] metrics + compare, REPORT по профилям и сводный, feedback-triage, detective-auditor по проблемам
+- [x] metrics + compare, feedback по 5 профилям, synthesis.md, REPORT.md (playtest/runs/2026-10-27-v1-2026-10-26-wave1/)
+- [ ] detective-auditor по проблемным местам → AUDIT.md рядом с REPORT
 - [ ] Отчёт Артему; правки — только по его решению
 - [ ] Коммит прогонов, PR
-- **Status:** pending
+- **Status:** in_progress
 
 ## Decisions Made
 | Decision | Rationale |

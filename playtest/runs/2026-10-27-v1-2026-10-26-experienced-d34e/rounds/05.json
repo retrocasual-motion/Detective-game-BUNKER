@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 461365,
+  "stop_reason": "end_turn",
+  "session_id": "f0b8bf43-68c2-4da3-a712-e62b05262f39",
+  "total_cost_usd": 2.367796,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 5039,
+    "cache_read_input_tokens": 353832,
+    "output_tokens": 2608,
+    "output_tokens_details": {
+      "thinking_tokens": 434
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 5039,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 710,
+        "cache_read_input_tokens": 119558,
+        "cache_creation_input_tokens": 1838,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1838
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 267,
+      "thinkingTokens": 246,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000258,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 80,
+      "outputTokens": 46200,
+      "thinkingTokens": 19007,
+      "cacheReadInputTokens": 2489130,
+      "cacheCreationInputTokens": 118174,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 118174,
+      "webSearchRequests": 0,
+      "costUSD": 2.367538,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 был коротким: новых улик почти нет, всё упирается в почту Рид.\n\n**Что пришло:**\n- **Почта Рид.** Mailbridge прислал выгрузку ящика `e.reed.uk@mailbridge.net` за 01.08–16.11.2009. Она зашифрована паролем владельца, сбрасывать его Mailbridge не стал.\n- **The Signal.** Главный редактор — Фрэнк Бейкер, С. Грей — внештатный автор. В книге Сато есть надпись «С. — проверяй источники. Фрэнк». Поэтому я предполагаю, что Сато пишет под именем С. Грей. Это мой вывод, доказательства пока нет.\n- **Отказы.** VAULTLINE дважды отклонила запросы: нужно точное название документа, а какое именно — не сказано. Газетный архив за три даты октября 2008 года тоже ничего не дал: эти номера не оцифрованы. Всего пустых дат уже шесть, до лимита осталось четыре, так что эту линию я бросаю. Номер клиники не обслуживается.\n\n**Действия на этот раунд:**\n- **Пароль ящика.** Ввожу три варианта: `Тоффи`, `Toffee` и `toffee`. Это кличка первой собаки Рид: она сама рассказывала о ней на записи диктофона, у неё в ежедневнике фото «Йоркшир, 1978», а Сато в блокноте пыталась выяснить именно её «первого питомца».\n- **Письмо в The Signal.** Спрашиваю, выходили ли у С. Грей статьи о VAULTLINE и HEXON BIO после ноября 2008 года, и прошу подтвердить, что С. Грей — это Сато.\n\nПодозреваемые и версия не изменились: главная подозреваемая — Рид (35%), уверенность в версии — 35%. Почта Рид должна показать, кому она отправляла данные испытаний и что было между ней и Коулом утром 13.10. Сейчас это главный недостающий кусок.",
+  "ttft_ms": 1586,
+  "type": "result",
+  "duration_ms": 27061,
+  "uuid": "970719a9-6127-47f6-b334-282600b26c10",
+  "ttft_stream_ms": 1110,
+  "time_to_request_ms": 215,
+  "time_to_request_phases_ms": {
+    "other": 36,
+    "system_prompt": 5,
+    "resume_other": 0,
+    "process_user_input": 7,
+    "input_attachments": 46,
+    "input_hooks": 4,
+    "transcript_persist": 3,
+    "tool_pool_refresh": 3,
+    "init_message": 24,
+    "engine_pickup": 2,
+    "message_prep": 2,
+    "model_config_wait": 2,
+    "autocompact": 4,
+    "query_setup": 1,
+    "model_gates": 1,
+    "tool_schema_build": 23,
+    "message_normalization": 22,
+    "client_creation": 10,
+    "request_build": 20
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 113,
+  "time_to_request_cpu_ms": 230,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 210,
+  "process_anon_mib_turn_start": 116,
+  "process_rss_mib_result": 223,
+  "process_anon_mib_result": 122,
+  "process_peak_rss_mib": 228,
+  "process_cpu_ms_turn": 1758,
+  "process_wall_ms_turn": 27060,
+  "process_cpu_ms_streaming": 804,
+  "process_wall_ms_streaming": 17276,
+  "main_stream_count": 3,
+  "main_stream_event_count": 372,
+  "main_stream_chunk_count": 239,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 30,
+    "cpu_ms": 51,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 1111,
+  "time_to_request_from_spawn_ms": 677417,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793091644673.4607,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 285712,
+  "stop_reason": "end_turn",
+  "session_id": "f0b8bf43-68c2-4da3-a712-e62b05262f39",
+  "total_cost_usd": 1.4633842,
+  "usage": {
+    "input_tokens": 14,
+    "cache_creation_input_tokens": 19922,
+    "cache_read_input_tokens": 521458,
+    "output_tokens": 11503,
+    "output_tokens_details": {
+      "thinking_tokens": 5807
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 19922,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1137,
+        "cache_read_input_tokens": 83706,
+        "cache_creation_input_tokens": 3159,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3159
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 267,
+      "thinkingTokens": 246,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000258,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 54,
+      "outputTokens": 28181,
+      "thinkingTokens": 12422,
+      "cacheReadInputTokens": 1150731,
+      "cacheCreationInputTokens": 83643,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 83643,
+      "webSearchRequests": 0,
+      "costUSD": 1.4631262,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 13,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 2 закончен. Кто был с Коулом на площадке, пока не установлено, но журналы сервера заметно сузили круг подозреваемых.\n\n**Что дали ответы архива:**\n- **Харт почти исключён.** Радиопост подтвердил сводку в 08:44:35 по часам сервера, а Коул упал около 08:45:10. Часы регистратора спешат примерно на 3,5 минуты, поэтому падение в 08:48:42 по регистратору — это 08:45:10 по серверу. От поста до площадки около 120 м, за 35 секунд их не пройти. Лист с его интервью он подобрал уже у тела.\n- **Рид теперь главная подозреваемая.** Трижды, 4, 8 и 12 октября, она отправляла выгрузки по маршруту 14. Это не офис: офис — маршрут 01. Утром 13.10 Коул с 08:00 до 08:41 просматривал её сеанс и дважды менял параметры её учётной записи. На допросе Рид сама сказала: «Не знала, что он что-то нашёл». Она разослала сводку в 08:43:10, а от её кабинета до площадки около 55 м.\n- **Тревога 12.10 была постановкой Коула и Рид.** В голосовом сообщении сестре от 08.10 Силва пересказывает подслушанный разговор: запись, учения, «день объявления», «медик и инженер не должны знать».\n- **Силву Коул обманул.** Заявку на досрочную выплату Коул в офис не передал: она стоит как «отложено администратором». При этом Силве он сказал, что передаст. Деньги на операцию сестры нужны были до 14.10. Кухня подтвердила сводку в 08:43:30, а у тела Силва появился только около 08:48. Эти 4,5 минуты пока не объяснены.\n- **Новую плиту Миллер поставил на общую западную лестницу.** На фото «после» виден трафарет «ОБЩ. ЛЕСТН. · ЗАПАД». Восточное ограждение держалось только на временном хомуте.\n- **Защищённый режим включил сам офис в 09:24:51,** уже после звонка медика. Внешний сигнал пришёл позже, в 10:40.\n\n**Подозреваемые:**\n\n| Кто | % |\n|---|---|\n| Рид | 30 |\n| Несчастный случай / другое | 20 |\n| Моро | 18 |\n| Силва | 17 |\n| Миллер | 7 |\n| Уолш | 5 |\n| Харт | 3 |\n\nУверенность в версии — 30%.\n\n**Записал 12 действий на этот раунд:**\n- запросы в бюро на материалы сеансов пользователей 05 (Рид), 01 и 04;\n- запрос в компанию на договоры и акты объекта по программе VL-31;\n- сайты hexon-bio.com и fieldworks-radio.com: ищу «наш первый знак» для графического ключа ноутбука;\n- справки NorthCare по партиям 0417 и 0418;\n- статус заказа плиты CS-2291 у поставщика;\n- номер газеты за 07.10.2008, чтобы проверить связь Тома Бернара с прошлым заездом;\n- листание папок A-11…A-31 из кабинета руководителя и бумаг координатора.",
+  "ttft_ms": 1658,
+  "type": "result",
+  "duration_ms": 117176,
+  "uuid": "45de978d-b56a-4c81-bf2d-fa107abc8664",
+  "ttft_stream_ms": 1182,
+  "time_to_request_ms": 209,
+  "time_to_request_phases_ms": {
+    "other": 24,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 24,
+    "input_hooks": 5,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 3,
+    "init_message": 19,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 30,
+    "autocompact": 3,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 25,
+    "message_normalization": 18,
+    "client_creation": 22,
+    "request_build": 23
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 158,
+  "time_to_request_cpu_ms": 227,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 232,
+  "process_anon_mib_turn_start": 137,
+  "process_rss_mib_result": 231,
+  "process_anon_mib_result": 129,
+  "process_peak_rss_mib": 238,
+  "process_cpu_ms_turn": 3445,
+  "process_wall_ms_turn": 117175,
+  "process_cpu_ms_streaming": 2132,
+  "process_wall_ms_streaming": 102582,
+  "main_stream_count": 7,
+  "main_stream_event_count": 1029,
+  "main_stream_chunk_count": 831,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 15,
+    "cpu_ms": 27,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 1183,
+  "time_to_request_from_spawn_ms": 395797,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793091363301.485,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

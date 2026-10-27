@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 620943,
+  "stop_reason": "end_turn",
+  "session_id": "3b6cb914-e0d4-42c9-9d97-66ae22c0a59f",
+  "total_cost_usd": 1.4672033000000002,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 12996,
+    "cache_read_input_tokens": 545386,
+    "output_tokens": 9795,
+    "output_tokens_details": {
+      "thinking_tokens": 6120
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 12996,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 988,
+        "cache_read_input_tokens": 138190,
+        "cache_creation_input_tokens": 8519,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 8519
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 256,
+      "thinkingTokens": 235,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002525,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 60,
+      "outputTokens": 67126,
+      "thinkingTokens": 39230,
+      "cacheReadInputTokens": 2214868,
+      "cacheCreationInputTokens": 143521,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 143521,
+      "webSearchRequests": 0,
+      "costUSD": 1.4669508000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 разобран. Новое в раунде почти ничего не дало по главному вопросу: кто стоял на площадке, по-прежнему неизвестно.\n\n**Что пришло**\n- **Блокнот Моро (увеличение).** На странице 14 на листке на двери крупно «РЕЖИМ ТРЕВОГИ». Значит, она рисовала в комнате анкет во время тревоги. Страница 15 оборвана.\n- **Половины листа с интервью Харта.** Лист с площадки чистый, обгоревший лист у Харта подписан «…арт». Нового это не дало.\n- **Свойства диктофона.** Запись тревоги REC007 сделана 12.10 в 21:47. Значит, ручка Сато была включена при тревоге, а Коул изъял её позже.\n- **Форма заключения.** В ней пять пунктов:\n  1. Что произошло с Коулом и кто действовал (если кто-то действовал).\n  2. Был ли умысел.\n  3. Роль дефекта ограждения.\n  4. Почему группу не выпустили.\n  5. Что за программа и кто её проводил.\n\n**Что я уточнил по времени и расстояниям.** Часы регистратора спешат на 3:33. Падение было около 08:45:09 по серверу.\n- **Харт** в 08:44:35 подтверждал сводку с радиопоста. До площадки оттуда около 122 м, так что в 08:44:53 он быть там не мог.\n- **Уолш и Сато** были вместе в медкабинете.\n- **Силва, Рид и Миллер** до площадки теоретически дойти могли.\n- **Моро** никто не подтверждает.\n\n**Рабочий черновик заключения**\n- Пункт 1: Коул упал с площадки вместе с угловой стойкой; участие третьего лица не доказано.\n- Пункт 2: умысел доказать нельзя.\n- Пункт 3: Миллер отчитался о замене плиты, которой не было (Colton Supply её не доставил), а Коул отклонил закрытие лестницы.\n- Пункт 4: защищённый режим включил офис в 09:24:51. Хейл погиб на шоссе, и снять режим стало некому.\n- Пункт 5: это испытание комплекса на добровольцах, которое HEXON BIO проводил через VAULTLINE, с погибшим A-24 в 2008 году.\n\nПодозреваемые (мои оценки): несчастный случай 30%, Моро 18%, Рид 17%, Силва 12%, Миллер 8%, Харт 5%. Уверенность в версии около 55%.\n\nВ `actions.md` записал три осмотра свойств: кадры камеры инженера, запись радиопоста и блокнот Моро. Если они ничего не добавят, отправлю ФИНАЛ по этому черновику. Раздел «Раунд 5» дописан в `journal.md`.",
+  "ttft_ms": 1927,
+  "type": "result",
+  "duration_ms": 131655,
+  "uuid": "0880607d-4c3e-490c-bdaf-7ab075e5d520",
+  "ttft_stream_ms": 1564,
+  "time_to_request_ms": 269,
+  "time_to_request_phases_ms": {
+    "other": 36,
+    "system_prompt": 5,
+    "resume_other": 0,
+    "process_user_input": 7,
+    "input_attachments": 76,
+    "input_hooks": 5,
+    "transcript_persist": 3,
+    "tool_pool_refresh": 4,
+    "init_message": 13,
+    "engine_pickup": 2,
+    "message_prep": 2,
+    "model_config_wait": 28,
+    "autocompact": 5,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 24,
+    "message_normalization": 24,
+    "client_creation": 11,
+    "request_build": 23
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 136,
+  "time_to_request_cpu_ms": 290,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 226,
+  "process_anon_mib_turn_start": 131,
+  "process_rss_mib_result": 219,
+  "process_anon_mib_result": 117,
+  "process_peak_rss_mib": 231,
+  "process_cpu_ms_turn": 2479,
+  "process_wall_ms_turn": 131654,
+  "process_cpu_ms_streaming": 1348,
+  "process_wall_ms_streaming": 116754,
+  "main_stream_count": 4,
+  "main_stream_event_count": 767,
+  "main_stream_chunk_count": 134,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 47,
+    "cpu_ms": 86,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1565,
+  "time_to_request_from_spawn_ms": 1258930,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793092226372.12,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

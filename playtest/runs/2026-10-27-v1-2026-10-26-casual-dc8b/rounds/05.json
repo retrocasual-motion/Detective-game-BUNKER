@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 168441,
+  "stop_reason": "end_turn",
+  "session_id": "d8b6a73c-3455-4794-a866-785046800857",
+  "total_cost_usd": 0.5288256000000001,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 3838,
+    "cache_read_input_tokens": 189398,
+    "output_tokens": 1798,
+    "output_tokens_details": {
+      "thinking_tokens": 299
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3838,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 476,
+        "cache_read_input_tokens": 64532,
+        "cache_creation_input_tokens": 1346,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1346
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 311,
+      "thinkingTokens": 290,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00028000000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 54,
+      "outputTokens": 17516,
+      "thinkingTokens": 3856,
+      "cacheReadInputTokens": 1025176,
+      "cacheCreationInputTokens": 62690,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 62690,
+      "webSearchRequests": 0,
+      "costUSD": 0.5285456000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "В раунде 5 нашёл подсказку к ключу ноутбука Коула и ввёл его в `actions.md`.\n\nНа сайте HEXON BIO в архиве есть вводный ролик до 2009 года, где рисуется прежний знак. Он начинается из центра, идёт в левый верхний угол, потом вправо по верхнему краю, вниз по правому, влево по нижнему и вверх по левому до середины. Подсказка на экране входа была «наш первый знак», так что это, по-моему, он. По сетке 3×3 из вводной получается ключ 5-1-3-9-7-4, и он совпадает с картинкой на экране входа ноутбука (прямой угол: горизонталь влево, вертикаль вниз). Это мой вывод, а не факт из материалов.\n\nНа сайте `vaultline-program.com` нашёл правила запросов в компанию: адрес `documents@vaultline-program.com`, в запросе нужны номер дела, точное наименование документа и номер программы. Какие именно документы просить, пока не знаю. Подожду, что окажется в ноутбуке.\n\nПодозреваемые и уверенность в версии прежние: Харт около 40%, Рид около 20%, версия 40%. Журнал дополнен разделом «Раунд 5».\n\nДействие на этот раунд: `ПАРОЛЬ | ноутбук | 5-1-3-9-7-4`.",
+  "ttft_ms": 2383,
+  "type": "result",
+  "duration_ms": 19190,
+  "uuid": "50fa9190-b133-4468-ad50-38f331f5021a",
+  "ttft_stream_ms": 1557,
+  "time_to_request_ms": 206,
+  "time_to_request_phases_ms": {
+    "other": 24,
+    "system_prompt": 3,
+    "resume_other": 1,
+    "process_user_input": 6,
+    "input_attachments": 69,
+    "input_hooks": 4,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 4,
+    "init_message": 20,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 16,
+    "message_normalization": 12,
+    "client_creation": 21,
+    "request_build": 16
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 83,
+  "time_to_request_cpu_ms": 225,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 229,
+  "process_anon_mib_turn_start": 135,
+  "process_rss_mib_result": 220,
+  "process_anon_mib_result": 121,
+  "process_peak_rss_mib": 235,
+  "process_cpu_ms_turn": 1356,
+  "process_wall_ms_turn": 19189,
+  "process_cpu_ms_streaming": 422,
+  "process_wall_ms_streaming": 7891,
+  "main_stream_count": 3,
+  "main_stream_event_count": 261,
+  "main_stream_chunk_count": 32,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 58,
+    "cpu_ms": 84,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1557,
+  "time_to_request_from_spawn_ms": 394449,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793091362077.693,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

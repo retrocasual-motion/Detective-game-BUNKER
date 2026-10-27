@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 658237,
+  "stop_reason": "end_turn",
+  "session_id": "3b6cb914-e0d4-42c9-9d97-66ae22c0a59f",
+  "total_cost_usd": 1.5711509000000003,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 5418,
+    "cache_read_input_tokens": 444036,
+    "output_tokens": 3786,
+    "output_tokens_details": {
+      "thinking_tokens": 232
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 5418,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 778,
+        "cache_read_input_tokens": 149161,
+        "cache_creation_input_tokens": 2966,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2966
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 256,
+      "thinkingTokens": 235,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002525,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 66,
+      "outputTokens": 70912,
+      "thinkingTokens": 39462,
+      "cacheReadInputTokens": 2658904,
+      "cacheCreationInputTokens": 148939,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 148939,
+      "webSearchRequests": 0,
+      "costUSD": 1.5708984000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Заключение отправлено: в `actions.md` записан `ФИНАЛ | заключение | см. журнал`, полный текст — в `journal.md` в разделах «Раунд 6» и «Заключение». Дело я до конца не раскрыл: на вопрос, кто действовал, ответить не смог.\n\nМатериалы раунда 6 (свойства кадров камеры и записи радиопоста) ничего не изменили. Других путей у меня не осталось: приложения 54–55 бюро не запрашивало или не изымало, а VAULTLINE на мои запросы по маршруту 14 и протоколу этапа C ответил отказом из-за точных наименований.\n\n**По пунктам заключения**\n1. **Что произошло.** Коул упал с верхней площадки вместе с угловой стойкой около 08:45:09 по часам сервера. Была ли борьба с другим человеком, установить нельзя. Харта, Уолш и Сато я исключил по журналам сервера и плану. Моро, Рид, Силву и Миллера по времени исключить нельзя. Харт после падения забрал и частично сжёг нижнюю половину своего интервью.\n2. **Умысел.** Не установлен. Эксперт признаков умышленного повреждения крепления не нашёл.\n3. **Дефект ограждения.** Он сыграл решающую роль. Трещина плиты старая. Коул отклонил закрытие лестницы, а Миллер отчитался о замене, которой не было: Colton Supply плиту не доставил.\n4. **Почему группу не выпустили.** Защищённый режим включил офис в 09:24:51, после звонка Уолш о гибели Коула. Хейл погиб на шоссе, и снять режим стало некому.\n5. **Программа.** Это испытание «комплекса для изоляции» на добровольцах, которое HEXON BIO проводил через VAULTLINE. В этапе A (2008) участник A-24, Томас Бернар, умер от реакции на соевую основу, и его смерть скрыли. Ложную тревогу 12.10 инсценировали Коул и Рид.\n\nЛея Моро — вероятно вдова Бернара: она преподаёт рисование, как и его жена, и спрятала папку A-24. Прямого документа об этом нет — это мой вывод.",
+  "ttft_ms": 3018,
+  "type": "result",
+  "duration_ms": 42045,
+  "uuid": "4c5a2123-6a18-4067-9eda-a69f24fc8d87",
+  "ttft_stream_ms": 1921,
+  "time_to_request_ms": 226,
+  "time_to_request_phases_ms": {
+    "other": 23,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 48,
+    "input_attachments": 55,
+    "input_hooks": 4,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 3,
+    "init_message": 8,
+    "engine_pickup": 2,
+    "message_prep": 3,
+    "model_config_wait": 2,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 13,
+    "message_normalization": 15,
+    "client_creation": 8,
+    "request_build": 34
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 176,
+  "time_to_request_cpu_ms": 344,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 234,
+  "process_anon_mib_turn_start": 141,
+  "process_rss_mib_result": 224,
+  "process_anon_mib_result": 125,
+  "process_peak_rss_mib": 246,
+  "process_cpu_ms_turn": 1838,
+  "process_wall_ms_turn": 42044,
+  "process_cpu_ms_streaming": 723,
+  "process_wall_ms_streaming": 23110,
+  "main_stream_count": 3,
+  "main_stream_event_count": 689,
+  "main_stream_chunk_count": 68,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 44,
+    "cpu_ms": 135,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1921,
+  "time_to_request_from_spawn_ms": 1391900,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793092359652.188,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
