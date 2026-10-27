@@ -36,7 +36,7 @@ rule(id="req-bureau-app7", action="ЗАПРОС", target=BUREAU, target_label="z
      ok="Бюро: «Направляем приложение № 7 — журналы сервера объекта за 13.10.2009. Материалы сеансов пользователей выдаются отдельным запросом, по коду пользователя.»",
      fail=FAIL_BUREAU)
 rule(id="req-bureau-mail", action="ЗАПРОС", target=BUREAU, target_label="zapros@okrug-bureau.org (окружное бюро)",
-     accept=[r"переписк|почт\w*\s+(ящик|сотрудник|координатор|рид)|e-?mail|электронн\w* почт"],
+     accept=[r"переписк|почт\w*\s+(ящик|сотрудник|координатор|пирс)|e-?mail|электронн\w* почт"],
      release=[],
      ok="Бюро: «Личная переписка сотрудников программы следствием не запрашивалась; бюро ею не располагает.»",
      fail=FAIL_BUREAU)
@@ -58,8 +58,8 @@ rule(id="req-vl-contracts", action="ЗАПРОС", target=VL, target_label="docu
 
 MB = r"lawful-requests@mailbridge\.net"
 rule(id="req-mailbridge", action="ЗАПРОС", target=MB, target_label="lawful-requests@mailbridge.net (Mailbridge, запросы органов)",
-     accept=[r"e\.?reed\.?uk@mailbridge\.net"], release=["L452"],
-     ok="Mailbridge прислал ответ с вложением: экспорт ящика e.reed.uk@mailbridge.net (зашифрован).",
+     accept=[r"e\.?pierce\.?uk@mailbridge\.net"], release=["L452"],
+     ok="Mailbridge прислал ответ с вложением: экспорт ящика e.pierce.uk@mailbridge.net (зашифрован).",
      fail="Mailbridge: «Ящик не найден. Укажите номер дела и точный адрес почтового ящика.»")
 
 rule(id="req-pinecell", action="ЗАПРОС", target=r"pinecell", target_label="lawful@pinecell-mobile.com (оператор связи)",
@@ -118,8 +118,8 @@ rule(id="pw-laptop", action="ПАРОЛЬ", target=r"ноутбук|laptop|a\.co
      release=["L560", "L561", "L562", "L563", "L564", "L565"], ok="Ключ принят. Вход выполнен.", fail="Неверный ключ.")
 rule(id="pw-phone", action="ПАРОЛЬ", target=r"телефон|смартфон|phone|\bpin\b|\bпин", target_label="телефон из стола кабинета руководителя: PIN",
      accept=[r"^(0110|1001)$"], release=["L540"], ok="Код принят. Телефон разблокирован.", fail="Неверный код.")
-rule(id="pw-mail", action="ПАРОЛЬ", target=r"экспорт\w* ящик|ящик|почт|mbx|mailbridge|e\.?reed",
-     target_label="экспорт ящика e.reed.uk@mailbridge.net: пароль ящика", accept=[r"^(тоффи|тофи|toffee|toffy|toffi)$"],
+rule(id="pw-mail", action="ПАРОЛЬ", target=r"экспорт\w* ящик|ящик|почт|mbx|mailbridge|e\.?pierce",
+     target_label="экспорт ящика e.pierce.uk@mailbridge.net: пароль ящика", accept=[r"^(тоффи|тофи|toffee|toffy|toffi)$"],
      requires=["L452"], requires_reply="Такого поля ввода в деле нет.",
      release=["L453"], ok="Пароль принят. Экспорт ящика открыт.", fail="Неверный пароль.")
 rule(id="pw-archive", action="ПАРОЛЬ", target=r"^(?!.*(номер|газет|выпуск|вестник)).*архив",
@@ -175,7 +175,7 @@ o("zoom-medoffice", r"^39|фото\w* медкаб|медкабинет\w* фо�
 o("zoom-lea", r"^40|блокнот\w* (л|лея|леи|моро)|моро|вещи л", Z, ["L940"], "Крупный план страниц блокнота Л. Моро.")
 o("zoom-mika", r"^41|блокнот\w* (м|мика|мики|сато)|сато|вещи м", Z, ["L941"], "Крупный план страниц блокнота М. Сато.")
 o("zoom-laptop", r"^47|ноутбук|экран входа|картинк|аватар", Z, ["L947"], "Крупный план экрана входа ноутбука.")
-o("zoom-emma", r"^43|\bрид\b|эмм|девочк|собак|йоркшир", Z, ["L948"], "Крупный план фотографии из вещей Э. Рид.")
+o("zoom-emma", r"^43|\bпирс\b|эмм|девочк|собак|йоркшир", Z, ["L948"], "Крупный план фотографии из вещей Э. Пирс.")
 o("zoom-gabriel", r"^44|силв|габриэл|записк", Z, ["L944"], "Крупный план записки из вещей Г. Силвы.")
 o("zoom-dan", r"^45|миллер|вещи д|дэн", Z, ["L945"], "Крупный план вещей Д. Миллера.")
 o("zoom-kate", r"^46|уолш|вещи к|кейт", Z, ["L946"], "Крупный план вещей К. Уолш.")

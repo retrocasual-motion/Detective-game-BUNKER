@@ -82,7 +82,7 @@
 | HEXON BIO | hexon-bio.com |
 | Fieldworks Radio | fieldworks-radio.com (табличка FR-07-112) |
 | Почтовый провайдер | mailbridge.net; lawful-requests@mailbridge.net |
-| Ящик Эммы | e.reed.uk@mailbridge.net |
+| Ящик Эммы | e.pierce.uk@mailbridge.net |
 | Покупатель | sentinel-labs.net; j.mercer@sentinel-labs.net |
 | The Signal | the-signal-news.com |
 | Газета округа | silverridge-chronicle.com (закладка) |
