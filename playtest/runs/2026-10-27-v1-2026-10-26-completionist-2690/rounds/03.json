@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 386234,
+  "stop_reason": "end_turn",
+  "session_id": "3b6cb914-e0d4-42c9-9d97-66ae22c0a59f",
+  "total_cost_usd": 1.0227519,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 18046,
+    "cache_read_input_tokens": 305775,
+    "output_tokens": 9749,
+    "output_tokens_details": {
+      "thinking_tokens": 4991
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 18046,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1020,
+        "cache_read_input_tokens": 107960,
+        "cache_creation_input_tokens": 8281,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 8281
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 256,
+      "thinkingTokens": 235,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002525,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 44,
+      "outputTokens": 45195,
+      "thinkingTokens": 25504,
+      "cacheReadInputTokens": 1182494,
+      "cacheCreationInputTokens": 113053,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 113053,
+      "webSearchRequests": 0,
+      "costUSD": 1.0224994,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 11,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 3 разобран. В `actions.md` записал действия на следующий раунд, в `journal.md` дописал «Раунд 3». Версия пока не доказана, моя уверенность — около 45%.\n\n**Что выяснилось**\n- **Суть программы.** Это исследование HEXON BIO через VAULTLINE.\n  - В этапе A (2008) участник A-24 умер на 15-й день от реакции на «компонент основы».\n  - В нынешнем этапе C партия 0417 «активная», а 0418 контрольная.\n  - NorthCare не знает партию 0417, значит, она не заводская.\n- **A-24.** Это Томас Бернар, механик, женат на преподавательнице рисования. Лея Моро — преподавательница рисования. Прямого документа, что она его вдова, нет — это мой вывод.\n- **Рид.** С почты e.reed.uk@mailbridge.net она тайно отправляла по маршруту 14 данные всех этапов программы. В 08:02 Коул выгрузил её сеанс, в 08:05 ограничил ей отправку, в 08:41 снял ограничение.\n- **Алиби.**\n  - Харт подтвердил сводку с радиопоста в 08:44:35, а Коул упал около 08:45:10, так что Харт на площадке быть не мог.\n  - Уолш и Сато были вместе до 08:46.\n  - Силве от кухни до площадки около 100 метров по общей лестнице.\n- **Кто мог быть на площадке.**\n  - Моро — рядом, в комнате анкет, но говорит, что сидела в жилом блоке.\n  - Рид после 08:43 нигде не зафиксирована.\n  - Миллер подтвердил сводку из технической в 08:47:20, но дистанция допускает пробежку.\n\n**Версия.** Моро — вдова A-24, вошла в программу, чтобы узнать правду. Она ночью вынесла из кабинета Коула папку A-24. Утром 13.10 она столкнулась с ним у восточной лестницы, и в борьбе у ослабленной угловой стойки Коул упал.\n\n**Подозреваемые (процент — моя оценка)**\n\n| Кто | % |\n|---|---|\n| Моро | 40 |\n| Рид | 17 |\n| Миллер | 10 |\n| Харт | 8 |\n| Офис/Хейл (косвенно: офис включил защищённый режим) | 8 |\n| Несчастный случай | 11 |\n| Остальные | по 3 |\n\n**Что отправил**\n- **Ноутбук:** два варианта графического ключа по старому знаку HEXON (вариант с центральной точкой и без неё). Прежний ключ-арка не подошёл.\n- **Звонок поставщику плиты:** в Colton Supply с номером заказа CS-2291.\n- **Запросы в VAULTLINE:** список маршрутов внешней отправки (маршрут 14), договор с HEXON BIO и протокол исследования по этапу C.",
+  "ttft_ms": 2539,
+  "type": "result",
+  "duration_ms": 85606,
+  "uuid": "011faecc-a696-4d1b-b0f3-addd006fd290",
+  "ttft_stream_ms": 2143,
+  "time_to_request_ms": 192,
+  "time_to_request_phases_ms": {
+    "other": 27,
+    "system_prompt": 5,
+    "resume_other": 1,
+    "process_user_input": 7,
+    "input_attachments": 69,
+    "input_hooks": 6,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 4,
+    "init_message": 12,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 2,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 1,
+    "tool_schema_build": 14,
+    "message_normalization": 11,
+    "client_creation": 8,
+    "request_build": 16
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 79,
+  "time_to_request_cpu_ms": 207,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 219,
+  "process_anon_mib_turn_start": 124,
+  "process_rss_mib_result": 223,
+  "process_anon_mib_result": 122,
+  "process_peak_rss_mib": 225,
+  "process_cpu_ms_turn": 2190,
+  "process_wall_ms_turn": 85605,
+  "process_cpu_ms_streaming": 1123,
+  "process_wall_ms_streaming": 67308,
+  "main_stream_count": 3,
+  "main_stream_event_count": 906,
+  "main_stream_chunk_count": 105,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 48,
+    "cpu_ms": 79,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2144,
+  "time_to_request_from_spawn_ms": 1056940,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793092024363.8875,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

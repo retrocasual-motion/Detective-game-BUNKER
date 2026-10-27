@@ -1,0 +1,167 @@
+{
+  "duration_api_ms": 179269,
+  "stop_reason": "end_turn",
+  "session_id": "3b6cb914-e0d4-42c9-9d97-66ae22c0a59f",
+  "total_cost_usd": 0.5144047,
+  "usage": {
+    "input_tokens": 26,
+    "cache_creation_input_tokens": 67925,
+    "cache_read_input_tokens": 387802,
+    "output_tokens": 20362,
+    "output_tokens_details": {
+      "thinking_tokens": 11579
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 67925,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 654,
+        "cache_read_input_tokens": 67197,
+        "cache_creation_input_tokens": 3916,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3916
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 256,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002525,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 235,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 26,
+      "outputTokens": 20362,
+      "cacheReadInputTokens": 387802,
+      "cacheCreationInputTokens": 67925,
+      "webSearchRequests": 0,
+      "costUSD": 0.5141522000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 11579,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 67925,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 60,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Я прочитал все материалы дела. В `actions.md` записал действия первого раунда, в `journal.md` — раздел «Раунд 1». Ответов архива пока нет.\n\nЧто я запросил:\n- **Осмотры:** листать все девять пачек документации (П-01…П-09), увеличить картинку учётной записи на ноутбуке руководителя и коробки комплекса для изоляции на фото медкабинета.\n- **Запрос бюро:** приложение № 7 — выгрузка журналов сервера объекта за 13.10.2009.\n- **Браузер:** vaultline-program.com.\n- **Звонок:** +7 800 555-31-20 — горячая линия NorthCare по партиям комплекса.\n- **Пароль:** PIN телефона 1001. Это моё предположение: телефон, похоже, принадлежит Силве, а день рождения его сестры Аны — день заезда, 01.10.\n\nПредварительная версия: на верхней площадке была борьба из-за листа с психологическим интервью Харта. Угловая стойка не выдержала боковой нагрузки, и Коул упал. Главный подозреваемый — Харт (около 35%), но уверенность в версии пока около 20%.\n\nОснования для этой версии:\n- Коул шантажировал Харта: на записи радиопоста в 07:37 он говорит, что не хочет, чтобы «миссис Колдер об этом узнала».\n- Верхняя половина интервью Харта лежала на площадке, а обгоревшая нижняя была у него в кармане.\n- Показания Моро и Харта расходятся с записью радиопоста и с показаниями других.\n\nЧасы регистратора радиопоста, по моему выводу, спешат примерно на три минуты. Поэтому удар на записи в 08:48:42 — это реально около 08:45.\n\nОтчёт инженера о замене плиты не сходится с осмотром: на месте была старая плита с временным креплением.",
+  "ttft_ms": 1884,
+  "type": "result",
+  "duration_ms": 180926,
+  "uuid": "2c6db8c1-0757-42fa-8746-fa1d57d05bdd",
+  "ttft_stream_ms": 1196,
+  "time_to_request_ms": 343,
+  "time_to_request_phases_ms": {
+    "other": 54,
+    "system_prompt": 2,
+    "resume_other": 1,
+    "process_user_input": 11,
+    "input_attachments": 68,
+    "input_hooks": 6,
+    "transcript_persist": 26,
+    "tool_pool_refresh": 5,
+    "init_message": 13,
+    "engine_pickup": 2,
+    "message_prep": 2,
+    "model_config_wait": 112,
+    "autocompact": 4,
+    "query_setup": 1,
+    "model_gates": 1,
+    "tool_schema_build": 16,
+    "message_normalization": 3,
+    "client_creation": 5,
+    "request_build": 11
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 110,
+  "time_to_request_cpu_ms": 383,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 228,
+  "process_anon_mib_turn_start": 133,
+  "process_rss_mib_result": 221,
+  "process_anon_mib_result": 120,
+  "process_peak_rss_mib": 231,
+  "process_cpu_ms_turn": 5252,
+  "process_wall_ms_turn": 180925,
+  "process_cpu_ms_streaming": 3140,
+  "process_wall_ms_streaming": 141093,
+  "main_stream_count": 13,
+  "main_stream_event_count": 1503,
+  "main_stream_chunk_count": 271,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 16,
+    "cpu_ms": 70,
+    "major_faults": 0
+  },
+  "first_content_frame_ms": 1196,
+  "time_to_request_from_spawn_ms": 740697,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793091707961.1736,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

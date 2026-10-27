@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 520717,
+  "stop_reason": "end_turn",
+  "session_id": "0e4ec851-7042-49e3-9c50-d100ba5e4e29",
+  "total_cost_usd": 2.3048916999999998,
+  "usage": {
+    "input_tokens": 18,
+    "cache_creation_input_tokens": 27772,
+    "cache_read_input_tokens": 949326,
+    "output_tokens": 12700,
+    "output_tokens_details": {
+      "thinking_tokens": 5935
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 27772,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1393,
+        "cache_read_input_tokens": 117936,
+        "cache_creation_input_tokens": 3255,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3255
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 264,
+      "thinkingTokens": 243,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002565,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 70,
+      "outputTokens": 46890,
+      "thinkingTokens": 23258,
+      "cacheReadInputTokens": 2114016,
+      "cacheCreationInputTokens": 117969,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 117969,
+      "webSearchRequests": 0,
+      "costUSD": 2.3046352,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 22,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 3 закончен. Устройство программы теперь ясно. Кто был с Коулом на площадке, по-прежнему не доказано: всё держится на косвенных признаках. Уверенность в версии — 40%.\n\n**Что выяснилось:**\n- **Тревога 12.10 была инсценировкой.** В ноутбуке Коула лежат три дубля «внешнего сообщения», записанные 15.09. Голос — Рид, мужской басовитый голос её поправляет. Значит, Рид солгала, что голос не узнала. Силва подслушал её разговор с Коулом про «запись» и «день объявления» и рассказал об этом сестре в голосовом сообщении.\n- **Программа — скрытое испытание HEXON BIO.** В выгрузках, которые Рид отправляла по маршруту 14, партия 0417 названа «активной», 0418 — «контролем». Её получали Харт, Моро и Силва.\n- **В 2008 году участник A-24 умер, и это скрыли.** В данных этапа A записано: «реакция на компонент основы, летальный исход». В справке о выбытии от 06.10.2008 — «состояние стабильное, эвакуирован». Есть копия записки A-24 об аллергии на сою с пометкой «К.У.», то есть Уолш знала об аллергии. Том Бернар из газеты умер в тот же день, но что он и есть A-24, не подтверждено.\n- **Папку A-24 украли и спрятали в комнате анкет.** Она нашлась среди чистых бланков, а на копии записки — графитовая пыль. В этой комнате каждый день работает Моро и рисует мягкими карандашами. Медицинский бланк из этой папки был в клапане папки Коула, когда он упал.\n- **Рид, вероятно, забрала из папки Коула улику против себя.** В 08:06 Коул распечатал выписку по её учётной записи, а в черновике доклада записал: «Выписка — у меня». В описи папки этой выписки нет, а папку с тела взяла Рид.\n- **С ключом Рид не виновата.** Аварийный дубликат висел на поясе у самого Коула, Рид сняла оба ключа с тела. Подозрение по ключу снимаю.\n- **Коул, похоже, присваивал деньги.** Он списывал наличными «работы Fieldworks Radio 2009», хотя компания закрылась в 2007-м. Ещё в 2008-м записана наличная «премия инженеру, этап A».\n- **Лязг в 09:28 по регистратору объяснился.** Это включение защищённого режима: время по серверу совпадает до секунды.\n\n**Подозреваемые сейчас:**\n\n| Кто | % | Главное |\n|---|---|---|\n| Моро | 35 | папка A-24 в её комнате, неправда о маршруте, пришла к медику с востока сразу после удара |\n| Несчастный случай / другое | 21 | ограждение было неисправно, «возня» могла быть самим падением |\n| Рид | 20 | Коул утром раскрыл её утечку; успевала дойти до площадки |\n| Силва | 8 | мотив сильный, но к телу пришёл снизу через 3 минуты |\n| Харт | 7 | мотив есть, но радиопост подтвердил сводку за 27 секунд до удара |\n| Остальные | 9 | алиби по терминалам и показаниям |\n\nГлавная нестыковка: зачем Коул в 08:41 снял ограничение с учётной записи Рид, если только что поймал её на утечке?\n\n**Отправлено в этом раунде:**\n- Запрос в VAULTLINE на анкету участника A-24, чтобы узнать, кто он.\n- Крупный план страниц 14–16 блокнота Моро и сравнение рисунка бородатого мужчины с фото A-24.\n- Файл отбора Моро в ноутбуке.\n- Звонок в NorthCare про партию 0417.\n- Сайты the-signal-news.com и mailbridge.net.\n- Номера газеты за 10.10 и 13.10.2008.",
+  "ttft_ms": 1789,
+  "type": "result",
+  "duration_ms": 183526,
+  "uuid": "1eb5073e-7e33-4cb5-836f-33e5b67fee75",
+  "ttft_stream_ms": 1255,
+  "time_to_request_ms": 211,
+  "time_to_request_phases_ms": {
+    "other": 28,
+    "system_prompt": 4,
+    "resume_other": 0,
+    "process_user_input": 7,
+    "input_attachments": 66,
+    "input_hooks": 6,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 4,
+    "init_message": 13,
+    "engine_pickup": 2,
+    "message_prep": 2,
+    "model_config_wait": 1,
+    "autocompact": 4,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 19,
+    "message_normalization": 16,
+    "client_creation": 18,
+    "request_build": 18
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 160,
+  "time_to_request_cpu_ms": 226,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 222,
+  "process_anon_mib_turn_start": 127,
+  "process_rss_mib_result": 217,
+  "process_anon_mib_result": 115,
+  "process_peak_rss_mib": 228,
+  "process_cpu_ms_turn": 4840,
+  "process_wall_ms_turn": 183525,
+  "process_cpu_ms_streaming": 3177,
+  "process_wall_ms_streaming": 164295,
+  "main_stream_count": 9,
+  "main_stream_event_count": 1255,
+  "main_stream_chunk_count": 975,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 39,
+    "cpu_ms": 75,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1256,
+  "time_to_request_from_spawn_ms": 938161,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793091905529.821,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

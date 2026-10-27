@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 271885,
+  "stop_reason": "end_turn",
+  "session_id": "d8b6a73c-3455-4794-a866-785046800857",
+  "total_cost_usd": 0.7772972,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 18682,
+    "cache_read_input_tokens": 370101,
+    "output_tokens": 9535,
+    "output_tokens_details": {
+      "thinking_tokens": 5833
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 18682,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 795,
+        "cache_read_input_tokens": 82348,
+        "cache_creation_input_tokens": 4389,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 4389
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 311,
+      "thinkingTokens": 290,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00028000000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 70,
+      "outputTokens": 28319,
+      "thinkingTokens": 9882,
+      "cacheReadInputTokens": 1594912,
+      "cacheCreationInputTokens": 83549,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 83549,
+      "webSearchRequests": 0,
+      "costUSD": 0.7770172000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 16,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Ноутбук Коула открылся ключом 5-1-2-3-6-9-8-7-4. Версия сложилась, и в `actions.md` я нажал «Решить дело», чтобы увидеть форму заключения.\n\nГлавное из ноутбука и остальных материалов:\n- **Шантаж Харта:** в 1998 году в Германии Харт разбил машину пьяным. Погиб сослуживец Колдер, а Харт сказал, что за рулём был тот. Об этом он рассказал психологу при отборе, интервью лежит на ноутбуке. Миссис Колдер из фразы на записи поста — мать погибшего. Коул шантажировал Харта этим в 07:37.\n- **Половины листа:** нижняя часть интервью с признанием обгорела и лежала у Харта. Верхняя, без признания, осталась на площадке. Похоже, страницу разорвали, а опасную половину унесли.\n- **Путь Харта:** с радиопоста на верхний уровень можно пройти по кольцу коридоров через общую лестницу. Восточную лестницу при этом проходить не нужно, и регистратор её не слышит. Алиби на 08:44–08:50 у Харта нет.\n- **Мошенничество Коула:** в расходах четыре наличные выплаты по 4 200 «Fieldworks Radio за обслуживание связи». Миллер говорит, что связь никто не обслуживал.\n- **Ложный отчёт:** отчёт Миллера о замене плиты 10.10 расходится с заключением эксперта. Излом старый, окисленный, значит, плиту не меняли. Коул подписал этот отчёт.\n- **Тревога:** «внешнее сообщение» 12.10 записано заранее, 15.09. Это было учение, а не настоящий удар.\n- **Доклад Хейлу:** в 08:12 Коул написал ему про Сато, Силву и Рид.\n\nХарт — около 65%, остальные подозреваемые и несчастный случай делят остальное. Уверенность в версии 60%. Умысел не доказан: возможно, это драка с непредумышленным исходом. Остаются неясными телефон Силвы (код из четырёх цифр), тайминг удара и то, как к Коулу попала страница с интервью Харта. Журнал дополнен разделом «Раунд 7».",
+  "ttft_ms": 5777,
+  "type": "result",
+  "duration_ms": 92750,
+  "uuid": "80d8f597-7e6e-4760-bd93-33c1acf7e976",
+  "ttft_stream_ms": 5014,
+  "time_to_request_ms": 222,
+  "time_to_request_phases_ms": {
+    "other": 28,
+    "system_prompt": 4,
+    "resume_other": 0,
+    "process_user_input": 6,
+    "input_attachments": 61,
+    "input_hooks": 5,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 3,
+    "init_message": 9,
+    "engine_pickup": 2,
+    "message_prep": 2,
+    "model_config_wait": 32,
+    "autocompact": 4,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 17,
+    "message_normalization": 17,
+    "client_creation": 9,
+    "request_build": 20
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 95,
+  "time_to_request_cpu_ms": 242,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 223,
+  "process_anon_mib_turn_start": 129,
+  "process_rss_mib_result": 221,
+  "process_anon_mib_result": 120,
+  "process_peak_rss_mib": 227,
+  "process_cpu_ms_turn": 2633,
+  "process_wall_ms_turn": 92749,
+  "process_cpu_ms_streaming": 1490,
+  "process_wall_ms_streaming": 69736,
+  "main_stream_count": 5,
+  "main_stream_event_count": 733,
+  "main_stream_chunk_count": 104,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 36,
+    "cpu_ms": 72,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 5014,
+  "time_to_request_from_spawn_ms": 437607,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793091405077.5083,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

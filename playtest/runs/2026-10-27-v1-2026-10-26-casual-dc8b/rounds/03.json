@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 138181,
+  "stop_reason": "end_turn",
+  "session_id": "d8b6a73c-3455-4794-a866-785046800857",
+  "total_cost_usd": 0.4318105000000001,
+  "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 17282,
+    "cache_read_input_tokens": 289798,
+    "output_tokens": 5822,
+    "output_tokens_details": {
+      "thinking_tokens": 2101
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 17282,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 749,
+        "cache_read_input_tokens": 56539,
+        "cache_creation_input_tokens": 2424,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2424
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 311,
+      "thinkingTokens": 290,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00028000000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 42,
+      "outputTokens": 14277,
+      "thinkingTokens": 3493,
+      "cacheReadInputTokens": 655765,
+      "cacheCreationInputTokens": 55775,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 55775,
+      "webSearchRequests": 0,
+      "costUSD": 0.43153050000000015,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 17,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 3 закончен. Журнал дополнен разделом «Раунд 3», в `actions.md` два действия.\n\nЧто нового из присланных файлов:\n- **Эмма Рид и утечка:** пользователь 05 — это Рид. Она четыре раза заходила с терминала узла в свою почту `e.reed.uk@mailbridge.net` и отправляла на внешний маршрут 14 три «экспорта» данных программы.\n- **Препарат:** по экспортам, в 2008 году участник A-24 умер на 15-й день из-за «реакции на компонент основы». Сейчас идёт этап C: партия 0417 активная, 0418 контрольная. У части участников растёт тревога. «Комплекс» из медкабинета, судя по всему, и есть испытываемое средство. Бланк участника A-24 с логотипом HEXON BIO лежал в папке Коула.\n- **Остальные нити:**\n  - Мика Сато — журналистка с «наживкой» и ручкой-диктофоном. В блокноте она выписывала вопросы безопасности к почте Рид.\n  - У Силвы записка про деньги на операцию Ане, аванс от VL, и Коул отложил его заявку на выплату.\n  - Харт 13.10 не получил стик, в таблице у него прочерк.\n\nВерсия пока прежняя. Харт — около 40% (шантаж, половина листа, ложь про «первым у тела»), Рид — около 20%. Уверенность в версии 40%. Неясно, зачем Коул в 08:41 снял с Рид ограничение, которое поставил в 08:05. Показания Леи Моро о времени удара тоже не сходятся с записью.\n\nДействия в `actions.md`:\n- **`ОСМОТР`:** увеличить знак HEXON BIO в шапке бланка из папки (файл 26). Подсказка к ноутбуку Коула — «наш первый знак», а на экране входа виден только прямой угол.\n- **`ЗАПРОС`:** в компанию на `vaultline-program.com` — «Извещение о нежелательном явлении, участник A-24, этап A (2008)». Название документа я угадываю, так что запрос может не сработать.",
+  "ttft_ms": 6625,
+  "type": "result",
+  "duration_ms": 61301,
+  "uuid": "adcc9fe1-b14d-4532-afd3-e188f187f7c9",
+  "ttft_stream_ms": 5862,
+  "time_to_request_ms": 238,
+  "time_to_request_phases_ms": {
+    "other": 80,
+    "system_prompt": 5,
+    "resume_other": 0,
+    "process_user_input": 10,
+    "input_attachments": 49,
+    "input_hooks": 5,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 3,
+    "init_message": 11,
+    "engine_pickup": 1,
+    "message_prep": 2,
+    "model_config_wait": 7,
+    "autocompact": 3,
+    "query_setup": 2,
+    "model_gates": 0,
+    "tool_schema_build": 15,
+    "message_normalization": 13,
+    "client_creation": 10,
+    "request_build": 20
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 183,
+  "time_to_request_cpu_ms": 257,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 229,
+  "process_anon_mib_turn_start": 137,
+  "process_rss_mib_result": 219,
+  "process_anon_mib_result": 120,
+  "process_peak_rss_mib": 235,
+  "process_cpu_ms_turn": 2511,
+  "process_wall_ms_turn": 61297,
+  "process_cpu_ms_streaming": 1024,
+  "process_wall_ms_streaming": 36228,
+  "main_stream_count": 6,
+  "main_stream_event_count": 702,
+  "main_stream_chunk_count": 92,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 35,
+    "cpu_ms": 60,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 5862,
+  "time_to_request_from_spawn_ms": 304528,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793091272193.9177,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

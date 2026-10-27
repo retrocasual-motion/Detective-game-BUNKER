@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 592763,
+  "stop_reason": "end_turn",
+  "session_id": "f0b8bf43-68c2-4da3-a712-e62b05262f39",
+  "total_cost_usd": 2.9592501999999996,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 10634,
+    "cache_read_input_tokens": 529832,
+    "output_tokens": 7328,
+    "output_tokens_details": {
+      "thinking_tokens": 3262
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 10634,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1119,
+        "cache_read_input_tokens": 136868,
+        "cache_creation_input_tokens": 2889,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2889
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 267,
+      "thinkingTokens": 246,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000258,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 94,
+      "outputTokens": 59448,
+      "thinkingTokens": 24999,
+      "cacheReadInputTokens": 3386881,
+      "cacheCreationInputTokens": 136535,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 136535,
+      "webSearchRequests": 0,
+      "costUSD": 2.9589922,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 7 закончен. Главная находка: пропавшая папка участника A-24 спрятана среди чистых бланков в комнате анкет, где работает Моро. Из-за этого главной подозреваемой я теперь считаю Моро.\n\n**Что в папке A-24 (листы 18–21 пачки чистых бланков):**\n- **Фото** мужчины со светлой щетиной.\n- **Справка о выбытии от 06.10.2008.** В ней написано «состояние стабильное, эвакуирован» и «предупреждений об аллергии не поступало». Подписи: Уолш, Коул и неразборчивый росчерк. Справка расходится с данными самой программы, где записан летальный исход от реакции на компонент основы.\n- **Копия записки A-24 от 22.09.2008.** Участник предупреждал медика: «аллергия на сою, в том числе соевый лецитин… прошу ничего с соей не давать». Копия снята на копире медкабинета и помечена «К.У.». Значит, Уолш знала об аллергии, а справку подписала ложную.\n- **Следы на копии.** На ней графитовая пыль, она сложена вчетверо и потёрта на сгибах. Похоже, её долго носила при себе Моро: она рисует мягкими карандашами.\n\n**Как это связывается:**\n- A-24 умер 06.10.2008, в тот же день, что и Том Бернар из газетного объявления. Что это один человек, пока только мой вывод.\n- Медицинский лист из этой же папки утром 13.10 лежал в папке Коула, а запасной ключ от его кабинета висел у него на поясе. Похоже, Коул обнаружил пропажу и вернул себе часть бумаг.\n- Ещё одна мелочь из бумаг радиопоста: регистратор пишет два канала, второй — переговорное устройство у окна в шахту лестницы.\n\n**Подозреваемые:**\n\n| Кто | % | Почему |\n|---|---|---|\n| Моро | 35 | папка A-24 на её рабочем месте; лжёт о том, откуда шла; Уолш её прикрывает |\n| Рид | 25 | Коул раскрыл продажу данных; из папки у тела пропала выписка о ней |\n| Несчастный случай | 15 | ограждение держалось на временном креплении |\n| Силва | 10 | |\n| Уолш | 7 | соучастница сокрытия гибели A-24 |\n| Миллер | 5 | |\n| Харт | 3 | |\n\nУверенность в версии — 40%. Не хватает прямого доказательства того, кто был на площадке в 08:45. Ещё два вопроса открыты: почему порван лист Харта и почему Моро говорит, что «кто-то быстро сбежал по лестнице», если на записи слышны только 3–4 шага.\n\n**Действия на этот раунд (5 строк в `actions.md`):**\n- открыть свойства записи радиопоста — нет ли там отдельного второго канала, где минуты падения слышны разборчивее;\n- совместить фото A-24 с бородатым мужчиной на последнем рисунке Моро;\n- увеличить фото A-24 и копию записки;\n- запросить у компании VAULTLINE анкету набора участника A-24, чтобы узнать его имя.",
+  "ttft_ms": 2148,
+  "type": "result",
+  "duration_ms": 74314,
+  "uuid": "994a85fb-1f49-4b0c-a10c-321d9d0c8d93",
+  "ttft_stream_ms": 1184,
+  "time_to_request_ms": 201,
+  "time_to_request_phases_ms": {
+    "other": 23,
+    "system_prompt": 4,
+    "resume_other": 0,
+    "process_user_input": 7,
+    "input_attachments": 52,
+    "input_hooks": 6,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 5,
+    "init_message": 24,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 3,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 13,
+    "message_normalization": 28,
+    "client_creation": 8,
+    "request_build": 22
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 151,
+  "time_to_request_cpu_ms": 210,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 221,
+  "process_anon_mib_turn_start": 127,
+  "process_rss_mib_result": 229,
+  "process_anon_mib_result": 127,
+  "process_peak_rss_mib": 231,
+  "process_cpu_ms_turn": 2595,
+  "process_wall_ms_turn": 74314,
+  "process_cpu_ms_streaming": 1654,
+  "process_wall_ms_streaming": 62757,
+  "main_stream_count": 4,
+  "main_stream_event_count": 718,
+  "main_stream_chunk_count": 582,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 40,
+    "cpu_ms": 58,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 1184,
+  "time_to_request_from_spawn_ms": 771113,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793091738511.1802,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 600484,
+  "stop_reason": "end_turn",
+  "session_id": "0e4ec851-7042-49e3-9c50-d100ba5e4e29",
+  "total_cost_usd": 2.7630999,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 4607,
+    "cache_read_input_tokens": 398297,
+    "output_tokens": 2419,
+    "output_tokens_details": {
+      "thinking_tokens": 346
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4607,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 680,
+        "cache_read_input_tokens": 134183,
+        "cache_creation_input_tokens": 1697,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1697
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 264,
+      "thinkingTokens": 243,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002565,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 84,
+      "outputTokens": 54935,
+      "thinkingTokens": 25344,
+      "cacheReadInputTokens": 3012717,
+      "cacheCreationInputTokens": 132658,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 132658,
+      "webSearchRequests": 0,
+      "costUSD": 2.7628434,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 закончен. Новых фактов он не дал, но пришли форма заключения и зашифрованный экспорт почтового ящика Рид. Заключение пока не отправляю. Версия та же, уверенность 55%.\n\n**Что пришло:**\n- **Форма заключения** — пять пунктов: что случилось с Коулом и кто действовал; был ли умысел; какую роль сыграл дефект ограждения; почему группу не выпустили; что за программа и кто её проводил.\n- **Экспорт ящика Рид.** Mailbridge выдаёт его только зашифрованным, открыть можно паролем владельца.\n\n**Почему ещё не отправляю.** Почта Рид может объяснить, куда уходили данные по маршруту 14 и что значит «архив Р.» в докладе Коула. Это нужно для пунктов 4 и 5, а возможно, и для пункта 1: Рид пока остаётся второй подозреваемой.\n\n**Пункт 4 уже почти ясен.** Защищённый режим включил офис своей командой в 09:24:51. Это через 15 минут после звонка Уолш о гибели и через 10 минут после того, как офис увидел утренний запрос Коула. В 09:34 Хейл заказал такси «немедленно, аэропорт». В 10:40 был настоящий удар, связь с офисом пропала, Хейл погиб на шоссе. Снять режим мог только офис, а снимать стало некому. Мой вывод: офис запер объект, чтобы скрыть случившееся и суть программы.\n\n**Отправлено на этот раунд:** три варианта пароля к ящику — `Toffee`, `toffee`, `Тоффи`. Это кличка первой собаки Рид, бигля из записи REC004 на ручке-диктофоне; она же, похоже, на фото «Йоркшир, 1978». Больше трёх попыток за раунд поле не примет, поэтому других вариантов пока не пробую. После ответа отправлю заключение.",
+  "ttft_ms": 2647,
+  "type": "result",
+  "duration_ms": 28854,
+  "uuid": "0efd915d-832a-49e7-a668-73f0ac309c21",
+  "ttft_stream_ms": 1285,
+  "time_to_request_ms": 243,
+  "time_to_request_phases_ms": {
+    "other": 30,
+    "system_prompt": 8,
+    "resume_other": 0,
+    "process_user_input": 6,
+    "input_attachments": 86,
+    "input_hooks": 4,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 4,
+    "init_message": 8,
+    "engine_pickup": 2,
+    "message_prep": 2,
+    "model_config_wait": 1,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 22,
+    "message_normalization": 27,
+    "client_creation": 11,
+    "request_build": 26
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 131,
+  "time_to_request_cpu_ms": 266,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 239,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 227,
+  "process_anon_mib_result": 126,
+  "process_peak_rss_mib": 246,
+  "process_cpu_ms_turn": 1794,
+  "process_wall_ms_turn": 28852,
+  "process_cpu_ms_streaming": 725,
+  "process_wall_ms_streaming": 16655,
+  "main_stream_count": 3,
+  "main_stream_event_count": 353,
+  "main_stream_chunk_count": 226,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 58,
+    "cpu_ms": 108,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1285,
+  "time_to_request_from_spawn_ms": 1183686,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793092151322.396,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

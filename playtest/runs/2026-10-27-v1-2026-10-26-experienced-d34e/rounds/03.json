@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 350073,
+  "stop_reason": "end_turn",
+  "session_id": "f0b8bf43-68c2-4da3-a712-e62b05262f39",
+  "total_cost_usd": 1.8069407999999998,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 14526,
+    "cache_read_input_tokens": 456743,
+    "output_tokens": 6798,
+    "output_tokens_details": {
+      "thinking_tokens": 2262
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 14526,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1139,
+        "cache_read_input_tokens": 96506,
+        "cache_creation_input_tokens": 4885,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 4885
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 267,
+      "thinkingTokens": 246,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000258,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 64,
+      "outputTokens": 34979,
+      "thinkingTokens": 14684,
+      "cacheReadInputTokens": 1607474,
+      "cacheCreationInputTokens": 98169,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 98169,
+      "webSearchRequests": 0,
+      "costUSD": 1.8066828000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 12,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 3 закончен. Стало ясно, чем на самом деле была программа, но кто был с Коулом на площадке в момент падения, пока не установлено.\n\n**Что выяснилось:**\n- **VL-31 — испытание препарата HEXON BIO в три этапа (2008, весна 2009, текущий).** Партия 0417 в выгрузке названа «активной», 0418 — «контролем». На горячей линии NorthCare партию 0418 подтвердили, а партии 0417 в реестре нет. Значит, Харту, Моро и Силве под видом витаминов давали незарегистрированный препарат.\n- **На первом этапе погиб участник A-24:** «день 15 — реакция на компонент основы, летальный исход». Это 06.10.2008 — дата смерти Тома Бернара из газетного некролога. Вывод, что A-24 и есть Бернар, пока не подтверждён. Бланк A-24 лежал в клапане папки Коула, а папки A-24 в шкафу нет.\n- **Рид отправляла данные всех трёх этапов по маршруту 14.** После каждой отправки она заходила в личную почту `e.reed.uk@mailbridge.net`. Утром 13.10, в 08:05, Коул закрыл ей этот маршрут, а в 08:41:05 снова открыл, за четыре минуты до падения. Почему он передумал, неясно. Рид при этом говорит, что Коул был у неё до 08:40, а в 08:41:05 он уже за своим терминалом в 55 м.\n- **Харт, бывший монтажник Fieldworks Radio, знал, что связь объекта никто не обслуживает.** Компания закрылась в декабре 2007 года. По эфиру он не слышал никакого «удара» и, видимо, понял, что тревога 12.10 поддельная. Похоже, поэтому Коул и давил на него шантажом.\n- **Плиту для восточной лестницы так и не доставили.** Поставщик её отгрузил 11.10, но получатель был недоступен, и 26.10 плита вернулась на склад. В отчёте Миллера сказано, что плита на восточной лестнице заменена, — это неправда.\n\n**Подозреваемые:**\n\n| Кто | % |\n|---|---|\n| Рид | 30 |\n| Моро | 20 |\n| Несчастный случай | 20 |\n| Силва | 17 |\n| Миллер | 6 |\n| Уолш | 5 |\n| Харт | 2 |\n\nУверенность в версии — 30%.\n\n**Записал 9 действий в `actions.md`:**\n- ввожу графический ключ ноутбука `5-1-2-3-6-9-8-7-4`, восстановленный по анимации старого знака HEXON. Картинка учётной записи — правый верхний угол этого знака, это совпадает;\n- запрашиваю у VAULTLINE список маршрутов офиса, чтобы узнать, кому уходил маршрут 14;\n- запрашиваю у бюро материалы сеансов пользователей 02 и 03;\n- открываю сайт `mailbridge.net` (почтовый сервис Рид);\n- ищу в архиве газеты номера за 08.10.2008 и 09.10.2008 (некролог Бернара);\n- прошу увеличить последние рисунки Моро и кадры с папкой у тела.",
+  "ttft_ms": 1502,
+  "type": "result",
+  "duration_ms": 68573,
+  "uuid": "8b111395-8d03-4afd-8ac3-55716b39b948",
+  "ttft_stream_ms": 1103,
+  "time_to_request_ms": 174,
+  "time_to_request_phases_ms": {
+    "other": 27,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 7,
+    "input_attachments": 36,
+    "input_hooks": 5,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 4,
+    "init_message": 25,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 4,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 14,
+    "message_normalization": 15,
+    "client_creation": 9,
+    "request_build": 16
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 124,
+  "time_to_request_cpu_ms": 183,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 224,
+  "process_anon_mib_turn_start": 130,
+  "process_rss_mib_result": 225,
+  "process_anon_mib_result": 124,
+  "process_peak_rss_mib": 232,
+  "process_cpu_ms_turn": 2781,
+  "process_wall_ms_turn": 68573,
+  "process_cpu_ms_streaming": 1672,
+  "process_wall_ms_streaming": 55194,
+  "main_stream_count": 5,
+  "main_stream_event_count": 749,
+  "main_stream_chunk_count": 605,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 24,
+    "cpu_ms": 40,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 1103,
+  "time_to_request_from_spawn_ms": 514720,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793091482287.0518,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
