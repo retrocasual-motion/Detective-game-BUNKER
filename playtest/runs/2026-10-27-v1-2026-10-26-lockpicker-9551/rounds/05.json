@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 390907,
+  "stop_reason": "end_turn",
+  "session_id": "e8c2ec36-1afb-4ca9-8dcb-3603d2b25042",
+  "total_cost_usd": 1.9690930000000002,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 5239,
+    "cache_read_input_tokens": 317704,
+    "output_tokens": 3068,
+    "output_tokens_details": {
+      "thinking_tokens": 327
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 5239,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 957,
+        "cache_read_input_tokens": 107586,
+        "cache_creation_input_tokens": 1969,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1969
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 277,
+      "thinkingTokens": 256,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000263,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 68,
+      "outputTokens": 36936,
+      "thinkingTokens": 10434,
+      "cacheReadInputTokens": 1895870,
+      "cacheCreationInputTokens": 106333,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 106333,
+      "webSearchRequests": 0,
+      "costUSD": 1.96883,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 7,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 закончен. Журнал дописан, в `actions.md` записано 4 действия.\n\n**Что пришло:**\n- **Почта Пирс.** Mailbridge прислал экспорт её ящика, но он зашифрован. Открыть его можно только паролем владельца; сбросить пароль они не могут.\n- **Fieldworks Radio закрылась в декабре 2007 года.** Значит, четыре оплаты «работ Fieldworks Radio, 2009» наличными на 16 800 в отчёте Коула выдуманы. Растрата подтверждается. Харт раньше работал в Fieldworks и мог это заметить — вероятно, поэтому Коул и шантажировал его «миссис Колдер».\n- **The Signal.** Главный редактор — Фрэнк Бейкер, среди авторов — внештатный С. Грей. Вероятно, это и есть Фрэнк, которому Сато отправляла материал, а «С. Грей» — её псевдоним. Подтверждения пока нет.\n- **VAULTLINE** на запрос о Fieldworks прислала только договор аренды и акт приёмки. Договора с Fieldworks у компании, видимо, нет.\n\n**Действия на этот раунд:**\n- **Три попытки пароля к ящику Пирс:** `Toffee`, `Toffi`, `Тоффи` — это весь лимит попыток на раунд. Почему эта кличка:\n  - Сато выписала в блокнот контрольные вопросы к терминалу Пирс: «дата рождения, девичья фамилия матери, первый питомец»;\n  - на диктофон Сато Пирс сама рассказала, что её первой собакой была бигль Тоффи;\n  - в обложке ежедневника Пирс лежит фото девочки с собакой, похожей на бигля.\n\n  Если не подойдёт, в следующем раунде попробую варианты с годом с оборота фото (1978).\n- **Письмо в редакцию The Signal.** Спрашиваю, получали ли они материалы о VAULTLINE и HEXON BIO в октябре 2009-го, включая попытку отправки 13.10 около 05:20, и кто был источником статьи 2008 года.\n\n**Подозреваемые:**\n\n| Кто | % |\n|---|---|\n| Пирс | 40 |\n| Моро | 15 |\n| Несчастный случай | 15 |\n| Харт | 12 |\n| Силва | 10 |\n| Миллер | 4 |\n| Другое | 4 |\n\nУверенность в версии — 50%. Версия прежняя: Коул собирался доложить Хейлу об утечке Пирс и погиб на площадке, где плиту так и не заменили. Выписку о Пирс из его папки кто-то убрал. Прямого свидетеля падения по-прежнему нет.",
+  "ttft_ms": 2031,
+  "type": "result",
+  "duration_ms": 36354,
+  "uuid": "c22e6458-7d7e-4d42-9619-e49784521646",
+  "ttft_stream_ms": 1391,
+  "time_to_request_ms": 151,
+  "time_to_request_phases_ms": {
+    "other": 23,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 25,
+    "input_hooks": 4,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 2,
+    "init_message": 8,
+    "engine_pickup": 9,
+    "message_prep": 1,
+    "model_config_wait": 10,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 1,
+    "tool_schema_build": 14,
+    "message_normalization": 14,
+    "client_creation": 9,
+    "request_build": 17
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 101,
+  "time_to_request_cpu_ms": 166,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 232,
+  "process_anon_mib_turn_start": 140,
+  "process_rss_mib_result": 226,
+  "process_anon_mib_result": 127,
+  "process_peak_rss_mib": 256,
+  "process_cpu_ms_turn": 1457,
+  "process_wall_ms_turn": 36354,
+  "process_cpu_ms_streaming": 617,
+  "process_wall_ms_streaming": 21991,
+  "main_stream_count": 3,
+  "main_stream_event_count": 451,
+  "main_stream_chunk_count": 43,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 15,
+    "cpu_ms": 29,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 1391,
+  "time_to_request_from_spawn_ms": 1268402,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793109882708.8428,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

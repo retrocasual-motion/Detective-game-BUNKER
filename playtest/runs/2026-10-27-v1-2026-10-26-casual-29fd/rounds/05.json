@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 352323,
+  "stop_reason": "end_turn",
+  "session_id": "3951e33b-2873-459f-a72d-e62a6cd555f8",
+  "total_cost_usd": 0.8352478,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 4396,
+    "cache_read_input_tokens": 279528,
+    "output_tokens": 3149,
+    "output_tokens_details": {
+      "thinking_tokens": 461
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4396,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 760,
+        "cache_read_input_tokens": 94102,
+        "cache_creation_input_tokens": 2430,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2430
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 311,
+      "thinkingTokens": 290,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00028000000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 54,
+      "outputTokens": 32677,
+      "thinkingTokens": 14000,
+      "cacheReadInputTokens": 1347138,
+      "cacheCreationInputTokens": 93344,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 93344,
+      "webSearchRequests": 0,
+      "costUSD": 0.8349678000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Я отправил заключение (`ФИНАЛ | заключение | см. журнал`). Текст — в журнале под заголовком «Заключение». Кто именно столкнул Коула, я установить не смог. Уверенность в версии — около 40%.\n\nОтветы на пункты формы:\n1. **Что произошло.**\n   - Коул упал с верхней площадки около 08:45 по серверу. Это 08:48:42 по часам регистратора радиопоста, которые я считаю спешащими примерно на 3,5 минуты.\n   - Перед ударом слышны шаги, возня и металлический скрежет, то есть это была стычка.\n   - Вероятнее всего, в ней участвовал Харт: Коул шантажировал его прошлым, половина его психоинтервью лежала на площадке, а вторая половина была у него в кармане. Силва видел, как Харт что-то спрятал у тела.\n   - Силву и Пирс я не исключаю. Исполнителя по материалам достоверно назвать нельзя.\n2. **Умысел.** Не установлен. Эксперт не нашёл умышленного повреждения крепления, а стычка могла быть внезапной.\n3. **Дефект ограждения.** Плита имела старую трещину. Коул отклонил закрытие лестницы, а Миллер написал, что плиту заменили, хотя экспертиза нашла старую. Дефект превратил стычку в смертельное падение.\n4. **Почему группу не выпустили.** Офис в 09:24 включил защищённый режим, зная о смерти Коула. Хейл в 09:34 заказал такси «немедленно, аэропорт». В 10:40 реальный удар по региону оборвал связь, а Хейл погиб на шоссе. Снять режим стало некому.\n5. **Что за программа.** Это исследование препарата под видом программы пребывания. Комплекс выдавали двумя партиями, активной и контрольной, а данные уходили наружу. В 2008 году один участник умер. Заказчик — HEXON BIO, на объекте программу вели Коул и Пирс. «Удар» в ночь на 12.10 они инсценировали.\n\nЗапрос в mailbridge остался без ответа, а ключ ноутбука не подобран.",
+  "ttft_ms": 14393,
+  "type": "result",
+  "duration_ms": 56453,
+  "uuid": "68d89ba1-790f-4519-adbc-a3b818c4642c",
+  "ttft_stream_ms": 13617,
+  "time_to_request_ms": 109,
+  "time_to_request_phases_ms": {
+    "other": 17,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 26,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 12,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 3,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 0,
+    "tool_schema_build": 8,
+    "message_normalization": 8,
+    "client_creation": 7,
+    "request_build": 10
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 58,
+  "time_to_request_cpu_ms": 119,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 139,
+  "process_rss_mib_result": 228,
+  "process_anon_mib_result": 129,
+  "process_peak_rss_mib": 253,
+  "process_cpu_ms_turn": 1261,
+  "process_wall_ms_turn": 56453,
+  "process_cpu_ms_streaming": 334,
+  "process_wall_ms_streaming": 19948,
+  "main_stream_count": 3,
+  "main_stream_event_count": 554,
+  "main_stream_chunk_count": 61,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 19,
+    "cpu_ms": 32,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 13618,
+  "time_to_request_from_spawn_ms": 2959404,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793111573892.357,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 331260,
+  "stop_reason": "end_turn",
+  "session_id": "2c21a42a-8cee-44fc-9289-d81a329d5464",
+  "total_cost_usd": 0.9059904000000001,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 9554,
+    "cache_read_input_tokens": 373558,
+    "output_tokens": 5927,
+    "output_tokens_details": {
+      "thinking_tokens": 2344
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 9554,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 963,
+        "cache_read_input_tokens": 98049,
+        "cache_creation_input_tokens": 1950,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1950
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 62,
+      "outputTokens": 34821,
+      "thinkingTokens": 13296,
+      "cacheReadInputTokens": 1701469,
+      "cacheCreationInputTokens": 96811,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 96811,
+      "webSearchRequests": 0,
+      "costUSD": 0.9057249,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 282,
+      "thinkingTokens": 261,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002655,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 закончен. Раздел «Раунд 4» дописан в `journal.md`, четыре действия записаны в `actions.md`.\n\n**Что дали новые материалы:**\n- **Телефон:** PIN 1001 подошёл. Телефон принадлежит Габриэлю Силве. Его сестре Ане назначена операция на 20.10, платёж нужен до 14.10, за последние дни Ана оставила 41 пропущенный звонок.\n- **Аванс:** 09.10 Силва пишет «Adam… no» — по всей видимости, Коул отказал в авансе. Заявка в офис не ушла (Приложение № 7).\n- **Подслушанный разговор:** в голосовом сообщении от 08.10 Силва пересказывает сестре, что подслушал разговор Пирс и Коула по-русски. Они обсуждали запись, учение и «день объявления», и что медик с инженером знать не должны. Силва понимал больше, чем они думали: Пирс сказала про него «он не понимает».\n- **Вывод:** тревогу и «удар» Коул и Пирс готовили вместе. Уолш и Миллер в замысел не входили.\n- **Сайт компании:** запросы принимаются по адресу documents@vaultline-program.com. Нужны номер дела, точное наименование документа и номер программы.\n\n**Версия:**\n- Пирс — 33%, Силва — 25%, несчастный случай — 12%, Харт — 10%, Уолш — 8%, Миллер — 7%, Моро и Сато вместе — 5%. Уверенность в версии — 33%.\n- У Силвы появился сильный мотив: он знал об обмане, а деньги были нужны до 14.10.\n- Против него время. В 08:43:30 он был внизу, а к телу пришёл снизу в 08:51:40. Как оказаться наверху в 08:48:26 и вернуться вниз другим путём, у меня не получается, так что я считаю его скорее непричастным.\n- Пирс остаётся: она лжёт и соорганизатор обмана, но привязки к площадке в 08:48 у меня нет.\n- Непонятно, зачем Коул в 08:05 ограничил учётную запись Пирс (код 47), а в 08:41 снял ограничение (код 48), если они действовали заодно.\n\n**Действия в `actions.md`:**\n- `ПАРОЛЬ | ноутбук | 7-4-1-2-3-6-9`. Это догадка: подсказка «наш первый знак», я читаю её как арку знака VAULTLINE.\n- Три запроса в компанию. Наименования документов я угадал, поэтому ответ покажет, принимает ли компания такие названия:\n  - договор с координатором;\n  - сценарий учебной тревоги и режима герметизации;\n  - акт объекта.",
+  "ttft_ms": 3764,
+  "type": "result",
+  "duration_ms": 60440,
+  "uuid": "2683f289-6bb9-4713-86c6-288baaf46fe2",
+  "ttft_stream_ms": 2898,
+  "time_to_request_ms": 136,
+  "time_to_request_phases_ms": {
+    "other": 21,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 22,
+    "input_hooks": 3,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 2,
+    "init_message": 7,
+    "engine_pickup": 7,
+    "message_prep": 1,
+    "model_config_wait": 10,
+    "autocompact": 3,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 13,
+    "message_normalization": 12,
+    "client_creation": 8,
+    "request_build": 16
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 86,
+  "time_to_request_cpu_ms": 149,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 232,
+  "process_anon_mib_turn_start": 140,
+  "process_rss_mib_result": 228,
+  "process_anon_mib_result": 130,
+  "process_peak_rss_mib": 255,
+  "process_cpu_ms_turn": 1523,
+  "process_wall_ms_turn": 60439,
+  "process_cpu_ms_streaming": 606,
+  "process_wall_ms_streaming": 39845,
+  "main_stream_count": 4,
+  "main_stream_event_count": 708,
+  "main_stream_chunk_count": 87,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 12,
+    "cpu_ms": 28,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 2898,
+  "time_to_request_from_spawn_ms": 2358008,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793110972368.5894,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

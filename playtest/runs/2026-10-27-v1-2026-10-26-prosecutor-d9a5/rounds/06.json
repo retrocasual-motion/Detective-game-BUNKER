@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 453288,
+  "stop_reason": "end_turn",
+  "session_id": "2c21a42a-8cee-44fc-9289-d81a329d5464",
+  "total_cost_usd": 1.1987124999999998,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 5660,
+    "cache_read_input_tokens": 337082,
+    "output_tokens": 3658,
+    "output_tokens_details": {
+      "thinking_tokens": 1490
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 5660,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 691,
+        "cache_read_input_tokens": 113663,
+        "cache_creation_input_tokens": 3005,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3005
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 80,
+      "outputTokens": 47810,
+      "thinkingTokens": 18899,
+      "cacheReadInputTokens": 2662670,
+      "cacheCreationInputTokens": 113480,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 113480,
+      "webSearchRequests": 0,
+      "costUSD": 1.1984469999999998,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 282,
+      "thinkingTokens": 261,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002655,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 6 закончен. Раздел «Раунд 6» дописан в `journal.md`, пять действий записаны в `actions.md`. Версия стоит на месте, уверенность 28%.\n\n**Ответы архива и новый материал:**\n- Ключ ноутбука «змейкой» (1-2-3-6-5-4-7-8-9) неверный.\n- Запросы «Список маршрутов офиса» и «Психологическое интервью. Конфиденциально» компания отклонила: таких наименований в учёте нет. Нужны точные названия, а я их не знаю.\n- Увеличенные страницы блокнота Моро почти ничего не добавили. Единственное полезное: на двери кабинета Коула на странице 14 нарисован листок «РЕЖИМ ТРЕВОГИ».\n\n**Что это значит:** Моро рисовала комнату анкет напротив кабинета Коула уже в режиме тревоги. На допросе она сказала, что 13.10 сидела в жилом блоке. Это противоречие в её показаниях, но не улика, что именно она была на лестнице.\n\n**Подозреваемые без изменений:**\n\n| Кто | % |\n|---|---|\n| Пирс | 38 |\n| Моро | 20 |\n| Несчастный случай | 15 |\n| Уолш | 8 |\n| Миллер | 8 |\n| Силва | 6 |\n| Харт | 5 |\n\nУлик против Пирс по-прежнему нет, только мотив, ложь и возможность. Для финала этого мало.\n\n**Действия в `actions.md`:**\n- Два новых ключа к ноутбуку: 4-1-2-3-6 и 1-2-3-5-7-8-9. Это догадки о форме знака.\n- Запросы в компанию: «Протокол герметизации» и «Психологическое интервью» (участник Харт). Названия угаданы по тексту дела.\n- Совмещение фото замены плиты 10.10 с кадром камеры инженера, чтобы проверить, была ли плита действительно заменена.",
+  "ttft_ms": 4415,
+  "type": "result",
+  "duration_ms": 47750,
+  "uuid": "077049da-69a5-43f9-b9ac-96188060edab",
+  "ttft_stream_ms": 3519,
+  "time_to_request_ms": 240,
+  "time_to_request_phases_ms": {
+    "other": 29,
+    "system_prompt": 4,
+    "resume_other": 0,
+    "process_user_input": 6,
+    "input_attachments": 83,
+    "input_hooks": 6,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 3,
+    "init_message": 16,
+    "engine_pickup": 2,
+    "message_prep": 2,
+    "model_config_wait": 9,
+    "autocompact": 4,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 19,
+    "message_normalization": 22,
+    "client_creation": 9,
+    "request_build": 23
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 103,
+  "time_to_request_cpu_ms": 311,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 234,
+  "process_anon_mib_turn_start": 142,
+  "process_rss_mib_result": 223,
+  "process_anon_mib_result": 124,
+  "process_peak_rss_mib": 241,
+  "process_cpu_ms_turn": 1615,
+  "process_wall_ms_turn": 47749,
+  "process_cpu_ms_streaming": 611,
+  "process_wall_ms_streaming": 21835,
+  "main_stream_count": 3,
+  "main_stream_event_count": 394,
+  "main_stream_chunk_count": 49,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 39,
+    "cpu_ms": 108,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 3519,
+  "time_to_request_from_spawn_ms": 2506130,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793111120172.7463,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

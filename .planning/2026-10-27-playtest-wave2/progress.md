@@ -5,3 +5,4 @@
 - Ветка claude/project-thread-few4t4 перезапущена от main (d2f262d, после PR #8).
 - Новые профили: timeline, lockpicker, prosecutor (references/profiles), строки в RUNBOOK §4.
 - Прогоны запущены одним фоновым скриптом по одному: timeline, lockpicker, procedural, prosecutor, casual (раундов до 8; Opus 4/15, Sonnet 3/10).
+- 14:33 все пять прогонов готовы (41,29 USD-оценки). Отчёт и сводка; аудит нашёл AUD-49 (побочная выдача П-02). Документ для Артема https://claude.ai/artifact/E5BL7Sm4bD3JxHo9mPtWGR. Песочницы удалены, кроме lockpicker-9551.

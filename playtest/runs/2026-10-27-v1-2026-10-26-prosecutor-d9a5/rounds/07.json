@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 474611,
+  "stop_reason": "end_turn",
+  "session_id": "2c21a42a-8cee-44fc-9289-d81a329d5464",
+  "total_cost_usd": 1.2653526999999998,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 3072,
+    "cache_read_input_tokens": 352802,
+    "output_tokens": 1906,
+    "output_tokens_details": {
+      "thinking_tokens": 208
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3072,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 629,
+        "cache_read_input_tokens": 118345,
+        "cache_creation_input_tokens": 1395,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1395
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 86,
+      "outputTokens": 49716,
+      "thinkingTokens": 19107,
+      "cacheReadInputTokens": 3015472,
+      "cacheCreationInputTokens": 116552,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 116552,
+      "webSearchRequests": 0,
+      "costUSD": 1.2650871999999997,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 282,
+      "thinkingTokens": 261,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002655,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 7 закончен. Новых материалов не пришло, раздел «Раунд 7» дописан в `journal.md`, в `actions.md` одна строка: `РЕШИТЬ | дело | —`.\n\n**Ответы архива на действия раунда 6:**\n- Ключи к ноутбуку 4-1-2-3-6 и 1-2-3-5-7-8-9 неверные.\n- Запросы «Протокол герметизации» и «Психологическое интервью» компания отклонила: таких наименований в учёте нет.\n- Совмещение изображений в архиве не предусмотрено, описания надо сравнивать самому.\n\n**Что я сделал сам:** сравнил описания фото замены плиты (файл 12) и кадров камеры 13.10 (файл 24).\n- Фото «после» в отчёте Миллера от 10.10 показывает новую плиту, свежую светло-серую краску и новые болты.\n- Кадры 13.10 показывают расколотую старую плиту с рыжим изломом, старые анкеры и временный хомут с полосой.\n- Отчёт «заменено» ложный, либо фото относится к другому узлу. Коул подписал «Принято», не проверив это или проигнорировав.\n- Кто убил Коула, это не проясняет.\n\n**Версия без изменений:** Пирс 38%, Моро 18%, несчастный случай 17%, Уолш 8%, Миллер 8%, Силва 6%, Харт 5%. Уверенность 28%. Доказательств против Пирс по-прежнему нет, только мотив, ложь и возможность.\n\nЯ застрял на двух источниках: ноутбук не открывается, а точных названий документов компании я не знаю. Поэтому нажимаю «Решить дело»: форма заключения покажет, какие пункты нужны, и её можно закрыть и продолжить.",
+  "ttft_ms": 2104,
+  "type": "result",
+  "duration_ms": 25394,
+  "uuid": "beb418dc-73ab-444e-b1f8-59ace87c5be9",
+  "ttft_stream_ms": 1620,
+  "time_to_request_ms": 238,
+  "time_to_request_phases_ms": {
+    "other": 54,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 6,
+    "input_attachments": 41,
+    "input_hooks": 19,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 3,
+    "init_message": 9,
+    "engine_pickup": 2,
+    "message_prep": 2,
+    "model_config_wait": 5,
+    "autocompact": 4,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 19,
+    "message_normalization": 21,
+    "client_creation": 26,
+    "request_build": 21
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 188,
+  "time_to_request_cpu_ms": 355,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 233,
+  "process_anon_mib_turn_start": 140,
+  "process_rss_mib_result": 223,
+  "process_anon_mib_result": 124,
+  "process_peak_rss_mib": 245,
+  "process_cpu_ms_turn": 1441,
+  "process_wall_ms_turn": 25393,
+  "process_cpu_ms_streaming": 404,
+  "process_wall_ms_streaming": 9192,
+  "main_stream_count": 3,
+  "main_stream_event_count": 320,
+  "main_stream_chunk_count": 35,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 30,
+    "cpu_ms": 74,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1621,
+  "time_to_request_from_spawn_ms": 2555216,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793111169331.6375,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
