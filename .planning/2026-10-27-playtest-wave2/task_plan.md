@@ -31,9 +31,9 @@ Phase 4
 - **Status:** complete
 
 ### Phase 4: Доставка
-- [ ] Коммит, PR, короткий отчёт Артему
+- [x] Коммит, PR #9, короткий отчёт Артему
 - [ ] Перенос плана в planning-archive после мержа
-- **Status:** pending
+- **Status:** in_progress
 
 ## Decisions Made
 | Decision | Rationale |
