@@ -1,0 +1,49 @@
+{
+  "run_id": "2026-10-27-v1-2026-10-26-experienced-366b",
+  "pack": "/home/user/detective-game-bunker/playtest/packs/v1-2026-10-26",
+  "pack_meta": {
+    "version": "v1-2026-10-26",
+    "built-from": "своды bunker/01–04 по A-224 (main после PR #6 + A-223, A-224 этой ветки); список ID — gm/sources.md",
+    "built-by": "Claude (detective-architect), ветка claude/project-thread-few4t4",
+    "approved-by-author": "yes",
+    "date": "2026-10-26"
+  },
+  "profile": "experienced",
+  "model": "opus",
+  "sandbox": "/tmp/case-qdpcwfpz",
+  "session_id": "263e7747-e368-4f6c-b496-f59d954f0dd6",
+  "round": 2,
+  "released": [
+    "L214__приложение_7_журналы_сервера_13-10.md",
+    "L101__сайт_vaultline-program.com.md",
+    "L163__сайт_hexon-bio.com.md",
+    "L177__сайт_fieldworks-radio.com.md",
+    "L560__ноутбук_рабочий_стол_и_отчёт_о_расходах.md",
+    "L561__ноутбук_папка_Тревога.md",
+    "L562__ноутбук_журнал_печати.md",
+    "L563__ноутбук_черновик_Доклад_Р.md",
+    "L564__ноутбук_сохранённая_страница_The_Signal.md",
+    "L565__ноутбук_личные_дела_VL-31.md",
+    "L540__телефон_содержимое.md",
+    "L989__листание_пачка_П-09_кабинет_руководителя.md",
+    "L985__листание_пачка_П-05_медкабинет.md",
+    "L984__листание_пачка_П-04_техническая.md",
+    "L990__совмещение_половин_листа.md",
+    "L973__свойства_кадры_камеры_инженера.md",
+    "L905__увеличение_кадры_камеры_инженера.md",
+    "L933__увеличение_медкабинет.md",
+    "L296__сайт_the-signal-news.com.md"
+  ],
+  "finished": null,
+  "requested_by_user": "Давай сначала начнём с одного профиля, посмотрим расход и затем решим с остальными",
+  "lint_warnings": [
+    "player/47__ноутбук_руководителя.md:10: мета-слово «разгадка/подсказка»: «Подсказк»"
+  ],
+  "isolation_probe": "ok",
+  "archivist": "sonnet",
+  "cost_usd": 2.8013391999999993,
+  "created": "2026-10-27T06:51:09",
+  "last_released": [
+    "L296__сайт_the-signal-news.com.md"
+  ]
+}

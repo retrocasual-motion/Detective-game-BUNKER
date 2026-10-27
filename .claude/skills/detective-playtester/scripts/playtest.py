@@ -15,6 +15,7 @@
   metrics --run DIR [--suspect ИМЯ]        уверенность по раундам из журнала игрока
   compare --runs DIR DIR ... --suspect ИМЯ сравнение прогонов (версии пакета, профили, люди)
   export  --pack DIR --out DIR             комплект для живых тестеров и ведущего-человека
+  walk    --pack DIR --script FILE         офлайн-проверка правил доступа по сценарию действий (без claude)
   selftest [--model M]                     технический тест на игрушечном деле
 
 Только стандартная библиотека Python 3.9+.
@@ -51,16 +52,31 @@ STRIP_ENV = [
     "PWF_PLAN_ROOT",
 ]
 
-ACTIONS = ("ПАРОЛЬ", "ЗАПРОС", "ПОИСК", "ФИНАЛ", "СТОП")
+# Базовые действия есть в любом пакете. Дополнительные (АДРЕС — адресная строка
+# браузера, ЗВОНОК — телефон, ОСМОТР — действие с материалом: увеличить, свойства,
+# листать, совместить; РЕШИТЬ — кнопка «Решить дело», открывает форму заключения)
+# пакет включает правилами в access.json и описывает во вводной.
+BASE_ACTIONS = ("ПАРОЛЬ", "ЗАПРОС", "ПОИСК", "ФИНАЛ", "СТОП")
+EXTRA_ACTIONS = ("АДРЕС", "ЗВОНОК", "ОСМОТР", "РЕШИТЬ")
+ACTIONS = BASE_ACTIONS + EXTRA_ACTIONS
+ARCHIVIST_ACTIONS = ("ЗАПРОС", "ПОИСК")
 ACTION_RE = re.compile(r"^\s*[-*]?\s*(" + "|".join(ACTIONS) + r")\s*\|\s*(.*?)\s*\|\s*(.*?)\s*$")
 
-ACTIONS_TEMPLATE = """# Действия
 
-Одна строка — одно действие: `ДЕЙСТВИЕ | ЦЕЛЬ | ЗНАЧЕНИЕ`.
-Действия: ПАРОЛЬ, ЗАПРОС, ПОИСК, ФИНАЛ, СТОП (см. вводную в case/).
-Строки ниже этой линии ведущий выполнит в конце раунда и очистит файл.
----
-"""
+def pack_actions(acc):
+    """Действия, которые есть в этом пакете: базовые + дополнительные из правил."""
+    used = {r.get("action") for r in (acc or {}).get("rules", [])} | set((acc or {}).get("default_reply", {}))
+    return [a for a in ACTIONS if a in BASE_ACTIONS or a in used]
+
+
+def actions_template(acc=None):
+    return ("# Действия\n\n"
+            "Одна строка — одно действие: `ДЕЙСТВИЕ | ЦЕЛЬ | ЗНАЧЕНИЕ`.\n"
+            f"Действия: {', '.join(pack_actions(acc))} (см. вводную в case/).\n"
+            "Строки ниже этой линии ведущий выполнит в конце раунда и очистит файл.\n---\n")
+
+
+ACTIONS_TEMPLATE = actions_template()
 
 # --- Проверка утечек -------------------------------------------------------
 
@@ -164,20 +180,40 @@ def lint(pack, quiet=False):
         try:
             rules = json.loads(acc.read_text(encoding="utf-8"))
             locked = [f.name for f in (pack / "locked").glob("*")] if (pack / "locked").is_dir() else []
-            reachable = set()
+            reachable, seen = set(), set()
+            for a, n in rules.get("attempt_limit", {}).items():
+                if a not in ACTIONS or not isinstance(n, int) or n < 1:
+                    hard.append(f"access.json: attempt_limit {a}: {n} — нужно действие из списка и целое ≥ 1")
             for r in rules.get("rules", []):
-                if r.get("action") not in ACTIONS:
+                if r.get("id") in seen:
+                    hard.append(f"access.json: повторяется id правила {r.get('id')}")
+                seen.add(r.get("id"))
+                if r.get("action") not in ACTIONS or r.get("action") in ("ФИНАЛ", "СТОП"):
                     hard.append(f"access.json: правило {r.get('id')}: неизвестное действие {r.get('action')}")
+                if r.get("intent") and r.get("action") not in ARCHIVIST_ACTIONS:
+                    warn.append(f"access.json: правило {r.get('id')}: intent у {r.get('action')} не используется")
                 for rid in r.get("release", []):
                     hits = [n for n in locked if n == rid or n.startswith(rid + "__")]
                     if not hits:
                         hard.append(f"access.json: правило {r.get('id')}: нет файла locked/{rid}__*")
                     reachable.update(hits)
+                for rid in r.get("requires", []):
+                    if not any(n == rid or n.startswith(rid + "__") for n in locked):
+                        hard.append(f"access.json: правило {r.get('id')}: requires {rid} — нет файла в locked/")
                 for pat in r.get("accept", []) + [r.get("target", "")]:
                     try:
                         re.compile(pat)
                     except re.error as e:
                         hard.append(f"access.json: правило {r.get('id')}: плохой regex {pat!r}: {e}")
+            ff = rules.get("final_form")
+            if ff is not None:
+                rel = ff.get("release", "") if isinstance(ff, dict) else ""
+                if not rel or not any(n == rel or n.startswith(rel + "__") for n in locked):
+                    hard.append(f"access.json: final_form.release {rel!r} — нет файла в locked/")
+                elif not any(rel in r.get("release", []) for r in rules.get("rules", [])):
+                    hard.append(f"access.json: final_form.release {rel} — ни одно правило не выдаёт форму")
+            elif any(r.get("action") == "РЕШИТЬ" for r in rules.get("rules", [])):
+                warn.append("access.json: есть правило РЕШИТЬ, но нет final_form — ФИНАЛ принимается в любой момент")
             for n in locked:
                 if n not in reachable:
                     warn.append(f"locked/{n}: ни одно правило его не открывает")
@@ -292,8 +328,10 @@ ARCHIVIST_BRIEF = """Ты — сотрудник архива в детекти�
 и содержит все уточнения из списка «обязательные уточнения» этого правила (номер, имя,
 дата, адрес). Если список пуст, уточнения не требуются: достаточно попросить нужный документ.
 Не принимай расплывчатые запросы («пришлите всё», «что у вас есть»), запросы о другом
-документе или запросы, где обязательное уточнение отсутствует или неверно. Сомневаешься —
-отказывай. Не объясняй игроку ничего: ответ только для журнала ведущего."""
+документе или запросы, где обязательное уточнение отсутствует или неверно. Запрос,
+отправленный не туда, куда указывает поле «куда» правила (другой адрес или адресат), не
+принимай. Сомневаешься — отказывай. Не объясняй игроку ничего: ответ только для журнала
+ведущего."""
 
 ARCHIVIST_SCHEMA = json.dumps({
     "type": "object",
@@ -364,7 +402,8 @@ def init(pack, profile, runs_dir, model=None, request="", selftest=False, skip_p
     sandbox = make_sandbox()
     shutil.copytree(pack / "player", sandbox / "case")
     (sandbox / "journal.md").write_text("# Журнал игрока\n", encoding="utf-8")
-    (sandbox / "actions.md").write_text(ACTIONS_TEMPLATE, encoding="utf-8")
+    acc = json.loads((pack / "gm" / "access.json").read_text(encoding="utf-8"))
+    (sandbox / "actions.md").write_text(actions_template(acc), encoding="utf-8")
     (sandbox / "replies.md").write_text("# Ответы архива\n\nПока ответов нет.\n", encoding="utf-8")
     stamp = dt.datetime.now().strftime("%Y-%m-%d")
     run_id = f"{stamp}-{meta.get('version', pack.name)}-{profile}-{secrets.token_hex(2)}"
@@ -386,64 +425,206 @@ def init(pack, profile, runs_dir, model=None, request="", selftest=False, skip_p
     return run
 
 
+def is_released(released, prefix):
+    return any(n == prefix or n.startswith(prefix + "__") for n in released)
+
+
+def requires_met(rule, released):
+    return all(is_released(released, p) for p in rule.get("requires", []))
+
+
+def resolve(acc, action, target, value, released, ask=None):
+    """Сопоставление одного действия с правилами. Без побочных эффектов.
+
+    ask(pool) -> rule_id | None — смысловое сопоставление (архивариус) для ЗАПРОС/ПОИСК.
+    Правило с `requires` действует, только когда все его префиксы уже выданы; до этого
+    цель считается недоступной (ответ `requires_reply` или ответ по умолчанию).
+    Возвращает {"hit": правило|None, "via": str, "msg": str, "res": str, "rule": str}.
+    """
+    rules = acc.get("rules", [])
+    defaults = acc.get("default_reply", {})
+    cand = [r for r in rules if r.get("action") == action
+            and re.search(r.get("target", ".*"), norm(target), flags=re.IGNORECASE)]
+    open_cand = [r for r in cand if requires_met(r, released)]
+    for r in open_cand:
+        if any(re.search(p, norm(value), flags=re.IGNORECASE) for p in r.get("accept", [])):
+            return {"hit": r, "via": ""}
+    if ask and action in ARCHIVIST_ACTIONS:
+        pool = open_cand if cand else [r for r in rules if r.get("action") == action and requires_met(r, released)]
+        pool = [r for r in pool if r.get("intent")]
+        if pool:
+            rid = ask(pool)
+            if rid:
+                return {"hit": next(r for r in pool if r["id"] == rid), "via": " (архивариус)"}
+    if open_cand:
+        r = open_cand[0]
+        return {"hit": None, "msg": r.get("fail", defaults.get(action, "Нет результата.")), "res": "отказ", "rule": r.get("id")}
+    if cand:
+        r = cand[0]
+        return {"hit": None, "msg": r.get("requires_reply", defaults.get(action, "Нет результата.")),
+                "res": "нет доступа", "rule": r.get("id")}
+    return {"hit": None, "msg": defaults.get(action, "Нет результата."), "res": "нет правила", "rule": "—"}
+
+
+FORM_BEFORE = "Заключение принимается только через форму: сначала откройте её («Решить дело»)."
+FORM_SAME_ROUND = "Форма заключения только что открыта: заполните её пункты и отправьте ФИНАЛ следующим ходом."
+FORM_AFTER = "Форма заключения открыта: новые действия недоступны, остаются ФИНАЛ и СТОП."
+
+
+def form_gate(acc, action, released, released_before_round):
+    """Форма заключения (`final_form` в access.json: release, before_reply, same_round_reply,
+    after_reply, return_allowed). ФИНАЛ принимается, только если форма выдана в одном из
+    прошлых раундов (игрок её видел). После выдачи формы остальные действия, кроме ФИНАЛ и
+    СТОП, не выполняются — если не задано `return_allowed: true` (форму можно закрыть и
+    продолжить расследование). Без `final_form` ничего не ограничивает. Возвращает
+    (ответ, результат) или None.
+    """
+    ff = acc.get("final_form")
+    if not ff or action == "СТОП":
+        return None
+    rel = ff.get("release", "")
+    opened = is_released(released, rel)
+    if action == "ФИНАЛ":
+        if not opened:
+            return ff.get("before_reply", FORM_BEFORE), "нет формы"
+        if not is_released(released_before_round, rel):
+            return ff.get("same_round_reply", FORM_SAME_ROUND), "нет формы"
+        return None
+    if opened and not ff.get("return_allowed"):
+        return ff.get("after_reply", FORM_AFTER), "форма открыта"
+    return None
+
+
+LIMIT_REPLY = "Слишком много неверных попыток: поле ввода снова примет значение в следующем раунде."
+
+
+def field_key(acc, action, target):
+    """Поле ввода, к которому относится действие: id первого правила с подходящей целью."""
+    for r in acc.get("rules", []):
+        if r.get("action") == action and re.search(r.get("target", ".*"), norm(target), flags=re.IGNORECASE):
+            return r.get("id")
+    return norm(target)
+
+
+class AttemptLimit:
+    """Лимит неверных попыток в одно поле за раунд (`attempt_limit` в access.json, например
+    {"ПАРОЛЬ": 3}). Удачные попытки не считаются. Сверх лимита значение не проверяется.
+    Правило поля (первое с подходящей целью) может задать свой `attempt_limit`
+    (число; 0 — без лимита) и свой `attempt_limit_reply`."""
+
+    def __init__(self, acc):
+        self.acc, self.limits, self.fails = acc, acc.get("attempt_limit", {}), {}
+
+    def reset(self):
+        self.fails = {}
+
+    def _field(self, action, target):
+        for r in self.acc.get("rules", []):
+            if r.get("action") == action and re.search(r.get("target", ".*"), norm(target), flags=re.IGNORECASE):
+                return r
+        return None
+
+    def _limit(self, action, target):
+        r = self._field(action, target)
+        if r is not None and "attempt_limit" in r:
+            return r["attempt_limit"] or None
+        return self.limits.get(action)
+
+    def blocked(self, action, target):
+        n = self._limit(action, target)
+        if not n:
+            return False
+        return self.fails.get((action, field_key(self.acc, action, target)), 0) >= n
+
+    def record(self, action, target, hit):
+        if self._limit(action, target) and not hit:
+            k = (action, field_key(self.acc, action, target))
+            self.fails[k] = self.fails.get(k, 0) + 1
+
+    def reply(self, action=None, target=None):
+        r = self._field(action, target) if action else None
+        if r is not None and r.get("attempt_limit_reply"):
+            return r["attempt_limit_reply"]
+        return self.acc.get("attempt_limit_reply", LIMIT_REPLY)
+
+
+def to_release(pack, hit, released):
+    """Имена файлов locked/, которые правило выдаёт сейчас (ещё не выданные)."""
+    names = []
+    for rid in hit.get("release", []):
+        for f in sorted((Path(pack) / "locked").glob("*")):
+            if (f.name == rid or f.name.startswith(rid + "__")) and f.name not in released and f.name not in names:
+                names.append(f.name)
+    return names
+
+
+def hit_reply(hit, files):
+    if not hit.get("release"):
+        return hit.get("ok", "Готово."), "ответ"
+    if files:
+        return hit.get("ok", "Готово."), "успех"
+    return hit.get("again", "Уже получено."), "повтор"
+
+
 def apply_actions(run, state, pack, sandbox):
     acc = json.loads((pack / "gm" / "access.json").read_text(encoding="utf-8"))
-    defaults = acc.get("default_reply", {})
     text = (sandbox / "actions.md").read_text(encoding="utf-8")
     body = text.split("\n---\n", 1)[1] if "\n---\n" in text else text
     replies, released_now, final = [], [], None
+    released_before_round = list(state["released"])
+    limit = AttemptLimit(acc)
     for line in body.splitlines():
         m = ACTION_RE.match(line)
         if not m:
             continue
         action, target, value = m.group(1), m.group(2), m.group(3)
+        if final:
+            replies.append(f"- {action} | {target} | {value} → Игра уже завершена.")
+            gm_log(run, f"| {state['round']} | {action} | {target} | {value} | — | после конца | — |")
+            continue
+        gate = form_gate(acc, action, state["released"], released_before_round)
+        if gate:
+            replies.append(f"- {action} | {target} | {value} → {gate[0]}")
+            gm_log(run, f"| {state['round']} | {action} | {target} | {value} | final_form | {gate[1]} | — |")
+            continue
+        if limit.blocked(action, target):
+            replies.append(f"- {action} | {target} | {value} → {limit.reply(action, target)}")
+            gm_log(run, f"| {state['round']} | {action} | {target} | {value} | {field_key(acc, action, target)} | лимит | — |")
+            continue
         if action in ("ФИНАЛ", "СТОП"):
             final = {"type": action, "target": target, "text": value}
             replies.append(f"- {action}: принято. Игра завершена.")
             gm_log(run, f"| {state['round']} | {action} | {target} | {value} | — | конец | — |")
             continue
-        cand = [r for r in acc.get("rules", []) if r.get("action") == action
-                and re.search(r.get("target", ".*"), norm(target), flags=re.IGNORECASE)]
-        hit, via = None, ""
-        for r in cand:
-            if any(re.search(p, norm(value), flags=re.IGNORECASE) for p in r.get("accept", [])):
-                hit = r
-                break
-        if not hit and action in ("ЗАПРОС", "ПОИСК") and state.get("archivist"):
-            pool = cand or [r for r in acc.get("rules", []) if r.get("action") == action]
-            pool = [r for r in pool if r.get("intent")]
-            if pool:
-                verdict = archivist(action, target, value, pool, model=state["archivist"])
-                state["cost_usd"] = state.get("cost_usd", 0) + verdict.get("cost", 0)
-                with open(Path(run) / "archivist-log.md", "a", encoding="utf-8") as f:
-                    f.write(f"- раунд {state['round']} · {action} | {target} | {value} → "
-                            f"{verdict['rule_id'] or 'отказ'}: {verdict.get('reason', '')}\n")
-                if verdict["rule_id"]:
-                    hit = next(r for r in pool if r["id"] == verdict["rule_id"])
-                    via = " (архивариус)"
-        if hit:
-            files = []
-            for rid in hit.get("release", []):
-                for f in sorted((pack / "locked").glob("*")):
-                    if (f.name == rid or f.name.startswith(rid + "__")) and f.name not in state["released"]:
-                        shutil.copy2(f, sandbox / "case" / f.name)
-                        state["released"].append(f.name)
-                        files.append(f.name)
+
+        def ask(pool, action=action, target=target, value=value):
+            verdict = archivist(action, target, value, pool, model=state["archivist"])
+            state["cost_usd"] = state.get("cost_usd", 0) + verdict.get("cost", 0)
+            with open(Path(run) / "archivist-log.md", "a", encoding="utf-8") as f:
+                f.write(f"- раунд {state['round']} · {action} | {target} | {value} → "
+                        f"{verdict['rule_id'] or 'отказ'}: {verdict.get('reason', '')}\n")
+            return verdict["rule_id"]
+
+        r = resolve(acc, action, target, value, state["released"], ask=ask if state.get("archivist") else None)
+        limit.record(action, target, r["hit"])
+        files = []
+        if r["hit"]:
+            files = to_release(pack, r["hit"], state["released"])
+            for name in files:
+                shutil.copy2(pack / "locked" / name, sandbox / "case" / name)
+                state["released"].append(name)
             released_now += files
-            msg = hit.get("ok", "Готово.") if files else hit.get("again", "Уже получено.")
-            res, rule = ("успех" if files else "повтор"), hit.get("id") + via
-        elif cand:
-            msg, res, rule = cand[0].get("fail", defaults.get(action, "Нет результата.")), "отказ", cand[0].get("id")
-            files = []
+            msg, res = hit_reply(r["hit"], files)
+            rule = r["hit"].get("id") + r["via"]
         else:
-            msg, res, rule, files = defaults.get(action, "Нет результата."), "нет правила", "—", []
+            msg, res, rule = r["msg"], r["res"], r["rule"]
         replies.append(f"- {action} | {target} | {value} → {msg}" + (f" Новые материалы: {', '.join(files)}." if files else ""))
         gm_log(run, f"| {state['round']} | {action} | {target} | {value} | {rule} | {res} | {', '.join(files) or '—'} |")
     (sandbox / "replies.md").write_text(
         f"# Ответы архива — раунд {state['round']}\n\n" + ("\n".join(replies) if replies else "Действий не было.") + "\n",
         encoding="utf-8")
     shutil.copy2(sandbox / "actions.md", Path(run) / "player-log" / f"actions-{state['round']:02d}.md")
-    (sandbox / "actions.md").write_text(ACTIONS_TEMPLATE, encoding="utf-8")
+    (sandbox / "actions.md").write_text(actions_template(acc), encoding="utf-8")
     return released_now, final, len(replies)
 
 
@@ -599,12 +780,13 @@ def export(pack, out):
              "Не подсказывай, не говори «почти», не объясняй смысл материалов. На неподходящее",
              "действие отвечай текстом «при отказе» или ответом по умолчанию. Записывай каждое",
              "действие тестера в журнал ведущего (таблица ниже) — это данные для сравнения.", "",
-             "| Действие | Цель | Что принимается | Открывает | Ответ при успехе | Ответ при отказе |",
-             "|---|---|---|---|---|---|"]
+             "| Действие | Цель | Что принимается | Открывает | Только после | Ответ при успехе | Ответ при отказе |",
+             "|---|---|---|---|---|---|---|"]
     for r in acc.get("rules", []):
         accepts = r.get("intent") or " / ".join(r.get("accept", []))
         lines.append(f"| {r['action']} | {r.get('target_label', r.get('target', ''))} | {accepts} | "
-                     f"{', '.join(r.get('release', []))} | {r.get('ok', '')} | {r.get('fail', '')} |")
+                     f"{', '.join(r.get('release', [])) or 'ответ без материала'} | {', '.join(r.get('requires', [])) or '—'} | "
+                     f"{r.get('ok', '')} | {r.get('fail', '')} |")
     lines += ["", "Ответ по умолчанию: " + "; ".join(f"{k}: «{v}»" for k, v in acc.get("default_reply", {}).items()),
               "", "## Журнал ведущего", "", "| Время | Действие | Цель | Значение | Правило | Результат | Открыто |",
               "|---|---|---|---|---|---|---|"]
@@ -621,6 +803,87 @@ def export(pack, out):
         "`playtest/runs/<дата>-<версия>-human-<имя>/` — тогда `playtest.py metrics` и `compare` "
         "сравнят людей и симуляцию на одном пакете.\n", encoding="utf-8")
     print(out)
+
+
+# --- Офлайн-проверка правил доступа -----------------------------------------
+
+WALK_EXPECT_RE = re.compile(r"^(.*?)\s*=>\s*(.*?)\s*$")
+
+
+def walk(pack, script, quiet=False):
+    """Детерминированный прогон сценария действий по access.json, без claude и архивариуса.
+
+    Строка сценария: `ДЕЙСТВИЕ | ЦЕЛЬ | ЗНАЧЕНИЕ => ОЖИДАНИЕ`.
+    ОЖИДАНИЕ: префиксы через запятую (L214, L387) — должны открыться ровно они;
+    `ответ` — правило сработало без материала; `отказ`, `нет доступа`, `нет правила`,
+    `повтор`, `лимит` — соответствующий результат; `нет формы`, `форма открыта` — ответ
+    формы заключения (final_form; `форма открыта` — только без return_allowed); `конец` — ФИНАЛ или СТОП принят. Без `=>` строка
+    выполняется без проверки. `---` — граница раунда (сбрасывает лимит попыток и
+    отмечает, что выданная форма увидена). `#` — комментарий. В конце — какие файлы
+    locked/ так и не открылись.
+    Возвращает число несовпадений.
+    """
+    pack = Path(pack).resolve()
+    acc = json.loads((pack / "gm" / "access.json").read_text(encoding="utf-8"))
+    released, bad, n, ended = [], 0, 0, False
+    released_before_round = []
+    limit = AttemptLimit(acc)
+    for ln, raw in enumerate(Path(script).read_text(encoding="utf-8").splitlines(), 1):
+        line = raw.split(" #", 1)[0].rstrip() if not raw.lstrip().startswith("#") else ""
+        if line.strip() == "---":
+            limit.reset()
+            released_before_round = list(released)
+            continue
+        if not line.strip():
+            continue
+        em = WALK_EXPECT_RE.match(line)
+        act_line, expect = (em.group(1), em.group(2)) if em else (line, None)
+        m = ACTION_RE.match(act_line)
+        if not m:
+            print(f"{ln}: не разобрано: {raw}")
+            bad += 1
+            continue
+        n += 1
+        action, target, value = m.groups()
+        gate = None if ended else form_gate(acc, action, released, released_before_round)
+        if ended:
+            r = {"hit": None, "res": "после конца", "rule": "—"}
+        elif gate:
+            r = {"hit": None, "res": gate[1], "rule": "final_form"}
+        elif limit.blocked(action, target):
+            r = {"hit": None, "res": "лимит", "rule": field_key(acc, action, target)}
+        elif action in ("ФИНАЛ", "СТОП"):
+            r = {"hit": None, "res": "конец", "rule": "—"}
+            ended = True
+        else:
+            r = resolve(acc, action, target, value, released)
+            limit.record(action, target, r["hit"])
+        files = to_release(pack, r["hit"], released) if r["hit"] else []
+        released += files
+        res = hit_reply(r["hit"], files)[1] if r["hit"] else r["res"]
+        got_prefixes = sorted({f.split("__", 1)[0] for f in files})
+        rule = r["hit"].get("id") if r["hit"] else r["rule"]
+        ok = True
+        if expect is not None:
+            e = expect.strip().lower()
+            if e in ("ответ", "отказ", "нет доступа", "нет правила", "повтор", "лимит",
+                     "нет формы", "форма открыта", "конец", "после конца"):
+                ok = res == e
+            else:
+                want = sorted(x.strip() for x in expect.split(",") if x.strip())
+                ok = res == "успех" and got_prefixes == want
+        if not ok:
+            bad += 1
+        if not quiet or not ok:
+            print(f"{'ок ' if ok else 'НЕТ'} {ln:>4}: {action} | {target} | {value} → {rule}: {res}"
+                  + (f" [{', '.join(got_prefixes)}]" if got_prefixes else "")
+                  + (f"  (ожидалось: {expect})" if expect is not None and not ok else ""))
+    locked = sorted(f.name for f in (pack / "locked").glob("*")) if (pack / "locked").is_dir() else []
+    missed = [x for x in locked if x not in released]
+    print(f"Действий: {n}, несовпадений: {bad}, открыто {len(released)} из {len(locked)}")
+    for x in missed:
+        print("  не открыт:", x)
+    return bad
 
 
 def selftest(model):
@@ -671,6 +934,8 @@ def main():
     a = sub.add_parser("metrics"); a.add_argument("--run", required=True); a.add_argument("--suspect")
     a = sub.add_parser("compare"); a.add_argument("--runs", nargs="+", required=True); a.add_argument("--suspect", required=True)
     a = sub.add_parser("export"); a.add_argument("--pack", required=True); a.add_argument("--out", required=True)
+    a = sub.add_parser("walk"); a.add_argument("--pack", required=True); a.add_argument("--script", required=True)
+    a.add_argument("--quiet", action="store_true", help="печатать только несовпадения")
     a = sub.add_parser("selftest"); a.add_argument("--model", default="haiku")
     args = ap.parse_args()
     if args.cmd == "lint":
@@ -693,6 +958,8 @@ def main():
         compare(args.runs, args.suspect)
     elif args.cmd == "export":
         export(args.pack, args.out)
+    elif args.cmd == "walk":
+        sys.exit(1 if walk(args.pack, args.script, args.quiet) else 0)
     elif args.cmd == "selftest":
         selftest(args.model)
 
