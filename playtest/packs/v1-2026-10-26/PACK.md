@@ -1,7 +1,7 @@
 # Пакет игрока v1-2026-10-26
 
 version: v1-2026-10-26
-built-from: своды bunker/01–04 по A-227 (main после PR #6 + A-223…A-227 этой ветки); список ID — gm/sources.md
+built-from: своды bunker/01–04 по A-231 (main после PR #9 + A-231); список ID — gm/sources.md
 built-by: Claude (detective-architect), ветка claude/project-thread-few4t4
 approved-by-author: yes
 date: 2026-10-26
