@@ -1,0 +1,167 @@
+{
+  "duration_api_ms": 218271,
+  "stop_reason": "end_turn",
+  "session_id": "876aadd8-c548-49fb-bd91-3b2ed5bdd23b",
+  "total_cost_usd": 1.0725949000000001,
+  "usage": {
+    "input_tokens": 40,
+    "cache_creation_input_tokens": 64788,
+    "cache_read_input_tokens": 647822,
+    "output_tokens": 21214,
+    "output_tokens_details": {
+      "thinking_tokens": 10083
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 64788,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1762,
+        "cache_read_input_tokens": 66608,
+        "cache_creation_input_tokens": 4179,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 4179
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 324,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002865,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 303,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 40,
+      "outputTokens": 21214,
+      "cacheReadInputTokens": 647822,
+      "cacheCreationInputTokens": 64788,
+      "webSearchRequests": 0,
+      "costUSD": 1.0723084,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 10083,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 64788,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 59,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Первый раунд готов: я прочитал все материалы, записал раздел «Раунд 1» в `journal.md` и поставил в `actions.md` 23 действия. Кто убийца, пока не знаю, уверенность в версии — около 30%.\n\n**Что выглядит установленным:**\n- **Ограждение.** Плиту крепления стойки, судя по всему, так и не заменили. Миллер в отчёте 10.10 пишет: новая плита, новые болты, свежая краска. На его же снимках 13.10 анкеры старые, с серой краской, а трещина почти целиком старая.\n- **Падение.** На записи радиопоста перед ударом слышны шаги вниз на 3–4 ступени, потом возня и скрежет металла. Значит, рядом с Коулом кто-то был, это не просто падение.\n- **Время.** Часы регистратора радиопоста, похоже, спешат примерно на 3 минуты. По оператору и серверу Коул звонил с узла в 07:35, а на записи он входит в узел в 07:37:52. Тогда удар был около 08:45:40 по реальному времени.\n- **Тревога 12.10 была инсценировкой.** В «внешнем сообщении» говорится, что удар уже нанесён. Но эфир в 23:43 того же вечера сообщает только о готовности, а настоящий удар был 13.10 в 10:40. По описанию голос в сообщении похож на голос Эммы Рид, хотя на опросе она сказала, что не узнала его.\n- **Программа.** Похоже, VAULTLINE прикрывает испытания HEXON BIO: Хейл — глава этой компании, «комплекс» выдавали двумя партиями, а в папке Коула лежал бланк осмотра «Этапа A» 2008 года.\n- **Шантаж Харта.** В 07:37 Коул у переговорного окна говорит: «Харт, ты же не хочешь, чтобы миссис Колдер об этом узнала?» Половина листа с психологическим интервью Харта осталась на площадке. Вторую, обгоревшую, нашли у него в нагрудном кармане.\n- **Ложь в показаниях.** Мика Сато говорит, что ночью спала, но в 05:21 кто-то пытался открыть дверь узла, и там нашли её ручку-диктофон. Кейт Уолш говорит, что дубликат ключа пропал в начале заезда, но Рид сдала инженеру оба ключа, включая дубликат.\n\n**Подозреваемые:**\n\n| Кто | % | Почему |\n|---|---|---|\n| Лея Моро | 22 | Пришла к медику через минуту-две после удара. Утверждает, что из жилого блока слышала, как кто-то сбежал по лестнице, — до площадки оттуда больше 50 м. Работает в комнате анкет в 6 м от площадки. |\n| Эмма Рид | 20 | Последней видела Коула (8:30–8:40), солгала про голос, держала у себя дубликат ключа, взяла папку у тела. |\n| Ник Харт | 15 | Сильный мотив из-за шантажа. Но на записи он подходит к телу со стороны нижнего коридора через две минуты после удара. |\n| Габриэль Силва | 12 | Срочно нужны деньги на операцию сестры, заявку на выплату Коул отложил. Тоже пришёл снизу. |\n| Кейт Уолш | 8 | Знает о прошлом заезде, подтверждает алиби Леи. |\n| Дэн Миллер | 8 | Ложный отчёт о плите, хранил ключи от кабинета. |\n| Мика Сато | 5 | Во время удара была у медика, это подтверждает Уолш. |\n| Несчастный случай / другое | 10 | Крепление и правда было ослаблено. |\n\nСвязь Леи с Томом Бернаром (умер 06.10.2008, сестра Клэр) — пока только моя догадка, в материалах её нет.\n\n**Действия на этот раунд:**\n- **Запрос в бюро:** приложение № 7, журналы сервера за 13.10. Это проверит смещение часов и время работы терминалов.\n- **Сайты:** VAULTLINE, HEXON BIO, Fieldworks Radio.\n- **Осмотр:**\n  - видна ли половина листа на снимках площадки 13.10;\n  - уголок листа в папке на кадре 14;\n  - совместить две половины листа;\n  - картинка учётной записи на ноутбуке;\n  - бланк A-24;\n  - коробки комплекса;\n  - пачки документов кабинета руководителя, технической, медкабинета и радиопоста;\n  - свойства аудиофайлов.\n- **Ноутбук:** ключ по знаку HEXON (подсказка — «наш первый знак»), в двух направлениях обхода.\n- **Телефон:** PIN по дню рождения Аны, 0110 и 1001.\n- **Звонки:** горячая линия NorthCare по партиям и поставщик плиты Colton Supply.\n- **Газета:** номер за 07.10.2008, на следующий день после смерти Тома Бернара.",
+  "ttft_ms": 1820,
+  "type": "result",
+  "duration_ms": 218962,
+  "uuid": "e1f51219-018f-4c3d-a12d-5da9411d8ccb",
+  "ttft_stream_ms": 1582,
+  "time_to_request_ms": 310,
+  "time_to_request_phases_ms": {
+    "other": 45,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 33,
+    "input_attachments": 18,
+    "input_hooks": 6,
+    "transcript_persist": 14,
+    "tool_pool_refresh": 3,
+    "init_message": 11,
+    "engine_pickup": 2,
+    "message_prep": 5,
+    "model_config_wait": 127,
+    "autocompact": 4,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 12,
+    "message_normalization": 2,
+    "client_creation": 15,
+    "request_build": 10
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 61,
+  "time_to_request_cpu_ms": 386,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 226,
+  "process_anon_mib_turn_start": 132,
+  "process_rss_mib_result": 221,
+  "process_anon_mib_result": 121,
+  "process_peak_rss_mib": 245,
+  "process_cpu_ms_turn": 6889,
+  "process_wall_ms_turn": 218961,
+  "process_cpu_ms_streaming": 4344,
+  "process_wall_ms_streaming": 189171,
+  "main_stream_count": 20,
+  "main_stream_event_count": 1932,
+  "main_stream_chunk_count": 969,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 11,
+    "cpu_ms": 18,
+    "major_faults": 0
+  },
+  "first_content_frame_ms": 1582,
+  "time_to_request_from_spawn_ms": 130824,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793085025187.9636,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
