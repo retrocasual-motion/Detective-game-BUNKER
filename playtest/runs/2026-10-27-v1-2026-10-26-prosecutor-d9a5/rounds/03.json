@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 278399,
+  "stop_reason": "end_turn",
+  "session_id": "2c21a42a-8cee-44fc-9289-d81a329d5464",
+  "total_cost_usd": 0.7711326000000002,
+  "usage": {
+    "input_tokens": 14,
+    "cache_creation_input_tokens": 23334,
+    "cache_read_input_tokens": 551460,
+    "output_tokens": 11369,
+    "output_tokens_details": {
+      "thinking_tokens": 5728
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 23334,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 865,
+        "cache_read_input_tokens": 87244,
+        "cache_creation_input_tokens": 3201,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3201
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 54,
+      "outputTokens": 28894,
+      "thinkingTokens": 10952,
+      "cacheReadInputTokens": 1327911,
+      "cacheCreationInputTokens": 87257,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 87257,
+      "webSearchRequests": 0,
+      "costUSD": 0.7708671000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 282,
+      "thinkingTokens": 261,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002655,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 20,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 3 закончен. Раздел «Раунд 3» дописан в `journal.md`. В `actions.md` две строки.\n\n**Что изменилось:**\n- **Смысл программы.** Программа VAULTLINE оказалась клиническим опытом компании HEXON BIO, главой которой был Хейл (газета). Участники делятся на «активную» партию комплекса 0417 (Харт, Моро, Силва) и контрольную 0418 (Сато, Уолш, Миллер).\n- **Прошлый заезд.** Участник A-24 умер в 2008 году на 15-й день, судя по экспорту, от реакции на компонент основы. Дата совпадает с газетным объявлением о смерти Тома Бернара 6 октября 2008 года. Что A-24 и есть Бернар, я вывел только по этому совпадению.\n- **Пирс.** Через служебный узел она отправляла данные программы на внешний маршрут 14 и входила в личную почту. На допросе она сказала, что не узнала голос на записи «внешнего сообщения», но по роликам-знакомствам это её голос. Выходит, она сама озвучила ложный «удар». Кроме того, она соврала, что Коул заходил к ней утром.\n- **Силва.** Телефон из стола Коула, скорее всего, его: сестра Ана, операция, 41 пропущенный звонок. Коул отложил его заявку на досрочную выплату.\n- **Харт.** Его я отодвинул (10%). Он подтвердил сводку на радиопосту в 08:44:35, а путь «первым к телу» по нижнему коридору занимает около двух минут. Это совпадает с его рассказом и с записью радиопоста.\n\n**Подозреваемые сейчас:** Пирс 40%, Силва 15%, Уолш 12%, Харт 10%, Миллер 8%, Моро и Сато вместе 5%, несчастный случай 10%. Уверенность в версии — 35%.\n\nДоказательств, что Пирс была на лестнице в 08:48, у меня нет. Есть только мотив, ложь и возможность.\n\n**Действия в `actions.md`:**\n- `АДРЕС | браузер | vaultline-program.com` — посмотреть, как оформлять запросы документов компании.\n- `ПАРОЛЬ | телефон | 1001` — это догадка: Силва на ролике сказал, что в день записи у сестры день рождения, а запись сделана в день 1, то есть 01.10. Из трёх попыток раунда я трачу одну.",
+  "ttft_ms": 1982,
+  "type": "result",
+  "duration_ms": 105853,
+  "uuid": "352f220b-2125-4566-b625-6e5387e86c88",
+  "ttft_stream_ms": 1210,
+  "time_to_request_ms": 127,
+  "time_to_request_phases_ms": {
+    "other": 18,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 32,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 13,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 9,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 10,
+    "message_normalization": 8,
+    "client_creation": 6,
+    "request_build": 12
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 77,
+  "time_to_request_cpu_ms": 142,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 229,
+  "process_anon_mib_turn_start": 137,
+  "process_rss_mib_result": 229,
+  "process_anon_mib_result": 130,
+  "process_peak_rss_mib": 252,
+  "process_cpu_ms_turn": 2193,
+  "process_wall_ms_turn": 105852,
+  "process_cpu_ms_streaming": 1215,
+  "process_wall_ms_streaming": 81523,
+  "main_stream_count": 7,
+  "main_stream_event_count": 1116,
+  "main_stream_chunk_count": 148,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 23,
+    "cpu_ms": 38,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1210,
+  "time_to_request_from_spawn_ms": 2250725,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793110865131.9045,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

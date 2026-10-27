@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 619992,
+  "stop_reason": "end_turn",
+  "session_id": "83c3f72c-b348-4d7b-a65c-90c40fd1954f",
+  "total_cost_usd": 2.7468867,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 13461,
+    "cache_read_input_tokens": 378681,
+    "output_tokens": 8438,
+    "output_tokens_details": {
+      "thinking_tokens": 3791
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13461,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1079,
+        "cache_read_input_tokens": 129860,
+        "cache_creation_input_tokens": 7065,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 7065
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 342,
+      "thinkingTokens": 321,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002955,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 78,
+      "outputTokens": 57751,
+      "thinkingTokens": 26871,
+      "cacheReadInputTokens": 2608176,
+      "cacheCreationInputTokens": 133703,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 133703,
+      "webSearchRequests": 0,
+      "costUSD": 2.7465912,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 закончен. Раздел «Раунд 4» дописан в `journal.md`, шесть действий записаны в `actions.md`. Прямого доказательства, кто был на площадке в 08:45, пока нет. Уверенность в версии — 50%.\n\n**Новые факты**\n- **A-24 — Томас Бернар, 1974 г. р., механик.** Так записано в учёте анкет VAULTLINE. Жена у него — преподаватель рисования, контакт — сестра Клэр.\n- **Лея Моро — преподаватель рисования, о программе узнала «из статьи».** Скорее всего, она вдова Бернара и скрыла это в анкете. Это мой вывод: фамилии у них разные.\n- **Ложную справку о выбытии A-24 визировал и Хейл.** Под увеличением вторая подпись читается как «R. Hale».\n- **Fieldworks Radio закрылась в декабре 2007 года.** А Коул в 2009-м каждый квартал списывал по 4 200 наличными «за обслуживание Fieldworks». Харт работал в этой компании и, видимо, это понял, так что компромат у них с Коулом был взаимный.\n- **Сато, вероятно, — автор The Signal «С. Грей».** Главного редактора зовут Фрэнк Бейкер, а книга у Сато подписана «С. — проверяй источники. Фрэнк».\n- **Моро была в комнате анкет, а не в жилом блоке.** На стр. 14 листок на двери Коула оказался объявлением «РЕЖИМ ТРЕВОГИ», а не листом A-24, как я предполагал раньше. На стр. 15 этот листок намечен, линия косяка оборвана, конец смазан. Значит, Моро рисовала напротив кабинета Коула уже во время тревоги и резко бросила рисунок.\n\n**Время.**\n- **Моро.** До медкабинета ей 40 с хода, а пришла она через 1–3 минуты после удара. Визита нет в журнале медика.\n- **Силва.** От кухни до подножия идти около 40 с, но появился он только через 4,5 минуты после подтверждения сводки. Где он был это время, не объяснено.\n\n**Подозреваемые**\n\n| Кто | % |\n|---|---|\n| Моро | 45 |\n| Несчастный случай | 20 |\n| Пирс | 15 |\n| Силва | 12 |\n| Миллер | 5 |\n| Харт | 2 |\n| Уолш и Сато | 1 |\n\n**Что не сходится.** Если Коула толкнула Моро, непонятно, зачем ей рвать лист с интервью Харта. Возможно, она хватала папку целиком.\n\n**Действия на следующий раунд**\n- Увеличить половину листа с площадки и бланк A-24: ищу графитовую пыль, которая указала бы на Моро.\n- Увеличить кадры камеры инженера у тела, снимки площадки из фототаблицы и обгоревшую половину листа Харта.\n- Нажать «Решить дело», чтобы увидеть пункты формы. По вводной форму можно закрыть и продолжить расследование.",
+  "ttft_ms": 2507,
+  "type": "result",
+  "duration_ms": 88542,
+  "uuid": "06c5e17b-98ac-41aa-ab51-a9013ccc56eb",
+  "ttft_stream_ms": 1992,
+  "time_to_request_ms": 128,
+  "time_to_request_phases_ms": {
+    "other": 26,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 30,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 8,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 11,
+    "message_normalization": 13,
+    "client_creation": 7,
+    "request_build": 13
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 78,
+  "time_to_request_cpu_ms": 142,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 223,
+  "process_anon_mib_turn_start": 130,
+  "process_rss_mib_result": 226,
+  "process_anon_mib_result": 127,
+  "process_peak_rss_mib": 233,
+  "process_cpu_ms_turn": 2327,
+  "process_wall_ms_turn": 88542,
+  "process_cpu_ms_streaming": 1642,
+  "process_wall_ms_streaming": 75209,
+  "main_stream_count": 3,
+  "main_stream_event_count": 831,
+  "main_stream_chunk_count": 700,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 22,
+    "cpu_ms": 38,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1992,
+  "time_to_request_from_spawn_ms": 691792,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793109305737.708,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

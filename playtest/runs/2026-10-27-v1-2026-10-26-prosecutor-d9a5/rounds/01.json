@@ -1,0 +1,167 @@
+{
+  "duration_api_ms": 119741,
+  "stop_reason": "end_turn",
+  "session_id": "2c21a42a-8cee-44fc-9289-d81a329d5464",
+  "total_cost_usd": 0.3562171,
+  "usage": {
+    "input_tokens": 26,
+    "cache_creation_input_tokens": 51863,
+    "cache_read_input_tokens": 350776,
+    "output_tokens": 11337,
+    "output_tokens_details": {
+      "thinking_tokens": 3677
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 51863,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 531,
+        "cache_read_input_tokens": 51654,
+        "cache_creation_input_tokens": 3397,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3397
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 26,
+      "outputTokens": 11337,
+      "cacheReadInputTokens": 350776,
+      "cacheCreationInputTokens": 51863,
+      "webSearchRequests": 0,
+      "costUSD": 0.3559516,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 3677,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 51863,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 282,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002655,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 261,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 49,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 1 закончен. Журнал дополнен, действия записаны в `actions.md`.\n\nГлавный подозреваемый пока Ник Харт. Его я оцениваю в 45%, уверенность в версии — 35%. Основания:\n- **Шантаж:** запись радиопоста (файл 50) в 07:37 фиксирует, как Коул шантажирует Харта.\n- **Обрывки листа:** верхняя половина психологического интервью Харта лежала на верхней площадке, а нижняя, обгоревшая, была у него в кармане.\n- **Опыт Харта:** он бывший монтажник связи и сапёр.\n- **Показания Силвы:** он видел, как Харт что-то спрятал у тела.\n\nСлабое место версии — неясно, где был Харт в момент падения. Радиопост фиксирует возню наверху в 08:48:32 и удар внизу в 08:48:42, но шагов Харта там нет. Его шаги слышны только в 08:50:55. Время падения по регистратору (08:48:42) тоже не сходится с «около 8:45» из показаний.\n\nОтдельно: отчёт Миллера о замене плиты ложный. Заключение эксперта показывает, что стойка держалась на старой плите с временным креплением. Версия несчастного случая от этого не отпадает.\n\nВ `actions.md` три действия:\n- запрос Приложения № 7 (журналы сервера за 13.10.2009);\n- листание пачек документации (файл 29);\n- увеличение знака в шапке бланка из клапана папки (файл 26).",
+  "ttft_ms": 1504,
+  "type": "result",
+  "duration_ms": 121480,
+  "uuid": "fb775104-9170-4515-8314-769c52fa87f9",
+  "ttft_stream_ms": 802,
+  "time_to_request_ms": 187,
+  "time_to_request_phases_ms": {
+    "other": 22,
+    "system_prompt": 1,
+    "resume_other": 1,
+    "process_user_input": 9,
+    "input_attachments": 15,
+    "input_hooks": 2,
+    "transcript_persist": 5,
+    "tool_pool_refresh": 2,
+    "init_message": 6,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 104,
+    "autocompact": 1,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 7,
+    "message_normalization": 1,
+    "client_creation": 2,
+    "request_build": 5
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 36,
+  "time_to_request_cpu_ms": 144,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 226,
+  "process_anon_mib_turn_start": 133,
+  "process_rss_mib_result": 238,
+  "process_anon_mib_result": 137,
+  "process_peak_rss_mib": 242,
+  "process_cpu_ms_turn": 3102,
+  "process_wall_ms_turn": 121479,
+  "process_cpu_ms_streaming": 1712,
+  "process_wall_ms_streaming": 73773,
+  "main_stream_count": 13,
+  "main_stream_event_count": 1407,
+  "main_stream_chunk_count": 209,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 9,
+    "cpu_ms": 15,
+    "major_faults": 0
+  },
+  "first_content_frame_ms": 802,
+  "time_to_request_from_spawn_ms": 2069085,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793110683485.135,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

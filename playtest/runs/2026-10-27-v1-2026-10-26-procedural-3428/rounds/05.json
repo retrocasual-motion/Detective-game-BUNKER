@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 492936,
+  "stop_reason": "end_turn",
+  "session_id": "a553e93d-e672-4cc8-94a5-18da98057777",
+  "total_cost_usd": 1.290365,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 9817,
+    "cache_read_input_tokens": 382776,
+    "output_tokens": 7666,
+    "output_tokens_details": {
+      "thinking_tokens": 3340
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 9817,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 943,
+        "cache_read_input_tokens": 129201,
+        "cache_creation_input_tokens": 6599,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 6599
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 281,
+      "thinkingTokens": 260,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00026500000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 52,
+      "outputTokens": 58631,
+      "thinkingTokens": 28734,
+      "cacheReadInputTokens": 1732380,
+      "cacheCreationInputTokens": 132612,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 132612,
+      "webSearchRequests": 0,
+      "costUSD": 1.2901,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 7,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Я отправил заключение: в `actions.md` записано `ФИНАЛ | заключение | см. журнал`, полный текст лежит в `journal.md` под заголовком «Заключение». Личность исполнителя я установил только по косвенным данным, остальные пункты опираются на документы надёжнее.\n\nВыводы по пунктам формы:\n\n1. **Что произошло.** Коул упал около 08:44:50 по часам сервера (08:48:42 по регистратору радиопоста, который спешит примерно на 3,5–4 минуты). Перед падением на записи слышны возня и скрежет, значит, был второй человек. Вниз по лестнице после падения никто не шёл, значит, этот человек пришёл по верхнему коридору. Наиболее вероятно, это Лея Моро. Её показания «читала в жилом блоке, слышала, как кто-то сбежал по лестнице» невозможны. В комнате анкет, которую она ведёт, спрятаны бумаги из пропавшей папки A-24, на них графитовая пыль. Мотив я вижу в мести за гибель A-24, а прямых доказательств нет. Пирс осталась запасным вариантом. Харта, Уолш, Сато, Силву и Миллера я исключил по времени подтверждений сводки и по месту.\n2. **Умысел.** Достоверно установить нельзя. Скорее драка или толчок без доказанного умысла на смерть.\n3. **Дефект ограждения.** Плита крепления была с давней трещиной, временный хомут срезало боковой нагрузкой. Коул отклонил предложение закрыть лестницу, а отчёт Миллера о замене плиты ложный: заказ в Colton Supply так и не доставлен.\n4. **Почему не выпустили.** Защищённый режим включил офис командой в 09:24:51, до реального удара в 10:40. Снять его мог только офис. Хейл вскоре погиб, связь с офисом пропала, а Коул, владевший правами администратора, был мёртв. Умысел удерживать группу доказать нельзя.\n5. **Что за программа.** VAULTLINE VL-31 была прикрытием для испытания препарата Hexon Bio. Партия 0417 «активная» не зарегистрирована в NorthCare, 0418 «контрольная». Участник A-24 умер в 2008 году на 15-й день, хотя в записке просил ничего с соей не давать. Тревога 12.10 была постановкой, о ней знали Коул и Пирс.\n\nВ заключении я оговорил, что для подтверждения личности исполнителя нужны показания Моро, экспертиза графита и отпечатков на бумагах A-24 и выяснение её связи с A-24. Уверенность в версии на момент отправки — около 50%.",
+  "ttft_ms": 4587,
+  "type": "result",
+  "duration_ms": 74060,
+  "uuid": "ace17c91-d409-4123-9f72-2820cbb28eb1",
+  "ttft_stream_ms": 3731,
+  "time_to_request_ms": 152,
+  "time_to_request_phases_ms": {
+    "other": 21,
+    "system_prompt": 2,
+    "resume_other": 1,
+    "process_user_input": 4,
+    "input_attachments": 33,
+    "input_hooks": 4,
+    "transcript_persist": 7,
+    "tool_pool_refresh": 2,
+    "init_message": 9,
+    "engine_pickup": 1,
+    "message_prep": 2,
+    "model_config_wait": 8,
+    "autocompact": 3,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 13,
+    "message_normalization": 12,
+    "client_creation": 7,
+    "request_build": 22
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 102,
+  "time_to_request_cpu_ms": 162,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 233,
+  "process_anon_mib_turn_start": 140,
+  "process_rss_mib_result": 219,
+  "process_anon_mib_result": 120,
+  "process_peak_rss_mib": 257,
+  "process_cpu_ms_turn": 1643,
+  "process_wall_ms_turn": 74060,
+  "process_cpu_ms_streaming": 869,
+  "process_wall_ms_streaming": 57880,
+  "main_stream_count": 3,
+  "main_stream_event_count": 909,
+  "main_stream_chunk_count": 103,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 24,
+    "cpu_ms": 42,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 3732,
+  "time_to_request_from_spawn_ms": 1978231,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793110592626.9175,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
