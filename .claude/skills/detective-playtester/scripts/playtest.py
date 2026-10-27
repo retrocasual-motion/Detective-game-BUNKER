@@ -439,6 +439,7 @@ def resolve(acc, action, target, value, released, ask=None):
     ask(pool) -> rule_id | None — смысловое сопоставление (архивариус) для ЗАПРОС/ПОИСК.
     Правило с `requires` действует, только когда все его префиксы уже выданы; до этого
     цель считается недоступной (ответ `requires_reply` или ответ по умолчанию).
+    Правило с `fallback: true` сверяется по шаблону последним, после архивариуса.
     Возвращает {"hit": правило|None, "via": str, "msg": str, "res": str, "rule": str}.
     """
     rules = acc.get("rules", [])
@@ -446,9 +447,16 @@ def resolve(acc, action, target, value, released, ask=None):
     cand = [r for r in rules if r.get("action") == action
             and re.search(r.get("target", ".*"), norm(target), flags=re.IGNORECASE)]
     open_cand = [r for r in cand if requires_met(r, released)]
-    for r in open_cand:
-        if any(re.search(p, norm(value), flags=re.IGNORECASE) for p in r.get("accept", [])):
-            return {"hit": r, "via": ""}
+
+    def by_pattern(fallback):
+        for r in open_cand:
+            if bool(r.get("fallback")) == fallback and \
+                    any(re.search(p, norm(value), flags=re.IGNORECASE) for p in r.get("accept", [])):
+                return r
+
+    r = by_pattern(False)
+    if r:
+        return {"hit": r, "via": ""}
     if ask and action in ARCHIVIST_ACTIONS:
         pool = open_cand if cand else [r for r in rules if r.get("action") == action and requires_met(r, released)]
         pool = [r for r in pool if r.get("intent")]
@@ -456,6 +464,10 @@ def resolve(acc, action, target, value, released, ask=None):
             rid = ask(pool)
             if rid:
                 return {"hit": next(r for r in pool if r["id"] == rid), "via": " (архивариус)"}
+    # `fallback: true` — шаблон проверяется после архивариуса (общий ответ вроде «не значится»)
+    r = by_pattern(True)
+    if r:
+        return {"hit": r, "via": ""}
     if open_cand:
         r = open_cand[0]
         return {"hit": None, "msg": r.get("fail", defaults.get(action, "Нет результата.")), "res": "отказ", "rule": r.get("id")}
