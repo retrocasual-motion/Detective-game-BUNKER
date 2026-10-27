@@ -54,9 +54,10 @@ STRIP_ENV = [
 
 # Базовые действия есть в любом пакете. Дополнительные (АДРЕС — адресная строка
 # браузера, ЗВОНОК — телефон, ОСМОТР — действие с материалом: увеличить, свойства,
-# листать, совместить) пакет включает правилами в access.json и описывает во вводной.
+# листать, совместить; РЕШИТЬ — кнопка «Решить дело», открывает форму заключения)
+# пакет включает правилами в access.json и описывает во вводной.
 BASE_ACTIONS = ("ПАРОЛЬ", "ЗАПРОС", "ПОИСК", "ФИНАЛ", "СТОП")
-EXTRA_ACTIONS = ("АДРЕС", "ЗВОНОК", "ОСМОТР")
+EXTRA_ACTIONS = ("АДРЕС", "ЗВОНОК", "ОСМОТР", "РЕШИТЬ")
 ACTIONS = BASE_ACTIONS + EXTRA_ACTIONS
 ARCHIVIST_ACTIONS = ("ЗАПРОС", "ПОИСК")
 ACTION_RE = re.compile(r"^\s*[-*]?\s*(" + "|".join(ACTIONS) + r")\s*\|\s*(.*?)\s*\|\s*(.*?)\s*$")
@@ -204,6 +205,15 @@ def lint(pack, quiet=False):
                         re.compile(pat)
                     except re.error as e:
                         hard.append(f"access.json: правило {r.get('id')}: плохой regex {pat!r}: {e}")
+            ff = rules.get("final_form")
+            if ff is not None:
+                rel = ff.get("release", "") if isinstance(ff, dict) else ""
+                if not rel or not any(n == rel or n.startswith(rel + "__") for n in locked):
+                    hard.append(f"access.json: final_form.release {rel!r} — нет файла в locked/")
+                elif not any(rel in r.get("release", []) for r in rules.get("rules", [])):
+                    hard.append(f"access.json: final_form.release {rel} — ни одно правило не выдаёт форму")
+            elif any(r.get("action") == "РЕШИТЬ" for r in rules.get("rules", [])):
+                warn.append("access.json: есть правило РЕШИТЬ, но нет final_form — ФИНАЛ принимается в любой момент")
             for n in locked:
                 if n not in reachable:
                     warn.append(f"locked/{n}: ни одно правило его не открывает")
@@ -456,6 +466,33 @@ def resolve(acc, action, target, value, released, ask=None):
     return {"hit": None, "msg": defaults.get(action, "Нет результата."), "res": "нет правила", "rule": "—"}
 
 
+FORM_BEFORE = "Заключение принимается только через форму: сначала откройте её («Решить дело»)."
+FORM_SAME_ROUND = "Форма заключения только что открыта: заполните её пункты и отправьте ФИНАЛ следующим ходом."
+FORM_AFTER = "Форма заключения открыта: новые действия недоступны, остаются ФИНАЛ и СТОП."
+
+
+def form_gate(acc, action, released, released_before_round):
+    """Форма заключения (`final_form` в access.json: release, before_reply, same_round_reply,
+    after_reply). ФИНАЛ принимается, только если форма выдана в одном из прошлых раундов
+    (игрок её видел). После выдачи формы остальные действия, кроме ФИНАЛ и СТОП, не
+    выполняются. Без `final_form` ничего не ограничивает. Возвращает (ответ, результат) или None.
+    """
+    ff = acc.get("final_form")
+    if not ff or action == "СТОП":
+        return None
+    rel = ff.get("release", "")
+    opened = is_released(released, rel)
+    if action == "ФИНАЛ":
+        if not opened:
+            return ff.get("before_reply", FORM_BEFORE), "нет формы"
+        if not is_released(released_before_round, rel):
+            return ff.get("same_round_reply", FORM_SAME_ROUND), "нет формы"
+        return None
+    if opened:
+        return ff.get("after_reply", FORM_AFTER), "форма открыта"
+    return None
+
+
 LIMIT_REPLY = "Слишком много неверных попыток: поле ввода снова примет значение в следующем раунде."
 
 
@@ -532,12 +569,22 @@ def apply_actions(run, state, pack, sandbox):
     text = (sandbox / "actions.md").read_text(encoding="utf-8")
     body = text.split("\n---\n", 1)[1] if "\n---\n" in text else text
     replies, released_now, final = [], [], None
+    released_before_round = list(state["released"])
     limit = AttemptLimit(acc)
     for line in body.splitlines():
         m = ACTION_RE.match(line)
         if not m:
             continue
         action, target, value = m.group(1), m.group(2), m.group(3)
+        if final:
+            replies.append(f"- {action} | {target} | {value} → Игра уже завершена.")
+            gm_log(run, f"| {state['round']} | {action} | {target} | {value} | — | после конца | — |")
+            continue
+        gate = form_gate(acc, action, state["released"], released_before_round)
+        if gate:
+            replies.append(f"- {action} | {target} | {value} → {gate[0]}")
+            gm_log(run, f"| {state['round']} | {action} | {target} | {value} | final_form | {gate[1]} | — |")
+            continue
         if limit.blocked(action, target):
             replies.append(f"- {action} | {target} | {value} → {limit.reply(action, target)}")
             gm_log(run, f"| {state['round']} | {action} | {target} | {value} | {field_key(acc, action, target)} | лимит | — |")
@@ -767,18 +814,23 @@ def walk(pack, script, quiet=False):
     Строка сценария: `ДЕЙСТВИЕ | ЦЕЛЬ | ЗНАЧЕНИЕ => ОЖИДАНИЕ`.
     ОЖИДАНИЕ: префиксы через запятую (L214, L387) — должны открыться ровно они;
     `ответ` — правило сработало без материала; `отказ`, `нет доступа`, `нет правила`,
-    `повтор`, `лимит` — соответствующий результат. Без `=>` строка выполняется без проверки.
-    `---` — граница раунда (сбрасывает лимит попыток). `#` — комментарий. В конце — какие файлы locked/ так и не открылись.
+    `повтор`, `лимит` — соответствующий результат; `нет формы`, `форма открыта` — ответ
+    формы заключения (final_form); `конец` — ФИНАЛ или СТОП принят. Без `=>` строка
+    выполняется без проверки. `---` — граница раунда (сбрасывает лимит попыток и
+    отмечает, что выданная форма увидена). `#` — комментарий. В конце — какие файлы
+    locked/ так и не открылись.
     Возвращает число несовпадений.
     """
     pack = Path(pack).resolve()
     acc = json.loads((pack / "gm" / "access.json").read_text(encoding="utf-8"))
-    released, bad, n = [], 0, 0
+    released, bad, n, ended = [], 0, 0, False
+    released_before_round = []
     limit = AttemptLimit(acc)
     for ln, raw in enumerate(Path(script).read_text(encoding="utf-8").splitlines(), 1):
         line = raw.split(" #", 1)[0].rstrip() if not raw.lstrip().startswith("#") else ""
         if line.strip() == "---":
             limit.reset()
+            released_before_round = list(released)
             continue
         if not line.strip():
             continue
@@ -791,8 +843,16 @@ def walk(pack, script, quiet=False):
             continue
         n += 1
         action, target, value = m.groups()
-        if limit.blocked(action, target):
+        gate = None if ended else form_gate(acc, action, released, released_before_round)
+        if ended:
+            r = {"hit": None, "res": "после конца", "rule": "—"}
+        elif gate:
+            r = {"hit": None, "res": gate[1], "rule": "final_form"}
+        elif limit.blocked(action, target):
             r = {"hit": None, "res": "лимит", "rule": field_key(acc, action, target)}
+        elif action in ("ФИНАЛ", "СТОП"):
+            r = {"hit": None, "res": "конец", "rule": "—"}
+            ended = True
         else:
             r = resolve(acc, action, target, value, released)
             limit.record(action, target, r["hit"])
@@ -804,7 +864,8 @@ def walk(pack, script, quiet=False):
         ok = True
         if expect is not None:
             e = expect.strip().lower()
-            if e in ("ответ", "отказ", "нет доступа", "нет правила", "повтор", "лимит"):
+            if e in ("ответ", "отказ", "нет доступа", "нет правила", "повтор", "лимит",
+                     "нет формы", "форма открыта", "конец", "после конца"):
                 ok = res == e
             else:
                 want = sorted(x.strip() for x in expect.split(",") if x.strip())

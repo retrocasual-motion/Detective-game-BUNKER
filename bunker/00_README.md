@@ -14,7 +14,7 @@
 | [04_STATUS_AND_OPEN_QUESTIONS.md](04_STATUS_AND_OPEN_QUESTIONS.md) | Сводка действующих решений, очередь работ, отвергнутое и не выбранное, исторический список «не возвращать». |
 | [docs/DETECTIVE_DESIGN_PRINCIPLES.md](docs/DETECTIVE_DESIGN_PRINCIPLES.md) | Полное основное руководство: 45 принципов, контрольный список и ссылки на источники. |
 | [docs/CLUE_INTERACTION_GUIDE.md](docs/CLUE_INTERACTION_GUIDE.md) | Дополнение по обнаружению, поиску, доступу и интерпретации: R01–R36, CA-01–CA-18, карточки M01–M24. Не заменяет основное руководство. |
-| [DECISIONS_LOG.md](DECISIONS_LOG.md) | Полный журнал решений A-1…A-222 с вариантами и причинами. |
+| [DECISIONS_LOG.md](DECISIONS_LOG.md) | Полный журнал решений A-1…A-224 с вариантами и причинами. |
 | [LEYA_LINE_FINAL.md](LEYA_LINE_FINAL.md) | Итог линии смерти Адама (v1.5): хронология, замки, носители, 13 стадий с гейтами, связность, опоры, риски, находки проверки 1.3. |
 | [LEYA_LINE_SESSION.md](LEYA_LINE_SESSION.md) | Протокол сессии по Лее (раунды 1–30) — история вариантов, не канон. |
 | `Архив/claude/EMMA_LINE_FINAL.md`, `EMMA_LINE_SESSION.md` | Прежняя линия (v2, Эмма — убийца), в архиве. Действующие узлы перечислены в 01 §12; на файл не ссылаться. |
