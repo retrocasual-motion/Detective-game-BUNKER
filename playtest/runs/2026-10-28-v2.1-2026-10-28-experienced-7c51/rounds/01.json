@@ -1,0 +1,167 @@
+{
+  "duration_api_ms": 240092,
+  "stop_reason": "end_turn",
+  "session_id": "bd2f1018-88ed-49de-8fc7-4ee7a178b307",
+  "total_cost_usd": 1.1200904999999999,
+  "usage": {
+    "input_tokens": 40,
+    "cache_creation_input_tokens": 70008,
+    "cache_read_input_tokens": 662455,
+    "output_tokens": 21355,
+    "output_tokens_details": {
+      "thinking_tokens": 10628
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 70008,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1284,
+        "cache_read_input_tokens": 68695,
+        "cache_creation_input_tokens": 4535,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 4535
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 302,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00027550000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 281,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 40,
+      "outputTokens": 21355,
+      "cacheReadInputTokens": 662455,
+      "cacheCreationInputTokens": 70008,
+      "webSearchRequests": 0,
+      "costUSD": 1.1198149999999998,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 10628,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 70008,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 59,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 1 закончен. Я прочитал все материалы дела и записал 15 действий в `actions.md`. Раздел «Раунд 1» добавлен в `journal.md`.\n\n**Главное, что я нашёл:**\n- **Вывод следствия о несчастном случае не держится.** Регистратор радиопоста в 08:44:52 записал наверху возню и металлический скрежет, а удар — в 08:45:02. После удара никто не спускался по лестнице. Значит, рядом с Коулом был человек, и ушёл он верхним коридором на запад.\n- **Отчёт Миллера о замене плиты, скорее всего, ложный.** Эксперт и кадры камеры за 13.10 показывают старую плиту с окисленной трещиной и старые анкеры. На фото «после» за стойкой бетонная стена, хотя эта стойка стоит над проёмом шахты. Телефон «поставщика» с кодом +7 495 (это код Москвы — знание не из материалов). В бумажнике Миллера лежит банковская квитанция.\n- **Показания Л. Моро противоречат записи и другим показаниям.** Она говорит, что слышала, как кто-то сбежал по лестнице, но запись этого не подтверждает. По её словам, она шла к медику из жилого блока. Но Сато в 08:46 ушла из медкабинета в общую зону и никого по дороге не видела, а другого пути из жилого блока нет. Её визита в 08:46 нет в журнале медика, хотя медик уверяет, что записывает всех.\n- **Утром Коул шантажировал Харта.** В 07:33 он сказал у окна поста: «ты же не хочешь, чтобы миссис Колдер об этом узнала?». Верхняя половина психологического интервью Харта лежала на площадке. Нижняя, обгоревшая, с обрывками «в 1998… за рулём…», нашлась у Харта в кармане.\n- **Тревога 12.10 была инсценировкой.** Голос «внешнего сообщения» об ударе по описанию совпадает с голосом Пирс, а настоящий удар был только 13.10 в 10:40. Кроме того, Пирс сдала инженеру аварийный дубликат ключа от кабинета Коула. По словам медика, этот дубликат давно пропал.\n- **Похоже, в 2008 году был предыдущий заезд.** В папке Коула лежал бланк HEXON BIO «Этап A» с осмотром от 22.09.2008. Р. Хейл — глава HEXON BIO и куратор VAULTLINE. Том Бернар умер 06.10.2008, его сестру зовут Клэр. Что Моро связана с ним, я только предполагаю, это не проверено.\n\n**Подозреваемые сейчас:** Моро 35%, Харт 20%, Пирс 15%, Силва 10%, Миллер 8%, остальные и несчастный случай — 12%. Уверенность в версии — 30%.\n\n**Что запрошено на этот раунд:**\n- в бюро — приложение № 7, журналы сервера за 13.10;\n- листаю пачки П-02 (в ней лишний слой картона, возможно пропавшая папка из шкафа Коула) и П-04;\n- увеличение и свойства кадра 10.10, знака на бланке HEXON, картинки на экране входа ноутбука и квитанции Миллера;\n- сайты VAULTLINE, HEXON BIO и Fieldworks Radio;\n- выпуск газеты за 07.10.2008;\n- PIN 1001 для телефона: судя по пропущенным вызовам «Ana», он, вероятно, принадлежит Силве;\n- звонки на горячую линию NorthCare и по номеру «Colton Supply».",
+  "ttft_ms": 2549,
+  "type": "result",
+  "duration_ms": 243920,
+  "uuid": "4f60b8ba-d9f2-4f9d-8ea1-ff7033fca900",
+  "ttft_stream_ms": 2324,
+  "time_to_request_ms": 281,
+  "time_to_request_phases_ms": {
+    "other": 39,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 26,
+    "input_attachments": 19,
+    "input_hooks": 6,
+    "transcript_persist": 22,
+    "tool_pool_refresh": 2,
+    "init_message": 11,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 127,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 1,
+    "tool_schema_build": 9,
+    "message_normalization": 1,
+    "client_creation": 4,
+    "request_build": 7
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 39,
+  "time_to_request_cpu_ms": 247,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 218,
+  "process_anon_mib_turn_start": 132,
+  "process_rss_mib_result": 213,
+  "process_anon_mib_result": 120,
+  "process_peak_rss_mib": 240,
+  "process_cpu_ms_turn": 6588,
+  "process_wall_ms_turn": 243919,
+  "process_cpu_ms_streaming": 4149,
+  "process_wall_ms_streaming": 190177,
+  "main_stream_count": 20,
+  "main_stream_event_count": 1871,
+  "main_stream_chunk_count": 1320,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 11,
+    "cpu_ms": 19,
+    "major_faults": 0
+  },
+  "first_content_frame_ms": 2324,
+  "time_to_request_from_spawn_ms": 1646130,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793210983583.4639,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
