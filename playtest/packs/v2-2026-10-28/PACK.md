@@ -3,7 +3,7 @@
 version: v2-2026-10-28
 built-from: своды bunker/01–04 по A-235 (main после PR #9 + A-231…A-235, ветка PR #10); список ID — gm/sources.md
 built-by: Claude (detective-architect), ветка claude/project-thread-few4t4
-approved-by-author: no
+approved-by-author: yes
 date: 2026-10-28
 based-on: v1-2026-10-26 (все правки v1 до A-238 включительно)
 
@@ -51,4 +51,4 @@ gm/values.md, раздел «Пакет v2».
 - Кейт (A-242): регламент 6.4 (08), строка сервера 08:45:05 (L214), листы 19–24 П-05 —
   шесть справок этапа A текстом вниз (L985, L957).
 
-Строку approved-by-author меняет на yes ведущий только по слову Артёма.
+approved-by-author: yes поставлено ведущим 28.10 15:21 по выбору Артёма на карточке «Утвердить пакет v2 и запустить волну на Fable?» — «Да, 5 профилей».
