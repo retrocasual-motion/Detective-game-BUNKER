@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 841968,
+  "stop_reason": "end_turn",
+  "session_id": "e4157431-e53c-461c-a12e-cdad25c9eaf5",
+  "total_cost_usd": 3.4848472999999998,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 8185,
+    "cache_read_input_tokens": 466933,
+    "output_tokens": 6652,
+    "output_tokens_details": {
+      "thinking_tokens": 1999
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 8185,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1410,
+        "cache_read_input_tokens": 157293,
+        "cache_creation_input_tokens": 5199,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 5199
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 244,
+      "thinkingTokens": 223,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00024650000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 92,
+      "outputTokens": 72288,
+      "thinkingTokens": 32713,
+      "cacheReadInputTokens": 3821564,
+      "cacheCreationInputTokens": 159270,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 159270,
+      "webSearchRequests": 0,
+      "costUSD": 3.4846007999999995,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 6 закончен. Я подтвердил кнопку «Решить дело» (`РЕШИТЬ | дело | продолжить`), поэтому возврата к расследованию нет: дальше только форма заключения, она появится к следующему раунду. Главный подозреваемый — Ник Харт, уверенность в версии 55%. Прямой улики, что на марше был именно он, нет: вывод держится на совпадении времени и на листе с его признанием.\n\n**Что дали последние осмотры:**\n- **Дубликат ключа взял сам Коул.** На кадре 14 у него на поясе два ключа, на одном красная бирка «МЕДКАБ. · 3». Пирс сняла оба ключа с тела и сдала инженеру. Противоречие с ключом снято: ни Уолш, ни Пирс здесь не лгали.\n- **Лист рвали двое.** Верхняя половина осталась на площадке рваным краем к проёму, нижняя упала вниз вместе с Коулом. Полоса крепления отогнута в сторону проёма, то есть на стойку давили с площадки наружу.\n- **Время Харта сходится до секунд.** На регистраторе с 08:45:40 до 08:46:30 есть неразборчивый шум. Если Харт стоял на площадке до 08:46:30, а потом пошёл в обход через общую лестницу (около 140 м, 47 с), у подножия он был бы примерно в 08:47:17. Регистратор записал первые шаги у тела в 08:47:15. С поста по своей версии он добежал бы примерно к 08:45:40, так что его показания с записью не сходятся.\n\n**Версия.** Коул шантажировал Харта его признанием 1998 года — о гибели сослуживца Д. Колдера. По моему выводу, Харт как бывший монтажник понял, что Коул списывал наличные за несуществующее обслуживание связи. В 08:43:20 Харт ушёл с поста и встретил Коула у восточной лестницы. Они сцепились из-за листа с признанием. Коул навалился на угловую стойку, которая держалась на старой треснувшей плите: замену 10.10 Миллер только изобразил, а Коул принял. Полоса срезалась, Коул упал.\n\nВосточную лестницу Харт, видимо, обошёл, чтобы шаги не попали на запись: это пост с регистратором, который он сам когда-то монтировал. У тела он подобрал нижнюю половину листа (это видел Силва) и позже сжёг её. Скорее всего, убивать он не собирался: это была борьба за лист плюс неисправное ограждение, о котором знали Коул и Миллер.\n\n**Фон дела, для заключения:**\n- VL-31 — скрытое испытание препарата HEXON BIO: активная партия 0417 под чужой упаковкой и контрольная 0418.\n- На этапе 2008 года погиб Томас Бернар, муж Моро. Документы о его смерти подделаны.\n- Фальшивую «внешнюю тревогу» 12.10 записали Пирс и Коул.\n- Защищённый режим в 09:24:51 включил офис, после чего куратор Хейл уехал в аэропорт и погиб в аварии на шоссе.\n\n**Другие варианты:**\n- **Моро** — 15%. Мотив сильный, она была рядом и говорит неправду о том, где находилась. Но к листу Харта она отношения не имеет; скорее она что-то видела из комнаты анкет.\n- **Пирс** — 12%. Коул только что уличил её в выводе данных, но распечатку о себе она спокойно забрала из папки позже.\n\n**Не объяснено:**\n- журнал медкабинета написан не почерком анкет Уолш;\n- зачем Коул в 08:41 снял ограничение с Пирс;\n- Сато, сидя в общей зоне около 08:46:50, могла видеть, как Харт идёт к общей лестнице, но в показаниях об этом ничего нет.\n\nЖурнал дополнен разделом «Раунд 6». Когда форма появится в `case/`, отвечу на её пункты по этой версии.",
+  "ttft_ms": 4612,
+  "type": "result",
+  "duration_ms": 82911,
+  "uuid": "060fa071-65ff-4afd-91b0-b3c20aa27746",
+  "ttft_stream_ms": 4087,
+  "time_to_request_ms": 212,
+  "time_to_request_phases_ms": {
+    "other": 23,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 99,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 3,
+    "init_message": 7,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 2,
+    "autocompact": 3,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 15,
+    "message_normalization": 18,
+    "client_creation": 7,
+    "request_build": 18
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 161,
+  "time_to_request_cpu_ms": 327,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 228,
+  "process_anon_mib_turn_start": 142,
+  "process_rss_mib_result": 214,
+  "process_anon_mib_result": 123,
+  "process_peak_rss_mib": 240,
+  "process_cpu_ms_turn": 2580,
+  "process_wall_ms_turn": 82910,
+  "process_cpu_ms_streaming": 1478,
+  "process_wall_ms_streaming": 59615,
+  "main_stream_count": 3,
+  "main_stream_event_count": 867,
+  "main_stream_chunk_count": 725,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 87,
+    "cpu_ms": 210,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 4088,
+  "time_to_request_from_spawn_ms": 2438299,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793211776240.9575,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

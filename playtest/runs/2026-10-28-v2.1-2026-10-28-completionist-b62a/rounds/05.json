@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 764573,
+  "stop_reason": "end_turn",
+  "session_id": "e4157431-e53c-461c-a12e-cdad25c9eaf5",
+  "total_cost_usd": 3.1929167,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 6670,
+    "cache_read_input_tokens": 599546,
+    "output_tokens": 4051,
+    "output_tokens_details": {
+      "thinking_tokens": 1922
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6670,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 553,
+        "cache_read_input_tokens": 152275,
+        "cache_creation_input_tokens": 2032,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2032
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 244,
+      "thinkingTokens": 223,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00024650000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 86,
+      "outputTokens": 65636,
+      "thinkingTokens": 30714,
+      "cacheReadInputTokens": 3354631,
+      "cacheCreationInputTokens": 151085,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 151085,
+      "webSearchRequests": 0,
+      "costUSD": 3.1926702,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 ничего нового не принёс. Провайдер почты и редакция The Signal ответили только автоответами. Бюро сообщило, что отметки технической уже выданы. Поиск по делу («Колдер», «дубликат», «графит») тоже ничего не добавил. Дело пока не решено, уверенность в версии та же — 40%.\n\nПодозреваемые без изменений: Моро 35%, Харт 25%, Пирс 22%, несчастный случай 10%, остальные с алиби — 8%.\n\nПеречитывая материалы, я заметил две детали, которые ещё не проверял:\n- на кадре 15 камеры инженера на ступенях марша видны следы пыли — возможно, по ним можно понять, кто был на лестнице;\n- Пирс сдала дубликат ключа «с биркой медкабинета», а у ключей медкабинета на щите ярко-красные бирки — хочу сверить, тот ли это ключ.\n\nВ `actions.md` на следующий раунд записаны пять увеличений:\n- кадр 15 со ступенями;\n- кадры 16–55 с верхней площадкой;\n- изъятые ключи кабинета руководителя;\n- снимки 6 и 12 из фототаблицы;\n- куртка Коула.\n\nШестое действие — кнопка «Решить дело». Пока это только предупреждение, подтверждать переход к форме я не стал. Внешние запросы перестали давать результат, похоже, всё главное уже открыто. Если осмотры ничего не покажут, дальше придётся решать по тому, что есть.\n\nЖурнал дополнен разделом «Раунд 5».",
+  "ttft_ms": 8322,
+  "type": "result",
+  "duration_ms": 56650,
+  "uuid": "6f6ddfe2-f6d4-4bed-a0cf-91ae69c04fb8",
+  "ttft_stream_ms": 7881,
+  "time_to_request_ms": 193,
+  "time_to_request_phases_ms": {
+    "other": 25,
+    "system_prompt": 5,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 75,
+    "input_hooks": 4,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 2,
+    "init_message": 9,
+    "engine_pickup": 1,
+    "message_prep": 2,
+    "model_config_wait": 1,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 16,
+    "message_normalization": 17,
+    "client_creation": 8,
+    "request_build": 17
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 82,
+  "time_to_request_cpu_ms": 211,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 226,
+  "process_anon_mib_turn_start": 139,
+  "process_rss_mib_result": 215,
+  "process_anon_mib_result": 122,
+  "process_peak_rss_mib": 235,
+  "process_cpu_ms_turn": 1959,
+  "process_wall_ms_turn": 56649,
+  "process_cpu_ms_streaming": 912,
+  "process_wall_ms_streaming": 32475,
+  "main_stream_count": 4,
+  "main_stream_event_count": 365,
+  "main_stream_chunk_count": 260,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 64,
+    "cpu_ms": 91,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 7881,
+  "time_to_request_from_spawn_ms": 2380304,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793211718065.4932,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

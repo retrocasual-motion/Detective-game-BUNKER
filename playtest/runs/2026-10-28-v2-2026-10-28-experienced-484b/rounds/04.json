@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 1025302,
+  "stop_reason": "end_turn",
+  "session_id": "2a441dd8-ba8c-48c8-aa32-8f3f1a4c72d3",
+  "total_cost_usd": 7.607551,
+  "usage": {
+    "input_tokens": 162,
+    "cache_creation_input_tokens": 12987,
+    "cache_read_input_tokens": 896137,
+    "output_tokens": 7900,
+    "output_tokens_details": {
+      "thinking_tokens": 2313
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 12987,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 611,
+        "cache_read_input_tokens": 153015,
+        "cache_creation_input_tokens": 3742,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3742
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 343,
+      "thinkingTokens": 322,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00029600000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 1000,
+      "outputTokens": 74951,
+      "thinkingTokens": 38997,
+      "cacheReadInputTokens": 3113300,
+      "cacheCreationInputTokens": 153569,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 153569,
+      "webSearchRequests": 0,
+      "costUSD": 7.607254999999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 13,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 завершён.\n\n**Что подтвердилось:**\n- На поясе Коула в кадре 14 — кольцо с двумя ключами, на одном красная бирка «МЕДКАБ. · 3»: дубликат он забрал сам, Пирс сняла ключи с тела — противоречие закрыто.\n- Половины листа — один лист интервью Харта; низ сожжён Хартом.\n- A-24 — Томас Бернар, 1974, механик; квитанция Миллера — 3 000 наличными от Коула на счёт Л. Миллер 13.10.2008, назначение пустое; «партия 0417» — наклейка поверх заводского торца без голограммы.\n- Регистратор пишет два канала, и канал 2 — микрофон переговорного устройства самого радиопоста.\n\n**Переоценка:** то, что Силва видел, как Харт прячет что-то *у тела*, лучше ложится на падение (низ листа упал с Коулом), чем на борьбу на площадке (тогда низ уже был бы у Харта). Шаги по маршу перед «вознёй» и срез полосы боковой нагрузкой к проёму — один спускающийся человек, схватившийся за поручень. Версия: несчастный случай на ограждении, которое Миллер «починил» на бумаге, а Коул запретил закрывать (55%); толчок Харта — 28%.\n\n**Отправлено:** разметка канала 2 за 08:40–08:50 (осмотр + запрос в бюро) — последняя проверка, был ли Харт на посту; звонок на домашний телефон Бернара; **РЕШИТЬ | дело** — получить форму заключения. В следующем раунде, если канал 2 не опрокинет версию, заполняю форму и отправляю ФИНАЛ.",
+  "ttft_ms": 2293,
+  "type": "result",
+  "duration_ms": 114205,
+  "uuid": "72d0c8cf-a8df-4ed4-b782-521f70801e6d",
+  "ttft_stream_ms": 1152,
+  "time_to_request_ms": 212,
+  "time_to_request_phases_ms": {
+    "other": 24,
+    "system_prompt": 34,
+    "resume_other": 0,
+    "process_user_input": 6,
+    "input_attachments": 38,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 3,
+    "init_message": 8,
+    "engine_pickup": 1,
+    "message_prep": 2,
+    "model_config_wait": 7,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 14,
+    "message_normalization": 15,
+    "client_creation": 32,
+    "request_build": 19
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 154,
+  "time_to_request_cpu_ms": 276,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 233,
+  "process_anon_mib_turn_start": 146,
+  "process_rss_mib_result": 225,
+  "process_anon_mib_result": 132,
+  "process_peak_rss_mib": 241,
+  "process_cpu_ms_turn": 3300,
+  "process_wall_ms_turn": 114204,
+  "process_cpu_ms_streaming": 2102,
+  "process_wall_ms_streaming": 98136,
+  "main_stream_count": 6,
+  "main_stream_event_count": 1035,
+  "main_stream_chunk_count": 850,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 26,
+    "cpu_ms": 44,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 1153,
+  "time_to_request_from_spawn_ms": 2806510,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793201968686.3552,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

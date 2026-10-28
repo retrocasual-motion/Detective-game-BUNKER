@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 723132,
+  "stop_reason": "end_turn",
+  "session_id": "03975b8e-12e1-4922-b557-6017858f8ded",
+  "total_cost_usd": 5.60875225,
+  "usage": {
+    "input_tokens": 162,
+    "cache_creation_input_tokens": 24114,
+    "cache_read_input_tokens": 691992,
+    "output_tokens": 12218,
+    "output_tokens_details": {
+      "thinking_tokens": 5352
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 24114,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 798,
+        "cache_read_input_tokens": 127503,
+        "cache_creation_input_tokens": 1215,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1215
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 348,
+      "thinkingTokens": 327,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00029850000000000005,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 678,
+      "outputTokens": 53608,
+      "thinkingTokens": 26389,
+      "cacheReadInputTokens": 1642695,
+      "cacheCreationInputTokens": 125530,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 125530,
+      "webSearchRequests": 0,
+      "costUSD": 5.608453750000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 19,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 3 завершён.\n\n**Что дал раунд**\n- Сеанс Пирс (L387): маршрут 14 был ей разрешён администратором ещё 30.09; 13.10 в 08:05 Коул ограничил её офисом, а в 08:41 — после разговора — **снял ограничение**. Её мотив существенно ослаб; остаётся ложь следствию и четыре входа в личную почту e.pierce.uk@mailbridge.net.\n- Экспорты: этап A 2008 — A-24 (Томас Бернар, 1974, механик) «реакция на компонент основы, летальный исход, день 15»; этап C — Харт/Моро/Силва на партии 0417 «активная», Сато/Уолш/Миллер — 0418 «контроль». Тревога Харта по анкетам 3→7. NorthCare подтверждает только 0418 — 0417, по всему, не их продукт.\n- Коул и Пирс в учёте VAULTLINE не числятся — это люди HEXON BIO.\n- Старый знак HEXON BIO (фильм на сайте) — замкнутый контур с центра в левый верхний угол и по краю до середины левой стороны: на сетке 3×3 это 5-1-2-3-6-9-8-7-4 — пробую как ключ ноутбука («наш первый знак»).\n- Противоречие в почерках: журнал и бланки «К. Уолш» — ровный с наклоном влево, как у Пирс; анкеты самой Уолш — округлые.\n\n**Обвинение:** Харт остаётся главным (45%); Моро (15%) — у неё спрятаны папка A-24 и копия бланка с аллергией, мотив — 2008 год; Пирс 12%, Миллер 10%, несчастный случай 10%.\n\n**Действия на раунд 4:** три варианта ключа ноутбука; у компании — полное интервью Харта, отчёт о выбытии A-24, список маршрутов (получатель маршрута 14); у бюро — запрос переписки Пирс у mailbridge; перевернуть и увеличить нижние шесть листов П-05; сравнить почерк оригинала и копии бланка 0589/08; увеличить журнал обращений; звонки по домашнему номеру Бернара, номеру Л. Миллер и в клинику Сан-Рафаэль.",
+  "ttft_ms": 1573,
+  "type": "result",
+  "duration_ms": 173705,
+  "uuid": "e09b82b3-11fe-46bf-884a-58a9b9a14505",
+  "ttft_stream_ms": 891,
+  "time_to_request_ms": 176,
+  "time_to_request_phases_ms": {
+    "other": 27,
+    "system_prompt": 4,
+    "resume_other": 0,
+    "process_user_input": 6,
+    "input_attachments": 56,
+    "input_hooks": 4,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 3,
+    "init_message": 9,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 3,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 14,
+    "message_normalization": 12,
+    "client_creation": 10,
+    "request_build": 21
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 125,
+  "time_to_request_cpu_ms": 186,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 229,
+  "process_anon_mib_turn_start": 142,
+  "process_rss_mib_result": 214,
+  "process_anon_mib_result": 122,
+  "process_peak_rss_mib": 235,
+  "process_cpu_ms_turn": 3977,
+  "process_wall_ms_turn": 173704,
+  "process_cpu_ms_streaming": 2744,
+  "process_wall_ms_streaming": 154270,
+  "main_stream_count": 6,
+  "main_stream_event_count": 1231,
+  "main_stream_chunk_count": 1016,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 46,
+    "cpu_ms": 67,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 891,
+  "time_to_request_from_spawn_ms": 2437756,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793201599942.4119,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

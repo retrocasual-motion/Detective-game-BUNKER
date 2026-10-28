@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 760265,
+  "stop_reason": "end_turn",
+  "session_id": "301cd52e-0135-47b0-99d6-caa7b831a9e6",
+  "total_cost_usd": 6.046507500000001,
+  "usage": {
+    "input_tokens": 194,
+    "cache_creation_input_tokens": 29063,
+    "cache_read_input_tokens": 842886,
+    "output_tokens": 13146,
+    "output_tokens_details": {
+      "thinking_tokens": 4896
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 29063,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 714,
+        "cache_read_input_tokens": 133975,
+        "cache_creation_input_tokens": 4484,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 4484
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 300,
+      "thinkingTokens": 279,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002745,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 710,
+      "outputTokens": 57930,
+      "thinkingTokens": 28627,
+      "cacheReadInputTokens": 1748852,
+      "cacheCreationInputTokens": 135271,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 135271,
+      "webSearchRequests": 0,
+      "costUSD": 6.046233000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 23,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 3 завершён.\n\n**Что дали поступления:**\n- **Миллер исключён**: отметки на панелях 08:44:35 и 08:45:30 при 27 с пути до площадки.\n- **Пирс** (пользователь 05) весь заезд отправляла данные этапов A/B/C на внешний маршрут 14 и заходила в личную почту; Коул в 08:05 ограничил её, поговорил с ней и в 08:41 ограничение снял. Экспорты раскрыли суть программы: партия 0417 — активная, 0418 — контроль; в 2008 г. участник **A-24 — Томас Бернар, механик, женат** — умер на 15-й день от «реакции на компонент основы».\n- **Ноутбук Коула** открылся по старому знаку HEXON: черновик доклада Хейлу (Сато, Силва, Пирс), три дубля «внешнего сообщения» 15.09 голосом Пирс (тревога — инсценировка), отчёт о расходах с «премией инженеру» 13.10.2008 и наличными «Fieldworks Radio 2009» — компании, закрытой с 2007 г.; полное интервью Харта: 1998 г., Германия, пьяным за рулём, погиб сослуживец Д. Колдер — предмет шантажа Коула.\n- Моро пришла в программу «из статьи» (The Signal, 2008, о гибели участника).\n\n**Действия раунда 3:** увеличить скрытые листы П-05 и кадр «после» дня 10, пролистать П-01/П-07/П-08, запросить у компании опись архива A-24, листы учёта Пирс и Коула, список маршрутов (14), договор с HEXON, акты Fieldworks 2009; у бюро — журнал за 12.10; звонки на домашний Бернара и Л. Миллер; газета 21.10.2009.\n\n**Подозреваемые:** Харт 35%, Моро 25%, Пирс 20%, несчастный случай 10%, исключённые 10%. Уверенность — 50% (фон 85%, личность ~35–40%).",
+  "ttft_ms": 1446,
+  "type": "result",
+  "duration_ms": 174587,
+  "uuid": "11b7c73b-f84d-4341-9f12-9de8c725ac7d",
+  "ttft_stream_ms": 804,
+  "time_to_request_ms": 126,
+  "time_to_request_phases_ms": {
+    "other": 19,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 37,
+    "input_hooks": 3,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 2,
+    "init_message": 7,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 11,
+    "message_normalization": 11,
+    "client_creation": 7,
+    "request_build": 14
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 75,
+  "time_to_request_cpu_ms": 139,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 205,
+  "process_anon_mib_turn_start": 118,
+  "process_rss_mib_result": 212,
+  "process_anon_mib_result": 119,
+  "process_peak_rss_mib": 223,
+  "process_cpu_ms_turn": 4146,
+  "process_wall_ms_turn": 174587,
+  "process_cpu_ms_streaming": 2986,
+  "process_wall_ms_streaming": 159658,
+  "main_stream_count": 7,
+  "main_stream_event_count": 1408,
+  "main_stream_chunk_count": 1186,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 18,
+    "cpu_ms": 41,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 804,
+  "time_to_request_from_spawn_ms": 2486395,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793201648119.9216,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

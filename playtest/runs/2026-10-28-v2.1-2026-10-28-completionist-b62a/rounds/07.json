@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 904017,
+  "stop_reason": "end_turn",
+  "session_id": "e4157431-e53c-461c-a12e-cdad25c9eaf5",
+  "total_cost_usd": 3.7699313,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 7830,
+    "cache_read_input_tokens": 492100,
+    "output_tokens": 6200,
+    "output_tokens_details": {
+      "thinking_tokens": 378
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 7830,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1178,
+        "cache_read_input_tokens": 165260,
+        "cache_creation_input_tokens": 5062,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 5062
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 244,
+      "thinkingTokens": 223,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00024650000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 98,
+      "outputTokens": 78488,
+      "thinkingTokens": 33091,
+      "cacheReadInputTokens": 4313664,
+      "cacheCreationInputTokens": 167100,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 167100,
+      "webSearchRequests": 0,
+      "costUSD": 3.7696848,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Заключение отправлено: в `actions.md` записана строка `ФИНАЛ` с краткими ответами. Полный текст по всем восьми пунктам формы, со ссылками на материалы, — в `journal.md` в разделе «## Заключение». Самое слабое место — пункт 1, кто именно был с Коулом на лестнице. Там уверенность около 55%, по остальным пунктам — 80–90%.\n\n1. **Что произошло.** Коул упал с марша восточной лестницы в 08:45:02 после борьбы: регистратор записал шаги вниз, возню и удар. Вероятнее всего, с ним был Ник Харт. Вывод сделан по совокупности косвенных признаков, свидетеля нет:\n   - Коул шантажировал Харта его признанием о гибели сослуживца Д. Колдера в 1998 году;\n   - лист с этим признанием разорван пополам: верхняя половина осталась на площадке, нижнюю Харт спрятал и позже сжёг;\n   - после 08:43:20 на посту Харта тихо, а к телу он пришёл в 08:47:15. Это сходится с обходом от площадки через общую лестницу и не сходится с его показанием, что он был на посту.\n   \n   У Силвы, Уолш, Сато и Миллера есть алиби по журналам сервера и терминала технической. Моро и Пирс полностью не исключены.\n2. **Умысел убить** не установлен: борьба шла за лист, а не за жизнь Коула.\n3. **Дефект ограждения сыграл решающую роль.** Трещину плиты нашли 03.10, но Коул отказался закрыть лестницу. Замена плиты 10.10 существует только на бумаге: плиту не доставили, а Миллер написал отчёт о ремонте.\n4. **Почему группу не выпустили.** Защищённый режим в 09:24:51 включил офис, а не внешний сигнал. Снять его может только офис. Хейл вскоре уехал «немедленно, в аэропорт» и погиб на шоссе.\n5. **Что это за программа.** Это скрытое испытание препарата HEXON BIO: партия 0417 — активная, 0418 — контрольная. «Внешнюю тревогу» 12.10 записали Коул и Пирс.\n6. **Участник прежнего этапа.** Томас Бернар, участник этапа 2008 года и муж Леи Моро, погиб 06.10.2008 от аллергической реакции на сою.\n7. **О его гибели не сообщили.** Бланк осмотра переписан («аллергии нет»), справка утверждает «эвакуирован, состояние стабильное». На справке визы Уолш, Коула и Хейла, Миллеру заплатили 3000 наличными. Что именно семья получила письменно, не установлено.\n8. **Передача сведений наружу.** Пирс трижды выгружала данные трёх этапов в свой личный почтовый ящик. Кому они ушли дальше и на каких условиях, не установлено: провайдер и редакция ответили только автоответами. Сато, журналистка The Signal, пыталась отправить свои записи с узла связи, но отправку отклонили.\n\nОстались необъяснёнными почерк журнала медкабинета (он не совпадает с анкетами Уолш) и то, зачем Коул в 08:41 снял ограничение с Пирс. На версию это не влияет, но в журнале отмечено как открытые вопросы.",
+  "ttft_ms": 3159,
+  "type": "result",
+  "duration_ms": 65991,
+  "uuid": "cc3d6daf-fb34-4170-aefe-bcb09431fcb6",
+  "ttft_stream_ms": 2479,
+  "time_to_request_ms": 215,
+  "time_to_request_phases_ms": {
+    "other": 25,
+    "system_prompt": 4,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 55,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 3,
+    "init_message": 33,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 15,
+    "message_normalization": 19,
+    "client_creation": 11,
+    "request_build": 32
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 109,
+  "time_to_request_cpu_ms": 328,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 228,
+  "process_anon_mib_turn_start": 142,
+  "process_rss_mib_result": 213,
+  "process_anon_mib_result": 122,
+  "process_peak_rss_mib": 243,
+  "process_cpu_ms_turn": 2501,
+  "process_wall_ms_turn": 65991,
+  "process_cpu_ms_streaming": 1528,
+  "process_wall_ms_streaming": 50951,
+  "main_stream_count": 3,
+  "main_stream_event_count": 1030,
+  "main_stream_chunk_count": 920,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 43,
+    "cpu_ms": 87,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2479,
+  "time_to_request_from_spawn_ms": 2522551,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793211860499.648,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

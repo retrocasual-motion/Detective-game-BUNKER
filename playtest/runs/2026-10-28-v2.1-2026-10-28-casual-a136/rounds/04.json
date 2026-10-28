@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 443545,
+  "stop_reason": "end_turn",
+  "session_id": "bfc7c42b-3626-4d5b-a760-9e2fd47f0161",
+  "total_cost_usd": 2.0221413999999998,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 13782,
+    "cache_read_input_tokens": 520245,
+    "output_tokens": 7665,
+    "output_tokens_details": {
+      "thinking_tokens": 2721
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13782,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1475,
+        "cache_read_input_tokens": 110145,
+        "cache_creation_input_tokens": 2351,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2351
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 237,
+      "thinkingTokens": 216,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000243,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 64,
+      "outputTokens": 38703,
+      "thinkingTokens": 13968,
+      "cacheReadInputTokens": 1866952,
+      "cacheCreationInputTokens": 109274,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 109274,
+      "webSearchRequests": 0,
+      "costUSD": 2.0218984,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 12,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 закончен. Ноутбук Коула открылся ключом 5-1-2-3-6-9-8-7-4 по старому знаку HEXON BIO, и это дало больше всего. Раздел «Раунд 4» дописан в `journal.md`, три новых действия записаны в `actions.md`. Уверенность в версии — 55%.\n\n**Что нового:**\n- **Тайна Харта.** В его личном деле в ноутбуке записано: в 1998 году в Германии он пьяным разбил машину, погиб сослуживец Д. Колдер, а Харт сказал следствию, что за рулём был Колдер. Миссис Колдер, которой Коул грозил у окна поста в 07:33, — видимо, его мать или вдова.\n- **За что Коул мог прижать Харта.** Коул снимал наличными деньги на «обслуживание Fieldworks Radio» в 2009 году. По словам Миллера, связь с монтажа никто не трогал, а Харт сам раньше работал в Fieldworks. Похоже, Харт понял, что Коул присваивает деньги, а Коул ответил ему угрозой рассказать про Колдера.\n- **«Два участника» из звонка Хейлу.** Это Сато (журналистка, готовит публикацию) и Силва (у него личный телефон). Отдельным пунктом в черновике Коула идёт Пирс. Харт там не упомянут.\n- **Постановка тревоги доказана.** В ноутбуке лежат три дубля «внешнего сообщения». Читает женский голос, похожий на голос Пирс, и мужской голос её поправляет.\n- **Пирс что-то убрала из папки.** В 08:06 Коул напечатал две страницы выписки по её учётной записи. В описи папки, которую Пирс взяла у тела, этой распечатки нет.\n- **Кто такой A-24.** Это Томас Бернар, механик, женат. Он умер 06.10.2008, ровно на 15-й день этапа A. Моро пришла в программу «из статьи» — видимо, той статьи 2008 года о погибшем участнике, сохранённой у Коула. Возможно, Моро — вдова Бернара, но это пока догадка.\n\n**Подозреваемые:**\n\n| Кто | Уверенность | Почему |\n|---|---|---|\n| Харт | 50% | шантаж; ушёл с поста после 08:43:18; обратный путь кругом сходится с шумом на посту в 08:45:40; сжёг свою половину листа |\n| Пирс | 20% | Коул поймал её на сливе данных; распечатки о ней в папке нет; соврала про голос в объявлении |\n| Несчастный случай / другое | 14% | стойка держалась на старой треснувшей плите |\n| Моро | 10% | возможно, связана с Бернаром; была рядом с площадкой и врёт, где была |\n| Миллер | 3% | алиби по отметкам панелей |\n| Силва, Уолш, Сато | 3% | алиби по терминалам |\n\n**Версия.** Около 08:43:20 Харт ушёл с поста и пошёл кругом наверх. У верхней площадки он перехватил Коула, и они сцепились — возможно, из-за листа с его интервью. Коул навалился на угловую стойку, и она вылетела вместе с треснувшей плитой, которую Миллер так и не заменил. Харт вернулся на пост кругом, потом «прибежал на удар» и подобрал нижнюю половину листа. Пирс воспользовалась смертью Коула и убрала из папки улику против себя.\n\nНестыковки остаются. Печать интервью Харта с ноутбука нигде не записана, так что непонятно, откуда взялась бумажная копия. Непонятно и то, почему Коул в 08:41 снял запрет на отправки Пирс.\n\n**Действия на этот раунд:**\n- звонок на домашний номер Бернара +7 916 555-24-08 — проверить связь с Моро;\n- сайт fieldworks-radio.com — подтвердить, что обслуживания в 2009 году не было;\n- запрос через бюро в почтовый сервис mailbridge.net о переписке Пирс — кому она отправляла данные.\n\nЕсли эти ответы картину не перевернут, в следующем раунде нажму «Решить дело».",
+  "ttft_ms": 3095,
+  "type": "result",
+  "duration_ms": 84787,
+  "uuid": "c28d0f8b-c9fc-4c96-bcb9-a6dc0bd17256",
+  "ttft_stream_ms": 2493,
+  "time_to_request_ms": 259,
+  "time_to_request_phases_ms": {
+    "other": 26,
+    "system_prompt": 7,
+    "resume_other": 0,
+    "process_user_input": 7,
+    "input_attachments": 107,
+    "input_hooks": 4,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 3,
+    "init_message": 9,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 2,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 16,
+    "message_normalization": 16,
+    "client_creation": 35,
+    "request_build": 18
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 158,
+  "time_to_request_cpu_ms": 387,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 225,
+  "process_anon_mib_turn_start": 139,
+  "process_rss_mib_result": 216,
+  "process_anon_mib_result": 125,
+  "process_peak_rss_mib": 236,
+  "process_cpu_ms_turn": 2455,
+  "process_wall_ms_turn": 84786,
+  "process_cpu_ms_streaming": 1204,
+  "process_wall_ms_streaming": 64625,
+  "main_stream_count": 5,
+  "main_stream_event_count": 841,
+  "main_stream_chunk_count": 168,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 96,
+    "cpu_ms": 215,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2494,
+  "time_to_request_from_spawn_ms": 2027204,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793211365084.565,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

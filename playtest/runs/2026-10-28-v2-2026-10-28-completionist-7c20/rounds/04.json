@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 1083207,
+  "stop_reason": "end_turn",
+  "session_id": "d47d605a-8e56-4e98-8924-a62df242e8d5",
+  "total_cost_usd": 7.794153500000001,
+  "usage": {
+    "input_tokens": 130,
+    "cache_creation_input_tokens": 17300,
+    "cache_read_input_tokens": 756091,
+    "output_tokens": 11562,
+    "output_tokens_details": {
+      "thinking_tokens": 6140
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 17300,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 745,
+        "cache_read_input_tokens": 161816,
+        "cache_creation_input_tokens": 1197,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1197
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 328,
+      "thinkingTokens": 307,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002885,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 776,
+      "outputTokens": 80020,
+      "thinkingTokens": 43807,
+      "cacheReadInputTokens": 2354420,
+      "cacheCreationInputTokens": 159825,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 159825,
+      "webSearchRequests": 0,
+      "costUSD": 7.793865000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 12,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 завершён. Журнал дописан, действия записаны.\n\n**Главное за раунд:**\n- Пачки П-01, П-03, П-07, П-08 — ничего нового; распечатки выписки по Пирс (08:06, 2 стр.) нет нигде в деле.\n- В медкабинете (П-05) под стопкой — **шесть листов лицом вниз** со штампом в углу и потёртыми краями: спрятанные документы, их нужно вскрыть.\n- **Блокнот Моро**: стр. 14 — ночь 12–13.10, на двери Коула листок «РЕЖИМ ТРЕВОГИ»; стр. 15 — та же комната днём, тот же листок, рисунок брошен на полуслове. Значит, утром 13.10 Моро сидела в комнате анкет — в 6 м от площадки, напротив кабинета Коула, — а не «у себя в жилом блоке». Её показание «кто-то сбежал по лестнице, потом удар» точно совпадает с регистратором именно оттуда. Любой нападавший с верхнего коридора проходил мимо её открытой двери.\n- Переоценил улику-лист: разорванный лист Харта говорит о борьбе за папку, а не конкретно о Харте — Харт лишь подобрал у тела половину с признанием.\n- С. Грей из The Signal = Сато (редактор Фрэнк Бейкер). Почта Пирс — через lawful-requests@mailbridge.net, экспорт шифруется паролем владельца (есть кандидат — «Toffy»).\n\n**Подозреваемые:** Моро 30 % / Пирс 28 % / Харт 24 % / несчастный случай 12 %.\n\n**Запрошено на раунд 5:** вскрытие шести перевёрнутых листов П-05; «прослушивание» отрезка регистратора 08:43–08:49; экспорт ящика Пирс у mailbridge; у бюро — сеансы администратора (экспорты Коула, выписка); у компании — журнал нежелательных явлений, листы учёта персонала Пирс и Коула; у редакции The Signal — о С. Грей и материалах с объекта.",
+  "ttft_ms": 1938,
+  "type": "result",
+  "duration_ms": 166904,
+  "uuid": "554a5b5b-5477-41e2-a044-160f52af7206",
+  "ttft_stream_ms": 1152,
+  "time_to_request_ms": 195,
+  "time_to_request_phases_ms": {
+    "other": 27,
+    "system_prompt": 31,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 42,
+    "input_hooks": 3,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 3,
+    "init_message": 7,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 2,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 1,
+    "tool_schema_build": 14,
+    "message_normalization": 17,
+    "client_creation": 9,
+    "request_build": 26
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 145,
+  "time_to_request_cpu_ms": 223,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 233,
+  "process_anon_mib_turn_start": 145,
+  "process_rss_mib_result": 213,
+  "process_anon_mib_result": 120,
+  "process_peak_rss_mib": 240,
+  "process_cpu_ms_turn": 3653,
+  "process_wall_ms_turn": 166903,
+  "process_cpu_ms_streaming": 2425,
+  "process_wall_ms_streaming": 150060,
+  "main_stream_count": 5,
+  "main_stream_event_count": 1011,
+  "main_stream_chunk_count": 846,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 31,
+    "cpu_ms": 48,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 1152,
+  "time_to_request_from_spawn_ms": 2830433,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793201992622.5757,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
