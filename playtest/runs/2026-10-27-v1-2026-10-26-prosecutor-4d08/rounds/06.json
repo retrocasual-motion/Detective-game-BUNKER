@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 427646,
+  "stop_reason": "end_turn",
+  "session_id": "c6711def-3aad-4744-b555-0711e10c1cf4",
+  "total_cost_usd": 1.0308031,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 6280,
+    "cache_read_input_tokens": 311369,
+    "output_tokens": 4081,
+    "output_tokens_details": {
+      "thinking_tokens": 1144
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6280,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 850,
+        "cache_read_input_tokens": 105448,
+        "cache_creation_input_tokens": 3266,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3266
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 361,
+      "thinkingTokens": 340,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00030500000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 66,
+      "outputTokens": 40421,
+      "thinkingTokens": 16614,
+      "cacheReadInputTokens": 2040521,
+      "cacheCreationInputTokens": 105526,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 105526,
+      "webSearchRequests": 0,
+      "costUSD": 1.0304981,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 6 закончен. Журнал дописан, действие записано в `actions.md`. Главная версия теперь — Эмма Пирс, уверенность около 55%. Хватит ли этого для заключения, станет ясно по форме бюро.\n\n**Что нашёл.** Пароль к экспорту ящика Пирс подошёл с первой попытки: `Toffy`, имя её собаки из записи диктофона и фото из её вещей.\n\nВ 11 письмах видно:\n- **Продажа данных.** С 28 августа Пирс договорилась с Дж. Мерсером из конкурирующей лаборатории Sentinel Labs, что передаст ему данные программы VL-31 по этапам A, B и C. Письма Мерсера о получении экспортов совпадают по датам с отправками на внешний маршрут 14 в журналах сервера.\n- **Подбор участника.** Для этапа C Мерсер просил участника с ограниченным английским, а Пирс обещала «слот в наборе». Похоже, это Силва.\n- **Что ещё нужно Мерсеру.** Он хочет «досье вещества». Пирс отвечает, что досье в архиве офиса и открывается номером активной партии, а какая партия активная, она не знает. Номер 0417 на горячей линии NorthCare «в реестре не зарегистрирован».\n- **Ключ.** 14 сентября она пишет, что передала ему какой-то ключ и других копий нет. Что это за ключ, из писем не ясно.\n\n**Почему обвинение теперь против Пирс.** В 08:02 Коул открыл её сеанс и увидел почту и экспорты. В 08:30–08:40 он был у неё. В 08:41 он снял ограничение, зачем — непонятно. Её мотив: потеря платы от Sentinel и уголовный риск. После сводки в 08:43 она свободна. Она взяла у тела папку и ключи, а «не знала, что он что-то нашёл» опровергается журналом сервера.\n\n**Что остаётся неясным:**\n- Как верхняя половина листа Харта оказалась на площадке.\n- Какой это ключ из письма 4 и зачем Коул снял ограничение.\n- Ключ ноутбука и PIN телефона.\n\nОстальные подозреваемые: Уолш около 12%, несчастный случай 12%, Моро, Харт и Миллер по 6%, Силва 3%.\n\nЯ нажал «Решить дело». Форма появится в `case/` в следующем раунде.",
+  "ttft_ms": 3965,
+  "type": "result",
+  "duration_ms": 48853,
+  "uuid": "85966f4b-bf65-4c8a-9f91-3ffe8b23d1bc",
+  "ttft_stream_ms": 3110,
+  "time_to_request_ms": 127,
+  "time_to_request_phases_ms": {
+    "other": 19,
+    "system_prompt": 2,
+    "resume_other": 1,
+    "process_user_input": 3,
+    "input_attachments": 25,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 11,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 10,
+    "autocompact": 3,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 16,
+    "message_normalization": 11,
+    "client_creation": 5,
+    "request_build": 12
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 75,
+  "time_to_request_cpu_ms": 132,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 140,
+  "process_rss_mib_result": 225,
+  "process_anon_mib_result": 127,
+  "process_peak_rss_mib": 255,
+  "process_cpu_ms_turn": 1269,
+  "process_wall_ms_turn": 48851,
+  "process_cpu_ms_streaming": 541,
+  "process_wall_ms_streaming": 26101,
+  "main_stream_count": 3,
+  "main_stream_event_count": 602,
+  "main_stream_chunk_count": 64,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 19,
+    "cpu_ms": 30,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 3110,
+  "time_to_request_from_spawn_ms": 2439333,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793116002679.3591,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

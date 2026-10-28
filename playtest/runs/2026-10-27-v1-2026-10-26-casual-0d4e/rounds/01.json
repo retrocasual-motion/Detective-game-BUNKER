@@ -1,0 +1,167 @@
+{
+  "duration_api_ms": 87072,
+  "stop_reason": "end_turn",
+  "session_id": "dd06f851-2e31-4838-b4b1-1d80509395d2",
+  "total_cost_usd": 0.3051884,
+  "usage": {
+    "input_tokens": 26,
+    "cache_creation_input_tokens": 45465,
+    "cache_read_input_tokens": 321609,
+    "output_tokens": 9082,
+    "output_tokens_details": {
+      "thinking_tokens": 2842
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 45465,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 606,
+        "cache_read_input_tokens": 48367,
+        "cache_creation_input_tokens": 2499,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2499
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 342,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002955,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 321,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 26,
+      "outputTokens": 9082,
+      "cacheReadInputTokens": 321609,
+      "cacheCreationInputTokens": 45465,
+      "webSearchRequests": 0,
+      "costUSD": 0.3048929,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 2842,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 45465,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 47,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 1 закончен. Я прочитал основные материалы дела и записал три действия в `actions.md`:\n- **Запрос:** приложение № 7 (журналы сервера объекта за 13.10.2009) по адресу бюро.\n- **Звонок:** на горячую линию NorthCare +7 800 555-31-20 по партиям комплекса для изоляции.\n- **Осмотр:** увеличить бланк из клапана папки (файл 26).\n\nЖурнал за раунд 1 записан в `journal.md`.\n\nВот что я выяснил:\n- **Падение:** по записи радиопоста Коул упал около 08:48:42. Перед этим на верхнем марше слышны шаги вниз, возня и металлический скрежет.\n- **Харт:** в 07:37 у окна радиопоста кто-то (мой вывод: Коул) сказал ему: «Харт, ты же не хочешь, чтобы миссис Колдер об этом узнала?». Верхняя половина его психоинтервью лежала на площадке, нижняя обгоревшая — у него в кармане.\n- **Силва:** ему срочно нужны $18 400 на операцию до 14-го числа. Коул отложил его заявку на досрочную выплату.\n- **Крепление:** эксперт нашёл на месте старую плиту со старой трещиной. Миллер же пишет, что заменил её 10.10, так что его отчёт сомнителен.\n\nМоя версия: Коул давил на Харта этим компроматом, на площадке случилась схватка, и стойка не выдержала. Уверенность около 30%. Главный подозреваемый Харт (около 40%), затем Силва (около 20%). По радиозаписи Харт на лестнице не проходил, и как он попал наверх, я пока не понимаю.",
+  "ttft_ms": 1863,
+  "type": "result",
+  "duration_ms": 90046,
+  "uuid": "957fb74c-4e80-48ba-9382-803f1b4ab2f8",
+  "ttft_stream_ms": 1201,
+  "time_to_request_ms": 249,
+  "time_to_request_phases_ms": {
+    "other": 40,
+    "system_prompt": 1,
+    "resume_other": 1,
+    "process_user_input": 20,
+    "input_attachments": 15,
+    "input_hooks": 5,
+    "transcript_persist": 10,
+    "tool_pool_refresh": 1,
+    "init_message": 7,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 116,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 11,
+    "message_normalization": 3,
+    "client_creation": 3,
+    "request_build": 9
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 36,
+  "time_to_request_cpu_ms": 238,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 224,
+  "process_anon_mib_turn_start": 132,
+  "process_rss_mib_result": 231,
+  "process_anon_mib_result": 132,
+  "process_peak_rss_mib": 243,
+  "process_cpu_ms_turn": 3083,
+  "process_wall_ms_turn": 90045,
+  "process_cpu_ms_streaming": 1616,
+  "process_wall_ms_streaming": 57883,
+  "main_stream_count": 13,
+  "main_stream_event_count": 1108,
+  "main_stream_chunk_count": 173,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 10,
+    "cpu_ms": 18,
+    "major_faults": 0
+  },
+  "first_content_frame_ms": 1202,
+  "time_to_request_from_spawn_ms": 1660914,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793115224118.087,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

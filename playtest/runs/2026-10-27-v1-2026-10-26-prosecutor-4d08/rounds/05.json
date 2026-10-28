@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 383726,
+  "stop_reason": "end_turn",
+  "session_id": "c6711def-3aad-4744-b555-0711e10c1cf4",
+  "total_cost_usd": 0.9337242,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 3766,
+    "cache_read_input_tokens": 299367,
+    "output_tokens": 2051,
+    "output_tokens_details": {
+      "thinking_tokens": 221
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3766,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 602,
+        "cache_read_input_tokens": 100953,
+        "cache_creation_input_tokens": 1481,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1481
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 361,
+      "thinkingTokens": 340,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00030500000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 60,
+      "outputTokens": 36340,
+      "thinkingTokens": 15470,
+      "cacheReadInputTokens": 1729152,
+      "cacheCreationInputTokens": 99246,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 99246,
+      "webSearchRequests": 0,
+      "costUSD": 0.9334192,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 закончен. Дело не решено, уверенность в версии осталась около 35%. Журнал дописан, действия записаны в `actions.md`.\n\n**Что пришло по запросам прошлого раунда:**\n- **Mailbridge** прислал экспорт ящика `e.pierce.uk@mailbridge.net` за 01.08–16.11.2009. Он зашифрован паролем владельца, сбросить его по запросу нельзя.\n- **VAULTLINE** на запрос протокола исследования этапа C ответила, что такого документа в учёте программы не значится. Вместо договора с HEXON BIO она прислала договор аренды объекта (2007) и акт приёмки. Акт совпадает с экземпляром из дела, нового там нет.\n- Оба графических ключа ноутбука, 1-2-3-6-9 и 1-2-3-6, не подошли.\n\n**Действия на следующий раунд:**\n- Три попытки пароля к экспорту ящика: `Toffy`, `Toffy1978` и `toffy`. Это догадка. Основание: в записи REC004 женщина с голосом, похожим на Пирс, называет первую собаку «Тоффи», и такая же собака на фото 1978 года из её вещей. Вопросы восстановления доступа (дата рождения, девичья фамилия матери, первый питомец) я взял из блокнота Сато.\n- Звонок на горячую линию NorthCare с номером партии 0417.\n\nПодозреваемые прежние: Уолш около 30%, Пирс около 25%, остальные ниже.\n\nПока почта Пирс закрыта, я не могу проверить, кому она отправляла данные и что знала о стычке на площадке. Если пароль не подойдёт, придётся искать другой путь.",
+  "ttft_ms": 2408,
+  "type": "result",
+  "duration_ms": 22371,
+  "uuid": "341e51ef-2c74-4a91-957f-d65ebb05caae",
+  "ttft_stream_ms": 1610,
+  "time_to_request_ms": 138,
+  "time_to_request_phases_ms": {
+    "other": 19,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 37,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 6,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 12,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 11,
+    "message_normalization": 11,
+    "client_creation": 8,
+    "request_build": 14
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 88,
+  "time_to_request_cpu_ms": 154,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 235,
+  "process_anon_mib_turn_start": 142,
+  "process_rss_mib_result": 227,
+  "process_anon_mib_result": 127,
+  "process_peak_rss_mib": 260,
+  "process_cpu_ms_turn": 1195,
+  "process_wall_ms_turn": 22370,
+  "process_cpu_ms_streaming": 391,
+  "process_wall_ms_streaming": 9187,
+  "main_stream_count": 3,
+  "main_stream_event_count": 329,
+  "main_stream_chunk_count": 37,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 22,
+    "cpu_ms": 42,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1610,
+  "time_to_request_from_spawn_ms": 2415860,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793115979019.694,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

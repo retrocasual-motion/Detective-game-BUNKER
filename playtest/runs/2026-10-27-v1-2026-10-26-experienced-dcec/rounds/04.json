@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 477329,
+  "stop_reason": "end_turn",
+  "session_id": "775e1b70-72ae-4589-a73b-879a6fd07be7",
+  "total_cost_usd": 2.3754574999999996,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 9965,
+    "cache_read_input_tokens": 348339,
+    "output_tokens": 6349,
+    "output_tokens_details": {
+      "thinking_tokens": 2463
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 9965,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1092,
+        "cache_read_input_tokens": 118827,
+        "cache_creation_input_tokens": 4960,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 4960
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 258,
+      "thinkingTokens": 237,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00025350000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 74,
+      "outputTokens": 47990,
+      "thinkingTokens": 22174,
+      "cacheReadInputTokens": 2252940,
+      "cacheCreationInputTokens": 120565,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 120565,
+      "webSearchRequests": 0,
+      "costUSD": 2.3752039999999996,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 закончен: журнал дописан, в `actions.md` записаны 4 действия. Главная подозреваемая теперь — Лея Моро. Уверенность в версии — 55%.\n\n**Что дал этот раунд:**\n- **Моро — вдова Тома Бернара**, участника A-24, погибшего в 2008 году. Автоответчик на его домашнем номере: «Вы позвонили Тому и Лее».\n- **Аварийный дубликат ключа был у самого Коула.** На кадре тела у него на поясе два ключа, на одном красная бирка медкабинета. Пирс просто сняла оба ключа с тела, так что это противоречие снято, и улик против неё стало меньше.\n- **Бумаги прошлого заезда были у Коула при падении.** В клапане его папки у тела уже в 08:56 лежал бланк HEXON «Этап A».\n- **Две половины листа — один лист с интервью Харта.** Шрифт одинаковый, разрыв тот же, внизу остаток подписи «…арт». Верхняя половина без следов графита и копоти.\n- **Рисунок 15 Моро брошен на полуслове.** Это вид из комнаты анкет на дверь кабинета, конец оборванной линии смазан.\n\n**Версия.** Моро пришла в программу, чтобы узнать правду о смерти мужа. Она работала в комнате анкет, в 6 м от площадки. Утром 13.10 Коул вышел из кабинета с документами и пошёл к лестнице. Предполагаю, что на площадке между ними была борьба, скорее всего за бумаги прошлого заезда. Ограждение стояло на старой треснувшей плите, которую Миллер «заменил» только на бумаге, и не выдержало.\n\nПосле падения Моро, по моей версии, спрятала папку A-24 в стопку бланков. Потом она пришла к Уолш примерно в 08:47, а Уолш не записала её визит в журнал. Показания Моро не сходятся с записью регистратора радиопоста: шагов того, кто «сбежал по лестнице», на ней нет.\n\n**Что остаётся под вопросом:**\n- **Умысел или нет.** Признаков, что Коула толкнули намеренно, нет: возможна борьба без умысла. На несчастный случай я по-прежнему оставляю 23%.\n- **Пирс (15%).** У неё был мотив: утром Коул раскрыл, что она пересылала данные программы на свой ящик. Но физических следов против неё нет, а в 08:43:10 она отправляла сводку со своего терминала. Распечатку о её пересылках, которую Коул сделал утром, так и не нашли.\n\n**Действия на этот раунд:**\n- пролистать пачку П-03 (бумаги координатора) — ищу эту распечатку, чтобы окончательно проверить Пирс;\n- пролистать П-05 (бумаги медкабинета) и П-01 (заполненные анкеты);\n- нажать «Решить дело», чтобы увидеть пункты формы заключения. По вводной форму можно закрыть и продолжить расследование.\n\nЕсли в бумагах координатора ничего нет, отправлю заключение против Моро.",
+  "ttft_ms": 1517,
+  "type": "result",
+  "duration_ms": 64490,
+  "uuid": "2b281ffb-38d7-4dac-b30d-957a94a7446a",
+  "ttft_stream_ms": 1052,
+  "time_to_request_ms": 112,
+  "time_to_request_phases_ms": {
+    "other": 19,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 31,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 3,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 3,
+    "autocompact": 1,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 9,
+    "message_normalization": 10,
+    "client_creation": 5,
+    "request_build": 12
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 61,
+  "time_to_request_cpu_ms": 121,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 225,
+  "process_anon_mib_turn_start": 139,
+  "process_rss_mib_result": 219,
+  "process_anon_mib_result": 128,
+  "process_peak_rss_mib": 250,
+  "process_cpu_ms_turn": 1905,
+  "process_wall_ms_turn": 64489,
+  "process_cpu_ms_streaming": 1266,
+  "process_wall_ms_streaming": 54758,
+  "main_stream_count": 3,
+  "main_stream_event_count": 674,
+  "main_stream_chunk_count": 547,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 25,
+    "cpu_ms": 36,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1052,
+  "time_to_request_from_spawn_ms": 2412618,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793138304594.0613,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

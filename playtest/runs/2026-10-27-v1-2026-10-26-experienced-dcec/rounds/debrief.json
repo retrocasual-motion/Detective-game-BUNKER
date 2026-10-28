@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 574457,
+  "stop_reason": "end_turn",
+  "session_id": "775e1b70-72ae-4589-a73b-879a6fd07be7",
+  "total_cost_usd": 2.7618419,
+  "usage": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 1659,
+    "cache_read_input_tokens": 133768,
+    "output_tokens": 2304,
+    "output_tokens_details": {
+      "thinking_tokens": 650
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 1659,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 2304,
+        "cache_read_input_tokens": 133768,
+        "cache_creation_input_tokens": 1659,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1659
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 258,
+      "thinkingTokens": 237,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00025350000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 82,
+      "outputTokens": 57546,
+      "thinkingTokens": 25046,
+      "cacheReadInputTokens": 2763502,
+      "cacheCreationInputTokens": 132205,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 132205,
+      "webSearchRequests": 0,
+      "costUSD": 2.7615884,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 1,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "**1. Источники**\n\nБольше всего ответов дали три материала:\n- **Запись регистратора радиопоста (файл 50).** Это хребет хронологии: шантаж Харта в 07:33, звонок из узла, возня на площадке и удар, лязг закрывающейся двери в 09:24.\n- **Журналы сервера (приложение № 7).** Особенно подтверждения сводки по постам: именно они сняли подозрения с Силвы, Харта и Уолш.\n- **Ноутбук Коула.** Ключ по старому знаку HEXON дал сразу шесть файлов: запись «внешнего сообщения», черновик доклада, отчёт о расходах, признание Харта.\n\nНоутбук — место, где собрано, пожалуй, слишком много: за один ход я получил ответы на пункты 4–5 и мотив Харта. Зато поиск этого ключа (подсказка «наш первый знак», аватар, старый знак на сайте HEXON) оказался одной из самых приятных цепочек. Остальное распределено хорошо: каждая пачка сканов или звонок давали по одному факту.\n\nЧто я так и не открыл:\n- **Терминал Пирс.** Кличку собаки (Тоффи) я знал, но поля для контрольных вопросов в материалах не нашёл.\n- **Архив газеты.** Выпуски 2008 года в него не вошли, а другой осмысленной даты я не придумал. История с Колдером в 1998 году тоже осталась за бортом.\n- **Пачки П-06, П-07, П-08.** Не листал, потому что в превью не было признаков чего-то странного.\n- **The Signal.** Редактору Фрэнку Бейкеру и на info@ не писал.\n- **Сеансы пользователей 01 и 04.** Запрашивал, но по ним на сервере ничего не нашлось, и я так и не понял, кто это.\n\nНе хватило одного источника, который физически ставит человека на площадку в 08:44. Это мог бы быть след, вещь, показание, которое противоречит именно присутствию, а не маршруту. Без него вывод об исполнителе держится на лжи Моро и хронологии, поэтому моя уверенность так и осталась около 55–60%.\n\n**2. Кейт Уолш**\n\nПо-моему, она скрывала, что знала об аллергии Тома Бернара на сою. Она сама сняла копию его записки на копире медкабинета («МК-02», пометка «К.У.»), а потом подписала справку «предупреждений об аллергии не поступало». Она участвовала в этапе A и выдавала препарат, то есть причастна к гибели Бернара или к её сокрытию. На 13.10 у неё, вероятно, есть второй секрет: она прикрыла Моро. Визита Моро в 08:46 нет в журнале, который она якобы «ведёт полностью», хотя на словах она этот визит подтверждает.\n\nКак это складывалось:\n- **Раунд 1, подозрение.** Бланк HEXON 2008 года с её подписью (файл 26). На ручке-диктофоне она отвечает «Была» и уходит («Мне к выдаче»). Пометки Сато: «Кейт признала», «организатор — медик?». И ещё пропуск визита Моро в журнале обращений (38) при её словах в протоколе (35).\n- **Раунд 2, понимание.** Листание П-02: справка о выбытии с её подписью рядом с копией записки «К.У.».\n- **Раунд 3, подтверждение.** Экспорт этапа A: «реакция на компонент основы, летальный исход».\n\nПо сложности — в самый раз, может быть чуть в лоб в раунде 1: подпись «К. Уолш» на бланке 2008 года сразу кричит «прошлый заезд». Но настоящая находка (копия «К.У.» с МК-02, спрятанная в стопке бланков) потребовала заметить картон на торце пачки, и это было приятно.\n\nЧего не хватило: как копия записки с её пометкой попала к Моро (графит, лист сложен вчетверо) и почему Уолш её прикрывала — из вины, по сговору или случайно. Эту связь мне хотелось бы получить раньше. Тогда роль Уолш в утре 13.10 стала бы понятнее, а вывод про Моро — твёрже.\n\n**3. Самый сильный и самый слабый момент**\n\nСамый сильный: сопоставление записи радиопоста с подтверждениями сводки по секундам — алиби проверяются физикой времени, а не словами. Самый слабый: на главный вопрос «кто был на площадке» не нашлось решающей улики, поэтому финал по исполнителю — разумная ставка, а не вывод. Ещё мелочь, но она выбивает из погружения: московские коды +7 495 и +7 916 у телефонов в Колорадо.",
+  "ttft_ms": 8368,
+  "type": "result",
+  "duration_ms": 26750,
+  "uuid": "4ede76ed-36f7-41f0-9e7c-1cf8e70dc8d9",
+  "ttft_stream_ms": 982,
+  "time_to_request_ms": 114,
+  "time_to_request_phases_ms": {
+    "other": 17,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 31,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 1,
+    "init_message": 5,
+    "engine_pickup": 2,
+    "message_prep": 0,
+    "model_config_wait": 7,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 8,
+    "message_normalization": 10,
+    "client_creation": 7,
+    "request_build": 13
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 63,
+  "time_to_request_cpu_ms": 129,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 226,
+  "process_anon_mib_turn_start": 140,
+  "process_rss_mib_result": 215,
+  "process_anon_mib_result": 124,
+  "process_peak_rss_mib": 252,
+  "process_cpu_ms_turn": 1130,
+  "process_wall_ms_turn": 26749,
+  "process_cpu_ms_streaming": 651,
+  "process_wall_ms_streaming": 24161,
+  "main_stream_count": 1,
+  "main_stream_event_count": 351,
+  "main_stream_chunk_count": 345,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 23,
+    "cpu_ms": 38,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 983,
+  "time_to_request_from_spawn_ms": 2590124,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793138482083.735,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

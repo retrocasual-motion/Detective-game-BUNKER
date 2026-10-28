@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 272146,
+  "stop_reason": "end_turn",
+  "session_id": "1dcf8f23-ac74-415d-ba47-b34bef0b5950",
+  "total_cost_usd": 0.9199624,
+  "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 19104,
+    "cache_read_input_tokens": 585455,
+    "output_tokens": 8541,
+    "output_tokens_details": {
+      "thinking_tokens": 1718
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 19104,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1089,
+        "cache_read_input_tokens": 104955,
+        "cache_creation_input_tokens": 2017,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2017
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 276,
+      "thinkingTokens": 255,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00026250000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 50,
+      "outputTokens": 36682,
+      "thinkingTokens": 13725,
+      "cacheReadInputTokens": 1376439,
+      "cacheCreationInputTokens": 103784,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 103784,
+      "webSearchRequests": 0,
+      "costUSD": 0.9196999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 13,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Я разобрал новые материалы, записал в `actions.md` пять действий и добавил в `journal.md` раздел «Раунд 3». Версия укрепилась, уверенность около 30%. Главный подозреваемый по-прежнему Пирс, около 40%.\n\n**Что дали новые материалы:**\n- **Пирс и утечка данных.** Пользователь 05 — Эмма Пирс. С узла она входила в почту e.pierce.uk@mailbridge.net и три раза отправляла «внешним» маршрутом 14 данные программы.\n- **Эксперимент над группой.** Экспорты показывают три этапа:\n  - Этап A (2008): шесть участников. У A-24 на 15-й день «реакция на компонент основы, летальный исход». По времени это может быть Том Бернар из газеты.\n  - Этап B (2009): шесть участников, нежелательных явлений нет.\n  - Этап C (текущий): партия 0417 названа «активной», 0418 — «контроль».\n- **Партия 0417.** NorthCare не знает такой партии, а 0418 в реестре есть. Мой вывод: в стики 0417 что-то добавили. Её получают Харт, Моро и Силва. Тревога у Харта и Силвы к 11-му дню выросла до 7.\n- **Коды участников.** Соответствие C-01…C-06 людям — мой вывод по совпадению времён выдачи с таблицей 37, прямо в файлах оно не названо.\n- **Сайт Hexon.** Хейл — основатель HEXON BIO, партнёрство с VAULTLINE с 2007 года. Старый знак компании — квадратная спираль. Её путь по сетке ключа: 5-1-2-3-6-9-8-7-4. Это гипотеза для ноутбука, я её ввёл.\n- **Плита крепления.** Colton Supply изготовил плиту, но на объект она не доставлена и возвращена на склад 26.10. Значит, отчёт Миллера «плита заменена 10.10» ложный. Что это — небрежность или сознательная ложь, пока не ясно.\n- **Мёртвые концы.** Пользователи 01 и 04 файлов не оставили. Компания не выдала список участников этапа A и сценарий тревоги. Газета за октябрь 2008 в архив не вошла — после двух неудач эту дверь закрываю.\n\n**Что я запросил:**\n- Пароль ноутбука — графический ключ по знаку Hexon.\n- Три документа у компании: акт о несчастном случае с A-24, договор подряда с Fieldworks Radio и протокол исследования этапа C со схемой партий.\n- Звонок в клинику San Rafael по номеру из телефона Силвы.\n\nАлиби по терминалам и времени не закрыты ни у Моро, ни у Сато, ни у Пирс после 08:43. Остальные четверо подтверждали сводку у терминалов до 08:47.\n\nОб ошибке: при записи журнала я сначала перезаписал файл вместо дописывания. Прежние разделы восстановил, но сжато: разделы «Раунд 1» и «Раунд 2» в журнале теперь короче оригинала.",
+  "ttft_ms": 1518,
+  "type": "result",
+  "duration_ms": 65765,
+  "uuid": "34d4a6ce-aa40-44c1-abbc-79b11fc70d53",
+  "ttft_stream_ms": 1002,
+  "time_to_request_ms": 137,
+  "time_to_request_phases_ms": {
+    "other": 18,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 44,
+    "input_hooks": 5,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 1,
+    "init_message": 6,
+    "engine_pickup": 1,
+    "message_prep": 2,
+    "model_config_wait": 9,
+    "autocompact": 3,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 10,
+    "message_normalization": 9,
+    "client_creation": 7,
+    "request_build": 13
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 87,
+  "time_to_request_cpu_ms": 147,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 235,
+  "process_anon_mib_turn_start": 141,
+  "process_rss_mib_result": 230,
+  "process_anon_mib_result": 130,
+  "process_peak_rss_mib": 258,
+  "process_cpu_ms_turn": 2691,
+  "process_wall_ms_turn": 65765,
+  "process_cpu_ms_streaming": 1779,
+  "process_wall_ms_streaming": 51392,
+  "main_stream_count": 6,
+  "main_stream_event_count": 1281,
+  "main_stream_chunk_count": 1095,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 31,
+    "cpu_ms": 46,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1002,
+  "time_to_request_from_spawn_ms": 2777141,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793116340422.795,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
