@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 1068336,
+  "stop_reason": "end_turn",
+  "session_id": "301cd52e-0135-47b0-99d6-caa7b831a9e6",
+  "total_cost_usd": 8.1268885,
+  "usage": {
+    "input_tokens": 98,
+    "cache_creation_input_tokens": 10964,
+    "cache_read_input_tokens": 645930,
+    "output_tokens": 8251,
+    "output_tokens_details": {
+      "thinking_tokens": 2367
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 10964,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 635,
+        "cache_read_input_tokens": 165339,
+        "cache_creation_input_tokens": 4360,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 4360
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 300,
+      "thinkingTokens": 279,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002745,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 938,
+      "outputTokens": 80164,
+      "thinkingTokens": 39232,
+      "cacheReadInputTokens": 3115256,
+      "cacheCreationInputTokens": 166511,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 166511,
+      "webSearchRequests": 0,
+      "costUSD": 8.126614,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 завершён.\n\n**Что дали поступления:**\n- Фото «после» в отчёте дня 10 снято на **общей западной лестнице** (трафарет «ОБЩ. ЛЕСТН. · ЗАПАД», проёма нет) — ложность отчёта Миллера о замене плиты доказана документом.\n- Форма заключения — пять пунктов: что произошло и кто действовал; умысел; роль дефекта; почему не выпустили; что за программа и кто проводил.\n- The Signal: главред Фрэнк Бейкер («Фрэнк» в блокноте Сато), С. Грей — автор статьи 2008 г.\n- Mailbridge принимает запросы по номеру дела и адресу ящика; экспорт открывается паролем владельца (у Сато записаны контрольные вопросы Пирс — первый питомец «Тоффи»).\n- Бюро отказало в СМЭ и экспертизе записи — таких приложений в описи нет; эту дверь больше не толкаю.\n\n**Действия:** запрос экспорта ящика e.pierce.uk@mailbridge.net и письмо в редакцию The Signal — единственное недобранное звено (адресат маршрута 14). В журнале — черновик заключения по всем пяти пунктам, готовый к отправке ФИНАЛ в следующем раунде.\n\n**Версия:** борьба на площадке между Коулом и Л. Моро (жена погибшего в 2008 г. участника A-24) за документы; падение из-за срезанного временного крепления при ложном отчёте о замене плиты; умысла на смерть не усматриваю; группу заперла команда офиса (Хейл) за час до реального удара; программа — испытание препарата HEXON BIO с сокрытой смертью 2008 г. Уверенность — 65% (фон 90%, участие Моро 50%).",
+  "ttft_ms": 2657,
+  "type": "result",
+  "duration_ms": 113975,
+  "uuid": "7db8a887-f07d-45b8-8efb-294be028391a",
+  "ttft_stream_ms": 1580,
+  "time_to_request_ms": 174,
+  "time_to_request_phases_ms": {
+    "other": 34,
+    "system_prompt": 3,
+    "resume_other": 1,
+    "process_user_input": 4,
+    "input_attachments": 53,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 3,
+    "init_message": 8,
+    "engine_pickup": 1,
+    "message_prep": 2,
+    "model_config_wait": 1,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 14,
+    "message_normalization": 16,
+    "client_creation": 9,
+    "request_build": 16
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 123,
+  "time_to_request_cpu_ms": 184,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 232,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 215,
+  "process_anon_mib_result": 122,
+  "process_peak_rss_mib": 239,
+  "process_cpu_ms_turn": 2942,
+  "process_wall_ms_turn": 113974,
+  "process_cpu_ms_streaming": 1981,
+  "process_wall_ms_streaming": 99706,
+  "main_stream_count": 4,
+  "main_stream_event_count": 1063,
+  "main_stream_chunk_count": 920,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 43,
+    "cpu_ms": 65,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 1581,
+  "time_to_request_from_spawn_ms": 2899522,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793202061669.8982,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

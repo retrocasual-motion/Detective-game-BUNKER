@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 601303,
+  "stop_reason": "end_turn",
+  "session_id": "bd2f1018-88ed-49de-8fc7-4ee7a178b307",
+  "total_cost_usd": 2.8097301,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 4163,
+    "cache_read_input_tokens": 537574,
+    "output_tokens": 2379,
+    "output_tokens_details": {
+      "thinking_tokens": 437
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4163,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 737,
+        "cache_read_input_tokens": 135925,
+        "cache_creation_input_tokens": 851,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 851
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 302,
+      "thinkingTokens": 281,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00027550000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 88,
+      "outputTokens": 54070,
+      "thinkingTokens": 24458,
+      "cacheReadInputTokens": 3296353,
+      "cacheCreationInputTokens": 133554,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 133554,
+      "webSearchRequests": 0,
+      "costUSD": 2.8094546,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 закончен. Я нажал «Решить дело» и сразу подтвердил переход к форме заключения. Обе строки записаны в `actions.md`, и после этого вернуться к расследованию уже нельзя. Форма появится в `case/` к следующему раунду, тогда отвечу на её пункты и отправлю ФИНАЛ.\n\n**Что дал раунд:**\n- **Лист.** Совмещение показало, что две половины — один лист: психологическое интервью Харта с его подписью. Разрыв сходится без зазора. Верхняя половина осталась на площадке. Нижняя упала вместе с Коулом, и Харт подобрал её у тела. Значит, лист Харта порвали именно в момент падения, у верхней площадки.\n- **Запись радиопоста по каналам** не получена. Бюро отказало: до заключения новых экспертиз не назначают. Мой расчёт времени Харта опирается на шум в 08:45:40–08:46:30, и проверить его отдельно по каналам теперь нельзя. Это ограничение я принимаю.\n- **Почта Пирс.** Её почтовый ящик бюро не запрашивает: писать провайдеру нужно самому, а адреса провайдера в материалах нет. Для вопроса о гибели Коула это не критично.\n\n**Итоговая версия.** Харт, которого Коул утром шантажировал записью о ДТП 1998 года, после 08:43:18 ушёл с поста западным путём на верхнюю площадку. Там он сцепился с Коулом за лист с интервью. Коул упал на угловую стойку, плиту которой Миллер так и не заменил, и стойка не выдержала. Харт вернулся на пост, а потом «на звук удара» пришёл к телу. Был ли умысел убить, не доказано. Уверенность — 60%: Харт 60%, Пирс 13%, Моро 12%, несчастный случай 10%, остальные 5%. Остаточное сомнение по Моро и Пирс остаётся: у обеих нет алиби на момент падения, Моро солгала о своём пути, а Пирс Коул утром уличил в утечке данных.",
+  "ttft_ms": 4091,
+  "type": "result",
+  "duration_ms": 31393,
+  "uuid": "8d22f922-c19f-43d1-a9fc-c5f945f2f996",
+  "ttft_stream_ms": 3115,
+  "time_to_request_ms": 210,
+  "time_to_request_phases_ms": {
+    "other": 20,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 66,
+    "input_hooks": 13,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 3,
+    "init_message": 32,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 12,
+    "message_normalization": 15,
+    "client_creation": 8,
+    "request_build": 25
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 100,
+  "time_to_request_cpu_ms": 307,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 230,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 214,
+  "process_anon_mib_result": 122,
+  "process_peak_rss_mib": 246,
+  "process_cpu_ms_turn": 1773,
+  "process_wall_ms_turn": 31393,
+  "process_cpu_ms_streaming": 597,
+  "process_wall_ms_streaming": 16122,
+  "main_stream_count": 4,
+  "main_stream_event_count": 336,
+  "main_stream_chunk_count": 150,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 56,
+    "cpu_ms": 104,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 3116,
+  "time_to_request_from_spawn_ms": 2248538,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793211586506.2893,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
