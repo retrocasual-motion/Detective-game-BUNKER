@@ -3,7 +3,7 @@
 version: v2.1-2026-10-28
 built-from: своды bunker/01–04 по A-235 (main после PR #9 + A-231…A-235, ветка PR #10); список ID — gm/sources.md
 built-by: Claude (detective-architect), ветка claude/project-thread-few4t4
-approved-by-author: no
+approved-by-author: yes
 date: 2026-10-28
 based-on: v2-2026-10-28 (утверждён 28.10 15:21; все правки v1 до A-238, v2 по A-239…A-242)
 
@@ -80,3 +80,5 @@ approved-by-author: yes поставлено ведущим 28.10 15:21 по в�
 
 `approved-by-author: no` — прогон на Opus только по слову Артёма (28.10: «после, когда я
 разрешу, можно будет сделать новый прогон, но уже не по Fable, а по опусу»).
+
+approved-by-author: yes поставлено ведущим 28.10 18:07 по сообщению Артёма «сейчас давай, да, прогон на Opus. Также на твое усмотрение, какие профили нужны» (после аудита AUD-157…165). Волна: experienced, completionist, casual на Opus.
