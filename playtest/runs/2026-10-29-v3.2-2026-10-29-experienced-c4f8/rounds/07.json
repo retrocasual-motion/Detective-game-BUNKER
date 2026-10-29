@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 535627,
+  "stop_reason": "end_turn",
+  "session_id": "50ffb4f0-9a81-4f7a-a617-2bc613fd3f8d",
+  "total_cost_usd": 1.4469831000000004,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 3291,
+    "cache_read_input_tokens": 570420,
+    "output_tokens": 1833,
+    "output_tokens_details": {
+      "thinking_tokens": 603
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3291,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 358,
+        "cache_read_input_tokens": 143321,
+        "cache_creation_input_tokens": 1457,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1457
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 360,
+      "thinkingTokens": 339,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00030450000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 72,
+      "outputTokens": 57395,
+      "thinkingTokens": 30333,
+      "cacheReadInputTokens": 3153526,
+      "cacheCreationInputTokens": 139308,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 139308,
+      "webSearchRequests": 0,
+      "costUSD": 1.4466786000000005,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 7 закончен. Форма заключения ещё не открыта.\n\nМой `РЕШИТЬ | дело | продолжить` из прошлого раунда дал только предупреждение бюро (файл L998). Для перехода к форме подтверждение нужно отправить заново.\n\nПока форма закрыта, я использую последний шанс проверить главное слабое звено — что Лея Моро жена Тома Бернара. В `actions.md` записаны четыре попытки открыть номера газеты за 07–10.10.2008. Тома не стало 06.10.2008, и в эти даты мог выйти некролог с именем жены. Все четыре даты — догадки, и каждая неудачная тратит лимит архива в десять дат.\n\nВерсия и оценки прежние: Моро 42%, Пирс 38%, остальные и несчастный случай 20%, уверенность около 45%. Если некролог подтвердит Лею, перейду к форме. Если нет — решу по имеющемуся.\n\nВ `journal.md` дописан короткий раздел «Раунд 7».",
+  "ttft_ms": 6793,
+  "type": "result",
+  "duration_ms": 35341,
+  "uuid": "fe46971d-582d-48e8-a838-ebba6cda6fb1",
+  "ttft_stream_ms": 6308,
+  "time_to_request_ms": 116,
+  "time_to_request_phases_ms": {
+    "other": 15,
+    "system_prompt": 2,
+    "resume_other": 1,
+    "process_user_input": 3,
+    "input_attachments": 31,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 6,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 3,
+    "tool_schema_build": 12,
+    "message_normalization": 12,
+    "client_creation": 6,
+    "request_build": 14
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 62,
+  "time_to_request_cpu_ms": 126,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 221,
+  "process_anon_mib_result": 128,
+  "process_peak_rss_mib": 256,
+  "process_cpu_ms_turn": 1290,
+  "process_wall_ms_turn": 35341,
+  "process_cpu_ms_streaming": 363,
+  "process_wall_ms_streaming": 10325,
+  "main_stream_count": 4,
+  "main_stream_event_count": 243,
+  "main_stream_chunk_count": 36,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 24,
+    "cpu_ms": 36,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 6308,
+  "time_to_request_from_spawn_ms": 1422699,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793267167948.423,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 526843,
+  "stop_reason": "end_turn",
+  "session_id": "ac1082f8-f8ac-4a02-bfe8-f27c72832682",
+  "total_cost_usd": 1.4512399999999996,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 9855,
+    "cache_read_input_tokens": 574412,
+    "output_tokens": 4364,
+    "output_tokens_details": {
+      "thinking_tokens": 1609
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 9855,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 729,
+        "cache_read_input_tokens": 148536,
+        "cache_creation_input_tokens": 1115,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1115
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 324,
+      "thinkingTokens": 303,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002865,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 62,
+      "outputTokens": 62770,
+      "thinkingTokens": 38492,
+      "cacheReadInputTokens": 2462735,
+      "cacheCreationInputTokens": 144214,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 144214,
+      "webSearchRequests": 0,
+      "costUSD": 1.4509534999999996,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 10,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 закончен, убийцу назвать пока не могу. Уверенность в версии — около 30%.\n\n**Что пришло**\n- **Ячейка 845.** Банк вскрыл её в присутствии следователя Коннора. Ячейку Коул арендовал с 20.10.2008 за наличные. Там лежали два предмета:\n  - акт передачи дел этапа A от 14.11.2008: Коул принял шесть дел, включая A-24, медлисты сверила Уолш;\n  - микрокассета «06.10.08»: хриплый голос сообщает о смерти на объекте, а другой, по телефону, приказывает не объявлять и сказать, что человеку «стало плохо в дороге». Это, видимо, скрытие смерти Бернара. Коул, судя по всему, хранил запись как страховку. Что второй голос — Хейл, я лишь предполагаю по описанию его голоса.\n- **Анкеты набора.** Моро узнала о программе «из статьи», то есть, вероятно, пришла после публикации о гибели участника. Это не доказывает, что она вдова Бернара.\n- **Ящик Пирс.** Mailbridge прислал экспорт, но он зашифрован паролем владельца, пока закрыт.\n\nПирс (33%) и Моро (30%) по-прежнему без алиби на 08:44:52, различить их нечем. Несчастный случай — 12%.\n\n**Действия на этот раунд** (в `actions.md`):\n- три попытки пароля к экспорту ящика: `Toffee`, `Toffi`, `Toffy`. Основание: в записи REC004 Пирс называет первую собаку бигль Тоффи, а на её фотографии 1978 года рыже-белая собака с чёрной спиной, как у бигля. Блокнот Сато показывает, что она сама искала секретные вопросы Пирс, включая первого питомца. Написание Тоффи в материалах нет, так что это угадывание;\n- ходатайство в VAULTLINE о распоряжении № 14/08 от 10.11.2008.\n\nРаздел «Раунд 5» дописан в `journal.md`.",
+  "ttft_ms": 3200,
+  "type": "result",
+  "duration_ms": 41469,
+  "uuid": "1aa95312-40e9-4a5a-9303-e210c8b60659",
+  "ttft_stream_ms": 1836,
+  "time_to_request_ms": 105,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 3,
+    "input_attachments": 31,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 9,
+    "message_normalization": 10,
+    "client_creation": 5,
+    "request_build": 11
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 54,
+  "time_to_request_cpu_ms": 115,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 143,
+  "process_rss_mib_result": 216,
+  "process_anon_mib_result": 123,
+  "process_peak_rss_mib": 257,
+  "process_cpu_ms_turn": 1541,
+  "process_wall_ms_turn": 41468,
+  "process_cpu_ms_streaming": 723,
+  "process_wall_ms_streaming": 26176,
+  "main_stream_count": 4,
+  "main_stream_event_count": 497,
+  "main_stream_chunk_count": 72,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 24,
+    "cpu_ms": 36,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1837,
+  "time_to_request_from_spawn_ms": 1393079,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793267138288.9604,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

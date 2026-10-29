@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 517956,
+  "stop_reason": "end_turn",
+  "session_id": "0a70ed0c-0bc7-4933-8031-5ae312bda85a",
+  "total_cost_usd": 2.8221462,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 6810,
+    "cache_read_input_tokens": 417496,
+    "output_tokens": 3122,
+    "output_tokens_details": {
+      "thinking_tokens": 309
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6810,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 758,
+        "cache_read_input_tokens": 141767,
+        "cache_creation_input_tokens": 2149,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2149
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 82,
+      "outputTokens": 53966,
+      "thinkingTokens": 22918,
+      "cacheReadInputTokens": 3083321,
+      "cacheCreationInputTokens": 140694,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 140694,
+      "webSearchRequests": 0,
+      "costUSD": 2.8218642000000007,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 315,
+      "thinkingTokens": 294,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000282,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 закончен: «Раунд 5» дописан в `journal.md`, в `actions.md` записаны три попытки пароля к ящику Пирс. Решения по делу пока нет, уверенность в версии — 63%.\n\n**Что нашлось в банковской ячейке Коула (№ 845):**\n- **Договор аренды.** Ячейку Коул арендовал 20.10.2008, в день окончания прошлого этапа, и оплатил наличными.\n- **Акт передачи дел прошлого этапа от 14.11.2008.** Дела всех шести участников, включая Тома Бернара, передал Коулу лично Р. Хейл, глава HEXON BIO. Уолш расписалась, что медицинские листы «сверены».\n- **Микрокассета «06.10.08» — день смерти Бернара.** Один мужчина сообщает, что участник «умер. Внутри, на объекте. Реакция». Второй отвечает: «Объявлять не будем… Стало плохо в дороге… Семье — эвакуирован. Справку завизирую». Первый: «Хорошо. Сделаю». По описанию голосов это Коул и Хейл, но экспертизой голоса не установлены.\n\nВыходит, гибель Бернара скрыли по указанию Хейла, а Коул выполнил: оформил ложную справку, переписал медкарту, заплатил Миллеру. Запись и акт он, видимо, хранил как страховку против Хейла.\n\n**Ящик Пирс.** Mailbridge прислал экспорт её почты, но он зашифрован её паролем. Пробую кличку её первой собаки — «Тоффи» из её разговора на диктофоне. Сато в блокноте как раз собирала ответы на контрольные вопросы Пирс, и «первый питомец» среди них. Варианты: `Toffee`, `Тоффи`, `toffee`.\n\nПодозреваемые без изменений: Моро — 62%, Пирс — 15%, несчастный случай или борьба без умысла — 10%, остальные — меньше. Механизм гибели Коула ячейка не прояснила. Если ящик откроется, следующим раундом закрываю вопрос о роли Пирс и перехожу к заключению.",
+  "ttft_ms": 1288,
+  "type": "result",
+  "duration_ms": 31379,
+  "uuid": "2904cbac-3efe-42cb-8b89-047b1950b913",
+  "ttft_stream_ms": 791,
+  "time_to_request_ms": 115,
+  "time_to_request_phases_ms": {
+    "other": 19,
+    "system_prompt": 4,
+    "resume_other": 0,
+    "process_user_input": 3,
+    "input_attachments": 32,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 2,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 8,
+    "message_normalization": 12,
+    "client_creation": 6,
+    "request_build": 12
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 65,
+  "time_to_request_cpu_ms": 121,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 232,
+  "process_anon_mib_turn_start": 145,
+  "process_rss_mib_result": 223,
+  "process_anon_mib_result": 130,
+  "process_peak_rss_mib": 256,
+  "process_cpu_ms_turn": 1595,
+  "process_wall_ms_turn": 31378,
+  "process_cpu_ms_streaming": 930,
+  "process_wall_ms_streaming": 21622,
+  "main_stream_count": 3,
+  "main_stream_event_count": 468,
+  "main_stream_chunk_count": 334,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 24,
+    "cpu_ms": 37,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 791,
+  "time_to_request_from_spawn_ms": 1394018,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793267139374.151,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

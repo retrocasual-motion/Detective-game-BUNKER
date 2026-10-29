@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 575302,
+  "stop_reason": "end_turn",
+  "session_id": "4fc0f380-7c3a-428b-a0f5-572a6f3312dc",
+  "total_cost_usd": 2.7257477,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 8197,
+    "cache_read_input_tokens": 422950,
+    "output_tokens": 3814,
+    "output_tokens_details": {
+      "thinking_tokens": 679
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 8197,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 853,
+        "cache_read_input_tokens": 144115,
+        "cache_creation_input_tokens": 2678,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2678
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 320,
+      "thinkingTokens": 299,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00028450000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 66,
+      "outputTokens": 54816,
+      "thinkingTokens": 22903,
+      "cacheReadInputTokens": 2518676,
+      "cacheCreationInputTokens": 140643,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 140643,
+      "webSearchRequests": 0,
+      "costUSD": 2.7254631999999996,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 закончен: раздел «Раунд 5» дописан в `journal.md`, в `actions.md` записаны два действия. Перед формой заключения осталось открыть почту Пирс.\n\n**Что выяснилось:**\n- **Аварийный дубликат ключа был у Коула.** На кадре 14 у тела на поясе кольцо с двумя ключами, на одном красная бирка «МЕДКАБ. · 3». Значит, Пирс заранее его не держала, а сняла оба ключа с тела. Это противоречие против неё снято.\n- **В клапане папки у тела — бланк HEXON «…Этап A».** В момент падения Коул нёс подлинник медлиста Бернара.\n- **В пачке медкабинета лежали шесть справок о выбытии участников этапа A** — вторые экземпляры, подписанные Уолш и Коулом. В справке Бернара от 06.10.2008 написано «эвакуирован» и «предупреждений об аллергии не поступало». Это ложь: по экспорту у него летальный исход, а в копии медлиста аллергия на молоко записана.\n- **Удар был наружу, в проём.** Полоса временного крепления разорвана, кромка отогнута в сторону проёма. Лист на площадке лежит рваным краем к проёму.\n- **Двери кабинета Коула и комнаты анкет — точно друг напротив друга.** Из комнаты анкет, где работала Моро, видно, как Коул выходит.\n\n**Подозреваемые:** Моро 60%, Пирс 20%, несчастный случай в борьбе 15%, прочие 5%. Уверенность в версии та же, 60%. По-прежнему не объяснено, почему журнал медкабинета написан почерком Пирс.\n\n**Отправлено:**\n- Ходатайство на lawful-requests@mailbridge.net о ящике e.pierce.uk@mailbridge.net. Пирс по внешнему маршруту 14 отправляла данные испытаний; письма покажут, кому она их пересылала.\n- Одна попытка пароля к зашифрованному архиву Хейла: «спокойствие — это наука», девиз с сайта HEXON BIO.\n\nПовторный запрос материалов сеанса медика бюро снова отклонило: по этому пользователю на сервере ничего, кроме журнала. К этому запросу больше не возвращаюсь. Если ответ почтового сервиса не изменит картину, в следующем раунде нажимаю «Решить дело».",
+  "ttft_ms": 2867,
+  "type": "result",
+  "duration_ms": 40726,
+  "uuid": "b54c3c7d-9c20-42e8-8cf6-0a8e3160acee",
+  "ttft_stream_ms": 2402,
+  "time_to_request_ms": 98,
+  "time_to_request_phases_ms": {
+    "other": 14,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 3,
+    "input_attachments": 30,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 1,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 0,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 0,
+    "tool_schema_build": 9,
+    "message_normalization": 9,
+    "client_creation": 6,
+    "request_build": 11
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 44,
+  "time_to_request_cpu_ms": 109,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 221,
+  "process_anon_mib_result": 130,
+  "process_peak_rss_mib": 255,
+  "process_cpu_ms_turn": 1691,
+  "process_wall_ms_turn": 40725,
+  "process_cpu_ms_streaming": 935,
+  "process_wall_ms_streaming": 27569,
+  "main_stream_count": 3,
+  "main_stream_event_count": 508,
+  "main_stream_chunk_count": 384,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 23,
+    "cpu_ms": 34,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2402,
+  "time_to_request_from_spawn_ms": 3187540,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793268932876.8557,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

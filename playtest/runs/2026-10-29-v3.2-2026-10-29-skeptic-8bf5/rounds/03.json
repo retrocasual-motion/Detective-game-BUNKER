@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 428464,
+  "stop_reason": "end_turn",
+  "session_id": "ac1082f8-f8ac-4a02-bfe8-f27c72832682",
+  "total_cost_usd": 1.1364952,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 30235,
+    "cache_read_input_tokens": 541076,
+    "output_tokens": 17977,
+    "output_tokens_details": {
+      "thinking_tokens": 12685
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 30235,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 726,
+        "cache_read_input_tokens": 125452,
+        "cache_creation_input_tokens": 2860,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2860
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 324,
+      "thinkingTokens": 303,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002865,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 46,
+      "outputTokens": 50873,
+      "thinkingTokens": 32176,
+      "cacheReadInputTokens": 1358867,
+      "cacheCreationInputTokens": 122875,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 122875,
+      "webSearchRequests": 0,
+      "costUSD": 1.1362086999999998,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 19,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 3 закончен. Убийцу я пока назвать не могу, уверенность в версии — около 25%.\n\n**Что выяснилось**\n- **Препарат.** Комплекс 0417 в экспорте помечен «активная», а 0418 — «контроль». NorthCare партию 0417 не знает. «Активную» партию получают Харт, Моро и Силва. Прошлый участник A-24, Томас Бернар, умер на 15-й день.\n- **Подделка медлиста.** В копии медлиста указана аллергия на молоко, а в бланке из синей папки Коула — «нет». Колл Бернара был одним из шести участников прошлого заезда.\n- **Пирс.** Она отправляла данные программы по маршруту 14 и заходила в личную почту. 13.10 Коул это обнаружил и набрал «Доклад_Р.txt», но не отправил. Голос поддельного внешнего сообщения похож на её голос.\n- **Ключи и плита.** Аварийный дубликат ключа был на поясе у Коула, а не пропал. Плиту Colton Supply не доставил, так что отчёт Миллера о замене ложный.\n- **Алиби Харта.** Радио было настроено на Лондон вручную с 08:44:31, и станция держалась больше минуты, то есть человек был у приёмника. До площадки ему идти около 42 с, к скрежету в 08:44:52 он не успевал.\n\n**Подозреваемые сейчас:** Пирс 30%, Моро 18%, Миллер 12%, несчастный случай 15%, Харт 10%, остальные меньше.\n\n**Действия на этот раунд** (в `actions.md`):\n- ходатайство в бюро: отметки обходов с терминала технической, чтобы проверить Миллера;\n- сайты: `mailbridge.net`, `northcare-nutrition.com`, `frontrange-savings.com/safe-deposit-boxes`, `the-signal-news.com`;\n- звонок на домашний номер Бернара;\n- архив газеты за 07.10.2008.\n\nРаздел «Раунд 3» дописан в `journal.md`.",
+  "ttft_ms": 2380,
+  "type": "result",
+  "duration_ms": 148647,
+  "uuid": "60baf65c-c692-4c25-bc6d-9672fa0e075c",
+  "ttft_stream_ms": 1608,
+  "time_to_request_ms": 105,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 3,
+    "input_attachments": 33,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 1,
+    "init_message": 6,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 0,
+    "tool_schema_build": 10,
+    "message_normalization": 7,
+    "client_creation": 6,
+    "request_build": 10
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 55,
+  "time_to_request_cpu_ms": 116,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 229,
+  "process_anon_mib_turn_start": 142,
+  "process_rss_mib_result": 215,
+  "process_anon_mib_result": 123,
+  "process_peak_rss_mib": 253,
+  "process_cpu_ms_turn": 2278,
+  "process_wall_ms_turn": 148647,
+  "process_cpu_ms_streaming": 1486,
+  "process_wall_ms_streaming": 134551,
+  "main_stream_count": 5,
+  "main_stream_event_count": 1054,
+  "main_stream_chunk_count": 180,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 26,
+    "cpu_ms": 38,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1608,
+  "time_to_request_from_spawn_ms": 1174169,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793266919430.6155,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

@@ -1,0 +1,167 @@
+{
+  "duration_api_ms": 216877,
+  "stop_reason": "end_turn",
+  "session_id": "ad443ff3-279a-4d4f-aa6b-279dc3d926f0",
+  "total_cost_usd": 0.5505076,
+  "usage": {
+    "input_tokens": 28,
+    "cache_creation_input_tokens": 69482,
+    "cache_read_input_tokens": 470531,
+    "output_tokens": 22515,
+    "output_tokens_details": {
+      "thinking_tokens": 14742
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 69482,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 792,
+        "cache_read_input_tokens": 73047,
+        "cache_creation_input_tokens": 2516,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2516
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 392,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00032050000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 371,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 28,
+      "outputTokens": 22515,
+      "cacheReadInputTokens": 470531,
+      "cacheCreationInputTokens": 69482,
+      "webSearchRequests": 0,
+      "costUSD": 0.5501871,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 14742,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 69482,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 58,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 1 закончен. Все материалы дела я прочитал и дописал в `journal.md` раздел «Раунд 1». В `actions.md` записал действия, ответов на них пока нет.\n\n**Версия на сейчас.** Коул, скорее всего, погиб не от несчастного случая. Запись радиопоста фиксирует шаги вниз по маршу, потом возню и скрежет (08:44:52) и удар (08:45:02). Это похоже на схватку на площадке, а не на простое падение. Сильного подозреваемого пока нет. Мотив — одна из трёх линий: шантаж Харта, деньги Силвы или смерть участника прошлого заезда (Т. Бернар, 06.10.2008) в связи с компанией Hexon Bio. Уверенность в версии — 15%.\n\n**Подозреваемые** (подробнее в журнале):\n- Моро — 22%.\n- Пирс — 18%.\n- Силва — 15%.\n- Миллер — 14%.\n- Харт — 10%.\n- Уолш и Сато вместе — 6%.\n- Несчастный случай или другое — 15%.\n\n**Главные противоречия:**\n- Миллер в отчёте пишет, что плиту заменили. Эксперт и кадры показывают старую трещину и старые анкеры.\n- Моро говорит, что слышала, как кто-то сбежал по лестнице. С её места это едва ли можно было услышать.\n- Харт говорит, что побежал к телу сразу после удара. Первые шаги у подножия на записи только в 08:47:15.\n- Запасной ключ от кабинета пропал из медкабинета, но оказался среди ключей, принятых Миллером от Пирс.\n\n**Что я заказал в `actions.md`:**\n- Осмотр ноутбука (увеличить картинку учётной записи) и листание сканов П-02, П-09, П-04 и П-06.\n- Пароль к телефону: 0110. Это день рождения сестры Силвы, если телефон его.\n- Три адреса в браузере: vaultline-program.com, hexon-bio.com, fieldworks-radio.com.\n- Два звонка: поставщику плит Colton Supply и на линию NorthCare по партиям комплекса.\n- Ходатайство в бюро на приложение № 7 — журналы сервера за 13.10.",
+  "ttft_ms": 5968,
+  "type": "result",
+  "duration_ms": 217278,
+  "uuid": "ee792a8a-94b0-43b4-b472-152055b4c5f7",
+  "ttft_stream_ms": 5051,
+  "time_to_request_ms": 207,
+  "time_to_request_phases_ms": {
+    "other": 29,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 13,
+    "input_attachments": 19,
+    "input_hooks": 4,
+    "transcript_persist": 7,
+    "tool_pool_refresh": 2,
+    "init_message": 6,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 96,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 11,
+    "message_normalization": 2,
+    "client_creation": 4,
+    "request_build": 7
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 35,
+  "time_to_request_cpu_ms": 161,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 218,
+  "process_anon_mib_turn_start": 133,
+  "process_rss_mib_result": 213,
+  "process_anon_mib_result": 120,
+  "process_peak_rss_mib": 236,
+  "process_cpu_ms_turn": 3956,
+  "process_wall_ms_turn": 217278,
+  "process_cpu_ms_streaming": 2339,
+  "process_wall_ms_streaming": 166829,
+  "main_stream_count": 14,
+  "main_stream_event_count": 1437,
+  "main_stream_chunk_count": 275,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 9,
+    "cpu_ms": 17,
+    "major_faults": 0
+  },
+  "first_content_frame_ms": 5052,
+  "time_to_request_from_spawn_ms": 2634408,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793268379515.8354,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

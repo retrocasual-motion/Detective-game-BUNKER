@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 703472,
+  "stop_reason": "end_turn",
+  "session_id": "4422ee5e-4669-4866-9b9f-a5eccd190050",
+  "total_cost_usd": 3.6629013000000006,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 9242,
+    "cache_read_input_tokens": 482050,
+    "output_tokens": 6310,
+    "output_tokens_details": {
+      "thinking_tokens": 3661
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 9242,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 851,
+        "cache_read_input_tokens": 163172,
+        "cache_creation_input_tokens": 5157,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 5157
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 94,
+      "outputTokens": 74492,
+      "thinkingTokens": 33625,
+      "cacheReadInputTokens": 4257799,
+      "cacheCreationInputTokens": 165107,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 165107,
+      "webSearchRequests": 0,
+      "costUSD": 3.6626318,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 290,
+      "thinkingTokens": 269,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002695,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 9 закончен. Форму заключения я пока не открываю: нашлась новая ниточка — почерк в документах медкабинета. Её стоит проверить до того, как закрыть себе доступ к действиям.\n\nКто был на площадке с Коулом, по-прежнему не доказано. Главная подозреваемая — Пирс (около 62%), за ней Моро (около 20%).\n\n**Что нашлось:**\n- **Почерк.** На ежедневных анкетах у Пирс почерк «ровный, с наклоном влево», у Уолш — «округлый, быстрый». А журнал обращений медкабинета, который считается журналом Уолш, описан как «ровный, с наклоном влево». Тем же почерком сделаны записи на медицинском бланке 2008 года с подписью «К. Уолш» и черновики в кабинете координатора. При этом Сато в блокноте пишет, что Уолш вела журнал у неё на глазах.\n- **Вывод-гипотеза:** журнал в нынешнем виде мог переписать кто-то другой, похоже Пирс, за 14 дней взаперти. Второй вариант — подпись «К. Уолш» на документах 2008 года ставила чужая рука. Это пока не доказано.\n- **В журнале нет визита Моро около 08:46 13.10**, хотя о нём говорят и Уолш, и сама Моро. Уолш при этом утверждает, что ведёт журнал полностью.\n- **В пачке медкабинета П-05** внизу лежат шесть листов текстом вниз, со строками и пятном штампа в углу, края потёрты. Что это, пока неизвестно.\n- **Остальное подтвердилось:** плиту заказали 04.10, получатель — Миллер. Его отметки обходов совпадают с регистратором радиопоста. Даты записей на ручке-диктофоне соответствуют моей хронологии.\n\n**Действия на следующий раунд (в `actions.md`):**\n- увеличить шесть листов П-05, лежащих текстом вниз;\n- увеличить журнал обращений: почерк, вырванные страницы, чернила;\n- увеличить медицинские листы в папках A-11…A-31 и сравнить почерк;\n- увеличить таблицу выдачи стиков.\n\nЕсли почерк подтвердит подмену журнала, это сильно укрепит версию против Пирс. После этого раунда подтвержу переход к форме заключения. Раздел «Раунд 9» дописан в `journal.md`.",
+  "ttft_ms": 1177,
+  "type": "result",
+  "duration_ms": 63743,
+  "uuid": "ab5a6f83-68ad-4340-9a08-52b57eee945b",
+  "ttft_stream_ms": 601,
+  "time_to_request_ms": 104,
+  "time_to_request_phases_ms": {
+    "other": 15,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 8,
+    "input_attachments": 14,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 0,
+    "model_config_wait": 4,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 11,
+    "message_normalization": 14,
+    "client_creation": 6,
+    "request_build": 15
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 54,
+  "time_to_request_cpu_ms": 113,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 229,
+  "process_anon_mib_turn_start": 142,
+  "process_rss_mib_result": 220,
+  "process_anon_mib_result": 128,
+  "process_peak_rss_mib": 253,
+  "process_cpu_ms_turn": 1707,
+  "process_wall_ms_turn": 63742,
+  "process_cpu_ms_streaming": 1151,
+  "process_wall_ms_streaming": 54547,
+  "main_stream_count": 3,
+  "main_stream_event_count": 459,
+  "main_stream_chunk_count": 339,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 8,
+    "cpu_ms": 16,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 601,
+  "time_to_request_from_spawn_ms": 1579258,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793267324567.419,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
