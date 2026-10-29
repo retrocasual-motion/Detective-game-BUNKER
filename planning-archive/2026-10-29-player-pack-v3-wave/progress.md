@@ -7,3 +7,4 @@
 - 10 прогонов инициализированы (probe ok) и запущены параллельно: Fable experienced-2e59, prosecutor-5b3d; Opus experienced-ec55, completionist-a95b, procedural-361f, casual-fd83; Sonnet experienced-b060, speedrunner-a838, media-948a, skeptic-076a.
 - Раунд 1 пройден всеми 10. speedrunner (Sonnet) застрял на узоре ноутбука 4 раунда (r5–r8), 8 раундов без финала; дал +4 раунда (запись в RUNBOOK/REPORT: отклонение от плана).
 - Волна завершена 10/10 ФИНАЛ, 205.9 USD. REPORT.md написан. Песочницы удалены.
+- Аудит волны AUD-2026-10-29-23…32; документ выводов https://claude.ai/artifact/7E19bbXhxjcHnh5j4TzskU; 04 §2 п. 18; план перенесён в planning-archive.
