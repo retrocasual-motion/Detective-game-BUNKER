@@ -1,0 +1,167 @@
+{
+  "duration_api_ms": 172969,
+  "stop_reason": "end_turn",
+  "session_id": "50ffb4f0-9a81-4f7a-a617-2bc613fd3f8d",
+  "total_cost_usd": 0.4903726999999999,
+  "usage": {
+    "input_tokens": 24,
+    "cache_creation_input_tokens": 66615,
+    "cache_read_input_tokens": 378702,
+    "output_tokens": 18569,
+    "output_tokens_details": {
+      "thinking_tokens": 10232
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 66615,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 865,
+        "cache_read_input_tokens": 68651,
+        "cache_creation_input_tokens": 3434,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3434
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 360,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00030450000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 339,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 24,
+      "outputTokens": 18569,
+      "cacheReadInputTokens": 378702,
+      "cacheCreationInputTokens": 66615,
+      "webSearchRequests": 0,
+      "costUSD": 0.49006819999999995,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 10232,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 66615,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 61,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 1 закончен. Я записал в `actions.md` 15 действий, а в `journal.md` — раздел «Раунд 1». Ответов архива пока нет.\n\nДействия в `actions.md`:\n- **Ходатайство** на приложение № 7 (журналы сервера за 13.10) на zapros@okrug-bureau.org.\n- **Листание пачек** П-01, П-02, П-04, П-09 и увеличение бланка из папки Коула (26) и экрана ноутбука (47).\n- **Сайты:** vaultline-program.com, hexon-bio.com, fieldworks-radio.com.\n- **Звонки** на горячую линию NorthCare и по номеру поставщика Colton Supply.\n- **Пароли:** две попытки на ноутбук и две на телефон. Всё это догадки, не выводы из материалов: ключи на ноутбук — арка и «змейка» по подсказке «наш первый знак», PIN телефона — дата рождения сестры Силвы в двух вариантах (0110, 1001).\n\nЧто показал разбор материалов:\n- **Это похоже на убийство.** По записи радиопоста (файл 50) в 08:44:46 кто-то спускается на 3–4 ступени, в 08:44:52 слышны возня и скрежет, в 08:45:02 — удар у подножия. Так звучит борьба, а не просто падение.\n- **Харт, скорее всего, ни при чём.** В 08:44:20–31 он у приёмника на посту. Добраться оттуда до площадки за 15 секунд он не мог.\n- **Отчёт инженера о замене плиты ложен.** В отчёте дня 10 (файл 12) сказано «плита заменена». Но эксперт (файл 23) и кадры камеры (файл 24) показывают старую плиту со старой трещиной.\n- **Кто мог быть на верхнем уровне около 08:44:** Моро, Пирс, Миллер; Силва — менее вероятно. Моро говорит, что слышала, как кто-то сбежал по лестнице. Это не сходится с записью, и слышать это из жилого блока она не могла. Её рисунки следят за кабинетом Коула.\n\nПодозреваемые: Моро 25%, Пирс 20%, Миллер 20%, Уолш 10%, Силва 8%, Харт 7%, несчастный случай или другое 10%. Уверенность в версии — около 20%.\n\nВыводы пока предварительные: журналов сервера и терминалов у меня нет, они придут по ходатайству.",
+  "ttft_ms": 2672,
+  "type": "result",
+  "duration_ms": 175661,
+  "uuid": "64c1486f-ee02-4a2d-bd1b-5ef326b33051",
+  "ttft_stream_ms": 1978,
+  "time_to_request_ms": 289,
+  "time_to_request_phases_ms": {
+    "other": 29,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 11,
+    "input_attachments": 10,
+    "input_hooks": 4,
+    "transcript_persist": 4,
+    "tool_pool_refresh": 2,
+    "init_message": 6,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 204,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 0,
+    "tool_schema_build": 7,
+    "message_normalization": 1,
+    "client_creation": 2,
+    "request_build": 4
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 36,
+  "time_to_request_cpu_ms": 190,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 194,
+  "process_anon_mib_turn_start": 107,
+  "process_rss_mib_result": 212,
+  "process_anon_mib_result": 119,
+  "process_peak_rss_mib": 223,
+  "process_cpu_ms_turn": 3668,
+  "process_wall_ms_turn": 175661,
+  "process_cpu_ms_streaming": 2439,
+  "process_wall_ms_streaming": 129029,
+  "main_stream_count": 12,
+  "main_stream_event_count": 1434,
+  "main_stream_chunk_count": 222,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 6,
+    "cpu_ms": 10,
+    "major_faults": 0
+  },
+  "first_content_frame_ms": 1978,
+  "time_to_request_from_spawn_ms": 883669,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793266628022.5803,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

@@ -1,0 +1,167 @@
+{
+  "duration_api_ms": 161009,
+  "stop_reason": "end_turn",
+  "session_id": "ac1082f8-f8ac-4a02-bfe8-f27c72832682",
+  "total_cost_usd": 0.48593919999999996,
+  "usage": {
+    "input_tokens": 26,
+    "cache_creation_input_tokens": 65889,
+    "cache_read_input_tokens": 410547,
+    "output_tokens": 18099,
+    "output_tokens_details": {
+      "thinking_tokens": 10082
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 65889,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 817,
+        "cache_read_input_tokens": 68256,
+        "cache_creation_input_tokens": 3070,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3070
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 324,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002865,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 303,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 26,
+      "outputTokens": 18099,
+      "cacheReadInputTokens": 410547,
+      "cacheCreationInputTokens": 65889,
+      "webSearchRequests": 0,
+      "costUSD": 0.4856527,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 10082,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 65889,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 60,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Я прочитал все материалы дела. Заключения пока нет: версия сырая, уверенность около 15%.\n\nВ `actions.md` записаны действия первого раунда:\n- **Ходатайство:** на `zapros@okrug-bureau.org` — приложение № 7, выгрузка журналов сервера объекта за 13.10.2009.\n- **Сайты:** `vaultline-program.com`, `hexon-bio.com`, `fieldworks-radio.com`.\n- **Звонки:** поставщику плиты Colton Supply (+7 495 555-18-44) и на горячую линию NorthCare (+7 800 555-31-20).\n- **Осмотр:** листание пачек П-09, П-02, П-04, П-06, П-03, П-05 и увеличение бланка из клапана папки.\n- **Пароль:** на телефон из стола Коула — `0110`. Это моё предположение: у Силвы день рождения сестры в первый день, а первый день, по-моему, 01.10, и этот телефон, вероятно, его. Лишь дата роликов («день 1») есть в материалах дела, остальное — вывод.\n\nВ `journal.md` дописан раздел «Раунд 1». Основное из него:\n- **Падение.** По регистратору радиопоста шаги вниз начались в 08:44:46, возня и скрежет — в 08:44:52, удар — в 08:45:02. Рядом с Коулом, судя по звуку, был ещё кто-то.\n- **Ведущий подозреваемый — Харт, 30%.** Коул шантажировал его в 07:33, нижняя половина его психоинтервью обнаружена у него в кармане, а Силва видел, как он что-то прятал у тела. Но на записи Харт появляется у подножия только в 08:47:15, спустя больше двух минут после удара.\n- **Несчастный случай — 17%.** Излом плиты старый, умышленного повреждения эксперт не нашёл.\n- **Отчёт Миллера.** Он пишет, что плиту заменил 10.10, но при осмотре стояла старая плита с хомутом. Это либо ложь, либо ошибка.\n- **Ключи.** Аварийный дубликат пропал с щита медкабинета, но Миллер записал два ключа, принятых от Пирс.\n\nЖурнал сервера (приложение № 7) нужен, чтобы проверить алиби по терминалам и дверям.",
+  "ttft_ms": 1757,
+  "type": "result",
+  "duration_ms": 163721,
+  "uuid": "4104b266-ed4e-49ab-944c-faa531190444",
+  "ttft_stream_ms": 1064,
+  "time_to_request_ms": 202,
+  "time_to_request_phases_ms": {
+    "other": 29,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 26,
+    "input_hooks": 3,
+    "transcript_persist": 5,
+    "tool_pool_refresh": 2,
+    "init_message": 4,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 101,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 9,
+    "message_normalization": 2,
+    "client_creation": 3,
+    "request_build": 6
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 39,
+  "time_to_request_cpu_ms": 151,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 195,
+  "process_anon_mib_turn_start": 108,
+  "process_rss_mib_result": 213,
+  "process_anon_mib_result": 120,
+  "process_peak_rss_mib": 230,
+  "process_cpu_ms_turn": 3587,
+  "process_wall_ms_turn": 163720,
+  "process_cpu_ms_streaming": 2160,
+  "process_wall_ms_streaming": 126525,
+  "main_stream_count": 13,
+  "main_stream_event_count": 1401,
+  "main_stream_chunk_count": 266,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 22,
+    "cpu_ms": 24,
+    "major_faults": 0
+  },
+  "first_content_frame_ms": 1064,
+  "time_to_request_from_spawn_ms": 883526,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793266628018.5908,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
