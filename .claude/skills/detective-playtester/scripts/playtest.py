@@ -57,16 +57,21 @@ STRIP_ENV = [
 # листать, совместить; РЕШИТЬ — кнопка «Решить дело», открывает форму заключения)
 # пакет включает правилами в access.json и описывает во вводной.
 BASE_ACTIONS = ("ПАРОЛЬ", "ЗАПРОС", "ПОИСК", "ФИНАЛ", "СТОП")
-EXTRA_ACTIONS = ("АДРЕС", "ЗВОНОК", "ОСМОТР", "РЕШИТЬ")
+# ХОДАТАЙСТВО — официальный запрос из двух карточек («Прошу» + «На основании»), см. petition_*.
+EXTRA_ACTIONS = ("АДРЕС", "ЗВОНОК", "ОСМОТР", "РЕШИТЬ", "ХОДАТАЙСТВО")
 ACTIONS = BASE_ACTIONS + EXTRA_ACTIONS
 ARCHIVIST_ACTIONS = ("ЗАПРОС", "ПОИСК")
 ACTION_RE = re.compile(r"^\s*[-*]?\s*(" + "|".join(ACTIONS) + r")\s*\|\s*(.*?)\s*\|\s*(.*?)\s*$")
 
 
 def pack_actions(acc):
-    """Действия, которые есть в этом пакете: базовые + дополнительные из правил."""
+    """Действия, которые есть в этом пакете: базовые + дополнительные из правил.
+    Пакет без писем свободным текстом (`"no_free_letters": true`) не показывает ЗАПРОС."""
     used = {r.get("action") for r in (acc or {}).get("rules", [])} | set((acc or {}).get("default_reply", {}))
-    return [a for a in ACTIONS if a in BASE_ACTIONS or a in used]
+    acts = [a for a in ACTIONS if a in BASE_ACTIONS or a in used]
+    if (acc or {}).get("no_free_letters"):
+        acts = [a for a in acts if a != "ЗАПРОС"]
+    return acts
 
 
 def actions_template(acc=None):
@@ -200,7 +205,11 @@ def lint(pack, quiet=False):
                 for rid in r.get("requires", []):
                     if not any(n == rid or n.startswith(rid + "__") for n in locked):
                         hard.append(f"access.json: правило {r.get('id')}: requires {rid} — нет файла в locked/")
-                for pat in r.get("accept", []) + [r.get("target", "")]:
+                card_pats = [sp.get(k, "") for slot in r.get("cards", []) for sp in slot for k in ("file", "quote")] + \
+                    [sp.get(k, "") for sp in r.get("not_cards", []) for k in ("file", "quote")]
+                if r.get("action") == "ХОДАТАЙСТВО" and r.get("accept"):
+                    warn.append(f"access.json: правило {r.get('id')}: accept у ХОДАТАЙСТВО не используется (нужны cards)")
+                for pat in r.get("accept", []) + [r.get("target", "")] + card_pats:
                     try:
                         re.compile(pat)
                     except re.error as e:
@@ -405,6 +414,10 @@ def init(pack, profile, runs_dir, model=None, request="", selftest=False, skip_p
     acc = json.loads((pack / "gm" / "access.json").read_text(encoding="utf-8"))
     (sandbox / "actions.md").write_text(actions_template(acc), encoding="utf-8")
     (sandbox / "replies.md").write_text("# Ответы архива\n\nПока ответов нет.\n", encoding="utf-8")
+    if any(r.get("action") == "ХОДАТАЙСТВО" for r in acc.get("rules", [])):
+        (sandbox / "case" / MAIL_FILE).write_text(
+            "# Почта специалиста\n\nОтветы на ваши ходатайства (новые — внизу). Строки ответов можно брать в карточки: файл `почта`.\n",
+            encoding="utf-8")
     stamp = dt.datetime.now().strftime("%Y-%m-%d")
     run_id = f"{stamp}-{meta.get('version', pack.name)}-{profile}-{secrets.token_hex(2)}"
     run = Path(runs_dir).resolve() / run_id
@@ -423,6 +436,160 @@ def init(pack, profile, runs_dir, model=None, request="", selftest=False, skip_p
                 f"Запрос автора: {request or '—'}\n\n| Раунд | Действие | Цель | Значение | Правило | Результат | Открыто |\n|---|---|---|---|---|---|---|")
     print(run)
     return run
+
+
+# --- Ходатайство: карточки «Прошу» и «На основании» ------------------------
+#
+# Строка: `ХОДАТАЙСТВО | адрес | прошу: <файл>, «<строка>» ; основание: <файл>, «<строка>»`.
+# Карточка — строка документа или деталь материала: файл (номер или имя из case/, `почта` —
+# ответы на ходатайства) и точная цитата из него. Свободного текста нет: цитата должна
+# найтись в указанном файле. Правило ХОДАТАЙСТВО в access.json вместо `accept` задаёт
+# `cards` — слоты карточек: каждый слот — список вариантов {"file": regex по номеру файла,
+# "quote": regex по нормализованной цитате}. Две карточки должны заполнить все слоты (порядок
+# не важен); один слот — вторая карточка любая; пустой список — любые две карточки.
+# `not_cards` — варианты, при которых правило не действует. `refusal: true` — ответ-отказ
+# (считается в лимите неверных попыток и в журнале как «отказ»). Regex `quote` проверяется по
+# цитате в нижнем регистре (ё → е) с сохранённой пунктуацией: «05.10» — дата, не код 05.
+# Порядок карточек не важен. Сначала по порядку проверяются исполнимые правила и отказы с
+# `early: true`, затем остальные отказы. Regex реквизита должен совпасть и в цитате, и в строке
+# материала. `address_book: true` — адрес ходатайства должен встречаться в доступных материалах.
+
+MAIL_FILE = "почта_специалиста.md"
+CARD_SPLIT_RE = re.compile(r"(?i)(?:^|[;|\s])(?:на\s+)?основани[еия]\s*[:—-]")
+CARD_HEAD_RE = re.compile(r"(?i)^\s*(?:файл\s*№?\s*)?(?P<id>[lл]\s*\d{3}|\d{2}|почт\w*)(?:__\S*?)?(?:\.md)?(?=[\s,:;·—«\"'(-]|$)\s*[,:;·—-]*\s*(?P<q>.*)$")
+
+
+def qnorm(s):
+    s = s.lower().replace("ё", "е")
+    s = re.sub(r"[^\w№]+", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def parse_card(text):
+    m = CARD_HEAD_RE.match(text or "")
+    if not m:
+        return None
+    fid = re.sub(r"\s+", "", m.group("id"))
+    fid = "почта" if fid.lower().startswith("почт") else ("L" + fid[1:] if fid[0] in "lLлЛ" else fid)
+    q = m.group("q").strip().strip(" «»\"'“”„.;,")
+    return {"file": fid, "raw": q}
+
+
+def parse_petition(value):
+    """'прошу: … ; основание: …' -> (прошу, основание) как сырой текст или None."""
+    parts = CARD_SPLIT_RE.split(value or "", maxsplit=1)
+    if len(parts) != 2:
+        return None
+    a = re.sub(r"(?i)^\s*прошу\s*[:—-]?\s*", "", parts[0]).strip(" ;|")
+    b = parts[1].strip(" ;|")
+    return (a, b) if a and b else None
+
+
+def find_quote(text, quote):
+    """Цитата есть в тексте файла: точное вхождение после нормализации или строка, где есть
+    не меньше 80 % слов цитаты. Возвращает найденную строку или None."""
+    qn = qnorm(quote)
+    if len(qn) < 2:
+        return None
+    tn = qnorm(text)
+    lines = [qnorm(l) for l in text.splitlines() if l.strip()]
+    if qn in tn:
+        return next((l for l in lines if qn in l), qn)
+    words = qn.split()
+    best, score = None, 0.0
+    for l in lines:
+        toks = set(l.split())
+        sc = sum(1 for w in words if w in toks) / len(words)
+        if sc > score:
+            best, score = l, sc
+    return best if score >= 0.8 else None
+
+
+def check_card(raw, files):
+    """files: {id: текст}. Возвращает (карточка, None) или (None, текст отказа интерфейса)."""
+    c = parse_card(raw)
+    if not c or not c["raw"]:
+        return None, "Карточка не оформлена: укажите файл и строку из него (например: `20, «вызов на прямую линию…»`)."
+    if c["file"] not in files:
+        return None, f"Карточка не из материалов дела: файла {c['file']} в папке case/ нет."
+    line = find_quote(files[c["file"]], c["raw"])
+    if line is None:
+        return None, f"В файле {c['file']} такой строки нет: карточка — точная строка или деталь материала."
+    c["quote"] = c["raw"].lower().replace("ё", "е")
+    c["line"] = line
+    return c, None
+
+
+def spec_ok(spec, card):
+    """Файл подходит, regex находит реквизит в цитате, и найденный фрагмент есть в самой строке
+    материала (свои слова игрока в карточке реквизитом не считаются)."""
+    if re.search(spec.get("file", ".*"), card["file"], flags=re.IGNORECASE) is None:
+        return False
+    m = re.search(spec.get("quote", ".*"), card["quote"], flags=re.IGNORECASE)
+    if m is None:
+        return False
+    frag = qnorm(m.group(0))
+    return not frag or frag in card["line"]
+
+
+def cards_ok(rule, cards):
+    if any(spec_ok(s, c) for s in rule.get("not_cards", []) for c in cards):
+        return False
+    slots = rule.get("cards", [])
+    if not slots:
+        return True
+    if len(slots) == 1:
+        return any(any(spec_ok(s, c) for s in slots[0]) for c in cards)
+    a, b = cards[0], cards[1]
+    fit = lambda c, slot: any(spec_ok(s, c) for s in slot)
+    return (fit(a, slots[0]) and fit(b, slots[1])) or (fit(b, slots[0]) and fit(a, slots[1]))
+
+
+def case_files(case_dir, extra=None):
+    """Тексты материалов, доступных игроку: {id: текст}; id — номер до `__` или `почта`."""
+    out = {}
+    for f in sorted(Path(case_dir).glob("*.md")):
+        if f.name == MAIL_FILE:
+            out["почта"] = f.read_text(encoding="utf-8")
+        elif "__" in f.name:
+            out[f.name.split("__", 1)[0]] = f.read_text(encoding="utf-8")
+    out.update(extra or {})
+    return out
+
+
+def resolve_petition(acc, target, value, released, files):
+    """Как resolve(), но для ХОДАТАЙСТВО: адрес — regex `target`, карточки — `cards`."""
+    defaults = acc.get("default_reply", {})
+    pair = parse_petition(value)
+    if not pair:
+        return {"hit": None, "msg": "Ходатайство не оформлено: нужны две карточки — «прошу: …» и «основание: …».",
+                "res": "не оформлено", "rule": "—", "cards": None}
+    cards = []
+    for raw in pair:
+        c, err = check_card(raw, files)
+        if err:
+            return {"hit": None, "msg": err, "res": "не оформлено", "rule": "—", "cards": None}
+        cards.append(c)
+    addr = norm(target)
+    if acc.get("address_book") and "@" in addr and not any(addr in t.lower() for t in files.values()):
+        return {"hit": None, "msg": "Адреса нет в адресной книге: она пополняется адресами из открытых материалов дела.",
+                "res": "не оформлено", "rule": "—", "cards": None}
+    cand = [r for r in acc.get("rules", []) if r.get("action") == "ХОДАТАЙСТВО"
+            and re.search(r.get("target", ".*"), addr, flags=re.IGNORECASE)]
+    # Сначала исполнимые правила и отказы с `early: true`, затем прочие отказы: отказ по теме
+    # одной карточки не перехватывает реквизит на другой.
+    for late in (False, True):
+        for r in cand:
+            if bool(r.get("refusal") and not r.get("early")) != late:
+                continue
+            if requires_met(r, released) and cards_ok(r, cards):
+                return {"hit": r, "via": "", "cards": cards}
+    return {"hit": None, "msg": defaults.get("ХОДАТАЙСТВО", "Письмо не доставлено: адрес не найден."),
+            "res": "отказ" if cand else "нет правила", "rule": cand[0]["id"] if cand else "—", "cards": cards}
+
+
+def card_label(c):
+    return f"{c['file']} «{c['raw'][:80]}»" if c else "—"
 
 
 def is_released(released, prefix):
@@ -571,11 +738,36 @@ def to_release(pack, hit, released):
 
 
 def hit_reply(hit, files):
+    if hit.get("refusal"):
+        return hit.get("ok", "Отказ."), "отказ"
     if not hit.get("release"):
         return hit.get("ok", "Готово."), "ответ"
     if files:
         return hit.get("ok", "Готово."), "успех"
     return hit.get("again", "Уже получено."), "повтор"
+
+
+def petition_log(run, rnd, target, cards, value, rule, res, files):
+    """Все ходатайства, включая отказы и неоформленные (A-249 п. 8, этап 2)."""
+    f = Path(run) / "petitions-log.md"
+    if not f.exists():
+        f.write_text("# Ходатайства\n\n| Раунд | Кому | Прошу | Основание | Правило | Результат | Открыто |\n"
+                     "|---|---|---|---|---|---|---|\n", encoding="utf-8")
+    a, b = (card_label(cards[0]), card_label(cards[1])) if cards else (value[:120].replace("|", "/"), "—")
+    with open(f, "a", encoding="utf-8") as fh:
+        fh.write(f"| {rnd} | {target} | {a} | {b} | {rule} | {res} | {', '.join(files) or '—'} |\n")
+
+
+def mail_append(path, rnd, target, cards, msg, files):
+    """Ответ на ходатайство приходит на почту специалиста: из неё тоже берут карточки."""
+    path = Path(path)
+    text = path.read_text(encoding="utf-8") if path.exists() else \
+        "# Почта специалиста\n\nОтветы на ваши ходатайства (новые — внизу). Строки ответов можно брать в карточки: файл `почта`.\n"
+    n = len(re.findall(r"^## Ответ №", text, flags=re.M)) + 1
+    text += (f"\n## Ответ № {n} · раунд {rnd}\n\nКому направлено: {target}\n"
+             f"Прошу: {card_label(cards[0])}\nОснование: {card_label(cards[1])}\n\n{msg}\n"
+             + (f"\nВложения: {', '.join(files)}\n" if files else ""))
+    path.write_text(text, encoding="utf-8")
 
 
 def apply_actions(run, state, pack, sandbox):
@@ -617,8 +809,11 @@ def apply_actions(run, state, pack, sandbox):
                         f"{verdict['rule_id'] or 'отказ'}: {verdict.get('reason', '')}\n")
             return verdict["rule_id"]
 
-        r = resolve(acc, action, target, value, state["released"], ask=ask if state.get("archivist") else None)
-        limit.record(action, target, r["hit"])
+        if action == "ХОДАТАЙСТВО":
+            r = resolve_petition(acc, target, value, state["released"], case_files(sandbox / "case"))
+        else:
+            r = resolve(acc, action, target, value, state["released"], ask=ask if state.get("archivist") else None)
+        limit.record(action, target, r["hit"] if r["hit"] and not r["hit"].get("refusal") else None)
         files = []
         if r["hit"]:
             files = to_release(pack, r["hit"], state["released"])
@@ -632,6 +827,10 @@ def apply_actions(run, state, pack, sandbox):
             msg, res, rule = r["msg"], r["res"], r["rule"]
         replies.append(f"- {action} | {target} | {value} → {msg}" + (f" Новые материалы: {', '.join(files)}." if files else ""))
         gm_log(run, f"| {state['round']} | {action} | {target} | {value} | {rule} | {res} | {', '.join(files) or '—'} |")
+        if action == "ХОДАТАЙСТВО":
+            petition_log(run, state["round"], target, r.get("cards"), value, rule, res, files)
+            if r.get("cards"):
+                mail_append(sandbox / "case" / MAIL_FILE, state["round"], target, r["cards"], msg, files)
     (sandbox / "replies.md").write_text(
         f"# Ответы архива — раунд {state['round']}\n\n" + ("\n".join(replies) if replies else "Действий не было.") + "\n",
         encoding="utf-8")
@@ -795,7 +994,9 @@ def export(pack, out):
              "| Действие | Цель | Что принимается | Открывает | Только после | Ответ при успехе | Ответ при отказе |",
              "|---|---|---|---|---|---|---|"]
     for r in acc.get("rules", []):
-        accepts = r.get("intent") or " / ".join(r.get("accept", []))
+        accepts = r.get("intent") or " / ".join(r.get("accept", [])) or \
+            " + ".join("(" + " или ".join(f"{sp.get('file', '*')}: {sp.get('quote', '*')}" for sp in slot) + ")"
+                       for slot in r.get("cards", [])) or "любые две карточки"
         lines.append(f"| {r['action']} | {r.get('target_label', r.get('target', ''))} | {accepts} | "
                      f"{', '.join(r.get('release', [])) or 'ответ без материала'} | {', '.join(r.get('requires', [])) or '—'} | "
                      f"{r.get('ok', '')} | {r.get('fail', '')} |")
@@ -839,6 +1040,7 @@ def walk(pack, script, quiet=False):
     acc = json.loads((pack / "gm" / "access.json").read_text(encoding="utf-8"))
     released, bad, n, ended = [], 0, 0, False
     released_before_round = []
+    mail = ""
     limit = AttemptLimit(acc)
     for ln, raw in enumerate(Path(script).read_text(encoding="utf-8").splitlines(), 1):
         line = raw.split(" #", 1)[0].rstrip() if not raw.lstrip().startswith("#") else ""
@@ -867,6 +1069,15 @@ def walk(pack, script, quiet=False):
         elif action in ("ФИНАЛ", "СТОП"):
             r = {"hit": None, "res": "конец", "rule": "—"}
             ended = True
+        elif action == "ХОДАТАЙСТВО":
+            avail = case_files(pack / "player", {n.split("__", 1)[0]: (pack / "locked" / n).read_text(encoding="utf-8")
+                                                 for n in released})
+            if mail:
+                avail["почта"] = mail
+            r = resolve_petition(acc, target, value, released, avail)
+            limit.record(action, target, r["hit"] if r["hit"] and not r["hit"].get("refusal") else None)
+            if r.get("cards"):
+                mail += "\n" + (hit_reply(r["hit"], ["x"])[0] if r["hit"] else r["msg"]) + "\n"
         else:
             r = resolve(acc, action, target, value, released)
             limit.record(action, target, r["hit"])
@@ -879,7 +1090,7 @@ def walk(pack, script, quiet=False):
         if expect is not None:
             e = expect.strip().lower()
             if e in ("ответ", "отказ", "нет доступа", "нет правила", "повтор", "лимит",
-                     "нет формы", "форма открыта", "конец", "после конца"):
+                     "нет формы", "форма открыта", "конец", "после конца", "не оформлено"):
                 ok = res == e
             else:
                 want = sorted(x.strip() for x in expect.split(",") if x.strip())
