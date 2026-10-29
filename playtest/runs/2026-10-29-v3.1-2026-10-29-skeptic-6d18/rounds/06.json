@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 449665,
+  "stop_reason": "end_turn",
+  "session_id": "07e90876-6db4-4833-9a5f-dd741d8bd3e9",
+  "total_cost_usd": 1.3533031000000004,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 7559,
+    "cache_read_input_tokens": 530680,
+    "output_tokens": 4980,
+    "output_tokens_details": {
+      "thinking_tokens": 2654
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 7559,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 689,
+        "cache_read_input_tokens": 136762,
+        "cache_creation_input_tokens": 1086,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1086
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 283,
+      "thinkingTokens": 262,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000266,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 72,
+      "outputTokens": 53132,
+      "thinkingTokens": 25372,
+      "cacheReadInputTokens": 2829331,
+      "cacheCreationInputTokens": 134660,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 134660,
+      "webSearchRequests": 0,
+      "costUSD": 1.3530371000000005,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 6 закончен. Прямых улик о том, кто был на площадке, у меня по-прежнему нет. Уверенность в версии упала с 40% до 30%.\n\n**Что выяснилось.** Анкеты набора не подтвердили, что Моро — вдова Бернара:\n- Моро 1979 года рождения, преподаватель рисования, контакт — мать в Лионе. О муже в анкете ничего нет.\n- Про статью она написала «из статьи». Вероятно, это The Signal за 03.11.2008, но это мой вывод.\n- Миллер знает объект с 1990-х, контакт — Л. Миллер в Денвере, вероятно дочь.\n\nВерсия о мести Моро держится только на автоответчике «Том и Лея» и на мотиве. Родство остаётся недоказанным.\n\n**Поправка к раунду 3.** «Алиби Харта» по радиозаписи не работает: регламент (п. 4.4) называет перебор станций режимом ПОИСК, то есть он идёт автоматически по таблице. По времени Харт мог дойти до площадки примерно за 40 секунд. Возня в 08:44:52 тоже возможна без второго человека: стойка могла сломаться под одним Коулом.\n\n**Подозреваемые (предварительно):**\n\n| Кто | Уверенность, % |\n|---|---|\n| Моро | 28 |\n| Харт | 20 |\n| Пирс | 13 |\n| Силва | 8 |\n| Миллер | 3 |\n| Уолш | 3 |\n| Сато | 2 |\n| Несчастный случай | 23 |\n\n**Запрошено в `actions.md`:** шесть осмотров, чтобы найти следы присутствия второго человека. Это увеличение листа с площадки, обгорелой половины листа Харта, блокнота Моро (страницы 14–16) и кадров 14–15, а также прослушивание радиопоста на 08:44:46 и 08:47:15. Раздел «Раунд 6» дописан в `journal.md`.",
+  "ttft_ms": 2881,
+  "type": "result",
+  "duration_ms": 59464,
+  "uuid": "cb989db9-f512-48ab-935d-a8bf6aefa814",
+  "ttft_stream_ms": 2273,
+  "time_to_request_ms": 102,
+  "time_to_request_phases_ms": {
+    "other": 14,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 3,
+    "input_attachments": 27,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 4,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 9,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 0,
+    "tool_schema_build": 9,
+    "message_normalization": 8,
+    "client_creation": 5,
+    "request_build": 11
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 52,
+  "time_to_request_cpu_ms": 115,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 230,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 221,
+  "process_anon_mib_result": 129,
+  "process_peak_rss_mib": 254,
+  "process_cpu_ms_turn": 1508,
+  "process_wall_ms_turn": 59463,
+  "process_cpu_ms_streaming": 644,
+  "process_wall_ms_streaming": 33761,
+  "main_stream_count": 4,
+  "main_stream_event_count": 452,
+  "main_stream_chunk_count": 67,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 21,
+    "cpu_ms": 32,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2273,
+  "time_to_request_from_spawn_ms": 1023378,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793262717404.954,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

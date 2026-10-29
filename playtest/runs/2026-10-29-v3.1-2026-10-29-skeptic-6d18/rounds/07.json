@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 507082,
+  "stop_reason": "end_turn",
+  "session_id": "07e90876-6db4-4833-9a5f-dd741d8bd3e9",
+  "total_cost_usd": 1.5154724000000004,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 10228,
+    "cache_read_input_tokens": 565313,
+    "output_tokens": 6471,
+    "output_tokens_details": {
+      "thinking_tokens": 3368
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 10228,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 894,
+        "cache_read_input_tokens": 146665,
+        "cache_creation_input_tokens": 1411,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1411
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 283,
+      "thinkingTokens": 262,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000266,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 80,
+      "outputTokens": 59603,
+      "thinkingTokens": 28740,
+      "cacheReadInputTokens": 3394644,
+      "cacheCreationInputTokens": 144888,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 144888,
+      "webSearchRequests": 0,
+      "costUSD": 1.5152064000000005,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 7 закончен. Различающего факта между подозреваемыми я так и не нашёл, уверенность в версии 28%. Раздел «Раунд 7» дописан в `journal.md`, два запроса записаны в `actions.md`.\n\n**Что дали осмотры:**\n- **Аварийный дубликат.** На кадре 14 на поясе Коула кольцо с двумя ключами, на одном красная бирка «МЕДКАБ. · 3». Это аварийный дубликат ключа кабинета. Он был у самого Коула, значит, никто его не крал. Версия, что Моро украла его ночью, не нужна и не подтверждается.\n- **Листы Харта.** Обе половины одного шрифта, на нижней обгоревшей «…арт» от подписи, и они стыкуются. Верхняя половина с именем Харта осталась чистой на площадке. Нижнюю с признанием Харт забрал у тела. Раз он не взял верхнюю, на площадке он, скорее всего, не был. Это вывод, не доказательство.\n- **Блокнот Моро.** Рисунки подтверждают, что она сидела в комнате анкет напротив кабинета Коула. Новых улик против неё нет.\n- **Время падения.** Между скрежетом (08:44:52) и ударом (08:45:02) прошло около 10 секунд. Само падение занимает около секунды, так что похоже на борьбу, а не на простое падение. Это тоже вывод.\n- **Прослушивание радиопоста** на 08:44:46 и 08:47:15 ничего нового не дало.\n\n**Подозреваемые (предварительно):**\n\n| Кто | Уверенность, % |\n|---|---|\n| Моро | 25 |\n| Пирс | 20 |\n| Харт | 18 |\n| Силва | 8 |\n| Миллер | 3 |\n| Уолш | 3 |\n| Сато | 2 |\n| Несчастный случай | 21 |\n\n**Что уже можно утверждать:**\n- стойка была дефектна, а Коул отказался закрыть лестницу;\n- отчёт Миллера о замене плиты ложный;\n- тревога была инсценировкой;\n- смерть Бернара в 2008 скрыли;\n- офис держал группу с 09:24.\n\n**Запрошено в `actions.md`:**\n- в Vaultline — опись «архива проекта» из штампа на обложке A-24;\n- в The Signal — сведения об источнике статьи про гибель участника.\n\nЕсли ничего нового не появится, следующим шагом буду нажимать `РЕШИТЬ` и подавать частичное заключение с оговорками.",
+  "ttft_ms": 2205,
+  "type": "result",
+  "duration_ms": 62590,
+  "uuid": "dae57709-ecfa-4efb-b299-9a5769a8edcd",
+  "ttft_stream_ms": 1442,
+  "time_to_request_ms": 176,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 25,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 5,
+    "engine_pickup": 2,
+    "message_prep": 0,
+    "model_config_wait": 75,
+    "autocompact": 1,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 10,
+    "message_normalization": 12,
+    "client_creation": 5,
+    "request_build": 11
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 25,
+  "time_to_request_cpu_ms": 138,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 230,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 222,
+  "process_anon_mib_result": 130,
+  "process_peak_rss_mib": 256,
+  "process_cpu_ms_turn": 1523,
+  "process_wall_ms_turn": 62589,
+  "process_cpu_ms_streaming": 773,
+  "process_wall_ms_streaming": 44651,
+  "main_stream_count": 4,
+  "main_stream_event_count": 611,
+  "main_stream_chunk_count": 84,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 14,
+    "cpu_ms": 26,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1442,
+  "time_to_request_from_spawn_ms": 1084038,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793262777973.593,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

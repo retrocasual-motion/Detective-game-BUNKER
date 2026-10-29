@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 619682,
+  "stop_reason": "end_turn",
+  "session_id": "5097212f-5f6e-4ee0-99ee-d803c0b94bc5",
+  "total_cost_usd": 3.1472034000000004,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 4544,
+    "cache_read_input_tokens": 455593,
+    "output_tokens": 1967,
+    "output_tokens_details": {
+      "thinking_tokens": 159
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4544,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 638,
+        "cache_read_input_tokens": 153420,
+        "cache_creation_input_tokens": 1292,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1292
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 273,
+      "thinkingTokens": 252,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00026100000000000006,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 88,
+      "outputTokens": 60473,
+      "thinkingTokens": 25007,
+      "cacheReadInputTokens": 3626052,
+      "cacheCreationInputTokens": 151490,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 151490,
+      "webSearchRequests": 0,
+      "costUSD": 3.1469424000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Выпуск газеты от 14.12.1987 объяснил, зачем Хейлу была нужна программа. На вопрос, кто был с Коулом на площадке, он не отвечает. Я записал в `actions.md` строку `РЕШИТЬ | дело | продолжить`. После неё вернуться к расследованию уже нельзя, к следующему раунду откроется форма заключения.\n\n**Что в газете:** 12 декабря 1987 года в торговом центре «Пайн-Плаза» кто-то закричал «пожар», хотя огня не было. В давке на лестнице погибли десять человек, среди них девятилетняя Эмили Хейл. Видимо, это дочь Хейла: на фото с места мужчина с ямочкой на подбородке, по описанию похожий на молодого Хейла. Отсюда X-17 — средство против паники и его слова «люди чаще гибнут не от угрозы, а от паники». Сам Хейл погиб 13.10 в стихийном бегстве машин на шоссе после удара.\n\n**Почему перехожу к заключению:**\n- Механизм гибели установлен. Ограждение не выдержало, потому что треснувшую плиту так и не заменили, а отчёт о замене ложный.\n- Подоплёка программы тоже ясна: тайные испытания X-17, скрытая по приказу Хейла смерть Бернара, инсценированная тревога и утечка данных Пирс в Sentinel Labs.\n- Исполнителем я по-прежнему считаю Моро, уверенность 65%. Улики против неё косвенные, но согласуются между собой; новых каналов, которые могли бы это изменить, я не вижу. Пирс остаётся на втором месте с 15%.\n\nРаздел «Раунд 7» дописан в журнал. В следующем раунде отвечу на пункты формы и отправлю ФИНАЛ.",
+  "ttft_ms": 3608,
+  "type": "result",
+  "duration_ms": 25836,
+  "uuid": "e283272f-4eec-4300-8c09-bb2eaf68e7e2",
+  "ttft_stream_ms": 1925,
+  "time_to_request_ms": 115,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 31,
+    "input_hooks": 3,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 1,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 5,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 9,
+    "message_normalization": 13,
+    "client_creation": 6,
+    "request_build": 13
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 65,
+  "time_to_request_cpu_ms": 131,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 230,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 216,
+  "process_anon_mib_result": 124,
+  "process_peak_rss_mib": 257,
+  "process_cpu_ms_turn": 1322,
+  "process_wall_ms_turn": 25835,
+  "process_cpu_ms_streaming": 336,
+  "process_wall_ms_streaming": 11746,
+  "main_stream_count": 3,
+  "main_stream_event_count": 304,
+  "main_stream_chunk_count": 152,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 24,
+    "cpu_ms": 37,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1925,
+  "time_to_request_from_spawn_ms": 1226299,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793262920221.7747,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
