@@ -9,3 +9,6 @@
 | 2 | documents@vaultline-program.com | L101 «данные выбывших участников прошлых этапов — по коду участника» | L981 «Наклейка с кодом: «A-24» | pet-vl-a24 | успех | L619__VAULTLINE_анкета_участника_A-24.md |
 | 2 | documents@vaultline-program.com | L101 «выписка из учёта анкет набора — анкеты, которые участники заполняли при наборе» | 06 «Программа пребывания VAULTLINE № VL-31» | pet-vl-registry | успех | L618__VAULTLINE_учёт_анкет_набора_VL-31.md |
 | 2 | inquiries@frontrange-savings.com | L945 «Получатель: Л. Миллер, счёт № …3086-02» | L945 «Внёс: А. Коул» | pet-bank-account | ответ | — |
+| 4 | lawful-requests@mailbridge.net | L387 «почтовый сервис mailbridge.net (веб) | e.pierce.uk@mailbridge.net» | L563 «05 — три отправки на 14; ящик e.pierce.uk@mailbridge.net» | pet-mailbridge | успех | L452__ответ_Mailbridge_экспорт_ящика.md |
+| 4 | inquiries@frontrange-savings.com | L130 «органы расследования и суд — по официальному запросу (см. «Запросы органов»), вс» | 25 «ключ плоский металлический, штамп DO NOT DUPLICATE, номер 845» | pet-bank-cell | успех | L460__банк_вскрытие_ячейки_845_опись.md, L461__ячейка_845_акт_передачи_дел.md, L462__ячейка_845_микрокассета_оцифровка.md |
+| 4 | info@the-signal-news.com | L564 «По сведениям источника, близкого к программе, этой осенью на одном из заездов по» | 41 «С. — проверяй источники. Фрэнк» | pet-info | ответ | — |

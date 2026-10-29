@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 503354,
+  "stop_reason": "end_turn",
+  "session_id": "50ffb4f0-9a81-4f7a-a617-2bc613fd3f8d",
+  "total_cost_usd": 1.3584311000000002,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 9273,
+    "cache_read_input_tokens": 400965,
+    "output_tokens": 6843,
+    "output_tokens_details": {
+      "thinking_tokens": 4866
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 9273,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 714,
+        "cache_read_input_tokens": 135323,
+        "cache_creation_input_tokens": 6164,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 6164
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 360,
+      "thinkingTokens": 339,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00030450000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 64,
+      "outputTokens": 55562,
+      "thinkingTokens": 29730,
+      "cacheReadInputTokens": 2583106,
+      "cacheCreationInputTokens": 136017,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 136017,
+      "webSearchRequests": 0,
+      "costUSD": 1.3581266000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 6 закончен. Я записал в `actions.md` одно действие — `РЕШИТЬ | дело | продолжить` — и дописал в `journal.md` раздел «Раунд 6». Форма заключения должна появиться к следующему раунду.\n\n**Что дал ящик Пирс.** Пароль «Toffee» подошёл. Из 11 писем видно, что Пирс продавала данные программы VL-31 по этапам A, B и C конкуренту — Sentinel Labs (Дж. Мерсер). «Слот» в наборе для участника с ограниченным английским, то есть Силвы, она сделала по их спецификации. Мерсер ждёт от неё «досье вещества». По письму от 09.10 оно лежит в архиве проекта у Хейла, архив заперт номером активной партии. Последнюю передачу она сделала 12.10, этап C Мерсер ждёт полностью. Это объясняет, почему Коул 13.10 в 08:02 просмотрел её сеанс и в 08:05 ограничил ей отправку. Но не объясняет, почему в 08:41 он снял ограничение.\n\n**Где я сейчас.** Прямого свидетельства ни против Моро, ни против Пирс у меня нет. Выбираю по косвенным признакам:\n- **Моро (42%):** в её рассказе есть расхождения. Жилой блок в 20 м от медкабинета, а она пришла к Уолш лишь около 08:47. Её слова про «кто-то сбежал по лестнице» запись поста не подтверждает. Мотив — если она жена Бернара — зависит от совпадения имени Леи на автоответчике.\n- **Пирс (38%):** есть мотив, ей 18 секунд до площадки, оба ключа от кабинета Коула сдала она. Расхождений со свидетелями у неё нет.\n- **Остальные и несчастный случай (20%).**\n\nУверенность в версии — около 45%, в заключении укажу Моро как основную. Новых способов проверить это в материалах я не вижу, поэтому решаю по имеющемуся.",
+  "ttft_ms": 2400,
+  "type": "result",
+  "duration_ms": 67083,
+  "uuid": "2e7a235c-d065-4d2b-80d2-cc9c8452e215",
+  "ttft_stream_ms": 1521,
+  "time_to_request_ms": 131,
+  "time_to_request_phases_ms": {
+    "other": 20,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 38,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 7,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 12,
+    "message_normalization": 13,
+    "client_creation": 6,
+    "request_build": 15
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 81,
+  "time_to_request_cpu_ms": 144,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 143,
+  "process_rss_mib_result": 222,
+  "process_anon_mib_result": 129,
+  "process_peak_rss_mib": 256,
+  "process_cpu_ms_turn": 1467,
+  "process_wall_ms_turn": 67082,
+  "process_cpu_ms_streaming": 653,
+  "process_wall_ms_streaming": 50851,
+  "main_stream_count": 3,
+  "main_stream_event_count": 417,
+  "main_stream_chunk_count": 73,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 29,
+    "cpu_ms": 43,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1521,
+  "time_to_request_from_spawn_ms": 1354527,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793267099741.3613,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

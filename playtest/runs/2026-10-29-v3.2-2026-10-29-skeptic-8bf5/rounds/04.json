@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 490461,
+  "stop_reason": "end_turn",
+  "session_id": "ac1082f8-f8ac-4a02-bfe8-f27c72832682",
+  "total_cost_usd": 1.3107227999999997,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 11484,
+    "cache_read_input_tokens": 529456,
+    "output_tokens": 7533,
+    "output_tokens_details": {
+      "thinking_tokens": 4707
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 11484,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 669,
+        "cache_read_input_tokens": 138560,
+        "cache_creation_input_tokens": 1236,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1236
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 324,
+      "thinkingTokens": 303,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002865,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 54,
+      "outputTokens": 58406,
+      "thinkingTokens": 36883,
+      "cacheReadInputTokens": 1888323,
+      "cacheCreationInputTokens": 134359,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 134359,
+      "webSearchRequests": 0,
+      "costUSD": 1.3104362999999997,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 закончен, убийцу назвать пока не могу. Уверенность в версии — около 28%.\n\n**Что выяснилось**\n- **Миллер исключён.** Отметки терминала технической ставят его у насосной в 08:44:35 и у щита генератора в 08:45:30. Оттуда до площадки около 35 секунд, так что в 08:44:52 он там быть не мог.\n- **Моро, вероятно, вдова Бернара.** Автоответчик по домашнему номеру A-24 называет «Тома и Лею». Это вывод, фамилия там другая.\n- **Сато, вероятно, автор «The Signal» С. Грей.** В её книге надпись «С. — проверяй источники. Фрэнк», а редактор издания — Фрэнк Бейкер. Это тоже вывод.\n- **Пирс.** В блокноте Сато пытается подобрать секретные вопросы Пирс, то есть ей был нужен ящик Пирс.\n- **Банковская ячейка.** Она открывается двумя ключами: арендатора и банка. Ключ с номером 845 лежал в куртке Коула.\n\nОстаются два кандидата: Пирс (около 35%) и Моро (около 30%). Алиби нет у обеих, и различить их мне нечем. Ещё я не могу объяснить, как половина интервью Харта оказалась у Коула и на площадке. Архив газеты за 2008 год не оцифрован, Бернара там не найти.\n\n**Действия на этот раунд** (в `actions.md`), три ходатайства:\n- в Mailbridge — содержимое ящика `e.pierce.uk@mailbridge.net`;\n- в VAULTLINE — анкеты набора текущей программы VL-31, чтобы проверить связь Моро с Бернаром;\n- в Front Range Savings — данные по ячейке, к которой подходит ключ №845.\n\nРаздел «Раунд 4» дописан в `journal.md`.",
+  "ttft_ms": 2347,
+  "type": "result",
+  "duration_ms": 67985,
+  "uuid": "b8d28989-5d9c-4700-b345-19606a1cdc5b",
+  "ttft_stream_ms": 1562,
+  "time_to_request_ms": 110,
+  "time_to_request_phases_ms": {
+    "other": 17,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 3,
+    "input_attachments": 27,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 1,
+    "init_message": 5,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 0,
+    "autocompact": 3,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 9,
+    "message_normalization": 13,
+    "client_creation": 7,
+    "request_build": 15
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 60,
+  "time_to_request_cpu_ms": 118,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 230,
+  "process_anon_mib_turn_start": 143,
+  "process_rss_mib_result": 222,
+  "process_anon_mib_result": 130,
+  "process_peak_rss_mib": 255,
+  "process_cpu_ms_turn": 1587,
+  "process_wall_ms_turn": 67985,
+  "process_cpu_ms_streaming": 772,
+  "process_wall_ms_streaming": 52030,
+  "main_stream_count": 4,
+  "main_stream_event_count": 529,
+  "main_stream_chunk_count": 79,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 20,
+    "cpu_ms": 31,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1562,
+  "time_to_request_from_spawn_ms": 1323885,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793267069159.8572,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 571744,
+  "stop_reason": "end_turn",
+  "session_id": "ac1082f8-f8ac-4a02-bfe8-f27c72832682",
+  "total_cost_usd": 1.6005654999999999,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 8747,
+    "cache_read_input_tokens": 610515,
+    "output_tokens": 5327,
+    "output_tokens_details": {
+      "thinking_tokens": 2866
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 8747,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 767,
+        "cache_read_input_tokens": 157157,
+        "cache_creation_input_tokens": 1241,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1241
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 324,
+      "thinkingTokens": 303,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002865,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 70,
+      "outputTokens": 68097,
+      "thinkingTokens": 41358,
+      "cacheReadInputTokens": 3073250,
+      "cacheCreationInputTokens": 152961,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 152961,
+      "webSearchRequests": 0,
+      "costUSD": 1.6002789999999998,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 6 закончен. Дело пока не решено, уверенность в версии — около 50%.\n\n**Главное**\n- **Ящик Пирс.** Пароль `Toffee` подошёл. С 28.08.2009 Пирс договорилась с Дж. Мерсером из `sentinel-labs.net` о продаже данных программы VL-31 за деньги. Речь о трёх этапах: A, B и C. Остаток платы Мерсер обещает после «досье вещества». Три отправки по маршруту 14 (04.10, 08.10 и 12.10) подтверждены его ответами. Этап C он ждёт «полностью».\n- **Слот для Силвы.** Пирс сделала в наборе слот участника с ограниченным английским по спецификации заказчика, то есть по заказу Мерсера. Силва в него и попал.\n- **Что это меняет.** 13.10 в 08:02 Коул вскрыл её сеанс, а в 08:12 написал Хейлу «срочно». У Пирс самый сильный мотив остановить его до отправки доклада. Против неё нет прямой улики о том, что на марше она с ним столкнулась.\n- **Моро.** По ней нет ни документа, что она вдова Бернара, ни мотива, связанного с 13.10. Версия осталась на уровне предположения.\n\nТеперь Пирс — около 50%, Моро — 15%, несчастный случай — 12%, Харт — 5%.\n\n**Объяснение, которое я принимаю:**\n- Пирс последовала за Коулом к восточной лестнице в 08:44.\n- На верхней части марша завязалась борьба, старая стойка сорвалась под боковой нагрузкой, Коул упал.\n- Затем Пирс взяла у тела папку и ключи.\n- Доказаны мотив, отсутствие у неё алиби и близость к площадке. Не доказан сам контакт на марше.\n\n**Действия на этот раунд** (в `actions.md`):\n- открыть сайт `sentinel-labs.net`;\n- нажать `РЕШИТЬ | дело | —`. Это только предупреждение, путь назад остаётся, пока я не напишу `продолжить`.\n\nРаздел «Раунд 6» дописан в `journal.md`.",
+  "ttft_ms": 2424,
+  "type": "result",
+  "duration_ms": 49693,
+  "uuid": "e9f19cb3-7bc8-496b-94c2-694f9ebb81c1",
+  "ttft_stream_ms": 1649,
+  "time_to_request_ms": 116,
+  "time_to_request_phases_ms": {
+    "other": 18,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 32,
+    "input_hooks": 5,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 4,
+    "autocompact": 3,
+    "query_setup": 0,
+    "model_gates": 0,
+    "tool_schema_build": 9,
+    "message_normalization": 10,
+    "client_creation": 7,
+    "request_build": 11
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 66,
+  "time_to_request_cpu_ms": 126,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 224,
+  "process_anon_mib_result": 131,
+  "process_peak_rss_mib": 257,
+  "process_cpu_ms_turn": 1402,
+  "process_wall_ms_turn": 49692,
+  "process_cpu_ms_streaming": 639,
+  "process_wall_ms_streaming": 34818,
+  "main_stream_count": 4,
+  "main_stream_event_count": 488,
+  "main_stream_chunk_count": 76,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 25,
+    "cpu_ms": 36,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1650,
+  "time_to_request_from_spawn_ms": 1435814,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793267181009.5564,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

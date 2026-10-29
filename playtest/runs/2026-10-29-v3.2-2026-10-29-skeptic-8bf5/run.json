@@ -13,7 +13,7 @@
   "model": "sonnet",
   "sandbox": "/tmp/case-0_iiiq11",
   "session_id": "ac1082f8-f8ac-4a02-bfe8-f27c72832682",
-  "round": 3,
+  "round": 8,
   "released": [
     "L214__приложение_7_журналы_сервера_13-10.md",
     "L101__сайт_vaultline-program.com.md",
@@ -44,21 +44,29 @@
     "L215__терминал_технической_отметки_обходов_13-10.md",
     "L249__сайт_mailbridge.net.md",
     "L130__сайт_frontrange-savings.com.md",
-    "L296__сайт_the-signal-news.com.md"
+    "L296__сайт_the-signal-news.com.md",
+    "L452__ответ_Mailbridge_экспорт_ящика.md",
+    "L618__VAULTLINE_учёт_анкет_набора_VL-31.md",
+    "L460__банк_вскрытие_ячейки_845_опись.md",
+    "L461__ячейка_845_акт_передачи_дел.md",
+    "L462__ячейка_845_микрокассета_оцифровка.md",
+    "L453__почта_e.pierce.uk_экспорт.md",
+    "L272__сайт_sentinel-labs.net.md",
+    "L998__предупреждение_бюро.md",
+    "L999__форма_заключения_бюро.md"
   ],
-  "finished": null,
+  "finished": {
+    "type": "ФИНАЛ",
+    "target": "заключение",
+    "text": "см. журнал"
+  },
   "requested_by_user": "Ну, давай, окей. Давай принимаем. Можно делать тест.",
   "lint_warnings": [
     "player/47__ноутбук_руководителя.md:10: мета-слово «разгадка/подсказка»: «Подсказк»"
   ],
   "isolation_probe": "ok",
   "archivist": null,
-  "cost_usd": 2.404092,
+  "cost_usd": 10.296267899999998,
   "created": "2026-10-29T09:37:02",
-  "last_released": [
-    "L215__терминал_технической_отметки_обходов_13-10.md",
-    "L249__сайт_mailbridge.net.md",
-    "L130__сайт_frontrange-savings.com.md",
-    "L296__сайт_the-signal-news.com.md"
-  ]
+  "last_released": []
 }
