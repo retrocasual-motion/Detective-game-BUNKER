@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 486559,
+  "stop_reason": "end_turn",
+  "session_id": "33a8720d-e9e1-4300-9bd7-34a507f879fb",
+  "total_cost_usd": 1.3380271000000006,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 8080,
+    "cache_read_input_tokens": 415475,
+    "output_tokens": 4532,
+    "output_tokens_details": {
+      "thinking_tokens": 1464
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 8080,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 967,
+        "cache_read_input_tokens": 141190,
+        "cache_creation_input_tokens": 3329,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3329
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 276,
+      "thinkingTokens": 255,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00026250000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 60,
+      "outputTokens": 56468,
+      "thinkingTokens": 29894,
+      "cacheReadInputTokens": 2190806,
+      "cacheCreationInputTokens": 138471,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 138471,
+      "webSearchRequests": 0,
+      "costUSD": 1.3377646000000005,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 разобран, в `actions.md` записаны новые действия, в `journal.md` дописан раздел «Раунд 5». Подозреваемых осталось двое, Пирс и Моро, но убийцу я назвать пока не могу, уверенность в версии — около 35%.\n\n**Что установлено**\n- **Миллер исключён.** Терминал технической записал его нажатия на панелях: насосная в 08:44:35, щит генератора в 08:45:30. Схватка на площадке шла в 08:44:46–08:45:02, а идти от технической до площадки около 33 секунд, так что он был в технической.\n- **Остальные по алиби:**\n  - Уолш и Сато: медкабинет, 08:45:05.\n  - Силва: звонки с кухонного терминала в 08:44:39 и 08:45:20, если звонил он.\n  - Харт: «Лондон» на посту в 08:44:31.\n- **Остаются без алиби** Пирс и Моро.\n- **Ячейка Коула № 845** (аренда с 20.10.2008, оплачена наличными) содержит два документа:\n  - Акт передачи дел этапа A от 14.11.2008. Уолш сверила медлисты, Коул принял, передал Хейл.\n  - Микрокассету «06.10.08». На ней сиплый голос сообщает, что участник умер на объекте. Низкий голос, судя по всему Хейл, отвечает: «Объявлять не будем», надо сказать, что стало плохо в дороге, «справку завизирую». Голос Коула здесь определён по сходству с записью 7:35 (мой вывод).\n- **Ящик Пирс на Mailbridge** пришёл зашифрованным, нужен пароль владельца.\n\n**Что отправлено**\n- Две попытки пароля к экспорту ящика Пирс: `Toffee` и `toffee1978`. Имя Тоффи — из записи ручки-диктофона, где она рассказывает о своей первой собаке; год 1978 — с обратной стороны её фотографии «Йоркшир, 1978».\n- Увеличение кадров 14–15 камеры инженера (тело, папка, очки).\n- Увеличение листа с площадки (файл 51), его фото в протоколе осмотра места (файл 22, фото 6) и обгоревшей половины листа Харта (файл 42).\n\n**Таблица подозреваемых**\n\n| Кто | Уверенность, % |\n|---|---|\n| Пирс | 38 |\n| Моро | 32 |\n| Харт | 5 |\n| Остальные четверо | по 3 |\n| Несчастный случай | 10 |\n\nПротив Пирс мотив с утечками и разоблачением, но Коул сам снял с неё ограничение в 08:41. У Моро нет алиби и есть ложь о месте, но её мотив пока не ясен.",
+  "ttft_ms": 4825,
+  "type": "result",
+  "duration_ms": 45041,
+  "uuid": "2679050a-ef10-4962-9e96-c55a19f13771",
+  "ttft_stream_ms": 4020,
+  "time_to_request_ms": 167,
+  "time_to_request_phases_ms": {
+    "other": 25,
+    "system_prompt": 3,
+    "resume_other": 1,
+    "process_user_input": 4,
+    "input_attachments": 53,
+    "input_hooks": 5,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 3,
+    "init_message": 9,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 1,
+    "tool_schema_build": 16,
+    "message_normalization": 13,
+    "client_creation": 8,
+    "request_build": 18
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 116,
+  "time_to_request_cpu_ms": 180,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 230,
+  "process_anon_mib_turn_start": 143,
+  "process_rss_mib_result": 214,
+  "process_anon_mib_result": 122,
+  "process_peak_rss_mib": 254,
+  "process_cpu_ms_turn": 1509,
+  "process_wall_ms_turn": 45041,
+  "process_cpu_ms_streaming": 714,
+  "process_wall_ms_streaming": 27981,
+  "main_stream_count": 3,
+  "main_stream_event_count": 579,
+  "main_stream_chunk_count": 65,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 42,
+    "cpu_ms": 59,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 4021,
+  "time_to_request_from_spawn_ms": 3104990,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793268850099.1663,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

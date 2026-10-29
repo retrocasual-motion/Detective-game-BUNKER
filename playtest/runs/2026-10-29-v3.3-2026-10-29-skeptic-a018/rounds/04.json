@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 447337,
+  "stop_reason": "end_turn",
+  "session_id": "33a8720d-e9e1-4300-9bd7-34a507f879fb",
+  "total_cost_usd": 1.2188276000000005,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 10180,
+    "cache_read_input_tokens": 386458,
+    "output_tokens": 5392,
+    "output_tokens_details": {
+      "thinking_tokens": 2282
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 10180,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 854,
+        "cache_read_input_tokens": 132188,
+        "cache_creation_input_tokens": 4251,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 4251
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 276,
+      "thinkingTokens": 255,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00026250000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 54,
+      "outputTokens": 51936,
+      "thinkingTokens": 28430,
+      "cacheReadInputTokens": 1775331,
+      "cacheCreationInputTokens": 130391,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 130391,
+      "webSearchRequests": 0,
+      "costUSD": 1.2185651000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 разобран, в `actions.md` записаны три ходатайства, в `journal.md` дописан раздел «Раунд 4». Виновного установить пока нельзя, уверенность в версии — около 25%.\n\n**Что нового**\n- **A-24 установлен.** Это Томас Бернар, 1974 года рождения, механик, женат. Это сходится с газетным объявлением от 06.10.2009 о годовщине смерти Тома Бернара.\n- **Анкеты набора 2009.**\n  - Моро пришла «из статьи», её мать живёт в Лионе.\n  - Силва записан в слот «ограниченный английский».\n  - У Миллера в контактах дочь Л. Миллер в Денвере.\n- **The Signal.** Главный редактор — Фрэнк Бейкер, есть внештатный автор С. Грей. По блокноту Сато («Фрэнку») я предполагаю, что Сато и есть С. Грей. Это мой вывод, не факт из материалов.\n- **Банк.** Ячейка открывается двумя ключами: арендатора и банка. Плоский ключ с номером 845 из куртки Коула, вероятно, ключ его ячейки. Запросы принимает inquiries@frontrange-savings.com.\n- **Mailbridge.** Запросы принимает lawful-requests@mailbridge.net, нужен точный адрес ящика.\n- **Отказ по терминалу технической.** Моя прошлая карточка основания была неточной, поэтому я отправил запрос заново с точной строкой из регламента (файл 08).\n\n**Таблица подозреваемых**\n\n| Кто | Уверенность, % |\n|---|---|\n| Миллер | 24 |\n| Моро | 15 |\n| Пирс | 15 |\n| Уолш | 8 |\n| Харт | 7 |\n| Силва | 5 |\n| Сато | 3 |\n| Несчастный случай / другое | 23 |\n\nМиллера я держу первым из-за ложного отчёта о плите и позднего подтверждения сводки в 08:47:20. Прямых доказательств против него нет.\n\n**Отправлены три ходатайства**\n- Бюро: отметки терминала технической за 13.10. Они покажут, был ли Миллер у оборудования около 08:45.\n- Mailbridge: содержимое ящика Пирс.\n- Front Range Savings: содержимое ячейки по ключу 845.\n\nБез отметок Миллера я не могу отличить его версию от остальных, пока это гадание.",
+  "ttft_ms": 3536,
+  "type": "result",
+  "duration_ms": 47991,
+  "uuid": "b08ff764-04a9-4f14-aef8-8f875c77e568",
+  "ttft_stream_ms": 2769,
+  "time_to_request_ms": 111,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 34,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 5,
+    "engine_pickup": 2,
+    "message_prep": 0,
+    "model_config_wait": 4,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 8,
+    "message_normalization": 9,
+    "client_creation": 6,
+    "request_build": 10
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 60,
+  "time_to_request_cpu_ms": 124,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 229,
+  "process_anon_mib_turn_start": 143,
+  "process_rss_mib_result": 215,
+  "process_anon_mib_result": 124,
+  "process_peak_rss_mib": 255,
+  "process_cpu_ms_turn": 1485,
+  "process_wall_ms_turn": 47990,
+  "process_cpu_ms_streaming": 786,
+  "process_wall_ms_streaming": 33314,
+  "main_stream_count": 3,
+  "main_stream_event_count": 537,
+  "main_stream_chunk_count": 63,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 26,
+    "cpu_ms": 39,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2769,
+  "time_to_request_from_spawn_ms": 3055672,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793268800794.8533,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

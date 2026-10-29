@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 690028,
+  "stop_reason": "end_turn",
+  "session_id": "4fc0f380-7c3a-428b-a0f5-572a6f3312dc",
+  "total_cost_usd": 3.4360922999999994,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 4358,
+    "cache_read_input_tokens": 484153,
+    "output_tokens": 2784,
+    "output_tokens_details": {
+      "thinking_tokens": 465
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4358,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 833,
+        "cache_read_input_tokens": 162537,
+        "cache_creation_input_tokens": 1979,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1979
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 320,
+      "thinkingTokens": 299,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00028450000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 90,
+      "outputTokens": 64718,
+      "thinkingTokens": 23953,
+      "cacheReadInputTokens": 4370799,
+      "cacheCreationInputTokens": 158366,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 158366,
+      "webSearchRequests": 0,
+      "costUSD": 3.435807799999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 9 закончен: газета нашлась, и в `actions.md` записан переход к форме заключения: `РЕШИТЬ | дело | продолжить`. После этого новых материалов не будет, останутся только форма и ФИНАЛ. Раздел «Раунд 9» дописан в `journal.md`.\n\n**Что показала газета от 14.12.1987.** В торговом центре «Пайн-Плаза» кто-то крикнул «пожар», хотя огня не было, и в давке на лестнице погибли 10 человек. Среди них Эмили Хейл, 9 лет. На фото у входа — мужчина с ямочкой на подбородке, это приметы Хейла. Отсюда его мотив: вещество против паники. Он сам говорит в ролике HEXON BIO: «люди чаще гибнут не от угрозы, а от паники».\n\n**Ещё одна деталь против Моро.** На её рисунке 14 на двери Коула уже висит листок «РЕЖИМ ТРЕВОГИ», а он появился только вечером 12.10. Рисунок 15 — тот же вид из комнаты анкет, и он брошен на середине линии. Значит, ночью или утром 13.10 она сидела в комнате анкет, а не читала в жилом блоке, как говорит (это мой вывод).\n\n**Итог перед формой:**\n\n| Кто | % | Основное |\n|---|---|---|\n| Л. Моро | 55 | вдова Бернара; была в комнате анкет напротив кабинета; к медику пришла со стороны площадки; солгала о маршруте; у неё папка A-24 и копия медлиста |\n| Э. Пирс | 25 | Коул в то утро раскрыл, что она продаёт данные Sentinel Labs; алиби нет после 08:43:10; солгала о разговоре |\n| Несчастный случай в борьбе | 15 | ограждение держалось на временной полосе |\n| Прочие | 5 | алиби по терминалам |\n\nУверенность в версии — 55%. Как и почему погиб Коул, подтверждено документами: подменённый медлист Бернара, инсценированная тревога, незаменённая плита на единственном маршруте сценария. Кто был с ним на площадке, установлено только по косвенным уликам. Был ли толчок умышленным, документами не установлено.\n\nЕсли форма придёт к следующему раунду, заполню её по пунктам и отправлю ФИНАЛ.",
+  "ttft_ms": 3446,
+  "type": "result",
+  "duration_ms": 33433,
+  "uuid": "5e081511-8731-49a1-b30b-fb4d470a4530",
+  "ttft_stream_ms": 2612,
+  "time_to_request_ms": 146,
+  "time_to_request_phases_ms": {
+    "other": 21,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 42,
+    "input_hooks": 5,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 7,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 1,
+    "tool_schema_build": 12,
+    "message_normalization": 17,
+    "client_creation": 7,
+    "request_build": 18
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 96,
+  "time_to_request_cpu_ms": 160,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 145,
+  "process_rss_mib_result": 216,
+  "process_anon_mib_result": 124,
+  "process_peak_rss_mib": 257,
+  "process_cpu_ms_turn": 1575,
+  "process_wall_ms_turn": 33432,
+  "process_cpu_ms_streaming": 669,
+  "process_wall_ms_streaming": 18693,
+  "main_stream_count": 3,
+  "main_stream_event_count": 383,
+  "main_stream_chunk_count": 267,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 33,
+    "cpu_ms": 49,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2612,
+  "time_to_request_from_spawn_ms": 3325630,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793269070882.366,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

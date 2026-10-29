@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 493983,
+  "stop_reason": "end_turn",
+  "session_id": "7dc9a4b0-40e5-4266-92b0-3d15aec041df",
+  "total_cost_usd": 2.3922203,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 13191,
+    "cache_read_input_tokens": 362747,
+    "output_tokens": 7876,
+    "output_tokens_details": {
+      "thinking_tokens": 4178
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13191,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 955,
+        "cache_read_input_tokens": 124787,
+        "cache_creation_input_tokens": 6544,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 6544
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 66,
+      "outputTokens": 48125,
+      "thinkingTokens": 21672,
+      "cacheReadInputTokens": 2137124,
+      "cacheCreationInputTokens": 125218,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 125218,
+      "webSearchRequests": 0,
+      "costUSD": 2.3919328,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 326,
+      "thinkingTokens": 305,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002875,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 10,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 закончен: 7 действий записаны в `actions.md`, раздел «Раунд 4» дописан в `journal.md`. Уверенность в версии осталась около 40%: Моро и Пирс почти сравнялись.\n\n**Что выяснилось:**\n- **Моро — вдова Бернара.** Автоответчик на его домашнем номере: «вы позвонили Тому и Лее». У неё сильный мотив. Рисунок со стр. 14 сделан ночью 12–13.10 из комнаты анкет: на двери Коула листок «РЕЖИМ ТРЕВОГИ». Значит, той ночью она была там, а не спала у себя, как говорила.\n- **Сато, вероятно, пишет для The Signal.** Главный редактор газеты — Фрэнк Бейкер, среди авторов есть внештатный «С. Грей». На книге Сато надпись: «С. — проверяй источники. Фрэнк».\n- **Распечатка о Пирс пропала.** Выписки «пользователь 05», которую Коул распечатал в 08:06, нет ни в его папке, ни в бумагах координатора.\n\n**Главная новая зацепка — почерк.** Пока это моё сопоставление описаний, его надо проверить:\n- В анкетах самооценки у Пирс почерк «ровный, с наклоном влево», у Уолш — «округлый, быстрый».\n- Журнал медкабинета написан ровным почерком с наклоном влево. Так же написана «копия» медосмотра Бернара с аллергией на молоко, включая подпись «К. Уолш».\n- Если это рука Пирс, то журнал переписан, а «копия» — подделка, оформленная под Уолш. Тогда Пирс могла подбросить её Моро, чтобы направить её против Коула. А в переписанном журнале нет визита Моро в 08:46, и Моро остаётся без подтверждённого алиби.\n\n**Две версии сейчас:**\n- **Моро (40%):** столкнула Коула на площадке, поверив подброшенному «доказательству».\n- **Пирс (38%):** после сводки в 08:43:10 догнала Коула, который нёс выписку о ней. В возне он упал. Потом она убрала выписку и подчистила журнал.\n- Несчастный случай — 15%: ограждение держалось только на временной полосе.\n\n**Действия на этот раунд:**\n- увеличить журнал обращений, таблицу выдачи, оригинал бланка из папки Коула и конверт «22.09.08» у Уолш, чтобы проверить почерк;\n- пролистать ежедневник Пирс;\n- ходатайство в банк по ключу Коула № 845 о сейфовой ячейке;\n- ходатайство в бюро о сеансе медика (пользователь 03).",
+  "ttft_ms": 2437,
+  "type": "result",
+  "duration_ms": 81177,
+  "uuid": "e49aa4ac-afc8-4547-a9ea-a84392c212cb",
+  "ttft_stream_ms": 2042,
+  "time_to_request_ms": 95,
+  "time_to_request_phases_ms": {
+    "other": 13,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 3,
+    "input_attachments": 20,
+    "input_hooks": 2,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 4,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 7,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 0,
+    "tool_schema_build": 8,
+    "message_normalization": 7,
+    "client_creation": 12,
+    "request_build": 10
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 36,
+  "time_to_request_cpu_ms": 125,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 229,
+  "process_anon_mib_turn_start": 143,
+  "process_rss_mib_result": 223,
+  "process_anon_mib_result": 132,
+  "process_peak_rss_mib": 254,
+  "process_cpu_ms_turn": 1919,
+  "process_wall_ms_turn": 81177,
+  "process_cpu_ms_streaming": 1210,
+  "process_wall_ms_streaming": 68205,
+  "main_stream_count": 3,
+  "main_stream_event_count": 632,
+  "main_stream_chunk_count": 498,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 14,
+    "cpu_ms": 23,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 2043,
+  "time_to_request_from_spawn_ms": 3059934,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793268805043.8726,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

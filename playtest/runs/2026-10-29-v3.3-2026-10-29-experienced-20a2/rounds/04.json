@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 428709,
+  "stop_reason": "end_turn",
+  "session_id": "ad443ff3-279a-4d4f-aa6b-279dc3d926f0",
+  "total_cost_usd": 1.1253346,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 9007,
+    "cache_read_input_tokens": 356343,
+    "output_tokens": 4767,
+    "output_tokens_details": {
+      "thinking_tokens": 2004
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 9007,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 845,
+        "cache_read_input_tokens": 121917,
+        "cache_creation_input_tokens": 3712,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3712
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 392,
+      "thinkingTokens": 371,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00032050000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 54,
+      "outputTokens": 46949,
+      "thinkingTokens": 26900,
+      "cacheReadInputTokens": 1772241,
+      "cacheCreationInputTokens": 119548,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 119548,
+      "webSearchRequests": 0,
+      "costUSD": 1.1250141,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 закончен. В `actions.md` записаны новые запросы, в `journal.md` дописан раздел «Раунд 4».\n\n**Что выяснилось:**\n- **Мотив Моро подтвердился.** Автоответчик на домашнем номере Бернара отвечает: «Тому и Лее». Значит, Лея Моро — вдова погибшего участника A-24 (Томаса Бернара). Анкета набора пишет, что о программе она узнала «из статьи» (вероятно, в The Signal).\n- **Алиби Миллера.** Его отметки на панелях насосной (08:44:35) и щита генератора (08:45:30) показывают, что в момент возни и удара он был в технической.\n- **У кого нет алиби.** Харт на радиопосту, Силва у терминала кухни, Сато и Уолш в медкабинете. Без алиби остались только Пирс и Моро.\n- **Банк.** Front Range Savings открывает ячейку двумя ключами, один из них у арендатора. Плоский ключ №845 из куртки Коула — вероятно, ключ от его ячейки. Что в ней лежит, пока неизвестно, и банку я не писал.\n\n**Версия сейчас (55%):** Моро нашла след через статью и вошла в программу. Ночью она взяла запасной ключ в медкабинете и унесла из шкафа Коула папку A-24 и копию бланка с аллергией. Копию она спрятала в комнате анкет. В 08:44 на площадке у неё была схватка с Коулом. Ветхая стойка с временным хомутом сорвалась, и он упал. Потом Моро пошла в медкабинет «из-за давления» (предлог, давление было в норме) и сочинила историю про бег по лестнице. Подозреваемые: Моро 60%, Пирс 20%, несчастный случай или другое 14%, остальные 6%.\n\n**Слабое место:** прямой улики, что Моро была на площадке, нет. Пирс тоже без алиби, и её полностью я не исключил.\n\n**Что отправил:**\n- Запрос в Hexon Bio (legal@hexon-bio.com) о партии 0417 со ссылкой на смерть A-24.\n- Ходатайство в бюро об отметках обходов технической повторил: в прошлом раунде оно сработало, а продолжение выгрузки («по запросу») я ещё не получал.\n\nВ следующем раунде нажму «Решить дело», если ответы не изменят версию.",
+  "ttft_ms": 2303,
+  "type": "result",
+  "duration_ms": 46455,
+  "uuid": "c484ecc6-8840-4a72-a0af-fe8f23ae36de",
+  "ttft_stream_ms": 1887,
+  "time_to_request_ms": 125,
+  "time_to_request_phases_ms": {
+    "other": 20,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 32,
+    "input_hooks": 3,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 2,
+    "init_message": 7,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 3,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 11,
+    "message_normalization": 12,
+    "client_creation": 7,
+    "request_build": 14
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 74,
+  "time_to_request_cpu_ms": 135,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 228,
+  "process_anon_mib_turn_start": 142,
+  "process_rss_mib_result": 220,
+  "process_anon_mib_result": 129,
+  "process_peak_rss_mib": 252,
+  "process_cpu_ms_turn": 1427,
+  "process_wall_ms_turn": 46454,
+  "process_cpu_ms_streaming": 700,
+  "process_wall_ms_streaming": 30727,
+  "main_stream_count": 3,
+  "main_stream_event_count": 514,
+  "main_stream_chunk_count": 60,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 23,
+    "cpu_ms": 36,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 1887,
+  "time_to_request_from_spawn_ms": 3035174,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793268780389.713,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

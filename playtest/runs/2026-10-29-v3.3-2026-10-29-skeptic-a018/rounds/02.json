@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 306643,
+  "stop_reason": "end_turn",
+  "session_id": "33a8720d-e9e1-4300-9bd7-34a507f879fb",
+  "total_cost_usd": 0.8312742000000002,
+  "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 27639,
+    "cache_read_input_tokens": 513172,
+    "output_tokens": 15187,
+    "output_tokens_details": {
+      "thinking_tokens": 8949
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 27639,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1233,
+        "cache_read_input_tokens": 98869,
+        "cache_creation_input_tokens": 2900,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2900
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 276,
+      "thinkingTokens": 255,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00026250000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 40,
+      "outputTokens": 35253,
+      "thinkingTokens": 20821,
+      "cacheReadInputTokens": 955177,
+      "cacheCreationInputTokens": 95721,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 95721,
+      "webSearchRequests": 0,
+      "costUSD": 0.8310117000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 19,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Я разобрал новые материалы раунда 2 и записал в `actions.md` действия на следующий раунд. В `journal.md` дописан раздел «Раунд 2». Кто убил Коула, пока не установлено, уверенность в версии — около 20%.\n\n**Что нового**\n- **Телефон из кабинета Коула принадлежит Силве.** PIN 1001 подошёл. В его голосовом от 08.10 Силва говорит, что слышал разговор Эммы и Адама о записи, учениях и «дне объявления», о которых медик и инженер не должны знать. Это его собственное утверждение. Оно, по моему выводу, указывает на то, что тревога 12.10 с «ударом» была постановкой Пирс и Коула.\n- **Журнал сервера (приложение № 7).** Коул в 08:02 экспортировал сеанс пользователя 05, то есть Пирс. В 08:05 и 08:41 он менял её учётную запись. Пирс при этом трижды за заезд отправляла экспорты по маршруту 14, получатель которого неизвестен.\n- **Защищённый режим.** Его включил офис командой в 09:24:51, до реального удара в 10:40.\n- **Алиби.** Журнал подтверждает, что Уолш в 08:45:05 была в медкабинете. Звонки без кода с терминала кухни в 08:44:39 и 08:45:20 по обе стороны от удара (08:45:02) подтверждают Силву, если звонил он.\n- **Папка A-24.** Папка со штампом «Выбыл досрочно» была спрятана среди бланков в комнате анкет. В ней фото мужчины со щетиной и копия медлиста с аллергией на молоко, снятая на копире медкабинета. Лист сложен вчетверо и запылён графитом, что наводит на карандаши Моро.\n- **Партия 0417.** Её наклейка наклеена поверх торца, без голограммы и срока годности. Партию 0417 получают Харт, Моро и Силва, партию 0418 — Сато, Уолш и Миллер.\n- **Половина листа с площадки.** Это верхняя часть психинтервью Харта, нижняя, обгоревшая, была у него в кармане. Я предполагаю, что Харт был на площадке во время схватки.\n- **Перебор эфира.** Приёмник запускает поиск сам при пропадании сигнала, так что перебор в 08:44:20 не доказывает, что Харт стоял у приёмника.\n\n**Версия.** Коул вскрыл утечки Пирс и параллельно шантажировал Харта. Около 08:44:50 на верхней площадке была драка, в которой порвали лист. Самый вероятный участник — Харт (около 30%), затем Пирс (около 17%) и Моро (около 15%). Около 22% я оставляю на несчастный случай или другое объяснение.\n\n**Действия на раунд**\n- Ключ ноутбука: путь старого знака Hexon по сетке, `5-1-2-3-6-9-8-7-4` (догадка по подсказке «наш первый знак»).\n- Ходатайства на материалы сеансов пользователей 05 и 01 в бюро.\n- Запрос выписки по участнику A-24 в VAULTLINE.\n- Листание пачек П-01, П-08, П-07 и осмотр листов 19–24 пачки П-05.\n- Звонки по партиям 0417 и 0418 и по заказу CS-2291.\n- Две даты газетного архива за октябрь 2008, чтобы проверить гибель Тома Бернара: 07.10 и 08.10.",
+  "ttft_ms": 2786,
+  "type": "result",
+  "duration_ms": 128523,
+  "uuid": "e6c1c643-b11c-4983-8c64-53952fd9b077",
+  "ttft_stream_ms": 1977,
+  "time_to_request_ms": 87,
+  "time_to_request_phases_ms": {
+    "other": 13,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 3,
+    "input_attachments": 28,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 1,
+    "init_message": 4,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 1,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 7,
+    "message_normalization": 6,
+    "client_creation": 5,
+    "request_build": 9
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 37,
+  "time_to_request_cpu_ms": 98,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 226,
+  "process_anon_mib_turn_start": 139,
+  "process_rss_mib_result": 212,
+  "process_anon_mib_result": 121,
+  "process_peak_rss_mib": 247,
+  "process_cpu_ms_turn": 2143,
+  "process_wall_ms_turn": 128523,
+  "process_cpu_ms_streaming": 1278,
+  "process_wall_ms_streaming": 109183,
+  "main_stream_count": 6,
+  "main_stream_event_count": 1186,
+  "main_stream_chunk_count": 166,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 23,
+    "cpu_ms": 33,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1978,
+  "time_to_request_from_spawn_ms": 2821715,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793268567063.097,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

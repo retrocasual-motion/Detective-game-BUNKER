@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 595911,
+  "stop_reason": "end_turn",
+  "session_id": "33a8720d-e9e1-4300-9bd7-34a507f879fb",
+  "total_cost_usd": 1.6344890000000007,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 6946,
+    "cache_read_input_tokens": 474970,
+    "output_tokens": 4711,
+    "output_tokens_details": {
+      "thinking_tokens": 2170
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6946,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1060,
+        "cache_read_input_tokens": 160050,
+        "cache_creation_input_tokens": 3608,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3608
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 276,
+      "thinkingTokens": 255,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00026250000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 72,
+      "outputTokens": 69302,
+      "thinkingTokens": 36900,
+      "cacheReadInputTokens": 3106225,
+      "cacheCreationInputTokens": 157610,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 157610,
+      "webSearchRequests": 0,
+      "costUSD": 1.6342265000000007,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 7 разобран. Я решил закончить расследование и записал в `actions.md` строку `РЕШИТЬ | дело | продолжить`. Форма заключения должна появиться к следующему раунду, и после этого назад пути нет. В `journal.md` дописан раздел «Раунд 7».\n\n**Что дали новые материалы**\n- **Прослушивание записи поста** (08:44:40, 08:45:40, 08:47:15, 08:52:00) нового не дало: тот же эфир и те же звуки у лестницы, что в разметке файла.\n- **Свойства ручки-диктофона.** Запись с Пирс про собаку Тоффи сделана 06.10, запись «Была» / «Мне к выдаче» — 10.10 в 08:22, запись тревоги — 12.10 в 21:47. Ручка была у Сато до того, как её изъял Коул.\n- **Блокнот Моро.** На странице 14 нарисован листок «РЕЖИМ ТРЕВОГИ» на двери кабинета Коула и свет под дверью. Моро из комнаты анкет напротив наблюдала за этой дверью в тревогу. Мотива убийства это не показывает.\n\n**Версия.** Убийство совершила Пирс около 08:44:50 на верхней площадке. Это вывод методом исключения, прямых доказательств нет.\n- **Мотив.** Коул раскрыл, что она продаёт данные программы Sentinel Labs, и доложил Хейлу.\n- **Возможность.** Сводка № 26 ушла от неё в 08:43:10, а до площадки 55 метров, около 18 секунд. Алиби у неё нет.\n- **Ложь и действия после.** Она сказала, что голос во «внешнем сообщении» не узнала, и что не знала, что Коул что-то нашёл. Папку и ключи с тела она забрала.\n- **Алиби остальных** подтверждены записями:\n  - Миллер: отметки панелей технической в 08:44:35 и 08:45:30.\n  - Уолш и Сато: медкабинет, отметка Уолш в 08:45:05.\n  - Силва: звонки с терминала кухни в 08:44:39 и 08:45:20.\n  - Харт: «Лондон» на радиопосту с 08:44:31.\n- **Моро** остаётся вторым вариантом: у неё тоже нет алиби, но я не нашёл мотива.\n\n**Таблица подозреваемых**\n\n| Кто | Уверенность, % |\n|---|---|\n| Пирс | 55 |\n| Моро | 22 |\n| Несчастный случай | 8 |\n| Остальные пятеро | алиби подтверждено |\n\nПротив этой версии работает одно: в 08:41 Коул сам снял с Пирс ограничение на отправку, и зачем, я не выяснил. Присутствие Пирс на площадке я не доказал, поэтому в заключении напишу, что это наиболее вероятно, но не доказано. Других материалов, которые можно запросить, я не вижу, поэтому дело закрываю. Уверенность в версии — около 50%.",
+  "ttft_ms": 2778,
+  "type": "result",
+  "duration_ms": 45642,
+  "uuid": "a6f649ae-58f5-4c29-8f04-74a7abe1793d",
+  "ttft_stream_ms": 1619,
+  "time_to_request_ms": 155,
+  "time_to_request_phases_ms": {
+    "other": 22,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 36,
+    "input_hooks": 4,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 2,
+    "init_message": 6,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 2,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 17,
+    "message_normalization": 19,
+    "client_creation": 12,
+    "request_build": 20
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 104,
+  "time_to_request_cpu_ms": 168,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 221,
+  "process_anon_mib_result": 129,
+  "process_peak_rss_mib": 258,
+  "process_cpu_ms_turn": 1411,
+  "process_wall_ms_turn": 45642,
+  "process_cpu_ms_streaming": 648,
+  "process_wall_ms_streaming": 30973,
+  "main_stream_count": 3,
+  "main_stream_event_count": 493,
+  "main_stream_chunk_count": 56,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 29,
+    "cpu_ms": 42,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1619,
+  "time_to_request_from_spawn_ms": 3225304,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793268970468.2163,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

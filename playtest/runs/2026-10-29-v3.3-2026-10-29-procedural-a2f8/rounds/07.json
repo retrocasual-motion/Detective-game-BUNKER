@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 623978,
+  "stop_reason": "end_turn",
+  "session_id": "4fc0f380-7c3a-428b-a0f5-572a6f3312dc",
+  "total_cost_usd": 3.0556121,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 4593,
+    "cache_read_input_tokens": 454750,
+    "output_tokens": 2498,
+    "output_tokens_details": {
+      "thinking_tokens": 225
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4593,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 804,
+        "cache_read_input_tokens": 153174,
+        "cache_creation_input_tokens": 1732,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1732
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 320,
+      "thinkingTokens": 299,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00028450000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 78,
+      "outputTokens": 59075,
+      "thinkingTokens": 23204,
+      "cacheReadInputTokens": 3417338,
+      "cacheCreationInputTokens": 148756,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 148756,
+      "webSearchRequests": 0,
+      "costUSD": 3.0553275999999996,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 7 закончен: ящик Пирс открылся паролем «Тоффи», и переписка дала подсказку к паролю архива Хейла. Раздел «Раунд 7» дописан в `journal.md`.\n\n**Что в почте Пирс:**\n- **Пирс продавала данные испытания на сторону.** С 28.08.2009 некий Дж. Мерсер с адреса sentinel-labs.net покупает у неё данные по трём этапам: A (2008), B (весна 2009) и текущему C. Оплата по каждому этапу, остаток — после «досье вещества». Экспорты по маршруту 14 уходили на этот домен; в списке маршрутов офиса он стоит «как у поставщика».\n- **Место для участника с ограниченным английским Пирс устроила по заказу покупателя.** По их спецификации такой участник «получает тревогу не из эфира, а по лицам других». Значит, Силву выбрали подопытным по чужому заказу.\n- **Подсказка к архиву.** 09.10 Пирс пишет: «архив заперт номером активной партии». По экспорту этапа C активная партия — 0417.\n- **Неясное письмо.** 14.09 Пирс пишет: «Ключ передала при встрече. Других копий нет». Какой это ключ, по материалам не видно.\n\n**Как это меняет картину.** Мотив Пирс против Коула стал сильнее. Утром 13.10 он раскрыл этот канал и написал черновик доклада Хейлу с адресом её ящика. Если бы доклад ушёл, она потеряла бы остаток оплаты и попала бы под ответственность. Но непонятно, почему он в 08:41 снял ей ограничение — договорились они или это была ловушка.\n\nПодозреваемые сейчас: Моро 50%, Пирс 30%, несчастный случай в борьбе 15%, прочие 5%. Уверенность в версии снизилась до 55%. Против Моро по-прежнему улики о том, где она была: пришла к медику со стороны площадки, солгала о маршруте, её комната анкет напротив кабинета Коула. Против Пирс — мотив и отсутствие алиби после 08:43:10.\n\nВ `actions.md` записано одно действие: `ПАРОЛЬ | архив проекта | 0417`. После архива нажимаю «Решить дело».",
+  "ttft_ms": 3139,
+  "type": "result",
+  "duration_ms": 32181,
+  "uuid": "7567734d-b157-4d47-93ca-d72d90848fa4",
+  "ttft_stream_ms": 2390,
+  "time_to_request_ms": 113,
+  "time_to_request_phases_ms": {
+    "other": 15,
+    "system_prompt": 2,
+    "resume_other": 1,
+    "process_user_input": 3,
+    "input_attachments": 33,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 0,
+    "model_config_wait": 11,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 8,
+    "message_normalization": 9,
+    "client_creation": 5,
+    "request_build": 11
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 62,
+  "time_to_request_cpu_ms": 126,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 232,
+  "process_anon_mib_turn_start": 145,
+  "process_rss_mib_result": 222,
+  "process_anon_mib_result": 130,
+  "process_peak_rss_mib": 257,
+  "process_cpu_ms_turn": 1522,
+  "process_wall_ms_turn": 32181,
+  "process_cpu_ms_streaming": 624,
+  "process_wall_ms_streaming": 17065,
+  "main_stream_count": 3,
+  "main_stream_event_count": 400,
+  "main_stream_chunk_count": 283,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 26,
+    "cpu_ms": 39,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2390,
+  "time_to_request_from_spawn_ms": 3252347,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793268997684.3167,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

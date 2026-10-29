@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 554632,
+  "stop_reason": "end_turn",
+  "session_id": "33a8720d-e9e1-4300-9bd7-34a507f879fb",
+  "total_cost_usd": 1.5120860000000007,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 12193,
+    "cache_read_input_tokens": 440449,
+    "output_tokens": 8123,
+    "output_tokens_details": {
+      "thinking_tokens": 4836
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 12193,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1022,
+        "cache_read_input_tokens": 149900,
+        "cache_creation_input_tokens": 6812,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 6812
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 276,
+      "thinkingTokens": 255,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00026250000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 66,
+      "outputTokens": 64591,
+      "thinkingTokens": 34730,
+      "cacheReadInputTokens": 2631255,
+      "cacheCreationInputTokens": 150664,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 150664,
+      "webSearchRequests": 0,
+      "costUSD": 1.5118235000000007,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 6 разобран, в `actions.md` записаны новые действия, в `journal.md` дописан раздел «Раунд 6». Подозреваемых по-прежнему двое, Пирс и Моро, и между ними я пока выбираю не по доказательствам. Уверенность в версии — около 45%.\n\n**Что нового**\n- **Ящик Пирс открылся паролем `Toffee`.** По письмам, с 28.08.2009 она продаёт данные программы VL-31 Дж. Мерсеру из sentinel-labs.net, по этапам A, B и C. Мерсер подтверждал получение в те же дни, когда с терминала 05 уходили экспорты: 04.10, 08.10 и 12.10.\n- **Досье вещества.** Мерсер требует досье вещества, а Пирс отвечает, что архив у Хейла заперт номером активной партии.\n- **Силва — тест-субъект.** Мерсер заказал участника с ограниченным английским, который получает тревогу «по лицам других», и Пирс пообещала сделать такой слот в наборе.\n- **Ключ.** 14.09 Пирс передала Мерсеру «ключ… других копий нет». Что за ключ, неизвестно.\n- **Кадр 14 камеры инженера.** У Коула на поясе кольцо с двумя ключами, на одном красная бирка «МЕДКАБ. · 3». Значит, аварийный дубликат был у Коула до смерти, а Пирс потом сняла оба ключа с тела.\n- **Два листа.** Лист с площадки и обгоревшая половина у Харта напечатаны одним шрифтом и порваны по диагонали, это две части одного листа.\n\n**Версия.** Пирс продавала данные Sentinel Labs, а Коул 13.10 в 08:02–08:12 увидел её отправки и доложил Хейлу. На площадке она, вероятно, столкнула Коула в ослабленное ограждение. Против этого работает одно: в 08:41 Коул сам снял с неё ограничение на отправку, и я не знаю, зачем.\n\n**Таблица подозреваемых**\n\n| Кто | Уверенность, % |\n|---|---|\n| Пирс | 50 |\n| Моро | 25 |\n| Харт | 6 |\n| Остальные | по 2–3 |\n| Несчастный случай | 8 |\n\nПротив Пирс — продажа данных, отсутствие алиби, ложь о голосе в «внешнем сообщении» и то, что она забрала папку и ключи с тела. Против Моро — нет полного алиби, ложь о том, что она слышала, и комната анкет напротив кабинета Коула.\n\n**Отправлено на проверку:** четыре отрезка записи радиопоста (08:44:40, 08:45:40, 08:47:15, 08:52:00), свойства ручки-диктофона и страницы 14–16 блокнота Моро. Они должны показать, кто ещё был на площадке или рядом с ней около 08:45.",
+  "ttft_ms": 3242,
+  "type": "result",
+  "duration_ms": 72769,
+  "uuid": "a831de0a-de56-41d5-b0ff-50b195a4c716",
+  "ttft_stream_ms": 2344,
+  "time_to_request_ms": 116,
+  "time_to_request_phases_ms": {
+    "other": 18,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 39,
+    "input_hooks": 4,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 2,
+    "init_message": 5,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 0,
+    "tool_schema_build": 8,
+    "message_normalization": 9,
+    "client_creation": 5,
+    "request_build": 11
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 66,
+  "time_to_request_cpu_ms": 129,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 216,
+  "process_anon_mib_result": 124,
+  "process_peak_rss_mib": 257,
+  "process_cpu_ms_turn": 1603,
+  "process_wall_ms_turn": 72769,
+  "process_cpu_ms_streaming": 873,
+  "process_wall_ms_streaming": 58227,
+  "main_stream_count": 3,
+  "main_stream_event_count": 617,
+  "main_stream_chunk_count": 86,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 30,
+    "cpu_ms": 45,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2345,
+  "time_to_request_from_spawn_ms": 3151261,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793268896431.4194,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
