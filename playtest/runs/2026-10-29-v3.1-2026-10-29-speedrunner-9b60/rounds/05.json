@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 222499,
+  "stop_reason": "end_turn",
+  "session_id": "458b6801-8e74-411d-9564-fd30219ee793",
+  "total_cost_usd": 0.7039463,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 2651,
+    "cache_read_input_tokens": 399893,
+    "output_tokens": 1260,
+    "output_tokens_details": {
+      "thinking_tokens": 27
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2651,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 215,
+        "cache_read_input_tokens": 80827,
+        "cache_creation_input_tokens": 498,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 498
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 54,
+      "outputTokens": 25718,
+      "thinkingTokens": 12678,
+      "cacheReadInputTokens": 1337808,
+      "cacheCreationInputTokens": 78137,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 78137,
+      "webSearchRequests": 0,
+      "costUSD": 0.7036167999999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 410,
+      "thinkingTokens": 389,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00032950000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "В этом раунде новых материалов нет. Звонок в Colton Supply дошёл до автоответчика: он просит ввести номер заказа. Я записал повторный звонок с номером `CS-2291` из отчёта инженера за день 10. Результат придёт к следующему раунду.\n\nВерсия не изменилась: пока ближе всего несчастный случай из-за неисправного ограждения, моя уверенность в ней около 40%. Если поставщик подтвердит, что плиту не поставляли, это укрепит версию с подделкой отчёта инженером Миллером. Раздел «Раунд 5» дописан в `journal.md`.",
+  "ttft_ms": 2590,
+  "type": "result",
+  "duration_ms": 16921,
+  "uuid": "ffd60795-f628-4dd4-b8d4-5bb926a62409",
+  "ttft_stream_ms": 2096,
+  "time_to_request_ms": 151,
+  "time_to_request_phases_ms": {
+    "other": 22,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 43,
+    "input_hooks": 5,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 9,
+    "engine_pickup": 1,
+    "message_prep": 2,
+    "model_config_wait": 4,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 13,
+    "message_normalization": 12,
+    "client_creation": 7,
+    "request_build": 19
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 101,
+  "time_to_request_cpu_ms": 166,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 226,
+  "process_anon_mib_turn_start": 140,
+  "process_rss_mib_result": 219,
+  "process_anon_mib_result": 127,
+  "process_peak_rss_mib": 251,
+  "process_cpu_ms_turn": 1242,
+  "process_wall_ms_turn": 16920,
+  "process_cpu_ms_streaming": 329,
+  "process_wall_ms_streaming": 5545,
+  "main_stream_count": 5,
+  "main_stream_event_count": 204,
+  "main_stream_chunk_count": 45,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 34,
+    "cpu_ms": 50,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2097,
+  "time_to_request_from_spawn_ms": 826800,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793262520686.2537,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

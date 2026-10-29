@@ -1,0 +1,167 @@
+{
+  "duration_api_ms": 110351,
+  "stop_reason": "end_turn",
+  "session_id": "07e90876-6db4-4833-9a5f-dd741d8bd3e9",
+  "total_cost_usd": 0.43546549999999995,
+  "usage": {
+    "input_tokens": 28,
+    "cache_creation_input_tokens": 63690,
+    "cache_read_input_tokens": 462135,
+    "output_tokens": 13417,
+    "output_tokens_details": {
+      "thinking_tokens": 5063
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 63690,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 607,
+        "cache_read_input_tokens": 63168,
+        "cache_creation_input_tokens": 3710,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3710
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 283,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000266,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 262,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 28,
+      "outputTokens": 13417,
+      "cacheReadInputTokens": 462135,
+      "cacheCreationInputTokens": 63690,
+      "webSearchRequests": 0,
+      "costUSD": 0.43519949999999996,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 5063,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 63690,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 59,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 1 закончен. Я прочитал все материалы дела и записал в `actions.md` девять действий. Ответов архива ещё нет, и дело не раскрыто. Уверенность в версии — 20%.\n\n**Что видно по материалам:**\n- За 16 секунд до удара радиопост записал возню и металлический скрежет на площадке (08:44:46–08:44:52). Это не похоже на чистый несчастный случай из постановления.\n- Эксперт нашёл старую трещину плиты. Но инженер Миллер в отчёте от 10.10 написал, что плиту заменил. На осмотре 28.10 стояла старая плита, так что отчёт ложный.\n- Коул в 07:33 шантажировал Харта у окна радиопоста. Половина психологического интервью Харта лежала на площадке, обгорелая вторая половина была у Харта в кармане.\n\n**Подозреваемые (предварительно):**\n\n| Кто | Уверенность, % |\n|---|---|\n| Харт | 35 |\n| Миллер | 15 |\n| Несчастный случай или иное | 15 |\n| Пирс | 12 |\n| Силва | 8 |\n| Уолш | 8 |\n| Моро | 4 |\n| Сато | 3 |\n\n**Что запросил в `actions.md`:**\n- ходатайство в бюро на приложение № 7 (журналы сервера за 13.10);\n- осмотр: увеличить ноутбук Коула и скан бланка из папки; листать пачки П-09 и П-02;\n- пароль к телефону Силвы — 0110;\n- адреса vaultline-program.com, fieldworks-radio.com и hexon-bio.com;\n- звонок поставщику плит Colton Supply.\n\nЖурнал за раунд дописан в `journal.md`.",
+  "ttft_ms": 1491,
+  "type": "result",
+  "duration_ms": 115058,
+  "uuid": "25612f15-c5c4-4007-b86d-edc903dcf380",
+  "ttft_stream_ms": 880,
+  "time_to_request_ms": 238,
+  "time_to_request_phases_ms": {
+    "other": 40,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 8,
+    "input_attachments": 21,
+    "input_hooks": 3,
+    "transcript_persist": 4,
+    "tool_pool_refresh": 2,
+    "init_message": 6,
+    "engine_pickup": 1,
+    "message_prep": 2,
+    "model_config_wait": 126,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 7,
+    "message_normalization": 1,
+    "client_creation": 5,
+    "request_build": 8
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 73,
+  "time_to_request_cpu_ms": 172,
+  "time_to_request_major_faults": 1,
+  "process_rss_mib_turn_start": 190,
+  "process_anon_mib_turn_start": 105,
+  "process_rss_mib_result": 204,
+  "process_anon_mib_result": 111,
+  "process_peak_rss_mib": 211,
+  "process_cpu_ms_turn": 3731,
+  "process_wall_ms_turn": 115058,
+  "process_cpu_ms_streaming": 2323,
+  "process_wall_ms_streaming": 87035,
+  "main_stream_count": 14,
+  "main_stream_event_count": 1512,
+  "main_stream_chunk_count": 223,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 18,
+    "cpu_ms": 14,
+    "major_faults": 0
+  },
+  "first_content_frame_ms": 881,
+  "time_to_request_from_spawn_ms": 598983,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793262291505.616,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
