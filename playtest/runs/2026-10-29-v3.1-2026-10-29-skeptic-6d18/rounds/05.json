@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 394934,
+  "stop_reason": "end_turn",
+  "session_id": "07e90876-6db4-4833-9a5f-dd741d8bd3e9",
+  "total_cost_usd": 1.2201831000000003,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 6347,
+    "cache_read_input_tokens": 506601,
+    "output_tokens": 2837,
+    "output_tokens_details": {
+      "thinking_tokens": 485
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6347,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 597,
+        "cache_read_input_tokens": 129196,
+        "cache_creation_input_tokens": 1093,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1093
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 283,
+      "thinkingTokens": 262,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000266,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 64,
+      "outputTokens": 48152,
+      "thinkingTokens": 22718,
+      "cacheReadInputTokens": 2298651,
+      "cacheCreationInputTokens": 127101,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 127101,
+      "webSearchRequests": 0,
+      "costUSD": 1.2199171000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 закончен. Виновного я всё ещё не назвал: уверенность в версии 40%.\n\n**Что дала ячейка № 845.** Коул арендовал её 20.10.2008 за наличные и положил туда две вещи:\n- **Акт передачи дел этапа A** от 14.11.2008. Коул принял от Хейла все шесть дел, включая A-24 (Бернар). Медицинские листы «сверила» Уолш.\n- **Микрокассета «06.10.08».** Это дата смерти Бернара. На ней сиплый голос, похожий на Коула, сообщает о смерти участника на объекте. Низкий бархатный голос, похожий на Хейла, отвечает: «Объявлять не будем… стало плохо в дороге… семье — эвакуирован. Справку завизирую».\n\nЗаписи доказывают, что смерть в 2008 скрыли. Скрыл её Хейл при участии Коула, а Коул хранил запись как страховку против него. Голоса опознаны только по описанию, не по именам.\n\n**Запросы.** Сеансы пользователей 02 и 03 ничего не добавили: сохранённых файлов нет, всё уже в журнале сервера. Vaultline отказал по анкетам набора, потому что я не указал номер программы. Повторил запрос с № VL-31, он записан в `actions.md`.\n\n**Дальше.** Родство Моро и Бернара пока не доказано. Анкеты набора должны это показать. Прямых улик о том, кто был на площадке в 08:44, по-прежнему нет. Моро остаётся главной версией (38%), за ней Пирс (15%), Харт (10%) и Силва (8%). Раздел «Раунд 5» дописан в `journal.md`.",
+  "ttft_ms": 2004,
+  "type": "result",
+  "duration_ms": 30752,
+  "uuid": "b62d8e81-6f40-4e4f-9b12-486b1670bd56",
+  "ttft_stream_ms": 1244,
+  "time_to_request_ms": 104,
+  "time_to_request_phases_ms": {
+    "other": 15,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 3,
+    "input_attachments": 33,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 1,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 3,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 9,
+    "message_normalization": 9,
+    "client_creation": 5,
+    "request_build": 10
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 54,
+  "time_to_request_cpu_ms": 116,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 230,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 221,
+  "process_anon_mib_result": 129,
+  "process_peak_rss_mib": 254,
+  "process_cpu_ms_turn": 1378,
+  "process_wall_ms_turn": 30751,
+  "process_cpu_ms_streaming": 357,
+  "process_wall_ms_streaming": 14373,
+  "main_stream_count": 4,
+  "main_stream_event_count": 432,
+  "main_stream_chunk_count": 57,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 26,
+    "cpu_ms": 37,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1244,
+  "time_to_request_from_spawn_ms": 991525,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793262685579.0188,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

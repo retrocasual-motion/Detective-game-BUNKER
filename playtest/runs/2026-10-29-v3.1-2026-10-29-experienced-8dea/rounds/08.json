@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 543226,
+  "stop_reason": "end_turn",
+  "session_id": "c2d594d7-3686-4e14-a398-5b33c5edc4cf",
+  "total_cost_usd": 1.7365511000000002,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 2990,
+    "cache_read_input_tokens": 621013,
+    "output_tokens": 1954,
+    "output_tokens_details": {
+      "thinking_tokens": 247
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2990,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 649,
+        "cache_read_input_tokens": 156352,
+        "cache_creation_input_tokens": 702,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 702
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 265,
+      "thinkingTokens": 244,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000257,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 94,
+      "outputTokens": 65609,
+      "thinkingTokens": 31950,
+      "cacheReadInputTokens": 4645521,
+      "cacheCreationInputTokens": 153866,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 153866,
+      "webSearchRequests": 0,
+      "costUSD": 1.7362940999999998,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 8 завершён. Новых материалов не пришло, а оба ходатайства бюро отклонило, так что новых путей у меня нет. В `actions.md` записано `РЕШИТЬ | дело | продолжить`, форму заключения заполню в следующем раунде.\n\n**Отказы**\n- **Вещи и устройства Хейла (п. 55).** Бюро пишет: «не указан номер приложения по описи или код пользователя по журналу сервера». Номер я указал не так, как нужно.\n- **Личная переписка сотрудников (п. 54).** Бюро ответило «не по адресу»: следствие её не запрашивало, содержимое ящиков хранит провайдер. Адреса провайдеров, кроме Mailbridge, мне неизвестны.\n\n**Итоговая версия** (уверенность около 38%, прямого доказательства убийства нет):\n- Коул упал в 08:45:02 после схватки на верхней площадке восточной лестницы: шаги вниз в 08:44:46, возня и скрежет в 08:44:52. Ограждение не выдержало, потому что его плиту крепления не заменили. Отчёт Миллера от 10.10 и чек-лист Коула «заменена» — ложь, Colton Supply плиту не доставил.\n- Наиболее вероятный участник схватки — Пирс. Это шпионка Sentinel Labs, которую Коул утром вскрыл, и у неё нет алиби на верхнем уровне. Альтернатива — Моро.\n- Общий фон: Хейл через HEXON BIO и VAULTLINE испытывал вещество X-17 на людях. Смерть Бернара в 2008 году скрыли. Тревога 12.10 была постановкой с голосом Пирс. Защищённый режим офис включил в 09:24, до реального удара в 10:40.\n\nВ `journal.md` дописан раздел «Раунд 8».",
+  "ttft_ms": 4696,
+  "type": "result",
+  "duration_ms": 26835,
+  "uuid": "aa9b6975-9f21-47ee-a82d-5ed9d77eee71",
+  "ttft_stream_ms": 4421,
+  "time_to_request_ms": 103,
+  "time_to_request_phases_ms": {
+    "other": 15,
+    "system_prompt": 2,
+    "resume_other": 1,
+    "process_user_input": 3,
+    "input_attachments": 31,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 1,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 0,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 8,
+    "message_normalization": 10,
+    "client_creation": 5,
+    "request_build": 12
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 53,
+  "time_to_request_cpu_ms": 114,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 145,
+  "process_rss_mib_result": 219,
+  "process_anon_mib_result": 127,
+  "process_peak_rss_mib": 256,
+  "process_cpu_ms_turn": 1193,
+  "process_wall_ms_turn": 26834,
+  "process_cpu_ms_streaming": 264,
+  "process_wall_ms_streaming": 8850,
+  "main_stream_count": 4,
+  "main_stream_event_count": 318,
+  "main_stream_chunk_count": 50,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 25,
+    "cpu_ms": 37,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 4421,
+  "time_to_request_from_spawn_ms": 1163080,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793262857128.8171,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

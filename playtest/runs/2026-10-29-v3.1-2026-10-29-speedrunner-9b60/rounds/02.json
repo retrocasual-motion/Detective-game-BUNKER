@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 133616,
+  "stop_reason": "end_turn",
+  "session_id": "458b6801-8e74-411d-9564-fd30219ee793",
+  "total_cost_usd": 0.4206173,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 8233,
+    "cache_read_input_tokens": 158835,
+    "output_tokens": 4097,
+    "output_tokens_details": {
+      "thinking_tokens": 1703
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 8233,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 624,
+        "cache_read_input_tokens": 55697,
+        "cache_creation_input_tokens": 3507,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3507
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 28,
+      "outputTokens": 15444,
+      "thinkingTokens": 7887,
+      "cacheReadInputTokens": 417278,
+      "cacheCreationInputTokens": 56016,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 56016,
+      "webSearchRequests": 0,
+      "costUSD": 0.42028780000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 410,
+      "thinkingTokens": 389,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00032950000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "В этом раунде я запросил у бюро материалы сеансов пользователя 05 — строка в `actions.md`. Раздел «Раунд 2» дописан в `journal.md`. Ответ придёт к следующему раунду.\n\nВерсия сместилась с Харта на Эмму Пирс. Уверенность в ней около 50%, а в самой Пирс как в виновной около 60%.\n\nЧто показали журналы сервера (`L214`):\n- **Кто такой пользователь 05:** по сводкам и ежедневным отправкам это, судя по всему, Пирс.\n- **Утечка:** она одна отправляла экспорты на маршрут 14 — 04.10, 08.10 и 12.10. Маршрутов 01 (офис) среди них нет.\n- **Проверка:** 13.10 с 08:00 до 08:41 Коул экспортировал журналы, просматривал сеанс 05 и дважды менял параметры этой учётной записи.\n- **Ложь Пирс:** она говорила, что Коул заходил к ней около 8:30 и ушёл около 8:40. По журналу его терминал был заблокирован с 08:30 до 08:41, выход — в 08:41:40.\n- **Алиби Харта и Силвы:** подтверждения сводки показывают Харта на посту в 08:43:18. Силва пытался звонить с кухни в 08:44:39 и 08:45:20. Удар слышен в 08:45:02.\n- **Остальные:** Моро, возможно, и Миллер остаются без проверки на момент падения. Миллер подтвердил сводку только в 08:47:20 и по расчёту пути мог успеть на площадку.\n\nМотив Пирс пока не подтверждён: нужен сам сеанс 05. Неясно и то, почему верхняя половина интервью Харта оказалась на площадке.",
+  "ttft_ms": 3516,
+  "type": "result",
+  "duration_ms": 38058,
+  "uuid": "d322926c-48eb-4360-8325-ed74c1693253",
+  "ttft_stream_ms": 2830,
+  "time_to_request_ms": 134,
+  "time_to_request_phases_ms": {
+    "other": 17,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 46,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 4,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 1,
+    "tool_schema_build": 11,
+    "message_normalization": 9,
+    "client_creation": 7,
+    "request_build": 19
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 84,
+  "time_to_request_cpu_ms": 163,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 224,
+  "process_anon_mib_turn_start": 138,
+  "process_rss_mib_result": 218,
+  "process_anon_mib_result": 126,
+  "process_peak_rss_mib": 247,
+  "process_cpu_ms_turn": 1278,
+  "process_wall_ms_turn": 38058,
+  "process_cpu_ms_streaming": 505,
+  "process_wall_ms_streaming": 24877,
+  "main_stream_count": 3,
+  "main_stream_event_count": 453,
+  "main_stream_chunk_count": 53,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 36,
+    "cpu_ms": 54,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2831,
+  "time_to_request_from_spawn_ms": 701404,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793262395343.442,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

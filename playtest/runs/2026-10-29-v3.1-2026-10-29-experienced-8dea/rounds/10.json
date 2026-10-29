@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 603451,
+  "stop_reason": "end_turn",
+  "session_id": "c2d594d7-3686-4e14-a398-5b33c5edc4cf",
+  "total_cost_usd": 1.9972652000000006,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 5150,
+    "cache_read_input_tokens": 649400,
+    "output_tokens": 4373,
+    "output_tokens_details": {
+      "thinking_tokens": 141
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 5150,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 778,
+        "cache_read_input_tokens": 163426,
+        "cache_creation_input_tokens": 3087,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3087
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 265,
+      "thinkingTokens": 244,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000257,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 114,
+      "outputTokens": 71862,
+      "thinkingTokens": 32107,
+      "cacheReadInputTokens": 6248602,
+      "cacheCreationInputTokens": 163325,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 163325,
+      "webSearchRequests": 0,
+      "costUSD": 1.9970082000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Заключение написано, в `actions.md` записано `ФИНАЛ | заключение | см. журнал`. Полный текст по восьми пунктам формы — в `journal.md`, раздел «Заключение».\n\nГлавное по пунктам:\n- **Кто и как (п. 1–2).** Коул упал 13.10 около 08:45:02 после короткой схватки на верхней площадке. Установить, кто именно с ним дрался, я не смог. Вероятнее всего это Пирс, оценка около 35–40%. Её сеанс Коул вскрыл утром, и ей грозило разоблачение как шпионке Sentinel Labs. Моро остаётся второй по вероятности, возможен и несчастный случай. Умысел на смерть материалами не доказан.\n- **Ограждение (п. 3).** Это решающая причина падения. Трещина в плите крепления была старая, а замену плиты Миллер в отчёте указал ложно: поставщик плиту так и не доставил.\n- **Почему не выпустили (п. 4).** Защищённый режим включил офис командой в 09:24:51, до реального удара в 10:40. После 10:41 связь с офисом пропала. Что решение «держать» принял Хейл, это мой вывод, прямого приказа в материалах нет.\n- **Программа (п. 5).** HEXON BIO под видом программы изоляции испытывала на людях вещество X-17, которое должно снижать панику. Партия 0417 была активной, 0418 — контрольной. Тревога 12.10 была постановкой, в основе её сценария лежит давка 1987 года, в которой погибла дочь Хейла.\n- **Прежний участник (п. 6–7).** Томас Бернар, участник A-24, умер на 15-й день выдачи. Скорее всего, причина — аллергия на молочный белок, из которого сделан препарат. Хейл приказал смерть скрыть, Коул исполнил, а семье сказали «стало плохо в дороге». Запись приказа Коул хранил в сейфовой ячейке.\n- **Утечка (п. 8).** Пирс продавала данные этапов A, B и C фирме Sentinel Labs (Дж. Мерсер). Сато, журналистка The Signal, отдельно пыталась вынести материал о программе.",
+  "ttft_ms": 5024,
+  "type": "result",
+  "duration_ms": 43252,
+  "uuid": "3b1b5b5c-d9dc-488d-a455-3d6de41fc2a5",
+  "ttft_stream_ms": 4413,
+  "time_to_request_ms": 126,
+  "time_to_request_phases_ms": {
+    "other": 17,
+    "system_prompt": 2,
+    "resume_other": 1,
+    "process_user_input": 3,
+    "input_attachments": 34,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 6,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 9,
+    "message_normalization": 12,
+    "client_creation": 12,
+    "request_build": 17
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 61,
+  "time_to_request_cpu_ms": 130,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 232,
+  "process_anon_mib_turn_start": 145,
+  "process_rss_mib_result": 223,
+  "process_anon_mib_result": 131,
+  "process_peak_rss_mib": 258,
+  "process_cpu_ms_turn": 1418,
+  "process_wall_ms_turn": 43252,
+  "process_cpu_ms_streaming": 494,
+  "process_wall_ms_streaming": 26531,
+  "main_stream_count": 4,
+  "main_stream_event_count": 844,
+  "main_stream_chunk_count": 87,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 27,
+    "cpu_ms": 40,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 4414,
+  "time_to_request_from_spawn_ms": 1442288,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793263136242.757,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 523034,
+  "stop_reason": "end_turn",
+  "session_id": "c2d594d7-3686-4e14-a398-5b33c5edc4cf",
+  "total_cost_usd": 1.6429338000000002,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 5992,
+    "cache_read_input_tokens": 601327,
+    "output_tokens": 4007,
+    "output_tokens_details": {
+      "thinking_tokens": 2071
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 5992,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 562,
+        "cache_read_input_tokens": 153316,
+        "cache_creation_input_tokens": 748,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 748
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 265,
+      "thinkingTokens": 244,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000257,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 86,
+      "outputTokens": 63655,
+      "thinkingTokens": 31703,
+      "cacheReadInputTokens": 4024508,
+      "cacheCreationInputTokens": 150876,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 150876,
+      "webSearchRequests": 0,
+      "costUSD": 1.6426767999999998,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 7 закончен. Новое здесь касается мотива Хейла, а не гибели Коула: версия о Коуле по-прежнему не доказана, уверенность около 38%.\n\n- **Газета от 14.12.1987.** В давке в торговом центре «Пайн-Плаза» погибли десять человек, среди них девятилетняя Эмили Хейл. На фото у входа мужчина с ямочкой на подбородке, по описанию похож на Р. Хейла. Дым и сирена в центре были без настоящего пожара, и сценарий этапа C повторяет ту давку. Мотив Хейла в том, чтобы «победить панику» препаратом X-17.\n- **Сайт Sentinel Labs.** Он пустой: общие слова об исследованиях поведения в кризисе и один адрес info@sentinel-labs.net.\n- **Подозреваемые без изменений:** Пирс 35%, несчастный случай 25%, Моро 13%, Миллер 12%, Харт 7%, остальные 8%.\n- **Что не сходится у Моро.** По словам Уолш, Моро пришла «через минуту-другую» после удара, то есть около 08:47, а сама Моро говорит о 08:46. Коул мог провести 08:41–08:44 в комнате анкет прямо напротив своего кабинета. Это её рабочее место.\n\nВ `actions.md` два ходатайства в бюро по пунктам описи, которые следствие не запрашивало: пункт 55 (вещи и устройства Хейла) и пункт 54 (личная переписка сотрудников). Раздел «Раунд 7» дописан в `journal.md`.",
+  "ttft_ms": 3290,
+  "type": "result",
+  "duration_ms": 39838,
+  "uuid": "10cc68dc-70e2-4eac-8b05-876d2b19b546",
+  "ttft_stream_ms": 2449,
+  "time_to_request_ms": 111,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 32,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 6,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 0,
+    "tool_schema_build": 9,
+    "message_normalization": 11,
+    "client_creation": 5,
+    "request_build": 14
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 61,
+  "time_to_request_cpu_ms": 122,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 145,
+  "process_rss_mib_result": 223,
+  "process_anon_mib_result": 131,
+  "process_peak_rss_mib": 256,
+  "process_cpu_ms_turn": 1386,
+  "process_wall_ms_turn": 39838,
+  "process_cpu_ms_streaming": 587,
+  "process_wall_ms_streaming": 26089,
+  "main_stream_count": 4,
+  "main_stream_event_count": 361,
+  "main_stream_chunk_count": 60,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 25,
+    "cpu_ms": 37,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2450,
+  "time_to_request_from_spawn_ms": 1122195,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793262816230.9216,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
