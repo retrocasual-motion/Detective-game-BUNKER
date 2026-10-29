@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 580117,
+  "stop_reason": "end_turn",
+  "session_id": "07e90876-6db4-4833-9a5f-dd741d8bd3e9",
+  "total_cost_usd": 1.8072267000000004,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 5730,
+    "cache_read_input_tokens": 624076,
+    "output_tokens": 3314,
+    "output_tokens_details": {
+      "thinking_tokens": 596
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 5730,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 835,
+        "cache_read_input_tokens": 158400,
+        "cache_creation_input_tokens": 1258,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1258
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 283,
+      "thinkingTokens": 262,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000266,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 104,
+      "outputTokens": 65828,
+      "thinkingTokens": 29709,
+      "cacheReadInputTokens": 5225927,
+      "cacheCreationInputTokens": 156470,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 156470,
+      "webSearchRequests": 0,
+      "costUSD": 1.8069607000000005,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Архив открылся с паролем `0417`, а `0418` не подошёл. Общая схема дела теперь ясна, но кто виноват в падении Коула, я по-прежнему не установил: уверенность в версии 30%.\n\n**Что в архиве:**\n- **Вещество X-17 (Hexon).** Это стик против паники при угрозе на основе витамина D, кальция и магния. Сырьё — пищевой казеин, то есть молочный белок. Участник A-24 с аллергией на коровье молоко умер на 15-й день этапа A. Я считаю, что причина смерти Бернара — реакция на казеин. Это мой вывод, прямо в материалах причина не названа.\n- **Подделка медлиста.** Лист с аллергией на молоко, судя по подписи «К.У.» и метке копира МК-02, переписала Уолш: «допущен без ограничений».\n- **Сценарий этапа C.**\n  - День 12 вечером — тревога, внешнее сообщение озвучивает координатор (Пирс).\n  - Группа идёт по единственному маршруту, по восточной служебной лестнице.\n  - Точки наблюдения руководителя — верхняя площадка и подножие. Коул мог быть на площадке просто на штатной точке, а не на встрече.\n  - Медик и инженер о сценарии не знают.\n- **Чек-лист безопасности** 10.10.2009: «плита заменена, проверено А. Коул». Поставщик подтвердил, что плиту вернули на склад 26.10, так что запись ложная и подписана Миллером и Коулом.\n- **Маршрут 14** — `sentinel-labs.net`: туда Пирс отправляла экспорты.\n- Связь Моро с Бернаром архив не подтвердил.\n\n**Подозреваемые (без изменений):**\n\n| Кто | Уверенность, % |\n|---|---|\n| Моро | 25 |\n| Пирс | 20 |\n| Харт | 18 |\n| Силва | 8 |\n| Миллер | 3 |\n| Уолш | 3 |\n| Сато | 2 |\n| Несчастный случай | 21 |\n\n**Дальше.** В `actions.md` записал два адреса: `sentinel-labs.net` и `coltonsupply.com`. После них нажму `РЕШИТЬ` и подам заключение. В нём отдельно разведу доказанное и вероятное. Раздел «Раунд 10» дописан в `journal.md`.",
+  "ttft_ms": 7366,
+  "type": "result",
+  "duration_ms": 40539,
+  "uuid": "87ea1a58-ea2c-4205-93e1-3821905cc162",
+  "ttft_stream_ms": 6554,
+  "time_to_request_ms": 103,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 2,
+    "resume_other": 1,
+    "process_user_input": 3,
+    "input_attachments": 28,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 1,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 8,
+    "message_normalization": 12,
+    "client_creation": 5,
+    "request_build": 12
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 53,
+  "time_to_request_cpu_ms": 114,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 227,
+  "process_anon_mib_turn_start": 141,
+  "process_rss_mib_result": 212,
+  "process_anon_mib_result": 121,
+  "process_peak_rss_mib": 254,
+  "process_cpu_ms_turn": 1424,
+  "process_wall_ms_turn": 40538,
+  "process_cpu_ms_streaming": 374,
+  "process_wall_ms_streaming": 17674,
+  "main_stream_count": 4,
+  "main_stream_event_count": 495,
+  "main_stream_chunk_count": 61,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 22,
+    "cpu_ms": 33,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 6555,
+  "time_to_request_from_spawn_ms": 1439604,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793263133497.3555,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

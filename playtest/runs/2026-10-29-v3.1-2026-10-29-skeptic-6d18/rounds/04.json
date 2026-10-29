@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 368991,
+  "stop_reason": "end_turn",
+  "session_id": "07e90876-6db4-4833-9a5f-dd741d8bd3e9",
+  "total_cost_usd": 1.115749,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 10491,
+    "cache_read_input_tokens": 469052,
+    "output_tokens": 6252,
+    "output_tokens_details": {
+      "thinking_tokens": 2495
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 10491,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 937,
+        "cache_read_input_tokens": 122026,
+        "cache_creation_input_tokens": 1916,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1916
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 283,
+      "thinkingTokens": 262,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000266,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 56,
+      "outputTokens": 45315,
+      "thinkingTokens": 22233,
+      "cacheReadInputTokens": 1792050,
+      "cacheCreationInputTokens": 120754,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 120754,
+      "webSearchRequests": 0,
+      "costUSD": 1.1154830000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 закончен. Действия записаны в `actions.md`, раздел «Раунд 4» дописан в `journal.md`. Уверенность в версии выросла до 38%, но прямых улик о площадке по-прежнему нет.\n\n**Что выяснил:**\n- **Мои три ходатайства о сеансах пользователей отклонены из-за формата.** В карточку надо брать точную подстроку файла, а я добавлял лишние слова. Переписал.\n- **Автоответчик Бернара.** По номеру из анкеты A-24 ответил голос: «вы позвонили Тому и Лее». Значит, жена Томаса Бернара — Лея. Я считаю, что это Лея Моро. Это вывод, но фамилия в материалах не совпадает.\n- **Партия 0417.** NorthCare её не знает: партия не зарегистрирована. Зарегистрирована только 0418, «контроль». Значит, 0417 — не их продукт. Я считаю её активным препаратом.\n- **Папка A-24.** Её вынули из шкафа Коула, и она лежала в стопке чистых бланков в комнате анкет. Ксерокопия мед. листа с аллергией на молоко была сложена вчетверо и в графитовой пыли. В комнате анкет работает Моро, она рисует карандашами.\n- **Банк.** Ячейка открывается двумя ключами сразу: арендатора и банка. Запросы идут на `inquiries@frontrange-savings.com`. Ключ №845 из куртки Коула, возможно, от такой ячейки.\n\n**Подозреваемые (предварительно):**\n\n| Кто | Уверенность, % |\n|---|---|\n| Моро | 40 |\n| Пирс | 15 |\n| Харт | 10 |\n| Силва | 8 |\n| Миллер | 3 |\n| Уолш | 3 |\n| Сато | 2 |\n| Несчастный случай или иное | 19 |\n\n**Текущая версия:** Моро — вдова Бернара. Она узнала из бумаг Коула, кто виноват, и 13.10 около 08:44 столкнулась с ним на площадке. Комната анкет в 11 м от площадки, а её рассказ о том, что она шла из жилого блока к медкабинету, не сходится с её же словами про бег по лестнице. Остальных исключают сервер, панель технической и тайминг радио. Это пока версия, не доказанный факт.\n\n**Запрошено в `actions.md`:**\n- в Vaultline: выписка из учёта анкет набора — по ней проверю, правда ли Моро жена Бернара;\n- в банк: аренда ячейки по ключу №845;\n- в бюро: сеансы пользователей 02 и 03 в исправленном формате.",
+  "ttft_ms": 2132,
+  "type": "result",
+  "duration_ms": 54871,
+  "uuid": "d6062440-4aa9-4d09-a21d-1d19d526a2d5",
+  "ttft_stream_ms": 1357,
+  "time_to_request_ms": 130,
+  "time_to_request_phases_ms": {
+    "other": 21,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 3,
+    "input_attachments": 33,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 4,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 19,
+    "message_normalization": 15,
+    "client_creation": 7,
+    "request_build": 13
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 80,
+  "time_to_request_cpu_ms": 140,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 228,
+  "process_anon_mib_turn_start": 142,
+  "process_rss_mib_result": 222,
+  "process_anon_mib_result": 130,
+  "process_peak_rss_mib": 253,
+  "process_cpu_ms_turn": 1483,
+  "process_wall_ms_turn": 54871,
+  "process_cpu_ms_streaming": 664,
+  "process_wall_ms_streaming": 41073,
+  "main_stream_count": 4,
+  "main_stream_event_count": 725,
+  "main_stream_chunk_count": 84,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 22,
+    "cpu_ms": 38,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1357,
+  "time_to_request_from_spawn_ms": 935651,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793262629530.408,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

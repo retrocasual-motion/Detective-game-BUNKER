@@ -1,0 +1,40 @@
+{
+  "run_id": "2026-10-29-v3.1-2026-10-29-speedrunner-9b60",
+  "pack": "/home/user/detective-game-bunker/playtest/packs/v3.1-2026-10-29",
+  "pack_meta": {
+    "version": "v3.1-2026-10-29",
+    "built-from": "своды bunker/01–04 в main после PR #24 + A-255 (ветка claude/project-thread-oa1mpi); список изменений — gm/sources.md, раздел v3.1",
+    "built-by": "Claude (detective-architect), ветка claude/project-thread-oa1mpi",
+    "approved-by-author": "yes",
+    "date": "2026-10-29",
+    "based-on": "v3-2026-10-29"
+  },
+  "profile": "speedrunner",
+  "model": "sonnet",
+  "sandbox": "/tmp/case-ytupdtdt",
+  "session_id": "458b6801-8e74-411d-9564-fd30219ee793",
+  "round": 8,
+  "released": [
+    "L214__приложение_7_журналы_сервера_13-10.md",
+    "L387__материалы_сеанса_пользователя_05.md",
+    "L388__копия_экспорта_exp_000231.md",
+    "L389__копия_экспорта_exp_000247.md",
+    "L390__копия_экспорта_exp_000262.md",
+    "L998__предупреждение_бюро.md",
+    "L999__форма_заключения_бюро.md"
+  ],
+  "finished": {
+    "type": "ФИНАЛ",
+    "target": "заключение",
+    "text": "см. журнал"
+  },
+  "requested_by_user": "Артём, 29.10 08:18: «Так, по решениям все принимаю, кроме 7-го, форма в 2 шага, думаю, это лишнее. И ячейка дешевле архива. Давай чуть подробнее про это расскажи в отдельном трейде. Все остальное ок.» (документ выводов волны v3: порядок работ — A-255, пакет v3.1, короткий прогон линии Ника: 3 Sonnet, 1 Opus experienced)",
+  "lint_warnings": [
+    "player/47__ноутбук_руководителя.md:10: мета-слово «разгадка/подсказка»: «Подсказк»"
+  ],
+  "isolation_probe": "ok",
+  "archivist": null,
+  "cost_usd": 5.0035214,
+  "created": "2026-10-29T08:24:16",
+  "last_released": []
+}
