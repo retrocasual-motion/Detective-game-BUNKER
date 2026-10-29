@@ -1,0 +1,167 @@
+{
+  "duration_api_ms": 347042,
+  "stop_reason": "end_turn",
+  "session_id": "2a441dd8-ba8c-48c8-aa32-8f3f1a4c72d3",
+  "total_cost_usd": 2.5561135,
+  "usage": {
+    "input_tokens": 290,
+    "cache_creation_input_tokens": 60965,
+    "cache_read_input_tokens": 261470,
+    "output_tokens": 25365,
+    "output_tokens_details": {
+      "thinking_tokens": 14524
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 60965,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 713,
+        "cache_read_input_tokens": 58021,
+        "cache_creation_input_tokens": 6132,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 6132
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 343,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00029600000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 322,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 290,
+      "outputTokens": 25365,
+      "cacheReadInputTokens": 261470,
+      "cacheCreationInputTokens": 60965,
+      "webSearchRequests": 0,
+      "costUSD": 2.5558175,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "thinkingTokens": 14524,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 60965,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 43,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 1 завершён.\n\n**Что сделал:** прочитал вводную, все рамочные документы, план, регламент, акты инженера, осмотр места, экспертизу, запись регистратора радиопоста, все семь протоколов, диктофон, газету, описи кабинета/папки/ключей и превью пачек документации (30 файлов из 50; вещи, медкабинет, ноутбук, телефон, видео и газетные подразделы — на следующий раунд).\n\n**Главное, что увидел:**\n- Падение Коула — 08:45:02 по регистратору, перед ним «возня, скрежет» на площадке: там кто-то был.\n- Плиту крепления стойки на самом деле не меняли — отчёт инженера дня 10 ложный (старая окисленная трещина, старые анкеры, временная полоса на месте).\n- В 07:33 Коул через окно радиопоста давил на Харта («миссис Колдер»), потом звонил Хейлу «срочно, по двум участникам». Хейл — глава HEXON BIO; в папке Коула — бланк HEXON 2008 г. с подписью медика Уолш. Хейл бежал в аэропорт в 09:34 и погиб.\n- Звуки из радиопоста прекращаются в 08:43:20 — Харту до площадки 42 с; к телу он пришёл с опозданием на ~1,5 мин и, по Силве, что-то спрятал в карман. Нижняя половина его интервью пропала.\n- Противоречие по ключам: дубликат «пропал», но 13.10 его сдала Пирс.\n\n**Действия отправлены:** запрос приложения № 7 (журналы сервера — объективная проверка алиби), листание пачек П-02 (там скрыт лишний слой картона), П-04, П-06, свойства кадров камеры инженера, увеличение фото «после», листа с площадки и бланка HEXON, три сайта и звонок «поставщику».\n\nТекущая версия — Харт (35%), с запасными кандидатами Пирс и Моро и ~15% на несчастный случай; журнал заполнен.",
+  "ttft_ms": 1345,
+  "type": "result",
+  "duration_ms": 350373,
+  "uuid": "6ab129e2-6b8b-4620-8ed4-eb8b0c90dfbe",
+  "ttft_stream_ms": 1236,
+  "time_to_request_ms": 387,
+  "time_to_request_phases_ms": {
+    "other": 46,
+    "system_prompt": 3,
+    "resume_other": 1,
+    "process_user_input": 5,
+    "input_attachments": 25,
+    "input_hooks": 4,
+    "transcript_persist": 7,
+    "tool_pool_refresh": 3,
+    "init_message": 10,
+    "engine_pickup": 2,
+    "message_prep": 2,
+    "model_config_wait": 247,
+    "autocompact": 4,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 11,
+    "message_normalization": 2,
+    "client_creation": 4,
+    "request_build": 10
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 46,
+  "time_to_request_cpu_ms": 341,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 197,
+  "process_anon_mib_turn_start": 111,
+  "process_rss_mib_result": 204,
+  "process_anon_mib_result": 111,
+  "process_peak_rss_mib": 211,
+  "process_cpu_ms_turn": 5977,
+  "process_wall_ms_turn": 350372,
+  "process_cpu_ms_streaming": 4508,
+  "process_wall_ms_streaming": 329302,
+  "main_stream_count": 10,
+  "main_stream_event_count": 2009,
+  "main_stream_chunk_count": 1662,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 20,
+    "cpu_ms": 25,
+    "major_faults": 0
+  },
+  "first_content_frame_ms": 1237,
+  "time_to_request_from_spawn_ms": 1874593,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793201034687.3066,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

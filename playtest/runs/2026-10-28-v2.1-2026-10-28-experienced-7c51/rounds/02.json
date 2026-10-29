@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 401860,
+  "stop_reason": "end_turn",
+  "session_id": "bd2f1018-88ed-49de-8fc7-4ee7a178b307",
+  "total_cost_usd": 1.7843771,
+  "usage": {
+    "input_tokens": 16,
+    "cache_creation_input_tokens": 27902,
+    "cache_read_input_tokens": 690233,
+    "output_tokens": 15148,
+    "output_tokens_details": {
+      "thinking_tokens": 7631
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 27902,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1377,
+        "cache_read_input_tokens": 97204,
+        "cache_creation_input_tokens": 3928,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3928
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 302,
+      "thinkingTokens": 281,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00027550000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 56,
+      "outputTokens": 36503,
+      "thinkingTokens": 18259,
+      "cacheReadInputTokens": 1352688,
+      "cacheCreationInputTokens": 97910,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 97910,
+      "webSearchRequests": 0,
+      "costUSD": 1.7841015999999998,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 18,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 2 записан: раздел «Раунд 2» в `journal.md`, новые действия в `actions.md`. Кто был на площадке с Коулом, пока не ясно. Уверенность в версии — 40%.\n\n**Кто отпал по журналам терминалов (момент удара — 08:45:02):**\n- **Миллер** нажимал отметки на панелях в технической в 08:44:35 и 08:45:30.\n- **Уолш** в 08:45:05 сделала в медкарте отметку о выдаче партии 0418. Сато в это время была у неё.\n- **Силва**, по-видимому, был на кухне: с кухонного терминала без кода дважды пытались позвонить наружу, в 08:44:39 и 08:45:20. На телефоне Силвы видно, что он отчаянно пытался связаться с сестрой: операцию нужно оплатить до 14-го. Что звонил именно он — моё предположение.\n- **Без алиби остаются Харт** (последняя отметка — подтверждение сводки в 08:43:18), **Пирс** (после рассылки сводки в 08:43:10) **и Моро**.\n\n**Что ещё нашлось:**\n- **Папка A-24.** Пропавшая из шкафа Коула папка спрятана в стопке чистых анкет в комнате анкет — это участок Моро. На папке штамп «Выбыл досрочно». Внутри ксерокопия медосмотра 0589/08 с пометкой «К.У.» и графитовой пылью, а у Моро как раз мягкие карандаши. На копии записана тяжёлая аллергия на сою и ограничение допуска. В бланке из папки Коула стоит «аллергии нет». Значит, документ подделали.\n- **Ключи.** Аварийный дубликат ключа от кабинета висел на поясе у самого Коула. Пирс сняла ключи с тела, а не украла дубликат.\n- **Утечка у Пирс.** Её учётная запись 05 трижды отправляла экспорты по маршруту 14 — это не офис. Утром 13.10 Коул просмотрел её сеанс и дважды менял её учётную запись.\n- **Офис запер объект сознательно.** Защищённый режим включили командой офиса в 09:24:51 — это и есть «лязг» на радиозаписи. Удар был только в 10:40.\n- **Тревога 12.10 была постановкой.** Силва в голосовом сообщении 08.10 пересказывает, как Пирс и Коул обсуждали запись, учения и «день объявления».\n- **Плиту не меняли.** Заказ у Colton Supply так и не доставили, его вернули на склад 26.10. Значит, отчёт Миллера от 10.10 ложный.\n- **Квитанция у Миллера.** 13.10.2008, через неделю после смерти Тома Бернара, Коул внёс 3 000 на счёт Л. Миллер.\n- **Партия 0417.** Её получали Харт, Моро и Силва, а в реестре NorthCare она не значится.\n- **Подрядчик по связи.** Fieldworks Radio закрылась в 2007 году, хотя в регламенте написано «обслуживание 2009». Харт там работал и как раз спрашивал, кто обслуживал связь.\n\n**Действия на этот раунд:**\n- **Ноутбук Коула:** ввожу ключ 5-1-2-3-6-9-8-7-4. Это старый знак HEXON по вводному ролику на их сайте, и с ним сходится уголок знака на картинке учётной записи.\n- **Бюро:** материалы сеансов пользователей 05, 01 и 04; запрос в банк о счёте Л. Миллер и о сейфовой ячейке № 845.\n- **VAULTLINE:** выписка из учёта анкет набора по участнику A-24 и по всем участникам текущего этапа.\n- **Улики:** увеличение коробок «комплекса», чтобы прочитать состав (ищу сою); звонок в NorthCare по партии 0418.",
+  "ttft_ms": 3009,
+  "type": "result",
+  "duration_ms": 165723,
+  "uuid": "9888acca-be5e-43d0-a57c-3853e9d482fd",
+  "ttft_stream_ms": 2164,
+  "time_to_request_ms": 130,
+  "time_to_request_phases_ms": {
+    "other": 18,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 3,
+    "input_attachments": 44,
+    "input_hooks": 5,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 6,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 3,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 10,
+    "message_normalization": 9,
+    "client_creation": 8,
+    "request_build": 12
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 79,
+  "time_to_request_cpu_ms": 143,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 226,
+  "process_anon_mib_turn_start": 139,
+  "process_rss_mib_result": 215,
+  "process_anon_mib_result": 123,
+  "process_peak_rss_mib": 249,
+  "process_cpu_ms_turn": 3749,
+  "process_wall_ms_turn": 165723,
+  "process_cpu_ms_streaming": 2344,
+  "process_wall_ms_streaming": 137410,
+  "main_stream_count": 8,
+  "main_stream_event_count": 1344,
+  "main_stream_chunk_count": 1065,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 37,
+    "cpu_ms": 49,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2164,
+  "time_to_request_from_spawn_ms": 1891176,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793211229310.147,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

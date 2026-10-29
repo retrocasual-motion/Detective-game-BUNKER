@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 713270,
+  "stop_reason": "end_turn",
+  "session_id": "e4157431-e53c-461c-a12e-cdad25c9eaf5",
+  "total_cost_usd": 2.9385955,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 12630,
+    "cache_read_input_tokens": 412121,
+    "output_tokens": 9163,
+    "output_tokens_details": {
+      "thinking_tokens": 4749
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 12630,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1417,
+        "cache_read_input_tokens": 140023,
+        "cache_creation_input_tokens": 7614,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 7614
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 244,
+      "thinkingTokens": 223,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00024650000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 78,
+      "outputTokens": 61585,
+      "thinkingTokens": 28792,
+      "cacheReadInputTokens": 2755085,
+      "cacheCreationInputTokens": 144415,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 144415,
+      "webSearchRequests": 0,
+      "costUSD": 2.9383489999999997,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 7,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 закончен: я разобрал три новых материала и ответы архива, дописал в журнал раздел «Раунд 4» и записал 3 действия на следующий раунд. Кто был с Коулом на марше, по-прежнему не установлено, прямой улики нет. Уверенность в версии — 40%.\n\n**Что выяснилось:**\n- **У Миллера алиби.** На терминале технической есть его отметки с панели насосной в 08:44:35 и с щита генератора в 08:45:30. Коул упал в 08:45:02, значит Миллер в это время был у оборудования.\n- **Лея Моро — жена погибшего участника Томаса Бернара.** На домашнем номере Бернара автоответчик говорит: «Вы позвонили Тому и Лее». Бернар — участник A-24, погиб на этапе 2008 года. Моро, видимо, её девичья фамилия: мать в анкете — Ж. Моро. О программе она узнала из статьи, а при знакомстве и в анкете своё отношение к Бернару скрыла.\n- **Сато, вероятно, журналистка The Signal под подписью «С. Грей».** Главный редактор издания — Фрэнк Бейкер. У Сато в книге надпись «С. — проверяй источники. Фрэнк», а в блокноте — заметки «перед отправкой Фрэнку».\n- **Не дали ничего:** фото из вещей Пирс (подтвердило только бигля Тоффи), звонок Миллерам, письмо Пирс (пришёл только автоответ), повторный запрос в VAULTLINE. Совмещать бланк с копией нельзя — действие к ним неприменимо. Бюро ответило, что ящик Пирс я должен запрашивать у провайдера сам.\n\n**Кто где был в 08:45:02.** Подтверждены четверо: Силва на кухне, Уолш и Сато в медкабинете, Миллер в технической. Не подтверждены трое:\n- **Пирс.** Последний след — сводка в 08:43:10 из кабинета координатора, оттуда до площадки 18 секунд.\n- **Харт.** С 08:43:20 на посту тихо. У тела он появился только в 08:47:15, хотя с поста добежал бы примерно к 08:45:40.\n- **Моро.** О ней данных нет. Она работает в 6 м от площадки и слышала шаги на лестнице. К медику пришла через минуту-другую после ухода Сато (около 08:46), а от площадки до медкабинета 18 секунд. Её визит в журнал медкабинета не записан.\n\n**Подозреваемые:**\n\n| Кто | % | Почему |\n|---|---|---|\n| Моро | 35 | мотив — гибель мужа и подлог бумаг; была рядом; говорит неправду, где была; время прихода к медику сходится |\n| Харт | 25 | Коул его шантажировал; на посту тихо с 08:43:20; пришёл поздно; спрятал свою половину листа |\n| Пирс | 22 | Коул её только что разоблачил; где она была в 08:43–08:50, данных нет; из папки пропала распечатка о ней |\n| несчастный случай | 10 | ограждение было неисправно |\n| Миллер, Уолш, Силва, Сато | 8 | алиби |\n\n**Не разрешено:** журнал медкабинета и бланк 2008 года написаны одним почерком с подписью «К. Уолш», и этот почерк похож на почерк анкет Пирс. Анкеты самой Уолш написаны другим почерком. Также не объяснены полторы минуты задержки Харта.\n\n**Действия на следующий раунд:**\n- запрос провайдеру о ящике Пирс на адрес lawful@mailbridge.net. Этот адрес я угадал по образцу Pinecell, в материалах его нет;\n- письмо в редакцию The Signal: получали ли они данные программы от Пирс и кто был источником статьи 2008 года;\n- запрос в бюро на полные отметки технической за 13.10.\n\nЕсли в следующем раунде ничего решающего не придёт, перейду к кнопке «Решить дело».",
+  "ttft_ms": 3373,
+  "type": "result",
+  "duration_ms": 102032,
+  "uuid": "eadb772a-eed1-4cf8-b3f9-075e60d8f009",
+  "ttft_stream_ms": 2842,
+  "time_to_request_ms": 223,
+  "time_to_request_phases_ms": {
+    "other": 26,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 57,
+    "input_hooks": 33,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 3,
+    "init_message": 7,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 2,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 1,
+    "tool_schema_build": 15,
+    "message_normalization": 17,
+    "client_creation": 27,
+    "request_build": 19
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 172,
+  "time_to_request_cpu_ms": 333,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 230,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 214,
+  "process_anon_mib_result": 122,
+  "process_peak_rss_mib": 242,
+  "process_cpu_ms_turn": 2509,
+  "process_wall_ms_turn": 102031,
+  "process_cpu_ms_streaming": 1548,
+  "process_wall_ms_streaming": 83151,
+  "main_stream_count": 3,
+  "main_stream_event_count": 806,
+  "main_stream_chunk_count": 664,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 48,
+    "cpu_ms": 115,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2842,
+  "time_to_request_from_spawn_ms": 2276743,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793211614709.2993,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

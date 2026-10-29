@@ -1,0 +1,167 @@
+{
+  "duration_api_ms": 346601,
+  "stop_reason": "end_turn",
+  "session_id": "301cd52e-0135-47b0-99d6-caa7b831a9e6",
+  "total_cost_usd": 2.92127625,
+  "usage": {
+    "input_tokens": 354,
+    "cache_creation_input_tokens": 75144,
+    "cache_read_input_tokens": 378127,
+    "output_tokens": 26401,
+    "output_tokens_details": {
+      "thinking_tokens": 14753
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 75144,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 721,
+        "cache_read_input_tokens": 77115,
+        "cache_creation_input_tokens": 1217,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1217
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 300,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002745,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 279,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 354,
+      "outputTokens": 26401,
+      "cacheReadInputTokens": 378127,
+      "cacheCreationInputTokens": 75144,
+      "webSearchRequests": 0,
+      "costUSD": 2.9210017500000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "thinkingTokens": 14753,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 75144,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 60,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 1 завершён.\n\n**Что сделал:** прочитал весь архив (файлы 00–51), разобрал реквизиты запросов, выстроил временную ось по регистратору радиопоста (файл 50) и расстояниям плана.\n\n**Ключевые находки:**\n- 07:33:55 Коул у окна радиопоста: «Харт, ты же не хочешь, чтобы миссис Колдер об этом узнала?» → звонок Хейлу «срочно, по двум участникам».\n- 08:44:46–08:45:02: шаги на марше, «возня, скрежет» наверху, удар. Харт у тела только через 2 мин 13 с при пути в 37 с, уходит не по маршу, а в нижний коридор.\n- Верхняя половина интервью Харта — на площадке; нижняя (обгоревшая: «…1998… за рулём…») — в кармане Харта.\n- Отчёт Миллера о замене плиты противоречит экспертизе (трещина старая, анкеры старые).\n- Пропавший «с начала заезда» дубликат ключа оказался у Пирс; в шкафу Коула не хватает одной папки; бланк HEXON BIO 2008 г. (заезд «Этап A», Уолш) — в клапане папки Коула.\n- Телефон из стола — скорее всего Силвы (41 вызов от Аны; операция сестры, $18 400, заявка отложена).\n\n**Действия в `actions.md`:** запрос приложения № 7 в бюро, детализация линии Хейла у оператора, три адреса сайтов, три звонка (партии 0417/0418, заказ CS-2291), 10 осмотров (ноутбук, бланк, пачки П-02/П-04/П-09, квитанция Миллера, свойства кадров и роликов, совмещение половин листа), PIN телефона (0110/1001), архив газеты (07–08.10.2008).\n\n**Подозреваемые:** Харт 35%, Пирс 20%, Силва 15%, несчастный случай 15%, Миллер 10%, Уолш 5%. Уверенность в версии — 35%.",
+  "ttft_ms": 1143,
+  "type": "result",
+  "duration_ms": 350639,
+  "uuid": "4104d961-b7f6-4678-877c-13c83f2d6ae4",
+  "ttft_stream_ms": 953,
+  "time_to_request_ms": 392,
+  "time_to_request_phases_ms": {
+    "other": 46,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 15,
+    "input_attachments": 69,
+    "input_hooks": 7,
+    "transcript_persist": 36,
+    "tool_pool_refresh": 3,
+    "init_message": 10,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 160,
+    "autocompact": 4,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 15,
+    "message_normalization": 2,
+    "client_creation": 10,
+    "request_build": 10
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 105,
+  "time_to_request_cpu_ms": 345,
+  "time_to_request_major_faults": 1,
+  "process_rss_mib_turn_start": 204,
+  "process_anon_mib_turn_start": 118,
+  "process_rss_mib_result": 212,
+  "process_anon_mib_result": 118,
+  "process_peak_rss_mib": 222,
+  "process_cpu_ms_turn": 7206,
+  "process_wall_ms_turn": 350637,
+  "process_cpu_ms_streaming": 5588,
+  "process_wall_ms_streaming": 327611,
+  "main_stream_count": 12,
+  "main_stream_event_count": 2016,
+  "main_stream_chunk_count": 1637,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 53,
+    "cpu_ms": 52,
+    "major_faults": 0
+  },
+  "first_content_frame_ms": 953,
+  "time_to_request_from_spawn_ms": 1874278,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793201034690.3435,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

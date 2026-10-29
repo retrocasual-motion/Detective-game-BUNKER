@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 1105402,
+  "stop_reason": "end_turn",
+  "session_id": "2a441dd8-ba8c-48c8-aa32-8f3f1a4c72d3",
+  "total_cost_usd": 8.181049250000001,
+  "usage": {
+    "input_tokens": 98,
+    "cache_creation_input_tokens": 7126,
+    "cache_read_input_tokens": 635593,
+    "output_tokens": 5422,
+    "output_tokens_details": {
+      "thinking_tokens": 2912
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 7126,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 464,
+        "cache_read_input_tokens": 162336,
+        "cache_creation_input_tokens": 1547,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1547
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 343,
+      "thinkingTokens": 322,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00029600000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 1098,
+      "outputTokens": 80373,
+      "thinkingTokens": 41909,
+      "cacheReadInputTokens": 3748893,
+      "cacheCreationInputTokens": 160695,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 160695,
+      "webSearchRequests": 0,
+      "costUSD": 8.18075325,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 завершён.\n\n**Главное из ответов:** домашний телефон Томаса Бернара (A-24) отвечает автоответчиком «вы позвонили Тому и Лее» — **Лея Моро — вдова Бернара**, вошла в программу под девичьей фамилией «из статьи» The Signal и собрала папку A-24 с честной копией медосмотра. Смазанный конец линии на её брошенном наброске говорит, что в момент удара она рисовала в комнате анкет — свидетель на слух, не участник. Бюро отказало в разметке по каналам из-за реквизита; форма заключения получена.\n\n**Отправлено (независимые действия):** повторный запрос канала 2 регистратора с номером материала по описи (№ 50) и листание П-01 (анкеты дня 12, свободные строки). Форму оставляю открытой; в следующем раунде, если ничего не опрокинет версию, заполняю пять пунктов и отправляю ФИНАЛ: несчастный случай на ограждении, «отремонтированном» на бумаге (Миллер) и не закрытом по решению Коула (55%), Харт как единственный не исключённый (27%); фон — скрытое испытание HEXON, смерть Бернара в 2008-м, подделка бланка, слив данных Пирс, бегство Хейла и запертая офисом группа.",
+  "ttft_ms": 2756,
+  "type": "result",
+  "duration_ms": 85710,
+  "uuid": "c0c07194-f913-48e8-a82c-21931ce64ad6",
+  "ttft_stream_ms": 1095,
+  "time_to_request_ms": 146,
+  "time_to_request_phases_ms": {
+    "other": 21,
+    "system_prompt": 3,
+    "resume_other": 1,
+    "process_user_input": 4,
+    "input_attachments": 40,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 6,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 6,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 12,
+    "message_normalization": 16,
+    "client_creation": 7,
+    "request_build": 17
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 95,
+  "time_to_request_cpu_ms": 153,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 220,
+  "process_anon_mib_turn_start": 132,
+  "process_rss_mib_result": 218,
+  "process_anon_mib_result": 126,
+  "process_peak_rss_mib": 230,
+  "process_cpu_ms_turn": 2183,
+  "process_wall_ms_turn": 85709,
+  "process_cpu_ms_streaming": 1247,
+  "process_wall_ms_streaming": 70623,
+  "main_stream_count": 4,
+  "main_stream_event_count": 468,
+  "main_stream_chunk_count": 332,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 29,
+    "cpu_ms": 43,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 1095,
+  "time_to_request_from_spawn_ms": 2927737,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793202089811.451,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

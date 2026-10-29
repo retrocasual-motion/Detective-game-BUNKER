@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 1025595,
+  "stop_reason": "end_turn",
+  "session_id": "5a01f0fc-a39d-4284-b3ce-0c8fbccc92c4",
+  "total_cost_usd": 7.80315475,
+  "usage": {
+    "input_tokens": 98,
+    "cache_creation_input_tokens": 13181,
+    "cache_read_input_tokens": 605035,
+    "output_tokens": 10868,
+    "output_tokens_details": {
+      "thinking_tokens": 6650
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13181,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 709,
+        "cache_read_input_tokens": 157972,
+        "cache_creation_input_tokens": 2903,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2903
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 358,
+      "thinkingTokens": 337,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0003035,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 1004,
+      "outputTokens": 76427,
+      "thinkingTokens": 39105,
+      "cacheReadInputTokens": 3270885,
+      "cacheCreationInputTokens": 157687,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 157687,
+      "webSearchRequests": 0,
+      "costUSD": 7.802851249999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 6 закончен. Журнал (раздел «Раунд 6») и действия записаны.\n\n**Что дал раунд:**\n\n- **Ящик Пирс (пароль «Toffee»):** она продавала данные VL-31 по этапам A, B, C фирме Sentinel Labs (Дж. Мерсер) с поэтапной оплатой, сама организовала набор Силвы по спецификации заказчика («участник с ограниченным английским — получает тревогу не из эфира, а по лицам других»), искала «досье вещества», запертое номером активной партии. Мотив у неё сильнейший — но борьбы за лист Харта это не объясняет.\n- **Автоответчик Бернаров:** «вы позвонили Тому и Лее» — Моро действительно вдова A-24.\n- **Перечитал регистратор:** «изредка неразборчивые звуки из глубины поста» идут до 08:43:20 и обрываются ровно в момент подтверждения сводки с радиопоста (08:43:18); дальше — только фон. Харт ушёл с поста сразу после подтверждения, 42 секунды — и к 08:44:02 он на площадке. Разорванный лист — предмет борьбы — был нужен только ему: шапка осталась наверху, признание упало с Коулом, и именно за ним Харт спустился (Силва видел, как он прятал его в карман; потом пытался сжечь).\n\n**Версия сменилась:** Харт 50%, Моро 20%, Пирс 15%, несчастный случай 15%. Скорее рывок и падение, чем умышленное убийство, но с сокрытием и уничтожением улики.\n\n**Действия:** нажал «Решить дело» (форма придёт к следующему раунду; по вводной её можно закрыть и продолжить), параллельно запросил у бюро экспертное прослушивание записи регистратора 08:43–08:48 (есть ли звуки из поста после 08:43:20, откуда шум 08:45:40–08:46:30) и у VAULTLINE — список маршрутов офиса (адресат маршрута 14).",
+  "ttft_ms": 2500,
+  "type": "result",
+  "duration_ms": 159804,
+  "uuid": "377c1059-2446-47a8-b529-1b2811c56e21",
+  "ttft_stream_ms": 1242,
+  "time_to_request_ms": 153,
+  "time_to_request_phases_ms": {
+    "other": 21,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 50,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 7,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 12,
+    "message_normalization": 15,
+    "client_creation": 11,
+    "request_build": 16
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 94,
+  "time_to_request_cpu_ms": 177,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 232,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 217,
+  "process_anon_mib_result": 124,
+  "process_peak_rss_mib": 258,
+  "process_cpu_ms_turn": 3097,
+  "process_wall_ms_turn": 159803,
+  "process_cpu_ms_streaming": 1959,
+  "process_wall_ms_streaming": 147828,
+  "main_stream_count": 4,
+  "main_stream_event_count": 810,
+  "main_stream_chunk_count": 661,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 41,
+    "cpu_ms": 56,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1242,
+  "time_to_request_from_spawn_ms": 2769131,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793201931562.2764,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

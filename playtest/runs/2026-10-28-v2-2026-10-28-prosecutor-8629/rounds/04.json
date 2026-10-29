@@ -1,0 +1,166 @@
+{
+  "duration_api_ms": 861773,
+  "stop_reason": "end_turn",
+  "session_id": "03975b8e-12e1-4922-b557-6017858f8ded",
+  "total_cost_usd": 6.72103375,
+  "usage": {
+    "input_tokens": 164,
+    "cache_creation_input_tokens": 19292,
+    "cache_read_input_tokens": 942806,
+    "output_tokens": 9782,
+    "output_tokens_details": {
+      "thinking_tokens": 4327
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 19292,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 781,
+        "cache_read_input_tokens": 141795,
+        "cache_creation_input_tokens": 1347,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1347
+        },
+        "type": "message",
+        "model": null
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 348,
+      "thinkingTokens": 327,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00029850000000000005,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 842,
+      "outputTokens": 63390,
+      "thinkingTokens": 30716,
+      "cacheReadInputTokens": 2585501,
+      "cacheCreationInputTokens": 144822,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 144822,
+      "webSearchRequests": 0,
+      "costUSD": 6.720735250000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 1,
+  "is_error": false,
+  "num_turns": 13,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 завершён. Главное:\n\n- **Ноутбук открыт** (ключ — старый знак HEXON BIO). Интервью Харта целиком: 1998, Германия, он пьяным за рулём, погиб сослуживец Д. Колдер, вину Харт переложил на него — «официальная версия». Коул открыл файл 10.10 в 21:40; с 11-го дня Харт просит ключ от кабинета, Коул не расстаётся с папкой. «Миссис Колдер» — мать погибшего.\n- **Хищения Коула**: четыре раза по $4 200 наличными «работы Fieldworks Radio, 2009» — фирма закрыта с декабря 2007, никто на объект не приезжал. Харт, бывший монтажник Fieldworks, это и выяснял у Миллера. Плюс $3 000 «премия инженеру» 13.10.2008 = квитанция на дочь Миллера.\n- **Лея Моро — жена Тома Бернара (A-24)**: автоответчик домашнего номера «Тому и Лее»; в программу пришла «из статьи» The Signal о гибели участника. Справка о выбытии A-24 подделана («стабилен, эвакуирован, об аллергии не предупреждал») с визами Уолш, Коула и Хейла; вторые экземпляры прятала Уолш.\n- «Внешнее сообщение» тревоги записано 15.09 Коулом и женщиной с голосом Пирс; черновик «Доклад_Р» 08:12 — на Сато, Силву и Пирс.\n\n**Обвинение**: Харт — 50% (мотив теперь взаимный шантаж; улики прежние), Моро — 20% (мотив мести, нет вещественных улик с площадки), несчастный случай 10%.\n\n**Действия на раунд 5**: нажал «Решить дело» (форму посмотрю, расследование продолжу); увеличить страницы 14–16 блокнота Моро; свойства записи регистратора на отрезке 08:43–08:49 по каналам (чтобы понять, откуда «неразборчивый шум»); у компании — договор с Fieldworks на 2009 и опись папки A-24 из архива проекта; у бюро — сведения о досмотре вещей при выходе 27.10.",
+  "ttft_ms": 1799,
+  "type": "result",
+  "duration_ms": 139820,
+  "uuid": "3cead8c5-4a25-484c-a583-bdc4a1c48716",
+  "ttft_stream_ms": 1059,
+  "time_to_request_ms": 188,
+  "time_to_request_phases_ms": {
+    "other": 25,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 41,
+    "input_hooks": 3,
+    "transcript_persist": 7,
+    "tool_pool_refresh": 2,
+    "init_message": 36,
+    "engine_pickup": 1,
+    "message_prep": 2,
+    "model_config_wait": 1,
+    "autocompact": 3,
+    "query_setup": 1,
+    "model_gates": 1,
+    "tool_schema_build": 12,
+    "message_normalization": 14,
+    "client_creation": 7,
+    "request_build": 25
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 137,
+  "time_to_request_cpu_ms": 294,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 218,
+  "process_anon_mib_result": 125,
+  "process_peak_rss_mib": 246,
+  "process_cpu_ms_turn": 3451,
+  "process_wall_ms_turn": 139819,
+  "process_cpu_ms_streaming": 2110,
+  "process_wall_ms_streaming": 125745,
+  "main_stream_count": 7,
+  "main_stream_event_count": 1004,
+  "main_stream_chunk_count": 825,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 33,
+    "cpu_ms": 67,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 1059,
+  "time_to_request_from_spawn_ms": 2625199,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793201787511.5454,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

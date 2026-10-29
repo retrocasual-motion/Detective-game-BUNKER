@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 959651,
+  "stop_reason": "end_turn",
+  "session_id": "301cd52e-0135-47b0-99d6-caa7b831a9e6",
+  "total_cost_usd": 7.332596000000001,
+  "usage": {
+    "input_tokens": 130,
+    "cache_creation_input_tokens": 20276,
+    "cache_read_input_tokens": 720474,
+    "output_tokens": 13983,
+    "output_tokens_details": {
+      "thinking_tokens": 8238
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 20276,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 625,
+        "cache_read_input_tokens": 155088,
+        "cache_creation_input_tokens": 3647,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3647
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 300,
+      "thinkingTokens": 279,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002745,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 840,
+      "outputTokens": 71913,
+      "thinkingTokens": 36865,
+      "cacheReadInputTokens": 2469326,
+      "cacheCreationInputTokens": 155547,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 155547,
+      "webSearchRequests": 0,
+      "costUSD": 7.332321500000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 11,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 завершён.\n\n**Что дали поступления:**\n- Автоответчик домашнего телефона Томаса Бернара: «вы позвонили **Тому и Лее**» — Моро связана с погибшим в 2008 г. участником A-24.\n- Шесть справок о выбытии этапа A («2-й экз. — медику») лежали текстом вниз в медкабинете; справка A-24 от 06.10.2008 — «состояние стабильное, эвакуирован, предупреждений об аллергии не поступало» — с визами Уолш, Коула и Хейла, при том что экспорт фиксирует летальный исход, а копия бланка — записанную аллергию на сою.\n- На ремне Коула в момент смерти висел аварийный дубликат ключа «МЕДКАБ. · 3» — подозрение о тайном доступе Пирс в кабинет снято.\n- Конверт Уолш хранил сложенный вчетверо лист — копию бланка A-24, оказавшуюся в стопке Моро.\n- Блокнот Моро: стр. 15 — комната анкет днём после ночи тревоги, рисунок брошен на середине линии — она была в 6 м от площадки утром 13.10, а не «у себя читала».\n\n**Действия:** нажата кнопка «Решить дело» (форму прочитаю, расследование продолжу), запросы в бюро на СМЭ тела и экспертизу отрезка записи регистратора, в компанию — распоряжение о защищённом режиме; сайты the-signal-news.com и mailbridge.net; осмотр кадра «после» дня 10 и свойств страниц блокнота.\n\n**Подозреваемые:** Моро 45%, Харт 25%, Пирс 10%, несчастный случай 10%, прочие 10%. Уверенность — 60% (фон 90%).",
+  "ttft_ms": 1536,
+  "type": "result",
+  "duration_ms": 203512,
+  "uuid": "bf9d2378-29db-442a-a385-ede7c3bb05f2",
+  "ttft_stream_ms": 922,
+  "time_to_request_ms": 147,
+  "time_to_request_phases_ms": {
+    "other": 22,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 37,
+    "input_hooks": 4,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 2,
+    "init_message": 7,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 5,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 1,
+    "tool_schema_build": 13,
+    "message_normalization": 14,
+    "client_creation": 9,
+    "request_build": 18
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 97,
+  "time_to_request_cpu_ms": 160,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 215,
+  "process_anon_mib_turn_start": 128,
+  "process_rss_mib_result": 209,
+  "process_anon_mib_result": 116,
+  "process_peak_rss_mib": 225,
+  "process_cpu_ms_turn": 3828,
+  "process_wall_ms_turn": 203511,
+  "process_cpu_ms_streaming": 2671,
+  "process_wall_ms_streaming": 189984,
+  "main_stream_count": 5,
+  "main_stream_event_count": 1109,
+  "main_stream_chunk_count": 948,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 28,
+    "cpu_ms": 41,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 923,
+  "time_to_request_from_spawn_ms": 2679854,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793201841800.6257,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

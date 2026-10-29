@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 614445,
+  "stop_reason": "end_turn",
+  "session_id": "e4157431-e53c-461c-a12e-cdad25c9eaf5",
+  "total_cost_usd": 2.5718473,
+  "usage": {
+    "input_tokens": 18,
+    "cache_creation_input_tokens": 33052,
+    "cache_read_input_tokens": 1045656,
+    "output_tokens": 16284,
+    "output_tokens_details": {
+      "thinking_tokens": 7944
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 33052,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1585,
+        "cache_read_input_tokens": 130935,
+        "cache_creation_input_tokens": 4072,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 4072
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 244,
+      "thinkingTokens": 223,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00024650000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 72,
+      "outputTokens": 52422,
+      "thinkingTokens": 24043,
+      "cacheReadInputTokens": 2342964,
+      "cacheCreationInputTokens": 131785,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 131785,
+      "webSearchRequests": 0,
+      "costUSD": 2.5716007999999997,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 25,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 3 закончен: я прочитал 20 новых материалов, дописал в журнал раздел «Раунд 3» и записал 10 действий на следующий раунд. Кто был с Коулом на марше в 08:44–08:45, по-прежнему не ясно; уверенность в версии — 35%.\n\n**Что теперь установлено:**\n- **VL-31 — испытание препарата HEXON BIO, а не исследование изоляции.** Партия 0417 — «активная»: в реестре NorthCare её нет, наклейка самодельная. Партия 0418 — контроль. Этап C идёт сейчас, до него были этапы A (2008) и B (весна 2009).\n- **В 2008 году на испытании погиб участник A-24 — Томас Бернар.** У него была аллергия на сою. После смерти бумаги переписали: в подшитом бланке «аллергии нет», в справке — «эвакуирован, состояние стабильное». Справку завизировали Уолш, Коул и Хейл. Миллеру тогда выдали «премию инженеру» — 3000 наличными.\n- **Тревога 12.10 была постановкой.** На ноутбуке Коула нашлись три дубля «внешнего сообщения» от 15.09: читает женский голос, по всей видимости Пирс, мужской голос ею руководит.\n- **Коул растрачивал деньги программы.** Он снимал наличные «за обслуживание связи Fieldworks Radio в 2009», хотя фирма закрылась в 2007-м. Харт, бывший монтажник Fieldworks, видимо, это понял, и в 07:33 Коул пригрозил ему «миссис Колдер».\n- **Тайна Харта.** В полном тексте интервью Харт признаётся: в 1998 году он пьяным разбил машину, его сослуживец Д. Колдер погиб, а вину Харт свалил на него.\n- **Утром 13.10 Коул поймал Пирс.** Она отправляла данные всех трёх этапов в личный ящик e.pierce.uk@mailbridge.net. Коул ограничил ей отправку, распечатал 2 листа выписки о её действиях и набросал доклад Хейлу. В 08:41 он почему-то снял ограничение.\n- **Эти 2 листа пропали.** В папке, которую Пирс взяла у тела, их нет.\n\n**Подозреваемые:**\n\n| Кто | % | Почему |\n|---|---|---|\n| Харт | 30 | Коул его шантажировал; звуков с поста нет с 08:43:20; Харт спрятал и сжёг свою половину листа |\n| Пирс | 25 | Коул её только что разоблачил; от её кабинета до площадки 18 с; из папки пропали листы о ней |\n| Моро | 20 | возможно, вдова Бернара (в анкете он «женат», она пришла в программу «из статьи»); копия бланка с правдой об аллергии побывала у неё; говорит неправду, где была |\n| несчастный случай | 10 | ограждение было неисправно |\n| Миллер | 7 | мотив слабый |\n| Уолш, Силва, Сато | 8 | алиби по журналу сервера |\n\n**Что не сходится:**\n- **Почерк.** Журнал медкабинета и копия бланка написаны «ровным почерком с наклоном влево», как подпись «К. Уолш». Но анкеты самой Уолш — «округлым», а «ровный с наклоном влево» — у анкет Пирс. Если журнал писала не Уолш, ему нельзя доверять, в том числе тому, что в нём нет визита Моро.\n- **Время прихода Харта.** С поста он добежал бы до подножия к 08:45:40, а в обход от площадки — примерно к 08:45:50. Пришёл он в 08:47:15, полторы минуты разницы ничем не объяснены.\n\n**Действия на следующий раунд:**\n- **Почерк:** совместить бланк из папки Коула с копией; увеличить записи журнала медкабинета за 13.10 и анкеты Уолш и Пирс.\n- **Запросы в бюро:**\n  - данные терминала технической — проверить отметки Миллера у оборудования до 08:47;\n  - запрос провайдеру о содержимом ящика Пирс.\n- **Запросы в VAULTLINE:** листы учёта персонала на Пирс и Коула — хочу понять, кто такая «миссис Колдер».\n- **Письмо самой Пирс** на её личный ящик.\n- **Звонки и сайт:** домашний номер Бернара и номер Л. Миллер; открыть сайт The Signal.",
+  "ttft_ms": 3347,
+  "type": "result",
+  "duration_ms": 189412,
+  "uuid": "eb91bd40-d56d-4f41-8154-c6e0a72e4089",
+  "ttft_stream_ms": 2904,
+  "time_to_request_ms": 162,
+  "time_to_request_phases_ms": {
+    "other": 21,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 59,
+    "input_hooks": 3,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 2,
+    "init_message": 8,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 1,
+    "tool_schema_build": 12,
+    "message_normalization": 12,
+    "client_creation": 11,
+    "request_build": 16
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 111,
+  "time_to_request_cpu_ms": 178,
+  "time_to_request_major_faults": 1,
+  "process_rss_mib_turn_start": 229,
+  "process_anon_mib_turn_start": 142,
+  "process_rss_mib_result": 211,
+  "process_anon_mib_result": 119,
+  "process_peak_rss_mib": 236,
+  "process_cpu_ms_turn": 4712,
+  "process_wall_ms_turn": 189412,
+  "process_cpu_ms_streaming": 2910,
+  "process_wall_ms_streaming": 148353,
+  "main_stream_count": 9,
+  "main_stream_event_count": 1504,
+  "main_stream_chunk_count": 1284,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 51,
+    "cpu_ms": 72,
+    "major_faults": 1,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2904,
+  "time_to_request_from_spawn_ms": 2078781,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793211416683.2861,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
