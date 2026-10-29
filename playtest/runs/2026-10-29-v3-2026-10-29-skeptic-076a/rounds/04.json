@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 387822,
+  "stop_reason": "end_turn",
+  "session_id": "70f3f583-47c6-42f4-98da-9820fe84b1cb",
+  "total_cost_usd": 1.1747892000000002,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 12991,
+    "cache_read_input_tokens": 482767,
+    "output_tokens": 7542,
+    "output_tokens_details": {
+      "thinking_tokens": 4146
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 12991,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 845,
+        "cache_read_input_tokens": 127157,
+        "cache_creation_input_tokens": 1700,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1700
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 252,
+      "thinkingTokens": 231,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002505,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 58,
+      "outputTokens": 48172,
+      "thinkingTokens": 26783,
+      "cacheReadInputTokens": 1900267,
+      "cacheCreationInputTokens": 125669,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 125669,
+      "webSearchRequests": 0,
+      "costUSD": 1.1745387000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "В раунде 4 новое сузило круг подозреваемых, но решающей улики о том, что произошло на площадке, всё ещё нет. Уверенность в версии — около 30%. Дело не решено, ФИНАЛ и СТОП не писал.\n\n**Что показали новые материалы**\n- **Миллер.** Панель насосной отметила время 08:44:35, щит генератора — 08:45:30. Они в 3–4 м друг от друга, так что Миллер почти наверняка был в технической, когда шла борьба на площадке. Это при условии, что отметки нажимал он.\n- **Телефон Силвы.** PIN 0110 подошёл (день рождения его сестры Аны).\n  - В голосовом сообщении Силва пишет, что слышал разговор Пирс и Коула о записи, учениях и «дне объявления». Медик и инженер об этом знать не должны.\n  - Пирс при этом сказала про него «он не понимает», хотя он понимает по-английски. На допросе он этого не сказал.\n  - Ему нужны деньги до 14.10, а Коул отказал: 09.10 Силва написал «Adam… no».\n- **A-24.** Это Томас Бернар, 1974 года рождения, механик, женат. Дата сходится с газетным объявлением о смерти Тома Бернара 06.10.2008.\n- **Банк Front Range Savings.** Ячейка открывается двумя ключами сразу, а у Коула лежал ключ № 845.\n- **The Signal.** Редактор — Фрэнк Бейкер. Автор С. Грей, похоже, и есть Сато.\n\n**Кто остаётся без алиби на 08:44:50**\n- Пирс — около 35%: знала о постановке, Коул нашёл её утечку данных.\n- Харт — около 28%: шантаж, обгоревшая половина листа у него в кармане.\n- Моро — около 12%: нет алиби, солгала о том, где была.\n\nАлиби у Миллера, Силвы, Уолш и Сато я считаю надёжными, но алиби Силвы держится на том, что звонил с кухни именно он.\n\n**Что отправил в `actions.md`**\n- Адрес mailbridge.net, где лежит личная почта Пирс.\n- Звонки на домашний телефон Бернар, на контактный телефон Миллера и на справочную банка.\n- Ходатайство в банк о ячейке 845.\n\nЖурнал с разделом «Раунд 4» записан в `journal.md`.",
+  "ttft_ms": 2064,
+  "type": "result",
+  "duration_ms": 66158,
+  "uuid": "c41de633-9db3-4f43-bbb5-53a402cdcdee",
+  "ttft_stream_ms": 1303,
+  "time_to_request_ms": 102,
+  "time_to_request_phases_ms": {
+    "other": 15,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 31,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 1,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 8,
+    "message_normalization": 8,
+    "client_creation": 6,
+    "request_build": 11
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 51,
+  "time_to_request_cpu_ms": 112,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 229,
+  "process_anon_mib_turn_start": 142,
+  "process_rss_mib_result": 222,
+  "process_anon_mib_result": 129,
+  "process_peak_rss_mib": 253,
+  "process_cpu_ms_turn": 1534,
+  "process_wall_ms_turn": 66158,
+  "process_cpu_ms_streaming": 847,
+  "process_wall_ms_streaming": 51714,
+  "main_stream_count": 4,
+  "main_stream_event_count": 689,
+  "main_stream_chunk_count": 203,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 24,
+    "cpu_ms": 35,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1303,
+  "time_to_request_from_spawn_ms": 2481654,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793247917935.9028,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

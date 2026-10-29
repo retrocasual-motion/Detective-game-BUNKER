@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 1469950,
+  "stop_reason": "end_turn",
+  "session_id": "e6e29d06-8f9c-40d0-a966-a5f6456f6fec",
+  "total_cost_usd": 8.806359,
+  "usage": {
+    "input_tokens": 130,
+    "cache_creation_input_tokens": 10539,
+    "cache_read_input_tokens": 868503,
+    "output_tokens": 7679,
+    "output_tokens_details": {
+      "thinking_tokens": 4967
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 10539,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 561,
+        "cache_read_input_tokens": 179032,
+        "cache_creation_input_tokens": 414,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 414
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 328,
+      "thinkingTokens": 307,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002885,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 1004,
+      "outputTokens": 85035,
+      "thinkingTokens": 47197,
+      "cacheReadInputTokens": 4076482,
+      "cacheCreationInputTokens": 176258,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 176258,
+      "webSearchRequests": 0,
+      "costUSD": 8.8060705,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 7,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 6 завершён. Журнал дописан, действия записаны.\n\n**Что дал раунд:** почта Пирс (пароль «Toffy» — первый питомец из записи Сато) открылась и оказалась не разоблачением программы, а **промышленным шпионажем**: с августа 2009 Пирс по договору с Sentinel Labs (Дж. Мерсер) продавала данные этапов A, B, C стандартным экспортом с узла, по их спецификации выбила «слот участника с ограниченным английским» (Силва), а остаток платы ждала за «досье вещества» из архива HEXON, запертого номером активной партии. Это делает её мотив утром 13.10 (Коул раскрыл утечку и писал доклад Хейлу) полноценным — развилка Моро/Пирс не закрыта почтой, а наоборот, уравновешена по мотиву.\n\n**Решаю по возможности и поведению:** Моро — 10 м от площадки, ложь о месте, обмолвка «подумала, Адам спешит», трёхминутная пауза Коула у её двери; Пирс — 55 м, сводка с терминала в 08:43:10, одно подтверждённое посещение Коула. Моро 55%, Пирс 25%.\n\n**Последняя проверка перед заключением:** прослушать характер шагов в 08:44:46 (ровные/лёгкие — кто начал спускаться), «возню» 08:44:52 (есть ли голоса) и неопознанный шум 08:45:40; для полноты рамки открыть sentinel-labs.net. В следующем раунде — `РЕШИТЬ | дело | продолжить`.",
+  "ttft_ms": 4467,
+  "type": "result",
+  "duration_ms": 152918,
+  "uuid": "d131b7f1-f637-42d3-9371-8bfbd4a1d33c",
+  "ttft_stream_ms": 2752,
+  "time_to_request_ms": 96,
+  "time_to_request_phases_ms": {
+    "other": 15,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 23,
+    "input_hooks": 3,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 1,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 1,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 10,
+    "message_normalization": 10,
+    "client_creation": 5,
+    "request_build": 11
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 45,
+  "time_to_request_cpu_ms": 105,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 233,
+  "process_anon_mib_turn_start": 145,
+  "process_rss_mib_result": 221,
+  "process_anon_mib_result": 129,
+  "process_peak_rss_mib": 257,
+  "process_cpu_ms_turn": 2106,
+  "process_wall_ms_turn": 152917,
+  "process_cpu_ms_streaming": 979,
+  "process_wall_ms_streaming": 119441,
+  "main_stream_count": 5,
+  "main_stream_event_count": 756,
+  "main_stream_chunk_count": 109,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 17,
+    "cpu_ms": 27,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 2753,
+  "time_to_request_from_spawn_ms": 3482769,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793248919079.4834,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

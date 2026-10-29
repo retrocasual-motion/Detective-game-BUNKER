@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 1072619,
+  "stop_reason": "end_turn",
+  "session_id": "e6e29d06-8f9c-40d0-a966-a5f6456f6fec",
+  "total_cost_usd": 6.474038749999999,
+  "usage": {
+    "input_tokens": 162,
+    "cache_creation_input_tokens": 36281,
+    "cache_read_input_tokens": 758840,
+    "output_tokens": 18637,
+    "output_tokens_details": {
+      "thinking_tokens": 10948
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 36281,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 796,
+        "cache_read_input_tokens": 144893,
+        "cache_creation_input_tokens": 859,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 859
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 328,
+      "thinkingTokens": 307,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002885,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 614,
+      "outputTokens": 64199,
+      "thinkingTokens": 36684,
+      "cacheReadInputTokens": 1625521,
+      "cacheCreationInputTokens": 142564,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 142564,
+      "webSearchRequests": 0,
+      "costUSD": 6.473750249999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 23,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 3 завершён. Журнал дописан, действия записаны.\n\n**Что изменилось:**\n\n- **Двое получили алиби.** Миллер — отметки панелей насосной и щита в 08:44:35 и 08:45:30. Харт — в 08:44:20–31 на радиопосту была короткая ручная перестройка, окончившаяся на «Лондоне» (Всемирная служба): в интервью Харт говорит, что в плохие дни «ловит Лондон»; автоматический режим ПОИСК выглядит иначе (25–50 с с остановками и возвратом на прежнюю станцию). В 137 м от площадки за 15 секунд не оказаться.\n- **Дело 2008 года раскрылось.** A-24 — участник этапа A, умер на 15-й день (06.10.2008) — совпадает с некрологом Тома Бернара. Настоящий медлист A-24 (копия Уолш): тяжёлая аллергия на молоко, «допущен с ограничением». «Оригинал» в папке Коула — переписан: «аллергия — нет». Через неделю после смерти Коул выплатил инженеру 3000 наличными, а в 2009 проводил по 4200 наличными закрытой с 2007 года Fieldworks Radio — присвоение.\n- **Папка A-24 спрятана в комнате анкет** — зоне Моро — с графитовой пылью на копии; на последней странице её блокнота — лицо с фотографии A-24. Моро пришла в программу «из статьи» The Signal о гибели участника.\n- **Пирс** сливала данные этапов A/B/C по маршруту 14 и входила в личный ящик; Коул утром ограничил её, но в 08:41:05 ограничение снял — конфликт мог быть исчерпан. Распечатка о ней (08:06) из вещей исчезла.\n\n**Подозреваемые:** Моро 40%, Пирс 35%, несчастный случай 10%. Запросил у VAULTLINE данные A-24 и лист учёта Пирс, у бюро — перевёрнутые листы из медкабинета и сеанс Уолш; открываю mailbridge.net, the-signal-news.com, страницу ячеек Front Range Savings, NorthCare; пробую «архив проекта» партией 0417; прослушиваю 08:44:20.",
+  "ttft_ms": 5113,
+  "type": "result",
+  "duration_ms": 326571,
+  "uuid": "7ed4b466-f3e5-41b0-a51a-f0794db096a0",
+  "ttft_stream_ms": 2459,
+  "time_to_request_ms": 102,
+  "time_to_request_phases_ms": {
+    "other": 15,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 29,
+    "input_hooks": 3,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 1,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 4,
+    "autocompact": 1,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 9,
+    "message_normalization": 7,
+    "client_creation": 6,
+    "request_build": 10
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 51,
+  "time_to_request_cpu_ms": 112,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 229,
+  "process_anon_mib_turn_start": 142,
+  "process_rss_mib_result": 217,
+  "process_anon_mib_result": 125,
+  "process_peak_rss_mib": 251,
+  "process_cpu_ms_turn": 3388,
+  "process_wall_ms_turn": 326571,
+  "process_cpu_ms_streaming": 2143,
+  "process_wall_ms_streaming": 288678,
+  "main_stream_count": 6,
+  "main_stream_event_count": 1914,
+  "main_stream_chunk_count": 265,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 14,
+    "cpu_ms": 31,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 2460,
+  "time_to_request_from_spawn_ms": 2892757,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793248329072.5974,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 600162,
+  "stop_reason": "end_turn",
+  "session_id": "30d776f3-1447-40e9-901e-e67cb2bf2a44",
+  "total_cost_usd": 2.8673540000000006,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 6315,
+    "cache_read_input_tokens": 426434,
+    "output_tokens": 2622,
+    "output_tokens_details": {
+      "thinking_tokens": 67
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6315,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 673,
+        "cache_read_input_tokens": 144742,
+        "cache_creation_input_tokens": 1728,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1728
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 337,
+      "thinkingTokens": 316,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000293,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 78,
+      "outputTokens": 56665,
+      "thinkingTokens": 25592,
+      "cacheReadInputTokens": 2937325,
+      "cacheCreationInputTokens": 143248,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 143248,
+      "webSearchRequests": 0,
+      "costUSD": 2.8670610000000005,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 закончен. Раздел «Раунд 5» дописан в `journal.md`, три попытки пароля к почте Пирс записаны в `actions.md`.\n\n**Что дал раунд — предыстория стала ясна:**\n- **Банк подтвердил взнос Миллеру.** 13.10.2008 Коул внёс 3 000 наличными на счёт Л. Миллер.\n- **Ячейка № 845 — страховка Коула.** В ней два вложения:\n  - акт от 14.11.2008: Хейл передал Коулу дела всех шести участников этапа A, включая A-24; медицинские листы сверила Уолш;\n  - микрокассета «06.10.08» — телефонный разговор, видимо Коула и Хейла (по описаниям голосов). Первый голос сообщает, что участник умер на объекте. Второй отвечает: «Объявлять не будем… Стало плохо в дороге… Семье — эвакуирован. Справку завизирую».\n- **Вывод.** Гибель Тома Бернара скрыли по указанию Хейла. Уолш переписала медицинский лист, Миллер молчал за деньги, Коул хранил запись разговора.\n- **Почта Пирс пока закрыта.** Экспорт ящика пришёл, но зашифрован паролем владельца, а сбросить пароль сервис не может.\n\n**Главный вопрос не решён.** Кто был на площадке в 08:44:52, по-прежнему неизвестно. Подозреваемые прежние: Пирс и Моро — по 40%, несчастный случай в борьбе — 12%, остальные — 8%. Уверенность в версии — 50%.\n\n**Следующий шаг.** Ввожу пароль к экспорту ящика: Toffi, toffi и Тоффи — имя первой собаки Пирс из записи на диктофоне. Если почта откроется, она может показать, кому Пирс пересылала данные и была ли связана с Моро или Сато.",
+  "ttft_ms": 3276,
+  "type": "result",
+  "duration_ms": 31655,
+  "uuid": "30838805-446e-4f04-a5bd-eb46efa0329d",
+  "ttft_stream_ms": 2195,
+  "time_to_request_ms": 106,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 2,
+    "resume_other": 1,
+    "process_user_input": 4,
+    "input_attachments": 30,
+    "input_hooks": 5,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 0,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 9,
+    "message_normalization": 10,
+    "client_creation": 5,
+    "request_build": 11
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 55,
+  "time_to_request_cpu_ms": 115,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 232,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 217,
+  "process_anon_mib_result": 124,
+  "process_peak_rss_mib": 256,
+  "process_cpu_ms_turn": 1376,
+  "process_wall_ms_turn": 31654,
+  "process_cpu_ms_streaming": 541,
+  "process_wall_ms_streaming": 17625,
+  "main_stream_count": 3,
+  "main_stream_event_count": 423,
+  "main_stream_chunk_count": 65,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 23,
+    "cpu_ms": 34,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2196,
+  "time_to_request_from_spawn_ms": 2737561,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793248173810.446,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

@@ -1,0 +1,167 @@
+{
+  "duration_api_ms": 137865,
+  "stop_reason": "end_turn",
+  "session_id": "d8d01972-7093-4ab7-96da-5ca32620e2e0",
+  "total_cost_usd": 0.4889219,
+  "usage": {
+    "input_tokens": 28,
+    "cache_creation_input_tokens": 67169,
+    "cache_read_input_tokens": 456719,
+    "output_tokens": 17426,
+    "output_tokens_details": {
+      "thinking_tokens": 8782
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 67169,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 939,
+        "cache_read_input_tokens": 67262,
+        "cache_creation_input_tokens": 3095,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3095
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 267,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000258,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 246,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 28,
+      "outputTokens": 17426,
+      "cacheReadInputTokens": 456719,
+      "cacheCreationInputTokens": 67169,
+      "webSearchRequests": 0,
+      "costUSD": 0.48866390000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 8782,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 67169,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 58,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Действия раунда 1 записаны в `actions.md`, раздел «Раунд 1» дописан в `journal.md`. Дело я пока не решил: уверенность в версии — около 15%.\n\nВсе материалы я прочитал. Ответы на действия придут к следующему раунду.\n\nЧто я заказал:\n- **Ходатайство** в бюро: приложение № 7, выгрузка журналов сервера объекта за 13.10.2009.\n- **Листание пачек** документации: П-02, П-03, П-04, П-05, П-06 и П-09.\n- **Увеличение** двух материалов: бланка из клапана папки Коула и картинки учётной записи на ноутбуке.\n- **Звонки:** на горячую линию NorthCare (справки по партиям комплекса) и поставщику Colton Supply (проверить заказ плиты).\n- **Сайты:** vaultline-program.com, hexon-bio.com и fieldworks-radio.com.\n- **Архив газеты:** выпуск за 07.10.2008 — проверить, не связана ли с прошлым заездом смерть Тома Бернара.\n\nГлавное из прочитанного:\n- **Падение.** Радиопост записал возню на лестнице в 08:44:52 и удар в 08:45:02. Эксперт умысла в креплении не нашёл, но возня делает случайность маловероятной.\n- **Плита.** Миллер заявил, что заменил плиту 10.10, а эксперт нашёл старую плиту со старой трещиной. Значит, отчёт о замене, скорее всего, ложный.\n- **Тревога.** Сообщение 12.10 об «ударе» читал женский голос, похожий на голос Э. Пирс. Реальный удар по соседнему объекту был только 13.10 около 10:40. Выходит, тревога была постановкой. Хейл заказал такси «немедленно, аэропорт» в 09:34, то есть до удара.\n- **Связь с HEXON BIO.** Бланк из папки Коула — формы HEXON BIO, от 22.09.2008, с подписью К. Уолш. Газета называет Хейла главой HEXON BIO, а не только куратором программы.\n- **Шантаж.** Коул шантажировал Н. Харта (запись 07:33:55). Нижняя половина листа с его интервью лежала у Харта в кармане, верхняя — на площадке.\n\nОсновные подозреваемые сейчас: Э. Пирс (около 30%), Н. Харт (около 20%), Г. Силва и Д. Миллер (по 12%).\n\nДва вывода — внешние: что смерть Тома Бернара в 2008 году связана с прошлым заездом, и что 22.09.2008 — дата прошлого заезда. В материалах дела этого нет.",
+  "ttft_ms": 1749,
+  "type": "result",
+  "duration_ms": 141334,
+  "uuid": "45e3bd90-2117-4633-ab0c-a4b22b9a3315",
+  "ttft_stream_ms": 1040,
+  "time_to_request_ms": 470,
+  "time_to_request_phases_ms": {
+    "other": 134,
+    "system_prompt": 1,
+    "resume_other": 1,
+    "process_user_input": 69,
+    "input_attachments": 42,
+    "input_hooks": 6,
+    "transcript_persist": 3,
+    "tool_pool_refresh": 6,
+    "init_message": 22,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 123,
+    "autocompact": 12,
+    "query_setup": 1,
+    "model_gates": 4,
+    "tool_schema_build": 31,
+    "message_normalization": 1,
+    "client_creation": 5,
+    "request_build": 7
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 169,
+  "time_to_request_cpu_ms": 177,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 182,
+  "process_anon_mib_turn_start": 96,
+  "process_rss_mib_result": 206,
+  "process_anon_mib_result": 112,
+  "process_peak_rss_mib": 208,
+  "process_cpu_ms_turn": 3726,
+  "process_wall_ms_turn": 141331,
+  "process_cpu_ms_streaming": 2387,
+  "process_wall_ms_streaming": 118095,
+  "main_stream_count": 14,
+  "main_stream_event_count": 1572,
+  "main_stream_chunk_count": 465,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 35,
+    "cpu_ms": 13,
+    "major_faults": 0
+  },
+  "first_content_frame_ms": 1040,
+  "time_to_request_from_spawn_ms": 2141349,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793247574507.0664,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

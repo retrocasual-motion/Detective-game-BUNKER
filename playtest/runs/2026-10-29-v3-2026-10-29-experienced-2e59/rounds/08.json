@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 1682846,
+  "stop_reason": "end_turn",
+  "session_id": "e6e29d06-8f9c-40d0-a966-a5f6456f6fec",
+  "total_cost_usd": 10.017035,
+  "usage": {
+    "input_tokens": 130,
+    "cache_creation_input_tokens": 8604,
+    "cache_read_input_tokens": 933602,
+    "output_tokens": 7467,
+    "output_tokens_details": {
+      "thinking_tokens": 95
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 8604,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 744,
+        "cache_read_input_tokens": 190935,
+        "cache_creation_input_tokens": 945,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 945
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 328,
+      "thinkingTokens": 307,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002885,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 1264,
+      "outputTokens": 95024,
+      "thinkingTokens": 47912,
+      "cacheReadInputTokens": 5916266,
+      "cacheCreationInputTokens": 188692,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 188692,
+      "webSearchRequests": 0,
+      "costUSD": 10.0167465,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 8 завершён. Заключение написано в `journal.md` (разделы «Раунд 8» и «Заключение», по восьми пунктам формы с указанием материалов), в `actions.md` отправлен `ФИНАЛ | заключение | см. журнал` с краткой сводкой.\n\n**Суть заключения:**\n\n1. **Что произошло.** Коул погиб 13.10.2009 в 08:45:02, упав с верхней площадки восточной лестницы в ходе борьбы за бумаги со вторым человеком (разорванный лист интервью Харта, «возня» на записи, уход наверху по коридору). Терминальные и иные алиби исключают Уолш, Силву, Миллера, Харта и Сато; без алиби — Моро и Пирс. Основная версия — **Лея Моро**, вдова участника A-24 Томаса Бернара (автоответчик «Том и Лея»), скрывшая связь при наборе, хранившая дело A-24 в своей комнате анкет в 6 м от площадки и давшая ложные показания (~55–65%). Альтернатива — Пирс, которую Коул тем утром разоблачил (~25%).\n2. **Умысел** не доказан — внезапная ссора.\n3. **Дефект ограждения** — решающий: трещина с дня 3, закрытие лестницы отклонил Коул, замена не выполнена, отчёт Миллера ложен.\n4. **Группу запер офис** — команда 09:24:51 после известия о гибели; Хейл бежал и погиб, снять режим было некому.\n5. **Программа** — слепое испытание препарата HEXON BIO (партии 0417/0418) под видом изоляции, с инсценированной тревогой.\n6. **A-24** умер 06.10.2008 от реакции при известной медику аллергии на молоко.\n7. **Сокрытие** — по приказу Хейла (кассета из ячейки 845), исполнили Коул и Уолш; семье — «эвакуирован».\n8. **Утечка** — Пирс продавала данные этапов A, B, C компании Sentinel Labs.\n\nДальнейших действий не требуется: игра завершается отправкой заключения.",
+  "ttft_ms": 4956,
+  "type": "result",
+  "duration_ms": 157578,
+  "uuid": "474c8118-4239-40ad-b1b0-61db2de928d2",
+  "ttft_stream_ms": 2551,
+  "time_to_request_ms": 97,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 8,
+    "input_attachments": 17,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 4,
+    "engine_pickup": 2,
+    "message_prep": 0,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 9,
+    "message_normalization": 11,
+    "client_creation": 5,
+    "request_build": 13
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 46,
+  "time_to_request_cpu_ms": 104,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 214,
+  "process_anon_mib_result": 122,
+  "process_peak_rss_mib": 256,
+  "process_cpu_ms_turn": 2260,
+  "process_wall_ms_turn": 157577,
+  "process_cpu_ms_streaming": 1180,
+  "process_wall_ms_streaming": 126682,
+  "main_stream_count": 5,
+  "main_stream_event_count": 2032,
+  "main_stream_chunk_count": 171,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 10,
+    "cpu_ms": 19,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 2552,
+  "time_to_request_from_spawn_ms": 3701422,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793249137734.6,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

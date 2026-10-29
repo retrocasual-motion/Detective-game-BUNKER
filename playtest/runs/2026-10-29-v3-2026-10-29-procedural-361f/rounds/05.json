@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 492921,
+  "stop_reason": "end_turn",
+  "session_id": "2cf15425-5c24-4432-8f17-db513d450d42",
+  "total_cost_usd": 2.6619425999999997,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 6478,
+    "cache_read_input_tokens": 400106,
+    "output_tokens": 3086,
+    "output_tokens_details": {
+      "thinking_tokens": 262
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6478,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 960,
+        "cache_read_input_tokens": 135887,
+        "cache_creation_input_tokens": 1921,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1921
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 74,
+      "outputTokens": 51650,
+      "thinkingTokens": 23448,
+      "cacheReadInputTokens": 2758513,
+      "cacheCreationInputTokens": 134586,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 134586,
+      "webSearchRequests": 0,
+      "costUSD": 2.6616865999999995,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 263,
+      "thinkingTokens": 242,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00025600000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "В этом раунде я нажал «Решить дело» и сразу подтвердил переход к форме заключения. Назад пути нет: новые материалы больше не придут, а свою главную подозреваемую, Моро, я ставлю на площадку только методом исключения. Прямого документа, что там была именно она, нет. В следующем раунде появится форма, на её пункты я отвечу строкой ФИНАЛ.\n\n**Что пришло в этом раунде**\n- **Сейфовая ячейка № 845 Коула** (к ней подходил ключ из его куртки):\n  - микрокассета с надписью «06.10.08» — это день смерти Томаса Бернара. Один голос (похож на Коула) докладывает: «умер… реакция». Другой (похож на Хейла) отвечает: «Объявлять не будем… Стало плохо в дороге… Семье — эвакуирован. Справку завизирую». Голоса по записи не названы, это моё опознание;\n  - акт передачи дел прошлого заезда от 14.11.2008: Хейл передал папки Коулу, медицинские листы «сверены» Уолш. Похоже, тогда же настоящую форму Бернара с аллергией заменили «чистой». Уолш сохранила копию настоящей в своём конверте «22.09.08»: на нём виден след листа, сложенного вчетверо.\n- **Рисунок Моро и фото Бернара.** Рисунок бородатого мужчины из блокнота Моро совпал с фото из папки A-24: по заключению осмотра, это очень похоже на одного человека. Вместе с автоответчиком («Тому и Лее») это подтверждает, что Моро — вдова Бернара.\n- **Отказ банка** по квитанции на 3 000 Миллеру: не указан вид договора и его номер. Повторять не стал: этот расход уже есть в отчёте Коула о расходах.\n\n**Почему я решил закончить сейчас**\n- **Алиби.** У Харта, Миллера, Силвы, Уолш и Сато они подтверждены терминалами и записью радиопоста.\n- **Моро.** В момент падения она была в комнате анкет, в 6 м от площадки, и солгала о том, где находилась. Теперь мотив подтверждён документами: смерть её мужа скрыли Коул и Хейл.\n- **Пирс.** Остаётся второй версией: у неё есть мотив и нет алиби. Она забрала папку Коула у тела, а распечатанная Коулом выписка о её отправках данных наружу из этой папки пропала.\n\n**Расклад:** Моро — 65%, Пирс — 18%, несчастный случай или другое — 8%, Харт — 2%, остальные — 7%. Уверенность в версии — 65%.",
+  "ttft_ms": 1273,
+  "type": "result",
+  "duration_ms": 33191,
+  "uuid": "87821609-165a-432f-8d34-0484a4fb430d",
+  "ttft_stream_ms": 784,
+  "time_to_request_ms": 105,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 3,
+    "input_attachments": 30,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 0,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 9,
+    "message_normalization": 10,
+    "client_creation": 6,
+    "request_build": 12
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 55,
+  "time_to_request_cpu_ms": 116,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 232,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 221,
+  "process_anon_mib_result": 128,
+  "process_peak_rss_mib": 256,
+  "process_cpu_ms_turn": 1530,
+  "process_wall_ms_turn": 33190,
+  "process_cpu_ms_streaming": 923,
+  "process_wall_ms_streaming": 26536,
+  "main_stream_count": 3,
+  "main_stream_event_count": 480,
+  "main_stream_chunk_count": 350,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 23,
+    "cpu_ms": 35,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 784,
+  "time_to_request_from_spawn_ms": 2623910,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793248060188.0217,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

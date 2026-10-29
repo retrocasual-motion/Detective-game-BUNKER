@@ -1,0 +1,167 @@
+{
+  "duration_api_ms": 287697,
+  "stop_reason": "end_turn",
+  "session_id": "30d776f3-1447-40e9-901e-e67cb2bf2a44",
+  "total_cost_usd": 1.2669192000000002,
+  "usage": {
+    "input_tokens": 38,
+    "cache_creation_input_tokens": 76202,
+    "cache_read_input_tokens": 664891,
+    "output_tokens": 26194,
+    "output_tokens_details": {
+      "thinking_tokens": 14428
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 76202,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1178,
+        "cache_read_input_tokens": 74119,
+        "cache_creation_input_tokens": 5305,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 5305
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 337,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000293,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 316,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 38,
+      "outputTokens": 26194,
+      "cacheReadInputTokens": 664891,
+      "cacheCreationInputTokens": 76202,
+      "webSearchRequests": 0,
+      "costUSD": 1.2666262000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 14428,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 76202,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 60,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 1 закончен. Все материалы в `case/` прочитаны, раздел «Раунд 1» дописан в `journal.md`, 23 действия записаны в `actions.md`.\n\n**Что видно уже сейчас (подробно — в журнале):**\n- **Падение не похоже на чистую случайность.** Регистратор радиопоста записал: в 08:44:52 на площадке возня и металлический скрежет, в 08:45:02 удар. После этого на лестнице тихо. Значит, наверху был второй человек, и вниз по лестнице он не спускался — ушёл верхним коридором.\n- **Ремонт ограждения, похоже, не делали.** В отчёте Миллера от 10.10 сказано, что плиту заменили на новую. На кадрах 13.10 — старая окисленная трещина и старые анкеры. У поставщика указан телефон с кодом +7 495: это код Москвы (внешнее знание), для Колорадо странно.\n- **Тревога 12.10 выглядит постановкой.** «Внешнее сообщение» о нанесённом ударе прозвучало 12.10. Настоящий удар случился 13.10 около 10:40. Голос сообщения по описанию совпадает с голосом Пирс.\n- **Офис мог сам закрыть объект.** В 09:10 офис уже говорил «внешняя обстановка, защищённый режим», хотя удара ещё не было. В 09:34 Хейл заказал такси «немедленно, в аэропорт».\n- **Коул шантажировал Харта.** В 07:33 у окна поста звучит: «Харт, ты же не хочешь, чтобы миссис Колдер об этом узнала?» Психологическое интервью Харта нашли разорванным: верхняя половина — на площадке, нижняя, обгоревшая, — в кармане Харта.\n- **Харт, вероятно, не успевал на площадку.** В 08:44:20–31 кто-то крутил приёмник на посту. От поста до площадки не меньше 40 секунд бегом, а возня началась через 21 секунду.\n- **Три показания расходятся с материалами:**\n  - Пирс сдала оба ключа, включая аварийный дубликат, который у медика «пропал».\n  - Сато говорит, что спала, но ночью у двери узла были шаги и сигналы кодового замка, а её ручку-диктофон нашли там же.\n  - Моро, судя по всему, была не в жилом блоке, а в комнате анкет — в 6 м от площадки.\n\n**Подозреваемые:** главного пока нет. Пирс — 20%; Силва, Моро и Миллер — по 15%; Харт — 10%; Уолш и Сато — по 5%; несчастный случай или другое — 15%. Уверенность в версии — 30%.\n\n**Что запрошено на этот раунд:**\n- в бюро — журналы сервера за 13.10 (приложение № 7);\n- три сайта: компании, HEXON BIO и подрядчика по связи;\n- PIN телефона 0110 (день рождения Аны, сестры Силвы);\n- листание пачек П-02, П-04, П-06, П-09;\n- совмещение двух половин листа;\n- свойства кадра от 10.10;\n- увеличение ключей, квитанции Миллера и коробок с комплексом;\n- прослушивание записи радиопоста с 08:45:40;\n- звонки на горячую линию производителя комплекса и поставщику плиты.",
+  "ttft_ms": 2653,
+  "type": "result",
+  "duration_ms": 291887,
+  "uuid": "e907450a-bb12-4b15-803b-2a5efdf4cf63",
+  "ttft_stream_ms": 2420,
+  "time_to_request_ms": 366,
+  "time_to_request_phases_ms": {
+    "other": 53,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 35,
+    "input_attachments": 25,
+    "input_hooks": 13,
+    "transcript_persist": 19,
+    "tool_pool_refresh": 4,
+    "init_message": 16,
+    "engine_pickup": 1,
+    "message_prep": 8,
+    "model_config_wait": 126,
+    "autocompact": 3,
+    "query_setup": 4,
+    "model_gates": 1,
+    "tool_schema_build": 30,
+    "message_normalization": 8,
+    "client_creation": 6,
+    "request_build": 13
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 103,
+  "time_to_request_cpu_ms": 157,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 196,
+  "process_anon_mib_turn_start": 109,
+  "process_rss_mib_result": 210,
+  "process_anon_mib_result": 116,
+  "process_peak_rss_mib": 230,
+  "process_cpu_ms_turn": 4622,
+  "process_wall_ms_turn": 291887,
+  "process_cpu_ms_streaming": 2763,
+  "process_wall_ms_streaming": 242471,
+  "main_stream_count": 19,
+  "main_stream_event_count": 2057,
+  "main_stream_chunk_count": 435,
+  "input_attachments_detail": {
+    "slowest_producer": "queued_commands",
+    "slowest_producer_ms": 14,
+    "cpu_ms": 12,
+    "major_faults": 0
+  },
+  "first_content_frame_ms": 2420,
+  "time_to_request_from_spawn_ms": 2141165,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793247574368.7097,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

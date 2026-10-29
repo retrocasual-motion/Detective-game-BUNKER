@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 514654,
+  "stop_reason": "end_turn",
+  "session_id": "597e4440-27c9-4a44-a66b-a39f94d344b8",
+  "total_cost_usd": 1.5878874,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 5437,
+    "cache_read_input_tokens": 601164,
+    "output_tokens": 2904,
+    "output_tokens_details": {
+      "thinking_tokens": 609
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 5437,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 733,
+        "cache_read_input_tokens": 152699,
+        "cache_creation_input_tokens": 1019,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1019
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 345,
+      "thinkingTokens": 324,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000297,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 74,
+      "outputTokens": 65478,
+      "thinkingTokens": 35277,
+      "cacheReadInputTokens": 3305424,
+      "cacheCreationInputTokens": 150530,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 150530,
+      "webSearchRequests": 0,
+      "costUSD": 1.5875904,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 7,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 7 закончен. Журнал дописан, в `actions.md` стоит одна строка: `РЕШИТЬ | дело | продолжить`. Доказательств против одного человека у меня нет, версия остаётся на уровне 50%.\n\nЧто дала ячейка 845 в банке Front Range Savings:\n- **Арендатор — Коул.** Договор от 20.10.2008, оплачен наличными, то есть через две недели после смерти участника A-24.\n- **Акт передачи дел этапа A от 14.11.2008.** Он перечисляет дела A-11…A-31, включая A-24. Медицинские листы сверила Уолш, принял Коул, передал Хейл.\n- **Микрокассета «06.10.08».** Сиплый мужской голос (похож на Коула) сообщает, что участник умер на объекте, реакция. Низкий голос по телефону (по смыслу похож на Хейла) отвечает: «Объявлять не будем… Стало плохо в дороге… Семье — эвакуирован. Справку завизирую». Коул, по-видимому, хранил запись как страховку.\n\nЭто подтверждает, что смерть A-24 скрыли по приказу Хейла и что Коул и Уолш об этом знали. Но кто именно столкнул Коула, запись не говорит.\n\nПодозреваемые прежние:\n- **Моро:** 45%. Вероятная вдова A-24. Ключ от кабинета Коула, бумаги про A-24 в комнате анкет, близость к лестнице. Её родство с Бернаром я вывожу только из автоответчика «Тому и Лее».\n- **Пирс:** 22%.\n- **Несчастный случай или другое:** 17%.\n- **Харт:** 8%.\n- **Уолш, Силва, Сато:** вместе 6%.\n- **Миллер:** 2%.\n\nОстальные отсеяны по времени: терминалы фиксируют их на других этажах.\n\nБольше источников я не вижу: личная переписка сотрудников следствием не запрашивалась. Поэтому нажимаю «Решить дело»; форму заключения и ответ архива получу в следующем раунде.",
+  "ttft_ms": 1819,
+  "type": "result",
+  "duration_ms": 28131,
+  "uuid": "70704edc-2616-40bd-9a28-f529a67e9189",
+  "ttft_stream_ms": 1144,
+  "time_to_request_ms": 113,
+  "time_to_request_phases_ms": {
+    "other": 15,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 36,
+    "input_hooks": 3,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 1,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 10,
+    "message_normalization": 11,
+    "client_creation": 5,
+    "request_build": 13
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 63,
+  "time_to_request_cpu_ms": 125,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 232,
+  "process_anon_mib_turn_start": 145,
+  "process_rss_mib_result": 220,
+  "process_anon_mib_result": 127,
+  "process_peak_rss_mib": 256,
+  "process_cpu_ms_turn": 1295,
+  "process_wall_ms_turn": 28131,
+  "process_cpu_ms_streaming": 520,
+  "process_wall_ms_streaming": 15587,
+  "main_stream_count": 4,
+  "main_stream_event_count": 429,
+  "main_stream_chunk_count": 80,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 29,
+    "cpu_ms": 40,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1144,
+  "time_to_request_from_spawn_ms": 2664954,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793248101264.7644,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

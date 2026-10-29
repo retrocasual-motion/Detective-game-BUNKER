@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 491216,
+  "stop_reason": "end_turn",
+  "session_id": "597e4440-27c9-4a44-a66b-a39f94d344b8",
+  "total_cost_usd": 1.4769670000000001,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 4742,
+    "cache_read_input_tokens": 580861,
+    "output_tokens": 1614,
+    "output_tokens_details": {
+      "thinking_tokens": 182
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4742,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 337,
+        "cache_read_input_tokens": 147620,
+        "cache_creation_input_tokens": 661,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 661
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 345,
+      "thinkingTokens": 324,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000297,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 66,
+      "outputTokens": 62574,
+      "thinkingTokens": 34668,
+      "cacheReadInputTokens": 2704260,
+      "cacheCreationInputTokens": 145093,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 145093,
+      "webSearchRequests": 0,
+      "costUSD": 1.4766700000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 6 закончен. Новых материалов не было, и дело пока не решено, уверенность в версии — по-прежнему около 45%.\n\nБанк отклонил моё ходатайство по ячейке №845: в файле L130 нет такой строки, как я её процитировал. Карточка должна быть точной строкой материала. Я повторил запрос с настоящей строкой сайта банка «Сейфовые ячейки: доступ и продление» в качестве «Прошу». В качестве основания остался ключ из описи кабинета Коула: «ключ плоский металлический, штамп DO NOT DUPLICATE, номер 845».\n\nПодозреваемые прежние: Моро 45%, Пирс 22%, несчастный случай или другое 17%, Харт 8%, Уолш, Силва и Сато вместе 6%, Миллер 2%. Если ответ банка ничего не добавит, в следующем раунде нажму «Решить дело».\n\nЖурнал и `actions.md` обновлены.",
+  "ttft_ms": 1566,
+  "type": "result",
+  "duration_ms": 17640,
+  "uuid": "cb977313-bfd0-47b9-9987-ff2828759515",
+  "ttft_stream_ms": 1143,
+  "time_to_request_ms": 107,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 2,
+    "resume_other": 1,
+    "process_user_input": 3,
+    "input_attachments": 31,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 9,
+    "message_normalization": 9,
+    "client_creation": 6,
+    "request_build": 13
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 56,
+  "time_to_request_cpu_ms": 119,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 197,
+  "process_anon_mib_turn_start": 110,
+  "process_rss_mib_result": 212,
+  "process_anon_mib_result": 120,
+  "process_peak_rss_mib": 222,
+  "process_cpu_ms_turn": 1015,
+  "process_wall_ms_turn": 17639,
+  "process_cpu_ms_streaming": 308,
+  "process_wall_ms_streaming": 8042,
+  "main_stream_count": 4,
+  "main_stream_event_count": 256,
+  "main_stream_chunk_count": 50,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 24,
+    "cpu_ms": 36,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1143,
+  "time_to_request_from_spawn_ms": 2646271,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793248081375.9724,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
