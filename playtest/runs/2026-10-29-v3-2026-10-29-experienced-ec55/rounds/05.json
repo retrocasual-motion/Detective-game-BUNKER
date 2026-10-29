@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 494336,
+  "stop_reason": "end_turn",
+  "session_id": "cba9192a-29ec-4089-aa6a-44a383434229",
+  "total_cost_usd": 2.8019662000000003,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 12889,
+    "cache_read_input_tokens": 654873,
+    "output_tokens": 7377,
+    "output_tokens_details": {
+      "thinking_tokens": 2781
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 12889,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1195,
+        "cache_read_input_tokens": 136736,
+        "cache_creation_input_tokens": 2345,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2345
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 235,
+      "thinkingTokens": 214,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00024200000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 94,
+      "outputTokens": 51626,
+      "thinkingTokens": 20821,
+      "cacheReadInputTokens": 3409781,
+      "cacheCreationInputTokens": 135859,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 135859,
+      "webSearchRequests": 0,
+      "costUSD": 2.8017242,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 12,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 записан: раздел «Раунд 5» есть в `journal.md`, 7 действий — в `actions.md`. Главное: алиби Харта по радио, скорее всего, мнимое. Теперь он главный подозреваемый, но уверенность в версии пока 55%. Решать дело ещё рано.\n\n**Что открылось:**\n- **Алиби Харта.** В паспорте приёмника радиопоста описан режим ПОИСК. Он сам перебирает станции, когда пропадает сигнал, стоит около 10 с на каждой и возвращается к исходной частоте. Значит, перебор в 08:44:20–31 и «Лондон» в 08:44:31 могли пройти без человека. Харт по интервью всегда слушает Лондон, так что это, вероятно, просто возврат к его частоте. Раньше я считал, что перебор делал он сам, — это была ошибка.\n- **Время Харта.** Последняя отметка Харта — подтверждение сводки с радиопоста в 08:43:18. До площадки в обход через общую лестницу около 42 с, то есть он мог быть там около 08:44:00. На записи нет шагов вверх по восточной лестнице, поэтому если он шёл, то в обход. К подножию он пришёл только в 08:47:15, хотя от поста нужно около 37 с.\n- **Лист с признанием.** Это интервью Харта о смерти Колдера, с его подписью. Лист разорван на площадке: верх остался там, низ оказался у Харта и обгорел, а у Харта бензиновая зажигалка. Силва видел у тела, как Харт что-то спрятал в карман.\n- **Банковская ячейка Коула.** В ней лежал акт передачи дел этапа A от Хейла Коулу. Ещё там была микрокассета от 06.10.08: голос, по описанию похожий на Хейла, велит скрыть смерть участника («стало плохо в дороге», «семье — эвакуирован»). Коул, видимо, хранил её как страховку.\n\n**Подозреваемые сейчас:**\n\n| Кто | % | Почему |\n|---|---|---|\n| Харт | 45 | мотив (шантаж в 07:33), разорванный лист с признанием, успевал по времени |\n| Моро | 22 | вдова Бернара, была рядом и лжёт; но, возможно, лжёт только чтобы скрыть, что спрятала папку A-24 |\n| Несчастный случай / другое | 15 | стойка держалась на временном креплении, плиту так и не заменили |\n| Пирс | 13 | Коул разоблачил её утечки, успевала |\n| Прочие | 5 | |\n\nУмысел столкнуть не доказан: Коул мог упасть во время борьбы за лист.\n\n**Действия на следующий раунд:**\n- **Запись радиопоста.** Прослушать её в 08:43:18, 08:44:20, 08:45:40 и 08:47:15. Хочу проверить, был ли перебор автоматическим, и понять, чей шум слышен после удара.\n- **Пачка П-05.** Осмотреть шесть нижних перевёрнутых листов медкабинета, сквозь которые просвечивают штампы. Предполагаю, что это медицинские листы этапа A.\n- **Ящик Пирс.** Ввести пароль: «Toffee» и «Тоффи», по кличке её первой собаки.\n\nЕсли прослушивание подтвердит, что перебор шёл без человека, перейду к решению дела.",
+  "ttft_ms": 1242,
+  "type": "result",
+  "duration_ms": 73315,
+  "uuid": "cf6375c7-838c-43a7-b353-22384da5136d",
+  "ttft_stream_ms": 711,
+  "time_to_request_ms": 104,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 3,
+    "input_attachments": 28,
+    "input_hooks": 3,
+    "transcript_persist": 3,
+    "tool_pool_refresh": 1,
+    "init_message": 6,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 0,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 8,
+    "message_normalization": 11,
+    "client_creation": 5,
+    "request_build": 12
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 53,
+  "time_to_request_cpu_ms": 113,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 144,
+  "process_rss_mib_result": 224,
+  "process_anon_mib_result": 131,
+  "process_peak_rss_mib": 255,
+  "process_cpu_ms_turn": 2128,
+  "process_wall_ms_turn": 73314,
+  "process_cpu_ms_streaming": 1439,
+  "process_wall_ms_streaming": 62766,
+  "main_stream_count": 5,
+  "main_stream_event_count": 795,
+  "main_stream_chunk_count": 623,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 21,
+    "cpu_ms": 31,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 711,
+  "time_to_request_from_spawn_ms": 2583471,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793248019729.4062,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

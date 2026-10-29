@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 302743,
+  "stop_reason": "end_turn",
+  "session_id": "14d3253d-ca96-43df-a4a5-ff8ecfe9180e",
+  "total_cost_usd": 0.9932576000000002,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 2278,
+    "cache_read_input_tokens": 312479,
+    "output_tokens": 1329,
+    "output_tokens_details": {
+      "thinking_tokens": 254
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2278,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 317,
+        "cache_read_input_tokens": 104631,
+        "cache_creation_input_tokens": 1109,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1109
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 365,
+      "thinkingTokens": 344,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000307,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 70,
+      "outputTokens": 35269,
+      "thinkingTokens": 16766,
+      "cacheReadInputTokens": 2299126,
+      "cacheCreationInputTokens": 102552,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 102552,
+      "webSearchRequests": 0,
+      "costUSD": 0.9929506000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 7 закончен, новых материалов не было, и версия не продвинулась: уверенность по-прежнему 30%.\n\n**Итог прошлого раунда:** оба ключа ноутбука, 1-2-3-6-9 и 4-5-6-9, оказались неверными.\n\n**Что я пробую теперь:** арку знака VAULTLINE целиком. Увеличенная картинка показывала один угол знака, и теперь я пробую его контур в двух направлениях. В `actions.md` записаны две попытки:\n- 7-4-1-2-3-6-9\n- 9-6-3-2-1-4-7\n\n**Подозреваемые без изменений:** Миллер — 30, Пирс — 30, Моро — 15, Силва — 5, другое — 20. Ноутбук Коула остаётся единственным непросмотренным источником, поэтому я упёрся в него. Журнал дополнен разделом «Раунд 7».",
+  "ttft_ms": 1756,
+  "type": "result",
+  "duration_ms": 13310,
+  "uuid": "7ad586f3-0f4f-4487-be75-c5c27580a952",
+  "ttft_stream_ms": 1545,
+  "time_to_request_ms": 117,
+  "time_to_request_phases_ms": {
+    "other": 20,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 31,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 9,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 11,
+    "message_normalization": 11,
+    "client_creation": 5,
+    "request_build": 11
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 66,
+  "time_to_request_cpu_ms": 125,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 143,
+  "process_rss_mib_result": 217,
+  "process_anon_mib_result": 125,
+  "process_peak_rss_mib": 254,
+  "process_cpu_ms_turn": 968,
+  "process_wall_ms_turn": 13310,
+  "process_cpu_ms_streaming": 206,
+  "process_wall_ms_streaming": 6825,
+  "main_stream_count": 3,
+  "main_stream_event_count": 195,
+  "main_stream_chunk_count": 24,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 24,
+    "cpu_ms": 35,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1545,
+  "time_to_request_from_spawn_ms": 2457015,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793247893339.9363,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

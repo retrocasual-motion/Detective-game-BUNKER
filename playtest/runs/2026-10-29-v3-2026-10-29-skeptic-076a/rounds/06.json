@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 477975,
+  "stop_reason": "end_turn",
+  "session_id": "70f3f583-47c6-42f4-98da-9820fe84b1cb",
+  "total_cost_usd": 1.426236,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 2864,
+    "cache_read_input_tokens": 426498,
+    "output_tokens": 1800,
+    "output_tokens_details": {
+      "thinking_tokens": 99
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2864,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 603,
+        "cache_read_input_tokens": 142791,
+        "cache_creation_input_tokens": 1315,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1315
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 252,
+      "thinkingTokens": 231,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002505,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 70,
+      "outputTokens": 59027,
+      "thinkingTokens": 32766,
+      "cacheReadInputTokens": 2719035,
+      "cacheCreationInputTokens": 140918,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 140918,
+      "webSearchRequests": 0,
+      "costUSD": 1.4259855000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "В раунде 6 новых материалов не пришло. Ходатайство о теле Коула бюро отклонило: нужен номер приложения по описи или код пользователя, а данных о вскрытии в деле нет. Других проверок, которые стоит делать, я не вижу.\n\nПоэтому я записал в `actions.md` строку `РЕШИТЬ | дело | продолжить`. Это подтверждает переход к форме заключения, назад пути нет. Форма должна появиться в `case/` к следующему раунду, и тогда я отвечу на её пункты строкой `ФИНАЛ`.\n\nМоя версия не изменилась, уверенность в ней — около 50%. Лея Моро, вероятно вдова умершего участника прошлого заезда Томаса Бернара, столкнула Коула с площадки. Прямых доказательств, что она там была, нет. Есть мотив, место рядом с лестницей, отсутствие алиби и ложь о том, где она находилась. Остальных подозреваемых я оцениваю так: Харт — около 20%, Пирс — около 20%, несчастный случай или другое — около 15%.\n\nВ заключении я отдельно отмечу, что доказано и что остаётся предположением.\n- **Доказано:**\n  - Смерть Бернара скрыли по приказу Хейла (микрокассета из ячейки 845).\n  - Плиту крепления не заменили (заказ CS-2291 не доставлен).\n  - «Удар» 12.10 был постановкой.\n  - Алиби по терминалам есть у Миллера, Силвы, Уолш и Сато.\n- **Предположение:** что Моро — жена Бернара. Основание — только автоответчик «Тому и Лее».\n\nРаздел «Раунд 6» дописан в `journal.md`.",
+  "ttft_ms": 2037,
+  "type": "result",
+  "duration_ms": 22241,
+  "uuid": "13a62e28-adac-42e3-9a72-085eba61c5fc",
+  "ttft_stream_ms": 1490,
+  "time_to_request_ms": 110,
+  "time_to_request_phases_ms": {
+    "other": 17,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 29,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 6,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 3,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 9,
+    "message_normalization": 10,
+    "client_creation": 6,
+    "request_build": 12
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 60,
+  "time_to_request_cpu_ms": 121,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 232,
+  "process_anon_mib_turn_start": 145,
+  "process_rss_mib_result": 219,
+  "process_anon_mib_result": 126,
+  "process_peak_rss_mib": 256,
+  "process_cpu_ms_turn": 1097,
+  "process_wall_ms_turn": 22240,
+  "process_cpu_ms_streaming": 247,
+  "process_wall_ms_streaming": 8154,
+  "main_stream_count": 3,
+  "main_stream_event_count": 322,
+  "main_stream_chunk_count": 58,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 22,
+    "cpu_ms": 34,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1490,
+  "time_to_request_from_spawn_ms": 2629789,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793248066073.9573,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

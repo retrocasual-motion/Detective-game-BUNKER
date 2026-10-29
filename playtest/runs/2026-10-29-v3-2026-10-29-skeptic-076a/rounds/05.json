@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 462217,
+  "stop_reason": "end_turn",
+  "session_id": "70f3f583-47c6-42f4-98da-9820fe84b1cb",
+  "total_cost_usd": 1.3541182,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 12385,
+    "cache_read_input_tokens": 392270,
+    "output_tokens": 9055,
+    "output_tokens_details": {
+      "thinking_tokens": 5884
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 12385,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 788,
+        "cache_read_input_tokens": 133188,
+        "cache_creation_input_tokens": 8054,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 8054
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 252,
+      "thinkingTokens": 231,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002505,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 64,
+      "outputTokens": 57227,
+      "thinkingTokens": 32667,
+      "cacheReadInputTokens": 2292537,
+      "cacheCreationInputTokens": 138054,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 138054,
+      "webSearchRequests": 0,
+      "costUSD": 1.3538677000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "В раунде 5 версия сместилась к Моро: теперь это моя главная версия, около 50% уверенности. Решающей улики, что она была на площадке, у меня нет. Дело не решено, ФИНАЛ и СТОП не писал.\n\n**Что нашёл**\n- **Автоответчик Бернара.** По телефону из анкеты A-24 отвечает голос: «вы позвонили Тому и Лее». Лея Моро в деле значится как пришедшая в программу «из статьи». Совпадение имени — мой вывод, документа о родстве нет.\n- **Ячейка 845.** Арендатор — Коул, договор от 20.10.2008. Внутри два документа.\n  - Акт передачи дел этапа A от 14.11.2008: передал Хейл, принял Коул, медицинские листы сверила Уолш.\n  - Микрокассета «06.10.08» — день смерти Бернара. На записи сиплый голос (похоже на Коула) сообщает, что участник умер на объекте от реакции. Низкий голос (похоже на Хейла) приказывает: «Объявлять не будем… Стало плохо в дороге».\n  - Из этого я вывожу, что смерть скрыли по приказу Хейла, а Коул хранил улики как страховку.\n- **Слова Моро.** Она говорит, что слышала шаги вниз по лестнице и потом удар. Это совпадает с записью радиопоста: шаги в 08:44:46, удар в 08:45:02. Уолш и Сато слышали только удар. Значит, Моро была у восточной лестницы, а не в жилом блоке, как она показала.\n\nМоя версия: Моро, вероятно жена погибшего Бернара, нашла папку A-24, поняла, как скрыли смерть мужа, и столкнула Коула с площадки. Альтернативы остаются: Харт — около 20% (шантаж, нет алиби) и Пирс — около 20% (знала о постановке, нет алиби).\n\nВ `actions.md` отправил одно ходатайство в бюро: данные о теле Коула, в первую очередь результаты вскрытия, если оно проводилось. Раздел «Раунд 5» дописан в `journal.md`. Нажать «Решить дело» планирую в следующем раунде, когда придёт ответ о вскрытии.",
+  "ttft_ms": 2030,
+  "type": "result",
+  "duration_ms": 79767,
+  "uuid": "ff250e3b-d48e-4926-9657-c448adc9a4b2",
+  "ttft_stream_ms": 1321,
+  "time_to_request_ms": 105,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 2,
+    "resume_other": 1,
+    "process_user_input": 3,
+    "input_attachments": 35,
+    "input_hooks": 4,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 2,
+    "init_message": 4,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 8,
+    "message_normalization": 8,
+    "client_creation": 5,
+    "request_build": 10
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 55,
+  "time_to_request_cpu_ms": 114,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 231,
+  "process_anon_mib_turn_start": 143,
+  "process_rss_mib_result": 222,
+  "process_anon_mib_result": 129,
+  "process_peak_rss_mib": 255,
+  "process_cpu_ms_turn": 1824,
+  "process_wall_ms_turn": 79767,
+  "process_cpu_ms_streaming": 1131,
+  "process_wall_ms_streaming": 66009,
+  "main_stream_count": 3,
+  "main_stream_event_count": 657,
+  "main_stream_chunk_count": 461,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 28,
+    "cpu_ms": 39,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1322,
+  "time_to_request_from_spawn_ms": 2548974,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793247985166.3247,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

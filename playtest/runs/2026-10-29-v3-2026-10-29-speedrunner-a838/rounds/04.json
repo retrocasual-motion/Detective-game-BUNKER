@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 237077,
+  "stop_reason": "end_turn",
+  "session_id": "14d3253d-ca96-43df-a4a5-ff8ecfe9180e",
+  "total_cost_usd": 0.7851922000000001,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 4757,
+    "cache_read_input_tokens": 271997,
+    "output_tokens": 2793,
+    "output_tokens_details": {
+      "thinking_tokens": 1090
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4757,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 536,
+        "cache_read_input_tokens": 91963,
+        "cache_creation_input_tokens": 2264,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2264
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 365,
+      "thinkingTokens": 344,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000307,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 52,
+      "outputTokens": 28097,
+      "thinkingTokens": 14055,
+      "cacheReadInputTokens": 1396552,
+      "cacheCreationInputTokens": 91039,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 91039,
+      "webSearchRequests": 0,
+      "costUSD": 0.7848852000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 закончен. Нового виновного он не дал, уверенность в версии — 25%.\n\n**Что пришло от VAULTLINE:**\n- **A-24:** участник, умерший в 2008 году, — Томас Бернар, 1974 г. р., механик, женат. Это подтверждает связь с газетным объявлением о его смерти.\n- **Текущий набор:** в выписке по VL-31 нет прямой связи Моро с Бернаром, моя версия о её родстве с ним ослабла.\n- **Контакты:**\n  - у Моро указана мать в Лионе;\n  - у Силвы — сестра Ана;\n  - у Миллера — Л. Миллер в Денвере.\n\n**Подозреваемые (уверенность, %):** Миллер — 25, Пирс — 30, Моро — 20, Харт — 5, другое — 20. Выбора между Пирс, Миллером и Моро пока нет.\n\n**Действия в `actions.md`:** три попытки по догадке.\n- **Звонок поставщику** Colton Supply (+7 495 555-18-44) — проверить, поставляли ли плиту по заказу CS-2291. Если нет, отчёт Миллера о замене плиты ложный.\n- **PIN телефона:** 0110. Это 1 октября, день рождения сестры Силвы по его ролику-знакомству.\n- **Ключ ноутбука:** 1-2-3-6-5-4-7-8-9 — «змейка» по трём полосам знака VAULTLINE.\n\nЖурнал дополнен разделом «Раунд 4».",
+  "ttft_ms": 3394,
+  "type": "result",
+  "duration_ms": 26001,
+  "uuid": "d3142b4f-e4af-4eba-b773-9edff3b54424",
+  "ttft_stream_ms": 2477,
+  "time_to_request_ms": 115,
+  "time_to_request_phases_ms": {
+    "other": 18,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 36,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 1,
+    "init_message": 5,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 7,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 9,
+    "message_normalization": 8,
+    "client_creation": 5,
+    "request_build": 10
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 65,
+  "time_to_request_cpu_ms": 125,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 224,
+  "process_anon_mib_turn_start": 138,
+  "process_rss_mib_result": 217,
+  "process_anon_mib_result": 125,
+  "process_peak_rss_mib": 247,
+  "process_cpu_ms_turn": 1126,
+  "process_wall_ms_turn": 26000,
+  "process_cpu_ms_streaming": 433,
+  "process_wall_ms_streaming": 15832,
+  "main_stream_count": 3,
+  "main_stream_event_count": 316,
+  "main_stream_chunk_count": 39,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 29,
+    "cpu_ms": 38,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2478,
+  "time_to_request_from_spawn_ms": 2364853,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793247801146.4565,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

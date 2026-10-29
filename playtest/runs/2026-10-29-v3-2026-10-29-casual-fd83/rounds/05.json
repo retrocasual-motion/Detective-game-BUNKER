@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 416212,
+  "stop_reason": "end_turn",
+  "session_id": "4f117aab-9dc7-4c7b-8d94-bed675e01e1f",
+  "total_cost_usd": 2.3734491999999996,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 5470,
+    "cache_read_input_tokens": 360729,
+    "output_tokens": 2676,
+    "output_tokens_details": {
+      "thinking_tokens": 497
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 5470,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 704,
+        "cache_read_input_tokens": 122200,
+        "cache_creation_input_tokens": 1755,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1755
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 80,
+      "outputTokens": 43614,
+      "thinkingTokens": 17422,
+      "cacheReadInputTokens": 2673511,
+      "cacheCreationInputTokens": 120733,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 120733,
+      "webSearchRequests": 0,
+      "costUSD": 2.3731662,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 317,
+      "thinkingTokens": 296,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00028300000000000005,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Пятый раунд готов: раздел «Раунд 5» дописан в `journal.md`, а в `actions.md` я нажал «Решить дело». После подтверждения новых материалов не будет, и вернуться к расследованию нельзя.\n\n**Что дали осмотры:**\n- **Блокнот Моро уличает её во лжи.** На странице 14 нарисован листок «РЕЖИМ ТРЕВОГИ» на двери кабинета Коула, под дверью полоска света. Такой листок мог появиться только после тревоги 12.10 в 21:43. Значит, утром 13.10 Моро рисовала в комнате анкет, примерно в 10 м от площадки. На опросе она сказала, что читала у себя в жилом блоке. Страница 15 брошена: линия оборвана посередине и смазана.\n- **Совмещение половин листа подтвердило догадку.** Это одна страница психологического интервью Харта с подписью «…арт».\n- **Лист с площадки ничего не добавил.** Следов графита нет.\n- **Свойства диктофона ничего не добавили.** Только даты записей.\n\n**Подозреваемые:** Моро 50%, Пирс 25%, несчастный случай или другое 13%, Миллер 6%, Харт 3%, Уолш 2%, Силва 1%.\n\n**Версия (уверенность 55%).** Моро — вдова Томаса Бернара, погибшего на этапе 2008 года. Около 08:44 она столкнулась с Коулом на площадке, и они схватились из-за папки. Коул упал через угловую стойку: Миллер её на самом деле не чинил, хотя отчитался о замене плиты.\n\n**Слабое место.** Прямого следа Моро на площадке нет. Пирс тоже могла там быть: её сводка в 08:43 не записана в журнал событий сервера, так что алиби у неё ненадёжное.\n\nВ следующем раунде прочитаю форму заключения и отправлю ответы строкой ФИНАЛ.",
+  "ttft_ms": 1404,
+  "type": "result",
+  "duration_ms": 29094,
+  "uuid": "8dcffafe-a74d-4f1c-bf12-849f959179f9",
+  "ttft_stream_ms": 872,
+  "time_to_request_ms": 107,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 26,
+    "input_hooks": 3,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 2,
+    "init_message": 6,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 0,
+    "tool_schema_build": 10,
+    "message_normalization": 11,
+    "client_creation": 5,
+    "request_build": 14
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 57,
+  "time_to_request_cpu_ms": 111,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 230,
+  "process_anon_mib_turn_start": 143,
+  "process_rss_mib_result": 220,
+  "process_anon_mib_result": 128,
+  "process_peak_rss_mib": 253,
+  "process_cpu_ms_turn": 1414,
+  "process_wall_ms_turn": 29093,
+  "process_cpu_ms_streaming": 834,
+  "process_wall_ms_streaming": 22250,
+  "main_stream_count": 3,
+  "main_stream_event_count": 354,
+  "main_stream_chunk_count": 229,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 19,
+    "cpu_ms": 29,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 872,
+  "time_to_request_from_spawn_ms": 2552100,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793247988353.365,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

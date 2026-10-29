@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 1219466,
+  "stop_reason": "end_turn",
+  "session_id": "e6e29d06-8f9c-40d0-a966-a5f6456f6fec",
+  "total_cost_usd": 7.34418575,
+  "usage": {
+    "input_tokens": 130,
+    "cache_creation_input_tokens": 13596,
+    "cache_read_input_tokens": 761508,
+    "output_tokens": 8131,
+    "output_tokens_details": {
+      "thinking_tokens": 4393
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13596,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 551,
+        "cache_read_input_tokens": 158763,
+        "cache_creation_input_tokens": 585,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 585
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 328,
+      "thinkingTokens": 307,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0002885,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 744,
+      "outputTokens": 72330,
+      "thinkingTokens": 41077,
+      "cacheReadInputTokens": 2387029,
+      "cacheCreationInputTokens": 156160,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 156160,
+      "webSearchRequests": 0,
+      "costUSD": 7.34389725,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 10,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 завершён. Журнал дописан, действия записаны.\n\n**Что дал раунд:**\n\n- **A-24 — Томас Бернар, 1974 г. р., механик, женат**, есть домашний телефон. Это тот самый Том Бернар из некролога (ум. 06.10.2008 — ровно 15-й день этапа A). Моро пришла в программу «из статьи» — статьи The Signal о гибели участника.\n- **Перевёрнутые листы из медкабинета** — вторые экземпляры справок о выбытии этапа A. Справка A-24 от 06.10.2008 лжёт: «состояние стабильное, эвакуирован», «предупреждений об аллергии не поступало». Подписи — Уолш и Коул. Уолш — соучастница подделки 2008 года и одновременно хранительница истинной копии медлиста.\n- **Сато = С. Грей**, внештатный автор The Signal; редактор — Фрэнк Бейкер.\n- Прослушивание подтвердило: в 08:44:20–31 — ручная настройка, не автоперебор. Алиби Харта держится.\n\n**Подозреваемые:** Моро 45%, Пирс 30%, несчастный случай 10%.\n\n**Действия на следующий раунд:** звонок на домашний телефон Бернара (кто ответит — ключ к связи Моро с A-24), ходатайства в банк о ячейке 845 и в Mailbridge об экспорте ящика Пирс, листание заполненных анкет П-01, крупный план фотографии A-24, прослушивание обмена репликами у тела в 08:48.",
+  "ttft_ms": 4239,
+  "type": "result",
+  "duration_ms": 151508,
+  "uuid": "0d1092c0-016c-48b8-9d81-0d790047e2fc",
+  "ttft_stream_ms": 2480,
+  "time_to_request_ms": 158,
+  "time_to_request_phases_ms": {
+    "other": 29,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 4,
+    "input_attachments": 43,
+    "input_hooks": 3,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 2,
+    "init_message": 7,
+    "engine_pickup": 1,
+    "message_prep": 2,
+    "model_config_wait": 1,
+    "autocompact": 3,
+    "query_setup": 0,
+    "model_gates": 1,
+    "tool_schema_build": 16,
+    "message_normalization": 13,
+    "client_creation": 9,
+    "request_build": 19
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 107,
+  "time_to_request_cpu_ms": 161,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 218,
+  "process_anon_mib_turn_start": 131,
+  "process_rss_mib_result": 211,
+  "process_anon_mib_result": 119,
+  "process_peak_rss_mib": 228,
+  "process_cpu_ms_turn": 2212,
+  "process_wall_ms_turn": 151507,
+  "process_cpu_ms_streaming": 1140,
+  "process_wall_ms_streaming": 122964,
+  "main_stream_count": 5,
+  "main_stream_event_count": 943,
+  "main_stream_chunk_count": 121,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 35,
+    "cpu_ms": 45,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 2480,
+  "time_to_request_from_spawn_ms": 3221243,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793248656933.8152,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

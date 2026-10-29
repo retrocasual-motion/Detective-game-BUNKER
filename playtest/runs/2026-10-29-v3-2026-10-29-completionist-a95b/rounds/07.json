@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 717388,
+  "stop_reason": "end_turn",
+  "session_id": "30d776f3-1447-40e9-901e-e67cb2bf2a44",
+  "total_cost_usd": 3.3862558000000007,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 8310,
+    "cache_read_input_tokens": 464747,
+    "output_tokens": 6181,
+    "output_tokens_details": {
+      "thinking_tokens": 3394
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 8310,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 876,
+        "cache_read_input_tokens": 156666,
+        "cache_creation_input_tokens": 5090,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 5090
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 337,
+      "thinkingTokens": 316,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000293,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-opus-5-5": {
+      "inputTokens": 90,
+      "outputTokens": 67410,
+      "thinkingTokens": 30941,
+      "cacheReadInputTokens": 3845654,
+      "cacheCreationInputTokens": 158534,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 158534,
+      "webSearchRequests": 0,
+      "costUSD": 3.3859628000000006,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 7 закончен. Раздел «Раунд 7» дописан в `journal.md`, а в `actions.md` записано нажатие кнопки «Решить дело» с подтверждением. После подтверждения назад пути нет: новые материалы и действия будут недоступны.\n\n**Что дал раунд.** Почти ничего нового:\n- запись радиопоста в 08:44:46, 08:48 и 08:52 ничего не добавила к разметке файла;\n- фото Пирс лишь подтвердило, что собака на нём — бигль Тоффи;\n- сайт Sentinel Labs: компания занимается исследованиями поведения людей в кризисе, то есть это покупатель данных;\n- на фото осмотра лист Харта лежит на площадке рваным краем к проёму.\n\n**Ключевой вывод (рассуждение, не доказательство).** На обороте листа Харта есть следы скрепки, а из бумаг Коула пропала только выписка о Пирс, напечатанная в 08:06. Скорее всего, Коул нёс к узлу связи скреплённую пачку: выписку о Пирс и интервью Харта. Нападавший рвал из рук именно её. Лист Харта порвался: верхняя половина осталась на площадке, нижняя упала вместе с Коулом, и её подобрал Харт. Выписка ушла с нападавшим, а нужна она была только Пирс.\n\n**Подозреваемые:**\n\n| Кто | Уверенность | Почему |\n|---|---|---|\n| Пирс | 65% | Утром Коул раскрыл продажу данных и писал доклад Хейлу. С 08:43:10 у неё нет алиби. Пропала выписка о ней. |\n| Моро | 15% | Мотив и ложь о том, где была, но скорее свидетель. |\n| Несчастный случай в борьбе | 12% | Временное крепление стояло на треснувшей плите, которую так и не заменили. |\n| Остальные | 8% | Алиби по терминалам, панелям и эфиру. |\n\nУверенность в версии — 60%. Слабое место: прямой улики, что на площадке была именно Пирс, нет.\n\n**Почему перехожу к заключению.** Все доступные пути пройдены: ноутбук, телефон, почта Пирс, банковская ячейка Коула, сайты, журналы сервера. Запросы по пользователям 01, 03 и 04 ничего не дали, новых путей я не вижу. Форма заключения появится к следующему раунду, тогда отвечу на её пункты строкой ФИНАЛ.",
+  "ttft_ms": 3529,
+  "type": "result",
+  "duration_ms": 72264,
+  "uuid": "e7ada307-dfc2-488f-a30d-13a4136be987",
+  "ttft_stream_ms": 2384,
+  "time_to_request_ms": 105,
+  "time_to_request_phases_ms": {
+    "other": 16,
+    "system_prompt": 2,
+    "resume_other": 1,
+    "process_user_input": 3,
+    "input_attachments": 28,
+    "input_hooks": 3,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 1,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 0,
+    "model_gates": 0,
+    "tool_schema_build": 9,
+    "message_normalization": 12,
+    "client_creation": 6,
+    "request_build": 13
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 50,
+  "time_to_request_cpu_ms": 116,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 229,
+  "process_anon_mib_turn_start": 142,
+  "process_rss_mib_result": 214,
+  "process_anon_mib_result": 122,
+  "process_peak_rss_mib": 254,
+  "process_cpu_ms_turn": 1731,
+  "process_wall_ms_turn": 72263,
+  "process_cpu_ms_streaming": 1022,
+  "process_wall_ms_streaming": 55045,
+  "main_stream_count": 3,
+  "main_stream_event_count": 503,
+  "main_stream_chunk_count": 322,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 21,
+    "cpu_ms": 33,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 2385,
+  "time_to_request_from_spawn_ms": 2823491,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793248259791.1824,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

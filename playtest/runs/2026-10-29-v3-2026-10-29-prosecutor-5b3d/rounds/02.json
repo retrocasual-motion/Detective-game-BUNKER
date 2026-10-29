@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 819446,
+  "stop_reason": "end_turn",
+  "session_id": "78082813-6bdb-4b6e-8dbd-63ac13404952",
+  "total_cost_usd": 4.8583365,
+  "usage": {
+    "input_tokens": 162,
+    "cache_creation_input_tokens": 29005,
+    "cache_read_input_tokens": 574165,
+    "output_tokens": 18169,
+    "output_tokens_details": {
+      "thinking_tokens": 9575
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 29005,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 32,
+        "output_tokens": 785,
+        "cache_read_input_tokens": 111511,
+        "cache_creation_input_tokens": 1148,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1148
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 240,
+      "thinkingTokens": 219,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00024450000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-fable-5-1": {
+      "inputTokens": 452,
+      "outputTokens": 48852,
+      "thinkingTokens": 27207,
+      "cacheReadInputTokens": 886208,
+      "cacheCreationInputTokens": 109471,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 109471,
+      "webSearchRequests": 0,
+      "costUSD": 4.858092,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 64000,
+      "canonicalModel": "claude-fable-5-1",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 16,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 2 завершён. Журнал дописан, действия записаны.\n\n**Что дал раунд:**\n\n- **Журнал сервера (L214) разложил всех по терминалам в минуту падения (08:44:46–08:45:02):** Силва — кухонный терминал 08:44:39 и 08:45:20 (пытался звонить сестре: срок оплаты 14-е); Уолш — медкабинет 08:44:31 и 08:45:05, с ней Сато; Харт — пост 08:43:18 плюс перебор станций 08:44:20–31. **Без алиби: Пирс (терминал 08:43:10, дальше тишина), Моро и Миллер** (подтвердил сводку только в 08:47:20 — остальные за секунды).\n- **Мотив Пирс появился:** в 08:02 Коул вскрыл её сеанс (пользователь 05), нашёл три экспорта по чужому маршруту 14, дважды урезал её учётную запись (08:05 и 08:41 — через минуту после ухода от неё) — а она назвала разговор «ничего особенного».\n- **Подлоги доказаны:** плита Colton Supply отгружена 11.10, а «фото после» снято 10.10 — Миллер ремонт не делал. Партии 0417 у NorthCare не существует. В стопке бланков спрятана папка A-24 «выбыл досрочно» с фото и подлинной копией медкарты (аллергия на молоко), тогда как у Коула — переписанная «аллергия: нет» тем же почерком Уолш.\n- **Риск для версии:** папка спрятана в комнате анкет Моро, на копии графит, а её рассказ о шагах на лестнице совпадает с регистратором — значит, она лгала о месте. Моро — 27%, Пирс — 38%.\n\n**Действия:** сеансы пользователей 05 (экспорты Пирс), 01 (отчёты Коула офису), 03 (med_ Уолш); отметки терминала технической (алиби Миллера); у компании — данные выбывшего A-24 и договоры по VL-31 (заказчик); сайты hexon-bio.com и fieldworks-radio.com; звонок NorthCare по партии 0418; увеличить портрет из блокнота Моро и фото A-24 для сравнения.",
+  "ttft_ms": 4840,
+  "type": "result",
+  "duration_ms": 318751,
+  "uuid": "fd05cb53-e2ac-4f5a-b28b-d35192ad736f",
+  "ttft_stream_ms": 2192,
+  "time_to_request_ms": 87,
+  "time_to_request_phases_ms": {
+    "other": 13,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 3,
+    "input_attachments": 18,
+    "input_hooks": 3,
+    "transcript_persist": 2,
+    "tool_pool_refresh": 1,
+    "init_message": 5,
+    "engine_pickup": 1,
+    "message_prep": 1,
+    "model_config_wait": 9,
+    "autocompact": 1,
+    "query_setup": 1,
+    "model_gates": 0,
+    "tool_schema_build": 8,
+    "message_normalization": 6,
+    "client_creation": 4,
+    "request_build": 9
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 37,
+  "time_to_request_cpu_ms": 96,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 227,
+  "process_anon_mib_turn_start": 140,
+  "process_rss_mib_result": 215,
+  "process_anon_mib_result": 123,
+  "process_peak_rss_mib": 248,
+  "process_cpu_ms_turn": 2967,
+  "process_wall_ms_turn": 318750,
+  "process_cpu_ms_streaming": 1934,
+  "process_wall_ms_streaming": 278509,
+  "main_stream_count": 6,
+  "main_stream_event_count": 2192,
+  "main_stream_chunk_count": 266,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 9,
+    "cpu_ms": 21,
+    "major_faults": 0,
+    "changed_files_reread": 0
+  },
+  "first_content_frame_ms": 2192,
+  "time_to_request_from_spawn_ms": 2649984,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793248086342.072,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}

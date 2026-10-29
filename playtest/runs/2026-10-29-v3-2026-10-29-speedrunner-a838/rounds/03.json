@@ -1,0 +1,165 @@
+{
+  "duration_api_ms": 212470,
+  "stop_reason": "end_turn",
+  "session_id": "14d3253d-ca96-43df-a4a5-ff8ecfe9180e",
+  "total_cost_usd": 0.7110225000000001,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 8676,
+    "cache_read_input_tokens": 249408,
+    "output_tokens": 3655,
+    "output_tokens_details": {
+      "thinking_tokens": 1291
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 8676,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 606,
+        "cache_read_input_tokens": 86622,
+        "cache_creation_input_tokens": 2848,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2848
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 365,
+      "thinkingTokens": 344,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000307,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    },
+    "claude-sonnet-5-5": {
+      "inputTokens": 46,
+      "outputTokens": 25304,
+      "thinkingTokens": 12965,
+      "cacheReadInputTokens": 1124555,
+      "cacheCreationInputTokens": 86282,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 86282,
+      "webSearchRequests": 0,
+      "costUSD": 0.7107155000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 3 закончен, но версия не окрепла: уверенность упала с 40% до 30%.\n\n**Что дали новые материалы:**\n- **Пирс и экспорты:** с её учётной записи трижды уходили данные программы по внешнему маршруту 14 — это три экспорта (04.10, 08.10, 12.10). Она также входила в личную почту e.pierce.uk@mailbridge.net. Возможно, она не преступница, а разоблачительница.\n- **Коул и права Пирс:** утром 13.10 Коул сначала ограничил ей внешнюю отправку (08:05), а в 08:41 снял ограничение. Зачем — не понятно.\n- **Суть программы:** это исследование препарата. Партия 0417 — «активная», 0418 — «контроль». Харт, Моро и Силва получали 0417, и у Харта и Силвы тревога по самооценкам растёт. Участник прошлого этапа A-24 умер на 15-й день. Скорее всего, это Том Бернар, о гибели которого есть объявление в газете от 06.10.2009.\n- **Моро:** она не была в прошлом заезде, но рисовала бородатого мужчину. Моя гипотеза, не факт: она может быть родственницей A-24.\n\n**Подозреваемые (уверенность, %):** Пирс — 30, Моро — 25, Миллер — 20, Харт — 5, другое — 20.\n\n**Действия в `actions.md`:** два ходатайства на documents@vaultline-program.com. Первое — выписка из учёта анкет набора по участнику A-24, второе — по текущему набору VL-31. Нужно выяснить, кто умер в 2008 году и кто на самом деле Моро. Журнал дополнен разделом «Раунд 3».",
+  "ttft_ms": 2330,
+  "type": "result",
+  "duration_ms": 32650,
+  "uuid": "084496a9-ec84-412c-9e50-37bfd186944a",
+  "ttft_stream_ms": 1558,
+  "time_to_request_ms": 145,
+  "time_to_request_phases_ms": {
+    "other": 23,
+    "system_prompt": 3,
+    "resume_other": 0,
+    "process_user_input": 5,
+    "input_attachments": 50,
+    "input_hooks": 8,
+    "transcript_persist": 1,
+    "tool_pool_refresh": 1,
+    "init_message": 6,
+    "engine_pickup": 2,
+    "message_prep": 1,
+    "model_config_wait": 1,
+    "autocompact": 2,
+    "query_setup": 1,
+    "model_gates": 1,
+    "tool_schema_build": 11,
+    "message_normalization": 11,
+    "client_creation": 5,
+    "request_build": 13
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 95,
+  "time_to_request_cpu_ms": 184,
+  "time_to_request_major_faults": 0,
+  "process_rss_mib_turn_start": 228,
+  "process_anon_mib_turn_start": 140,
+  "process_rss_mib_result": 219,
+  "process_anon_mib_result": 126,
+  "process_peak_rss_mib": 251,
+  "process_cpu_ms_turn": 1366,
+  "process_wall_ms_turn": 32649,
+  "process_cpu_ms_streaming": 550,
+  "process_wall_ms_streaming": 20201,
+  "main_stream_count": 3,
+  "main_stream_event_count": 421,
+  "main_stream_chunk_count": 46,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 39,
+    "cpu_ms": 64,
+    "major_faults": 0,
+    "changed_files_reread": 1
+  },
+  "first_content_frame_ms": 1559,
+  "time_to_request_from_spawn_ms": 2331228,
+  "warm_spare_claimed": false,
+  "flag_fetch_kick": "not_asked_warm",
+  "time_origin_ms": 1793247767361.1248,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "process_start_tuning": 0,
+  "_returncode": 0
+}
