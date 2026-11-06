@@ -49,8 +49,11 @@ Docker Desktop (для справки) — запускает базу данн�
 
 **6. Репозиторий.**
 - VS Code → Ctrl+Shift+P → «Git: Clone» → «Clone from GitHub» → войти в GitHub →
-  выбрать `retrocasual-motion/Detective-game-BUNKER` → папка, например
-  `C:\Projects` (Windows) или `~/Projects` (macOS).
+  выбрать `retrocasual-motion/Detective-game-BUNKER` → папка **`E:\Projects`** (у автора;
+  путь без пробелов и кириллицы, не в облачной папке) → получится
+  `E:\Projects\Detective-game-BUNKER`.
+- Медиа — отдельно, вне репозитория: `E:\Projects\bunker-media` (её синхронизировать
+  с облаком).
 - На вопрос «Доверяете ли вы авторам?» — **Да** (иначе расширение не работает).
 
 **7. Первая команда Claude.** Открыть панель Claude и написать:
