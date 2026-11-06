@@ -16,7 +16,7 @@ Phase 5
 ### Phase 4: Поиск: skills для Claude Code; среда разработки
 - **Status:** complete
 ### Phase 5: STACK.md, вопросы автору, PR
-- **Status:** in_progress
+- **Status:** complete
 
 ## Decisions Made
 | Decision | Rationale |
