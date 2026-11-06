@@ -15,3 +15,5 @@
 - Оплата РФ: ЮKassa / Robokassa / CloudPayments; зависит от формы автора (самозанятый / ИП) — вопрос автору.
 - Claude Code: VS Code extension — skills (подмножество команд), plugins, hooks, MCP, plan mode, checkpoints, inline diffs; локально. Cloud sessions — skills из репо, plugins аккаунта, нет /plugin; GitHub PR, auto-fix.
 - Skills: anthropics/skills (~188k★: webapp-testing, frontend-design, skill-creator, mcp-builder); obra/superpowers (~313k★ по странице: TDD, systematic-debugging, writing/executing-plans, verification-before-completion, code review, worktrees); Context7 (актуальная документация библиотек); Playwright MCP.
+- 06.11 автор: среда ENV-A; хостинг в России, аккаунта нет — сравнить цены; домен автора — один, .ru; спросил, сколько доменов нужно и нет ли сервиса «много сайтов» (Tilda). Код: «в отдельном репозитории game. RA» — противоречие (R-A = папка game/ в этом репо) → уточнить.
+- VPS 2/4: Timeweb ~1000–1900 ₽, Selectel ~3600 ₽, Yandex ~5000 ₽ (обзоры 2025–26). Домены: .ru ~999 ₽ продление (REG.RU 2026); .com/.net — не подтверждено (~1500–2000 ₽). Проверить свободность канонических доменов из контейнера не удалось (RDAP/DNS недоступны).
