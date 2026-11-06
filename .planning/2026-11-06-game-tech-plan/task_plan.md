@@ -1,46 +1,53 @@
-# Task Plan: [Brief Description]
+# Task Plan: технический план браузерной игры БУНКЕР (что реализовать)
 
 ## Goal
-[One sentence describing the end state]
+Документ `dev/TECH_PLAN.md`: фундамент разработки — все экраны, механики, устройства,
+все материалы пакета v3.3 с привязкой к способу показа, движок правил, реальный слой,
+монетизация и доступ, контент-конвейер, открытые вопросы. Без выбора стека (следующий шаг).
 
 ## Next Step
-[The single next action. Update whenever phase status changes.]
+Обсуждение плана и вопросов T-1…T-17 — в отдельной сессии (автор 06.11: «создай отдельный тред»); затем выбор стека.
 
 ## Current Phase
-Phase 1
+Phase 5
 
 ## Phases
 
-### Phase 1: Requirements & Discovery
-- [ ] Understand user intent
-- [ ] Identify constraints
-- [ ] Document in findings.md
+### Phase 1: Видение автора
+- [x] Видение автора 06.11 (стол-холст, полноэкранный просмотр, 3D-предметы, устройства: ноутбук, терминал, телефон, радио; ходатайство-папка; почта следователя и реальная; сайты; монетизация; только десктоп)
+- [x] Обзор источников — findings.md
+- **Status:** complete
+
+### Phase 2: Инвентаризация материалов
+- [x] player/ 51 + 00 — тип, где лежит, действия, что даёт
+- [x] locked/ 73 — тип, как открывается (правило), куда попадает
+- [x] Замки и поля ввода, сайты, звонки, ходатайства (access.json)
+- [x] Сверка с 02 (E-семейства) и REAL_WORLD (3D, эксперимент, газета)
+- **Status:** complete
+
+### Phase 3: Написание dev/TECH_PLAN.md
+- [x] Разделы 1–14, 1133 строки
+- **Status:** complete
+
+### Phase 4: Проверка полноты (все ID пакета в плане) и self-eval
+- [x] Все 51 стартовых и 73 закрытых ID есть в плане (grep)
+- [ ] self-eval — в новой сессии
 - **Status:** in_progress
 
-### Phase 2: Planning & Structure
-- [ ] Define approach
-- [ ] Create project structure
-- **Status:** pending
-
-### Phase 3: Implementation
-- [ ] Execute the plan
-- [ ] Write to files before executing
-- **Status:** pending
-
-### Phase 4: Testing & Verification
-- [ ] Verify requirements met
-- [ ] Document test results
-- **Status:** pending
-
-### Phase 5: Delivery
-- [ ] Review outputs
-- [ ] Deliver to user
+### Phase 5: PR, вопрос «мержим?»
 - **Status:** pending
 
 ## Decisions Made
 | Decision | Rationale |
 |----------|-----------|
+| План пишется в этом треде, стек — следующим шагом | слова автора 06.11 |
+| Файл в новой папке `dev/` | не канон сюжета и не рабочий файл линии; долгоживущая спецификация |
+| Инвентарь — по пакету v3.3 | последний утверждённый пакет; собран по сводам |
+| PNG плана v3 и схемы лестницы в репо нет | отмечено в плане 5.4 |
+| Обсуждение — новая сессия от ветки claude/nifty-dijkstra-6zrnuk | просьба автора 06.11 |
 
 ## Errors Encountered
 | Error | Resolution |
 |-------|------------|
+| git pull после squash-мёржа — divergent | ветка пересоздана от origin/main |
+| force-push запрещён классификатором | merge старой ветки, обычный push |
