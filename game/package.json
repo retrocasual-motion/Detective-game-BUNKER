@@ -1,0 +1,23 @@
+{
+  "name": "bunker-game",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "dev": "pnpm content:build && pnpm --parallel -F api -F game-web dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "e2e": "pnpm -F game-web e2e",
+    "content:build": "pnpm -F content build"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.5",
+    "typescript": "^7.0.2"
+  }
+}
