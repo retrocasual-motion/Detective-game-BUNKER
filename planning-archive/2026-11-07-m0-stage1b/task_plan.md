@@ -50,11 +50,11 @@ Phase 6
 ### Phase 6: Проверки, документы, PR
 - [x] e2e обновлены, снимки всех видов и переходов просмотрены
 - [x] DECISIONS, TECH_PLAN (4.0, 4.2, 4.11, таблица этапов), ARCHITECTURE, DEVELOPMENT
-- [ ] ревью ветки, PR, «мержим?»
-**Status:** in_progress
+- [x] ревью ветки (10 находок: 9 исправлены с тестами, 1 отложена), PR #38, слияние — разрешено автором
+**Status:** complete
 
 ## Next Step
-Ревью ветки (/code-review), исправления, «мержим?».
+Автор проверяет этап 1b руками; затем исследование UX_PRINCIPLES (UX-NEXT), потом этап 2.
 
 ## Errors Encountered
 | Error | Attempt | Resolution |

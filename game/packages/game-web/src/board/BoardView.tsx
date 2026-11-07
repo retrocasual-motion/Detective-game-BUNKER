@@ -74,7 +74,11 @@ function BoardCard(props: BoardCardProps) {
     },
     onPointerUp(e: PointerEvent<HTMLElement>) {
       e.stopPropagation();
-      const under = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-board-item]');
+      // Под точкой могут лежать нити и подписи (они поверх копий) — ищем копию сквозь них.
+      const under = document
+        .elementsFromPoint(e.clientX, e.clientY)
+        .map((el) => el.closest('[data-board-item]'))
+        .find((el) => el !== null);
       props.onPullEnd(under?.getAttribute('data-board-item') ?? null);
     },
     onPointerCancel() {
@@ -219,6 +223,11 @@ export function BoardView() {
             const at = toWorld(e, board.camera);
             if (clickTimer.current) clearTimeout(clickTimer.current);
             clickTimer.current = setTimeout(() => setEditing({ id, at }), DOUBLE_CLICK_MS);
+          }}
+          onLabelClick={(id, e) => {
+            if (clickTimer.current) clearTimeout(clickTimer.current);
+            clickTimer.current = null;
+            setEditing({ id, at: toWorld(e, board.camera) });
           }}
           onThreadDoubleClick={(id, e) => {
             if (clickTimer.current) clearTimeout(clickTimer.current);

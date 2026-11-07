@@ -54,6 +54,31 @@ test('нить тянется от булавки к другой копии', a
   await connected(page);
 });
 
+test('нить можно отпустить на булавку копии, у которой уже есть нить', async ({ page }) => {
+  const [a, b] = await connected(page);
+  await page.getByTestId('nav-left').click();
+  await pin(page, '05');
+  await page.getByTestId('nav-right').click();
+  await expect(items(page)).toHaveCount(3);
+  const ids = await items(page).evaluateAll((els) =>
+    els.map((e) => e.getAttribute('data-board-item')),
+  );
+  const c = ids.find((id) => id !== a && id !== b) ?? '';
+  // Отпускаем ровно на булавку b — там кончается нить a→b.
+  await pull(page, c, await center(page, `board-pin-${b}`));
+  await expect(threads(page)).toHaveCount(2);
+});
+
+test('двойной щелчок по подписи открывает правку, а не удаляет нить', async ({ page }) => {
+  await connected(page);
+  await threads(page).first().click({ force: true });
+  await page.getByTestId('thread-label-input').fill('дата');
+  await page.getByTestId('thread-label-input').press('Enter');
+  await page.getByTestId('view-right').getByText('дата').dblclick();
+  await expect(page.getByTestId('thread-label-input')).toBeVisible();
+  await expect(threads(page)).toHaveCount(1);
+});
+
 test('нить, отпущенная мимо копии или на свою копию, не появляется', async ({ page }) => {
   const [a] = await twoOnBoard(page);
   await pull(page, a, { x: 900, y: 600 });

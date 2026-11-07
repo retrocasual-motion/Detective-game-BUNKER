@@ -118,3 +118,17 @@ test('взятый лист приподнимается и наклоняетс
   await page.mouse.up();
   await expect(page.getByTestId('card-12')).not.toHaveClass(/card-dragging/);
 });
+
+test('рука остановилась, лист ещё в руке — наклон проходит', async ({ page }) => {
+  const box = await page.getByTestId('card-12').boundingBox();
+  if (!box) throw new Error('нет листа');
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  const rot = () => page.getByTestId('card-12').evaluate((el) => (el as HTMLElement).style.rotate);
+  const base = await rot();
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  for (let i = 1; i <= 6; i++) await page.mouse.move(x + i * 30, y);
+  await expect.poll(rot, { timeout: 1000 }).toBe(base);
+  await page.mouse.up();
+});

@@ -6,6 +6,8 @@ const AFTER_DRAG_MS = 500;
 /** Наклон бумаги по скорости руки: градусов на px/мс, предел. */
 const TILT_PER_SPEED = 4;
 const TILT_MAX = 8;
+/** Рука остановилась — наклон уходит через столько мс. */
+const TILT_IDLE_MS = 90;
 
 export interface DragResult {
   /** Смещение в мировых координатах, пока объект тянут (null — не тянут). */
@@ -42,6 +44,13 @@ export function useDraggable({ zoom, onDrop, onGrab, onMove }: DragOptions): Dra
   const lastDragEnd = useRef(0);
   const [offset, setOffset] = useState<{ x: number; y: number } | null>(null);
   const [tilt, setTilt] = useState(0);
+  const idle = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stopTilt = () => {
+    if (idle.current) clearTimeout(idle.current);
+    idle.current = null;
+    last.current.v = 0;
+    setTilt(0);
+  };
 
   const end = (e: PointerEvent<HTMLElement>, commit: boolean) => {
     const s = start.current;
@@ -50,7 +59,7 @@ export function useDraggable({ zoom, onDrop, onGrab, onMove }: DragOptions): Dra
     const dx = (e.clientX - s.x) / zoom;
     const dy = (e.clientY - s.y) / zoom;
     setOffset(null);
-    setTilt(0);
+    stopTilt();
     if (dragged.current) lastDragEnd.current = Date.now();
     if (commit && dragged.current) onDrop(dx, dy);
     else if (dragged.current) onMove?.(0, 0);
@@ -82,6 +91,8 @@ export function useDraggable({ zoom, onDrop, onGrab, onMove }: DragOptions): Dra
         const v = l.v * 0.7 + ((e.clientX - l.x) / dt) * 0.3;
         last.current = { x: e.clientX, t: e.timeStamp, v };
         setTilt(Math.max(-TILT_MAX, Math.min(TILT_MAX, v * TILT_PER_SPEED)));
+        if (idle.current) clearTimeout(idle.current);
+        idle.current = setTimeout(stopTilt, TILT_IDLE_MS);
         setOffset({ x: dx / zoom, y: dy / zoom });
         onMove?.(dx / zoom, dy / zoom);
       },

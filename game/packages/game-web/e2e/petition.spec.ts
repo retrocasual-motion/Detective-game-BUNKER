@@ -52,3 +52,17 @@ test('щелчок по уголку папки не сдвигает комна
   const after = await page.getByTestId('scene').boundingBox();
   expect(after).toEqual(before);
 });
+
+test('открытая папка не закрывает стрелку «Слева»', async ({ page }) => {
+  await page.getByTestId('petition-corner').click();
+  const box = await page.getByTestId('nav-left').boundingBox();
+  if (!box) throw new Error('нет стрелки');
+  const onTop = await page.evaluate(
+    ({ x, y }) =>
+      document.elementFromPoint(x, y)?.closest('[data-testid]')?.getAttribute('data-testid'),
+    { x: box.x + box.width - 4, y: box.y + box.height / 2 },
+  );
+  expect(onTop).toBe('nav-left');
+  await page.getByTestId('nav-left').click();
+  await expect(page.getByTestId('view-left')).toBeVisible();
+});

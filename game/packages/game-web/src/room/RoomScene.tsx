@@ -1,5 +1,5 @@
 import type { View } from '@bunker/shared';
-import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { type ReactNode, useLayoutEffect, useRef, useState } from 'react';
 import {
   easeCamera,
   faceOps,
@@ -19,7 +19,8 @@ import { VIEW_LABELS } from './views.ts';
 type FaceView = Exclude<View, 'room'>;
 
 interface Phase {
-  from: View;
+  /** Откуда едет камера — поза, а не вид: новый переход посреди старого начинается с места. */
+  from: Pose;
   to: View;
   moving: boolean;
 }
@@ -44,17 +45,24 @@ interface RoomSceneProps {
 export function RoomScene({ view, onGo, hideNav, faces }: RoomSceneProps) {
   const vp = useViewport();
   const p = perspectiveFor(vp);
-  const [ph, setPh] = useState<Phase>({ from: view, to: view, moving: false });
+  const [ph, setPh] = useState<Phase>({ from: POSES[view], to: view, moving: false });
   const world = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  /** Где камера сейчас (в том числе посреди перехода). */
+  const live = useRef<Pose>(POSES[view]);
 
   const apply = (pose: Pose | null) => {
+    if (pose) live.current = pose;
     if (world.current) world.current.style.transform = pose ? toCss(poseOps(pose, p)) : 'none';
     if (pose && canvas.current) drawRoom(canvas.current, pose, p, vp);
   };
 
-  useEffect(() => {
-    setPh((cur) => (cur.to === view ? cur : { from: cur.to, to: view, moving: !reducedMotion() }));
+  useLayoutEffect(() => {
+    setPh((cur) =>
+      cur.to === view
+        ? cur
+        : { from: cur.moving ? live.current : POSES[cur.to], to: view, moving: !reducedMotion() },
+    );
   }, [view]);
 
   const flat = !ph.moving && ph.to !== 'room';
@@ -64,11 +72,12 @@ export function RoomScene({ view, onGo, hideNav, faces }: RoomSceneProps) {
     if (!ph.moving) apply(flat ? null : POSES[ph.to]);
   });
 
-  // Движение: кадры из JS — одна и та же поза для граней и холста.
+  // Движение: кадры из JS — одна и та же поза для граней и холста. Первая поза ставится
+  // до отрисовки (layout), иначе мелькнул бы кадр с гранями без камеры.
   // biome-ignore lint/correctness/useExhaustiveDependencies: перезапуск — только при новом переходе
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!ph.moving) return;
-    const a = POSES[ph.from];
+    const a = ph.from;
     const b = POSES[ph.to];
     const start = performance.now();
     let raf = 0;

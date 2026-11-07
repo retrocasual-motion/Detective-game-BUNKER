@@ -14,7 +14,7 @@ interface MaterialCardProps {
 /**
  * Материал на столе — лист бумаги (DESK-A): лежит с поворотом, при взятии приподнимается
  * (тень больше), в движении отстаёт от руки наклоном, после отпускания оседает.
- * Один клик (без перетаскивания) — открыть.
+ * Один клик (без перетаскивания) или Enter (у кнопки он тоже даёт click) — открыть.
  */
 export const MaterialCard = memo(function MaterialCard({
   item,
@@ -41,9 +41,6 @@ export const MaterialCard = memo(function MaterialCard({
       style={{ translate: `${x}px ${y}px`, rotate: `${item.rot + drag.tilt}deg`, zIndex: item.z }}
       onClick={() => {
         if (!drag.wasDragged()) onOpen?.(item.materialId);
-      }}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') onOpen?.(item.materialId);
       }}
       {...drag.handlers}
     >

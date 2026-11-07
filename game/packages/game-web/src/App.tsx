@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { BoardView } from './board/BoardView.tsx';
 import { pinToBoard } from './board/board-actions.ts';
 import { DeskView } from './desk/DeskView.tsx';
@@ -13,7 +13,8 @@ const isTyping = (t: EventTarget | null) =>
   t instanceof HTMLElement && (t.isContentEditable || ['INPUT', 'TEXTAREA'].includes(t.tagName));
 
 export function App() {
-  const state = useGame((g) => g.state);
+  // Только вид: стол и доска подписаны на своё сами, App не перерисовывает их на каждый сдвиг.
+  const view = useGame((g) => g.state?.view);
   const load = useGame((g) => g.load);
   const setView = useGame((g) => g.setView);
   const openViewer = useGame((g) => g.openViewer);
@@ -39,7 +40,13 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [setView]);
 
-  if (!state) {
+  // Один и тот же набор видов — React не перерисовывает их вместе с App.
+  const faces = useMemo(
+    () => ({ desk: <DeskView onOpen={openViewer} />, left: <LeftView />, right: <BoardView /> }),
+    [openViewer],
+  );
+
+  if (!view) {
     return (
       <div className="placeholder">
         {loadFailed ? 'Сервер пока не отвечает, пробуем ещё…' : 'Загрузка…'}
@@ -49,16 +56,7 @@ export function App() {
 
   return (
     <div className="room" data-testid="room">
-      <RoomScene
-        view={state.view}
-        onGo={setView}
-        hideNav={viewerId !== null}
-        faces={{
-          desk: <DeskView onOpen={openViewer} />,
-          left: <LeftView />,
-          right: <BoardView />,
-        }}
-      />
+      <RoomScene view={view} onGo={setView} hideNav={viewerId !== null} faces={faces} />
       {saveStatus === 'error' && (
         <div className="save-error" data-testid="save-error">
           Не сохранено

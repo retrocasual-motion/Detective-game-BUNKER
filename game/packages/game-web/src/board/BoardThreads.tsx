@@ -12,6 +12,8 @@ interface BoardThreadsProps {
   pulling: { from: { x: number; y: number }; to: { x: number; y: number } } | null;
   onThreadClick(id: string, e: MouseEvent): void;
   onThreadDoubleClick(id: string, e: MouseEvent): void;
+  /** Подпись: щелчок (и двойной) — правка сразу; удаление — только двойным щелчком по самой нити. */
+  onLabelClick(id: string, e: MouseEvent): void;
 }
 
 /**
@@ -24,6 +26,7 @@ export function BoardThreads({
   pulling,
   onThreadClick,
   onThreadDoubleClick,
+  onLabelClick,
 }: BoardThreadsProps) {
   const pin = new Map(items.map((i) => [i.id, pinOf(i)]));
   return (
@@ -54,8 +57,7 @@ export function BoardThreads({
                 x={(a.x + b.x) / 2}
                 y={(a.y + b.y) / 2 - 8}
                 onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => onThreadClick(t.id, e)}
-                onDoubleClick={(e) => onThreadDoubleClick(t.id, e)}
+                onClick={(e) => onLabelClick(t.id, e)}
               >
                 {t.label}
               </text>

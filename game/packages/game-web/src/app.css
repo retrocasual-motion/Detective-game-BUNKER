@@ -139,6 +139,11 @@ button {
 }
 .nav-left {
   left: var(--space-1);
+  transition: left 0.25s var(--ease-camera);
+}
+/* Открытая папка слева — стрелка встаёт у её края, а не под ней. */
+.room:has(.petition-open) .nav-left {
+  left: calc(var(--space-4) + var(--folder-width) + var(--space-1));
 }
 .nav-right {
   right: var(--space-1);
@@ -463,7 +468,8 @@ button {
 }
 .board-thread-hit {
   stroke: transparent;
-  stroke-width: 18;
+  /* Достаточно, чтобы попасть, и не съедает щелчки по копиям под нитью. */
+  stroke-width: 10;
   pointer-events: stroke;
   cursor: pointer;
 }
