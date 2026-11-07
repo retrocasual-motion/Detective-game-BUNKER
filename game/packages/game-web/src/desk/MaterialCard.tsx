@@ -30,11 +30,17 @@ export const MaterialCard = memo(function MaterialCard({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={`${material.id}. ${material.title}`}
       className={`card${drag.offset ? ' card-dragging' : ''}`}
       data-testid={`card-${item.materialId}`}
       style={{ transform: `translate(${x}px, ${y}px)`, zIndex: item.z }}
       onDoubleClick={() => {
         if (!drag.wasDragged()) onOpen?.(item.materialId);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') onOpen?.(item.materialId);
       }}
       {...drag.handlers}
     >
