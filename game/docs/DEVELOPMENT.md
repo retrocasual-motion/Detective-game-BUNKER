@@ -86,6 +86,9 @@ Claude будет спрашивать разрешение на команды 
       (ничего не создаёт ни локально, ни на GitHub).
 - [x] Имя и почта для коммитов: `git config user.name`, `git config user.email`
       (если пусто — спросить автора).
+- [x] GitHub CLI (нужен Claude для PR): `gh auth status`. Если не вошёл — автор в
+      терминале VS Code (Ctrl+Ё или меню «Терминал → Создать терминал») запускает
+      `gh auth login`: GitHub.com → HTTPS → Y → Login with a web browser → код в браузере.
 - [x] Свободное место на диске E: (нужно ~5–10 ГБ под зависимости и браузеры тестов).
 - [x] Docker не требуется (локально без Docker — решение 06.11).
 
@@ -124,7 +127,8 @@ Claude будет спрашивать разрешение на команды 
 
 **Сделано 07.11.2026 (компьютер автора, Windows 11):** git 2.56.0; Node.js 26.13.0
 LTS, npm 11.20.0, pnpm 12.18.0; связь с GitHub и право записи — есть; имя и почта —
-`retrocasual-motion <gorlin.motion@gmail.com>` (как в истории репозитория); диск E: —
+`retrocasual-motion <gorlin.motion@gmail.com>` (как в истории репозитория); GitHub CLI —
+вход выполнен; диск E: —
 525 ГБ свободно; плагины planning-with-files 3.28.1, Superpowers 7.0.0, Context7 —
 установлены и включены; webapp-testing — в skills проекта; папка медиа создана.
 Не сделано: вход в Context7 (`/mcp`); браузеры Playwright и `.env` — с кодом M0;
