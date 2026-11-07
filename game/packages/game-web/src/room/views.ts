@@ -7,13 +7,22 @@ export const VIEW_LABELS: Record<View, string> = {
   right: 'Справа',
 };
 
-/** Порядок вкладок. Стрелки ходят по линии Слева ↔ Стол ↔ Справа. */
-export const TAB_ORDER: View[] = ['room', 'left', 'desk', 'right'];
-const LINE: View[] = ['left', 'desk', 'right'];
+export type Dir = 'left' | 'right' | 'up' | 'down';
 
-export function viewByArrow(view: View, key: 'ArrowLeft' | 'ArrowRight'): View {
-  if (view === 'room') return key === 'ArrowLeft' ? 'left' : 'right';
-  const i = LINE.indexOf(view);
-  const next = key === 'ArrowLeft' ? Math.max(0, i - 1) : Math.min(LINE.length - 1, i + 1);
-  return LINE[next] ?? view;
-}
+/**
+ * Куда ведёт каждая стрелка (TECH_PLAN 4.0): со стола — влево, вправо и назад в комнату;
+ * из «Слева» и «Справа» — обратно к столу; из комнаты — к любой зоне.
+ */
+export const NAV: Record<View, Partial<Record<Dir, View>>> = {
+  desk: { left: 'left', right: 'right', up: 'room' },
+  left: { right: 'desk' },
+  right: { left: 'desk' },
+  room: { left: 'left', right: 'right', down: 'desk' },
+};
+
+export const KEY_DIR: Partial<Record<string, Dir>> = {
+  ArrowLeft: 'left',
+  ArrowRight: 'right',
+  ArrowUp: 'up',
+  ArrowDown: 'down',
+};

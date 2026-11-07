@@ -10,8 +10,7 @@ body,
 }
 /* clip, а не hidden: hidden-контейнер браузер всё равно прокручивает к фокусу
    (уголок папки выступает за низ экрана — комната уезжала вверх). */
-.room,
-.room-view {
+.room {
   overflow: clip;
 }
 body {
@@ -27,55 +26,146 @@ button {
 
 .room {
   position: relative;
-  display: flex;
-  flex-direction: column;
   height: 100%;
-}
-.room-tabs {
-  display: flex;
-  gap: var(--space-1);
-  height: var(--tabs-height);
-  padding: var(--space-1);
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-}
-.room-tab {
-  padding: 0 var(--space-3);
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-}
-.room-tab[aria-selected="true"] {
-  background: var(--color-surface-raised);
-  border-color: var(--color-accent);
-}
-.room-status {
-  margin-left: auto;
-  align-self: center;
-  padding: 0 var(--space-3);
-  color: var(--color-danger);
-}
-.room-view {
-  position: relative;
-  flex: 1;
-  min-height: 0;
 }
 
-.room-overview {
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  gap: var(--space-3);
-  height: 100%;
-  padding: var(--space-4);
+/* ── Комната (ROOM-B): серая 3D-сцена ── */
+.scene {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  perspective-origin: 50% 50%;
+  background: var(--color-room-dark);
 }
-.room-zone {
-  flex: 1;
-  max-width: 360px;
-  background: var(--color-surface);
-  border: 1px dashed var(--color-border);
+.world {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+.plane {
+  position: absolute;
+  transform-origin: 50% 50%;
+}
+.face {
+  backface-visibility: hidden;
+}
+.face {
+  overflow: clip;
+}
+.scene[data-moving="true"] .world {
+  pointer-events: none;
+}
+.scene[data-moving="true"] .face {
+  will-change: transform;
+}
+.face-hidden {
+  visibility: hidden;
+}
+.face-content {
+  position: absolute;
+  inset: 0;
+}
+.face-desk {
+  background: var(--color-desk);
+}
+.face-left {
+  background: var(--color-room-wall);
+}
+.face-right {
+  background: var(--color-room-wall);
+}
+.face-zone {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  border: 4px dashed transparent;
+  color: transparent;
+  font-size: 64px;
+}
+.face-zone:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: rgb(0 0 0 / 15%);
+}
+.scene-decor {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.scene-decor[hidden] {
+  display: none;
+}
+
+/* Стрелки по краям экрана: маленькие, проявляются при наведении. */
+.nav-arrow {
+  position: absolute;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  background: var(--color-nav-bg);
+  color: var(--color-text);
+  border: none;
   border-radius: var(--radius);
-  font-size: 20px;
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+.nav-arrow:hover {
+  opacity: 1;
+}
+.nav-glyph {
+  font-size: 28px;
+  line-height: 1;
+}
+.nav-label {
+  font-size: 12px;
+  display: none;
+}
+.nav-arrow:hover .nav-label {
+  display: inline;
+}
+.nav-left,
+.nav-right {
+  top: 50%;
+  width: var(--nav-size);
+  min-height: calc(var(--nav-size) * 2);
+  margin-top: calc(var(--nav-size) * -1);
+  flex-direction: column;
+}
+.nav-left {
+  left: var(--space-1);
+}
+.nav-right {
+  right: var(--space-1);
+}
+.nav-up,
+.nav-down {
+  left: 50%;
+  height: var(--nav-size);
+  min-width: calc(var(--nav-size) * 2);
+  padding: 0 var(--space-2);
+  transform: translateX(-50%);
+}
+.nav-up {
+  top: var(--space-1);
+}
+.nav-down {
+  bottom: var(--space-1);
+}
+.save-error {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 60;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-surface);
+  color: var(--color-danger);
+  border-radius: var(--radius);
 }
 
 .petition-corner {
