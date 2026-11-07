@@ -1,11 +1,13 @@
 import { type PointerEvent, useRef, useState } from 'react';
 
 const CLICK_SLOP = 3;
+/** Двойной клик вскоре после перетаскивания — продолжение жеста, а не «открыть». */
+const AFTER_DRAG_MS = 500;
 
 export interface DragResult {
   /** Смещение в мировых координатах, пока объект тянут (null — не тянут). */
   offset: { x: number; y: number } | null;
-  /** Был ли последний жест перетаскиванием (а не кликом) — для двойного клика. */
+  /** Было ли перетаскивание в последнем жесте или только что перед ним — для двойного клика. */
   wasDragged(): boolean;
   handlers: {
     onPointerDown(e: PointerEvent<HTMLElement>): void;
@@ -26,6 +28,7 @@ export function useDraggable(
 ): DragResult {
   const start = useRef<{ x: number; y: number } | null>(null);
   const dragged = useRef(false);
+  const lastDragEnd = useRef(0);
   const [offset, setOffset] = useState<{ x: number; y: number } | null>(null);
 
   const end = (e: PointerEvent<HTMLElement>, commit: boolean) => {
@@ -35,12 +38,13 @@ export function useDraggable(
     const dx = (e.clientX - s.x) / zoom;
     const dy = (e.clientY - s.y) / zoom;
     setOffset(null);
+    if (dragged.current) lastDragEnd.current = Date.now();
     if (commit && dragged.current) onDrop(dx, dy);
   };
 
   return {
     offset,
-    wasDragged: () => dragged.current,
+    wasDragged: () => dragged.current || Date.now() - lastDragEnd.current < AFTER_DRAG_MS,
     handlers: {
       onPointerDown(e) {
         if (e.button !== 0) return;

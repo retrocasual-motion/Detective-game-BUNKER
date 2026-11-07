@@ -9,7 +9,11 @@ interface GameStore {
   materials: Material[];
   state: PlayerState | null;
   saveStatus: SaveStatus;
+  /** Материал, открытый в просмотрщике (null — закрыт). */
+  viewerId: string | null;
   load(): Promise<void>;
+  openViewer(materialId: string): void;
+  closeViewer(): void;
   setView(view: View): void;
   updateState(fn: (s: PlayerState) => PlayerState): void;
 }
@@ -25,6 +29,15 @@ export const useGame = create<GameStore>((set, get) => {
     materials: [],
     state: null,
     saveStatus: 'saved',
+    viewerId: null,
+
+    openViewer(materialId) {
+      set({ viewerId: materialId });
+    },
+
+    closeViewer() {
+      set({ viewerId: null });
+    },
 
     async load() {
       const [materials, state] = await Promise.all([getMaterials(), getState()]);

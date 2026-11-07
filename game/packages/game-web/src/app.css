@@ -173,3 +173,50 @@ button {
   margin-top: var(--space-2);
   font-family: var(--font-paper);
 }
+
+.viewer {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: rgb(0 0 0 / 70%);
+}
+.viewer-bar {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+}
+.viewer-bar button {
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.viewer-title {
+  margin-right: auto;
+  align-self: center;
+}
+.viewer-paper {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  width: min(900px, 100%);
+  margin: var(--space-3) auto calc(var(--corner-height) + var(--space-3));
+  padding: var(--space-4);
+  background: var(--color-paper);
+  color: var(--color-paper-text);
+  font: var(--font-size-paper) / 1.5 var(--font-paper);
+  box-shadow: var(--shadow);
+  user-select: text;
+}
+.viewer-paper table {
+  border-collapse: collapse;
+}
+.viewer-paper th,
+.viewer-paper td {
+  border: 1px solid var(--color-border);
+  padding: var(--space-1) var(--space-2);
+}

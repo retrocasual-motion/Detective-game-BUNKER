@@ -6,6 +6,7 @@ import { RoomOverview } from './room/RoomOverview.tsx';
 import { RoomTabs } from './room/RoomTabs.tsx';
 import { viewByArrow } from './room/views.ts';
 import { useGame } from './store.ts';
+import { Viewer } from './viewer/Viewer.tsx';
 
 const isTyping = (t: EventTarget | null) =>
   t instanceof HTMLElement && (t.isContentEditable || ['INPUT', 'TEXTAREA'].includes(t.tagName));
@@ -15,7 +16,7 @@ function CurrentView({ view }: { view: View }): ReactNode {
     case 'room':
       return <RoomOverview />;
     case 'desk':
-      return <DeskView />;
+      return <DeskView onOpen={useGame.getState().openViewer} />;
     case 'left':
       return <div data-testid="view-left" className="placeholder" />;
     case 'right':
@@ -27,6 +28,7 @@ export function App() {
   const state = useGame((g) => g.state);
   const load = useGame((g) => g.load);
   const setView = useGame((g) => g.setView);
+  const viewerId = useGame((g) => g.viewerId);
 
   useEffect(() => {
     load();
@@ -35,6 +37,7 @@ export function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || isTyping(e.target)) return;
+      if (useGame.getState().viewerId) return;
       const view = useGame.getState().state?.view;
       if (view) setView(viewByArrow(view, e.key));
     };
@@ -50,6 +53,7 @@ export function App() {
       <div className="room-view">
         <CurrentView view={state.view} />
       </div>
+      {viewerId && <Viewer materialId={viewerId} />}
       <PetitionCorner />
     </div>
   );
