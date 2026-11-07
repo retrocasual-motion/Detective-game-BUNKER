@@ -66,6 +66,7 @@ export function App() {
       )}
       {viewerId && (
         <Viewer
+          key={viewerId}
           materialId={viewerId}
           onPin={(id) =>
             useGame

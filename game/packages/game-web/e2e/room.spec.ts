@@ -1,72 +1,91 @@
 import { expect, test } from './fixtures.ts';
 
+const scene = (page: import('@playwright/test').Page) => page.getByTestId('scene');
+
 test('старт — вид «Стол»', async ({ page }) => {
+  await expect(page.getByTestId('view-desk')).toBeVisible();
+  await expect(scene(page)).toHaveAttribute('data-view', 'desk');
+});
+
+test('стрелка у правого края открывает доску, у левого края доски — обратно стол', async ({
+  page,
+}) => {
+  await page.getByTestId('nav-right').click();
+  await expect(page.getByTestId('view-right')).toBeVisible();
+  await expect(page.getByTestId('view-desk')).toBeHidden();
+  await page.getByTestId('nav-left').click();
   await expect(page.getByTestId('view-desk')).toBeVisible();
 });
 
-test('вкладка «Справа» открывает доску', async ({ page }) => {
-  await page.getByTestId('view-tab-right').click();
-  await expect(page.getByTestId('view-right')).toBeVisible();
-});
-
-test('стрелки: ← со стола — «Слева», → дважды — «Справа»', async ({ page }) => {
+test('клавиши дублируют стрелки: ← «Слева», → стол, ↑ комната, ↓ стол', async ({ page }) => {
   await page.keyboard.press('ArrowLeft');
   await expect(page.getByTestId('view-left')).toBeVisible();
   await page.keyboard.press('ArrowRight');
-  await page.keyboard.press('ArrowRight');
-  await expect(page.getByTestId('view-right')).toBeVisible();
+  await expect(page.getByTestId('view-desk')).toBeVisible();
+  await page.keyboard.press('ArrowUp');
+  await expect(scene(page)).toHaveAttribute('data-view', 'room');
+  await page.keyboard.press('ArrowDown');
+  await expect(scene(page)).toHaveAttribute('data-view', 'desk');
 });
 
 test('вид сохраняется после перезагрузки', async ({ page }) => {
-  await page.getByTestId('view-tab-left').click();
-  await expect(page.getByTestId('view-left')).toBeVisible();
-  await page.waitForResponse(
+  const saved = page.waitForResponse(
     (r) => r.url().endsWith('/api/state') && r.request().method() === 'PUT',
   );
+  await page.getByTestId('nav-left').click();
+  await expect(page.getByTestId('view-left')).toBeVisible();
+  await saved;
   await page.reload();
   await expect(page.getByTestId('view-left')).toBeVisible();
 });
 
-test('«Комната»: три зоны переключают виды', async ({ page }) => {
-  for (const [zone, view] of [
-    ['Слева', 'left'],
-    ['Стол', 'desk'],
-    ['Справа', 'right'],
-  ] as const) {
-    await page.getByTestId('view-tab-room').click();
-    await page.getByTestId('view-room').getByRole('button', { name: zone, exact: true }).click();
+test('«Комната»: щелчок по зоне ведёт в вид', async ({ page }) => {
+  for (const view of ['left', 'desk', 'right'] as const) {
+    await page.getByTestId('nav-up').click();
+    await expect(scene(page)).toHaveAttribute('data-view', 'room');
+    await page.getByTestId(`zone-${view}`).click();
     await expect(page.getByTestId(`view-${view}`)).toBeVisible();
+    await expect(scene(page)).toHaveAttribute('data-view', view);
+    // Обратно к столу — там стрелка «Комната».
+    if (view !== 'desk') await page.getByTestId(view === 'left' ? 'nav-right' : 'nav-left').click();
   }
 });
 
-test('уголок папки виден на всех видах и открывает пустую папку', async ({ page }) => {
-  for (const view of ['desk', 'room', 'left', 'right']) {
-    await page.getByTestId(`view-tab-${view}`).click();
-    await expect(page.getByTestId('petition-corner')).toBeVisible();
+test('в «Комнате» все три вида видны сразу (как стены и стол)', async ({ page }) => {
+  await page.getByTestId('nav-up').click();
+  for (const v of ['view-desk', 'view-left', 'view-right']) {
+    await expect(page.getByTestId(v)).toBeVisible();
   }
-  await page.getByTestId('petition-corner').click();
-  const folder = page.getByTestId('petition-folder');
-  for (const field of ['Кому', 'Прошу', 'На основании']) {
-    await expect(folder.getByLabel(field)).toBeDisabled();
-  }
-  await folder.getByRole('button', { name: 'Закрыть' }).click();
-  await expect(folder).toBeHidden();
 });
 
-test('при 1366×768 нет горизонтальной прокрутки, вкладки видны', async ({ page }) => {
+test('при 1366×768 нет горизонтальной прокрутки, стрелки и уголок папки на экране', async ({
+  page,
+}) => {
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth > window.innerWidth,
   );
   expect(overflow).toBe(false);
-  await expect(page.getByTestId('view-tab-desk')).toBeInViewport();
-  await expect(page.getByTestId('petition-corner')).toBeInViewport();
+  for (const id of ['nav-left', 'nav-right', 'nav-up', 'petition-corner']) {
+    await expect(page.getByTestId(id)).toBeInViewport();
+  }
 });
 
-test('щелчок по уголку папки не сдвигает комнату', async ({ page }) => {
-  const before = await page.getByTestId('view-tab-desk').boundingBox();
-  await page.getByTestId('petition-corner').click();
-  const after = await page.getByTestId('view-tab-desk').boundingBox();
-  expect(after?.y).toBe(before?.y);
+test('в покое вид лежит ровно на экране (без 3D)', async ({ page }) => {
+  for (const [arrow, view] of [
+    ['nav-left', 'view-left'],
+    ['nav-right', 'view-desk'],
+    ['nav-right', 'view-right'],
+  ] as const) {
+    await page.getByTestId(arrow).click();
+    await expect(scene(page)).toHaveAttribute('data-view', view.replace('view-', ''));
+    await expect(scene(page)).toHaveAttribute('data-moving', 'false');
+    expect(await page.getByTestId(view).boundingBox()).toEqual({
+      x: 0,
+      y: 0,
+      width: 1366,
+      height: 768,
+    });
+  }
 });
 
 test('сервер ответил 503 при загрузке — игра повторяет запрос и открывается', async ({ page }) => {
@@ -82,9 +101,20 @@ test('сервер ответил 503 при загрузке — игра по�
   await expect(page.getByTestId('view-desk')).toBeVisible({ timeout: 15_000 });
 });
 
-test('под открытой папкой стрелки не переключают вид', async ({ page }) => {
-  await page.getByTestId('petition-corner').click();
-  await page.keyboard.press('ArrowLeft');
-  await page.getByTestId('petition-folder').getByRole('button', { name: 'Закрыть' }).click();
-  await expect(page.getByTestId('view-desk')).toBeVisible();
+test.describe('с анимацией', () => {
+  test.use({ reducedMotion: 'no-preference' });
+
+  test('переход идёт движением камеры и заканчивается в покое', async ({ page }) => {
+    await page.getByTestId('nav-left').click();
+    await expect(scene(page)).toHaveAttribute('data-moving', 'true');
+    await expect(page.getByTestId('nav-right')).toBeHidden();
+    await expect(scene(page)).toHaveAttribute('data-moving', 'false');
+    await expect(page.getByTestId('view-left')).toBeVisible();
+    expect(await page.getByTestId('view-left').boundingBox()).toEqual({
+      x: 0,
+      y: 0,
+      width: 1366,
+      height: 768,
+    });
+  });
 });

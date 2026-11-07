@@ -55,3 +55,31 @@ export const removeFromBoard =
       items: s.board.items.filter((i) => i.id !== id),
       threads: s.board.threads.filter((t) => t.id !== id && t.from !== id && t.to !== id),
     });
+
+export interface Taken {
+  items: BoardItem[];
+  threads: BoardThread[];
+}
+
+/** Что заберёт removeFromBoard(id) — чтобы можно было «Вернуть». */
+export const takeFromBoard = (id: string, s: PlayerState): Taken => ({
+  items: s.board.items.filter((i) => i.id === id),
+  threads: s.board.threads.filter((t) => t.id === id || t.from === id || t.to === id),
+});
+
+/** Вернуть забранное. Нить возвращается, только если обе её копии на доске; дубли не появляются. */
+export const restoreToBoard =
+  (taken: Taken): Update =>
+  (s) => {
+    const itemIds = new Set(s.board.items.map((i) => i.id));
+    const items = [...s.board.items, ...taken.items.filter((i) => !itemIds.has(i.id))];
+    const present = new Set(items.map((i) => i.id));
+    const threadIds = new Set(s.board.threads.map((t) => t.id));
+    const threads = [
+      ...s.board.threads,
+      ...taken.threads.filter(
+        (t) => !threadIds.has(t.id) && present.has(t.from) && present.has(t.to),
+      ),
+    ];
+    return withBoard(s, { items, threads });
+  };

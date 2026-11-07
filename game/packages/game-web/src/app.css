@@ -168,52 +168,79 @@ button {
   border-radius: var(--radius);
 }
 
-.petition-corner {
+/* Папка ходатайства (PET-A): уголок внизу слева; открытая — слева на треть экрана, без затемнения. */
+.petition {
   position: absolute;
-  right: var(--space-4);
+  left: var(--space-4);
   bottom: 0;
+  z-index: 50;
+  width: var(--folder-width);
+  height: var(--folder-height);
+  display: flex;
+  flex-direction: column;
+  translate: 0 calc(100% - var(--corner-height) + 8px);
+  transition: translate 0.25s var(--ease-camera);
+  pointer-events: none;
+}
+.petition:not(.petition-open):hover {
+  translate: 0 calc(100% - var(--corner-height) - 4px);
+}
+.petition-open {
+  translate: 0 0;
+}
+.petition-tab {
+  align-self: flex-start;
   width: var(--corner-width);
   height: var(--corner-height);
-  background: var(--color-card);
+  flex: none;
+  background: var(--color-folder);
   color: var(--color-card-text);
   border: none;
   border-radius: var(--radius) var(--radius) 0 0;
   box-shadow: var(--shadow);
-  transform: translateY(8px);
-  transition: transform 0.15s;
-  z-index: 50;
-}
-.petition-corner:hover {
-  transform: translateY(0);
-}
-.overlay {
-  position: absolute;
-  inset: 0;
-  background: rgb(0 0 0 / 55%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
+  pointer-events: auto;
 }
 .petition-folder {
-  width: min(640px, 90%);
-  padding: var(--space-4);
-  background: var(--color-card);
-  color: var(--color-card-text);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  position: relative;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  padding: var(--space-4) var(--space-3);
+  background: var(--color-folder);
+  color: var(--color-card-text);
+  border-radius: 0 var(--radius) 0 0;
+  box-shadow: var(--shadow-paper-lifted);
+  pointer-events: auto;
 }
-.petition-folder label {
+.petition:not(.petition-open) .petition-folder {
+  visibility: hidden;
+  transition: visibility 0s 0.25s;
+}
+.petition-close {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+}
+.petition-field {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  border: none;
 }
-.petition-folder input {
+.petition-field-name {
+  padding: 0;
+  font-weight: bold;
+}
+.petition-slot {
+  min-height: 56px;
   padding: var(--space-2);
-  font: inherit;
+  border: 2px dashed var(--color-folder-slot);
+  border-radius: var(--radius);
+  color: var(--color-folder-slot);
+  font-size: 12px;
 }
 .placeholder {
   color: var(--color-text-muted);
@@ -256,14 +283,35 @@ button {
   flex-direction: column;
   justify-content: flex-start;
 }
+/* Лист бумаги на столе (DESK-A): тень, подъём, наклон в движении, оседание. */
+.paper {
+  background: var(--color-paper-sheet);
+  border-radius: 1px;
+  box-shadow: var(--shadow-paper);
+  transition:
+    rotate var(--paper-settle),
+    scale var(--paper-settle),
+    box-shadow 0.2s;
+}
+.paper:hover {
+  scale: 1.015;
+}
+.paper.card-dragging {
+  cursor: grabbing;
+  scale: 1.04;
+  box-shadow: var(--shadow-paper-lifted);
+  transition:
+    rotate 0.12s ease-out,
+    scale 0.12s ease-out,
+    box-shadow 0.12s;
+}
 .card-dragging {
   cursor: grabbing;
-  outline: 2px solid var(--color-accent);
 }
 .card-id {
   display: block;
   font-weight: bold;
-  color: var(--color-text-muted);
+  color: var(--color-card-id);
 }
 .card-title {
   display: block;
@@ -276,38 +324,54 @@ button {
   inset: 0;
   z-index: 40;
   display: flex;
-  flex-direction: column;
-  background: rgb(0 0 0 / 70%);
+  justify-content: center;
+  padding: var(--space-3) var(--space-4) calc(var(--corner-height) + var(--space-3));
+  background: var(--color-viewer-backdrop);
+  transition: padding-left 0.25s;
 }
-.viewer-bar {
+/* Открыта папка ходатайства — лист уезжает вправо, чтобы оба были видны. */
+.viewer-with-folder {
+  padding-left: calc(var(--folder-width) + var(--space-4));
+}
+.viewer-stage {
   display: flex;
+  align-items: flex-start;
   gap: var(--space-2);
-  justify-content: flex-end;
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-surface);
-}
-.viewer-bar button {
-  padding: var(--space-1) var(--space-3);
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-}
-.viewer-title {
-  margin-right: auto;
-  align-self: center;
+  max-width: 100%;
+  min-height: 0;
 }
 .viewer-paper {
-  flex: 1;
-  min-height: 0;
+  width: min(820px, 100%);
+  max-height: 100%;
   overflow-y: auto;
-  width: min(900px, 100%);
-  margin: var(--space-3) auto calc(var(--corner-height) + var(--space-3));
   padding: var(--space-4);
   background: var(--color-paper);
   color: var(--color-paper-text);
   font: var(--font-size-paper) / 1.5 var(--font-paper);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-paper-lifted);
   user-select: text;
+}
+.viewer-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  width: var(--viewer-tools-width);
+  flex: none;
+}
+.tool {
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  text-align: left;
+}
+.tool-close {
+  width: var(--nav-size);
+  height: var(--nav-size);
+  padding: 0;
+  text-align: center;
+  font-size: 18px;
 }
 .viewer-paper table {
   border-collapse: collapse;
@@ -319,7 +383,6 @@ button {
 }
 
 .viewer-note {
-  align-self: center;
   color: var(--color-accent);
 }
 .board {
@@ -329,20 +392,60 @@ button {
 .board-surface {
   background: var(--color-board);
 }
-.board-toolbar {
+/* Копия на доске (TH-B): тело — открыть и двигать, булавка — тянуть нить, ✕ — снять. */
+.board-card {
+  padding: 0;
+  overflow: visible;
+}
+.board-card-body {
   position: absolute;
-  top: var(--space-2);
-  left: var(--space-2);
-  z-index: 5;
+  inset: 0;
+  padding: var(--space-2);
+  padding-top: calc(var(--space-2) + 10px);
+  background: transparent;
+  border: none;
+  border-radius: inherit;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  color: inherit;
 }
-.board-toolbar button {
-  padding: var(--space-1) var(--space-3);
+.board-pin {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--pin-y) - var(--pin-size) / 2);
+  width: var(--pin-size);
+  height: var(--pin-size);
+  margin-left: calc(var(--pin-size) / -2);
+  padding: 0;
+  border: 2px solid var(--color-pin-edge);
+  border-radius: 50%;
+  background: var(--color-thread);
+  cursor: crosshair;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 50%);
+  transition: scale 0.12s;
+}
+.board-pin:hover {
+  scale: 1.35;
+}
+.board-remove {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
   background: var(--color-surface-raised);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  color: var(--color-text);
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.12s;
 }
-.board-toolbar button[aria-pressed="true"] {
-  border-color: var(--color-accent);
+.board-card:hover .board-remove,
+.board-remove:focus-visible {
+  opacity: 1;
 }
 .board-threads {
   position: absolute;
@@ -355,16 +458,20 @@ button {
 }
 .board-thread {
   stroke: var(--color-thread);
-  stroke-width: 6;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.board-thread-hit {
+  stroke: transparent;
+  stroke-width: 18;
   pointer-events: stroke;
   cursor: pointer;
 }
-.board-thread-selected {
-  stroke: var(--color-accent);
+.board-thread-hit:hover {
+  stroke: rgb(255 255 255 / 12%);
 }
-.board-thread-pin {
-  fill: var(--color-thread);
-  pointer-events: none;
+.board-thread-pulling {
+  stroke-dasharray: 6 6;
 }
 .board-thread-label {
   fill: var(--color-text);
@@ -376,21 +483,35 @@ button {
   font: var(--font-size-ui) var(--font-ui);
   text-anchor: middle;
 }
-.card-selected {
-  outline: 3px solid var(--color-accent);
-}
-.card-pending {
-  outline: 3px dashed var(--color-accent);
-}
 .thread-label-input {
   position: absolute;
   left: 0;
   top: 0;
   width: 200px;
   margin-left: -100px;
+  margin-top: -14px;
   padding: var(--space-1) var(--space-2);
   font: inherit;
   z-index: 10;
+}
+.undo-toast {
+  position: absolute;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 12px 0 0 12px;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.undo-toast button {
+  padding: 2px var(--space-2);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius);
 }
 
 .left-view {
@@ -451,4 +572,16 @@ button {
   display: block;
   font-size: 12px;
   color: var(--color-text-muted);
+}
+
+/* Без анимаций по желанию системы (и в автотестах). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: системное «без анимаций» сильнее любых переходов */
+    transition-duration: 0s !important;
+    /* biome-ignore lint/complexity/noImportantStyles: то же */
+    transition-delay: 0s !important;
+  }
 }

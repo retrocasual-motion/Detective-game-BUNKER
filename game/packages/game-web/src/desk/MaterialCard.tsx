@@ -11,7 +11,11 @@ interface MaterialCardProps {
   onOpen?(materialId: string): void;
 }
 
-/** Материал на столе. Серый прототип: прямоугольник с номером и названием (TECH_PLAN 9.1). */
+/**
+ * Материал на столе — лист бумаги (DESK-A): лежит с поворотом, при взятии приподнимается
+ * (тень больше), в движении отстаёт от руки наклоном, после отпускания оседает.
+ * Один клик (без перетаскивания) — открыть.
+ */
 export const MaterialCard = memo(function MaterialCard({
   item,
   material,
@@ -20,11 +24,11 @@ export const MaterialCard = memo(function MaterialCard({
   onGrab,
   onOpen,
 }: MaterialCardProps) {
-  const drag = useDraggable(
+  const drag = useDraggable({
     zoom,
-    (dx, dy) => onMove(item.materialId, item.x + dx, item.y + dy),
-    () => onGrab(item.materialId),
-  );
+    onDrop: (dx, dy) => onMove(item.materialId, item.x + dx, item.y + dy),
+    onGrab: () => onGrab(item.materialId),
+  });
   const x = item.x + (drag.offset?.x ?? 0);
   const y = item.y + (drag.offset?.y ?? 0);
 
@@ -32,10 +36,10 @@ export const MaterialCard = memo(function MaterialCard({
     <button
       type="button"
       aria-label={`${material.id}. ${material.title}`}
-      className={`card${drag.offset ? ' card-dragging' : ''}`}
+      className={`card paper${drag.offset ? ' card-dragging' : ''}`}
       data-testid={`card-${item.materialId}`}
-      style={{ transform: `translate(${x}px, ${y}px)`, zIndex: item.z }}
-      onDoubleClick={() => {
+      style={{ translate: `${x}px ${y}px`, rotate: `${item.rot + drag.tilt}deg`, zIndex: item.z }}
+      onClick={() => {
         if (!drag.wasDragged()) onOpen?.(item.materialId);
       }}
       onKeyDown={(e) => {
