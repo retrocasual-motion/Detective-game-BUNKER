@@ -1,0 +1,39 @@
+/*
+ * Шкура игры: все цвета, шрифты и размеры — только здесь.
+ * Серый прототип (M0). На этапе дизайна меняется этот файл, а не компоненты.
+ */
+:root {
+  --font-ui: system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-paper: Georgia, "Times New Roman", serif;
+  --font-size-ui: 14px;
+  --font-size-paper: 16px;
+
+  --color-bg: #2b2b2b;
+  --color-surface: #3a3a3a;
+  --color-surface-raised: #4a4a4a;
+  --color-text: #e8e8e8;
+  --color-text-muted: #a8a8a8;
+  --color-accent: #c9a227;
+  --color-danger: #d9534f;
+  --color-border: #5a5a5a;
+
+  --color-desk: #575757;
+  --color-board: #6b6458;
+  --color-card: #d4d4d4;
+  --color-card-text: #222;
+  --color-paper: #f2f0ea;
+  --color-paper-text: #1d1d1d;
+  --color-thread: #b03030;
+
+  --tabs-height: 44px;
+  --corner-width: 180px;
+  --corner-height: 36px;
+  --card-width: 160px;
+  --card-height: 220px;
+  --radius: 4px;
+  --shadow: 0 2px 6px rgb(0 0 0 / 40%);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+}

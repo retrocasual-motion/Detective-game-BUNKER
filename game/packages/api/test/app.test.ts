@@ -41,6 +41,14 @@ describe('API', () => {
     expect(await res.json()).toEqual({ ok: true });
   });
 
+  it('GET /api/health → 503, пока база не готова', async () => {
+    const res = await createApp({ db, materials, production: false, isReady: () => false }).request(
+      '/api/health',
+    );
+    expect(res.status).toBe(503);
+    expect(await res.json()).toEqual({ ok: false });
+  });
+
   it('GET /api/materials → 51 материал', async () => {
     const res = await app().request('/api/materials');
     expect(((await res.json()) as Material[]).length).toBe(51);

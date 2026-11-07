@@ -1,0 +1,55 @@
+import type { View } from '@bunker/shared';
+import { type ReactNode, useEffect } from 'react';
+import { PetitionCorner } from './petition/PetitionCorner.tsx';
+import { RoomOverview } from './room/RoomOverview.tsx';
+import { RoomTabs } from './room/RoomTabs.tsx';
+import { viewByArrow } from './room/views.ts';
+import { useGame } from './store.ts';
+
+const isTyping = (t: EventTarget | null) =>
+  t instanceof HTMLElement && (t.isContentEditable || ['INPUT', 'TEXTAREA'].includes(t.tagName));
+
+function CurrentView({ view }: { view: View }): ReactNode {
+  switch (view) {
+    case 'room':
+      return <RoomOverview />;
+    case 'desk':
+      return <div data-testid="view-desk" className="placeholder" />;
+    case 'left':
+      return <div data-testid="view-left" className="placeholder" />;
+    case 'right':
+      return <div data-testid="view-right" className="placeholder" />;
+  }
+}
+
+export function App() {
+  const state = useGame((g) => g.state);
+  const load = useGame((g) => g.load);
+  const setView = useGame((g) => g.setView);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || isTyping(e.target)) return;
+      const view = useGame.getState().state?.view;
+      if (view) setView(viewByArrow(view, e.key));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [setView]);
+
+  if (!state) return <div className="placeholder">Загрузка…</div>;
+
+  return (
+    <div className="room" data-testid="room">
+      <RoomTabs view={state.view} />
+      <div className="room-view">
+        <CurrentView view={state.view} />
+      </div>
+      <PetitionCorner />
+    </div>
+  );
+}

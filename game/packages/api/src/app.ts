@@ -17,6 +17,8 @@ export interface AppDeps {
   db: Db;
   materials: Material[];
   production: boolean;
+  /** Готова ли база (миграции применены); до этого health отвечает 503. */
+  isReady?: () => boolean;
 }
 
 /** Состояние ссылается только на материалы, которые у игрока есть, и в своих местах. */
@@ -30,10 +32,10 @@ function invalidReference(s: PlayerState, materials: Material[]): string | null 
   return null;
 }
 
-export function createApp({ db, materials, production }: AppDeps): Hono {
+export function createApp({ db, materials, production, isReady = () => true }: AppDeps): Hono {
   const app = new Hono();
 
-  app.get('/api/health', (c) => c.json({ ok: true }));
+  app.get('/api/health', (c) => (isReady() ? c.json({ ok: true }) : c.json({ ok: false }, 503)));
 
   app.get('/api/materials', (c) => c.json(materials));
 

@@ -14,7 +14,8 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "e2e": "pnpm -F game-web e2e",
-    "content:build": "pnpm -F content build"
+    "content:build": "pnpm -F content build",
+    "dev:app": "pnpm content:build && pnpm --parallel -F api -F game-web serve"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.5",
