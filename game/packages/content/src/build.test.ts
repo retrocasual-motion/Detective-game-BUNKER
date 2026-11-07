@@ -1,0 +1,44 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { describe, expect, it } from 'vitest';
+import { buildStartingMaterials, DEFAULT_PLAYER_DIR } from './build.ts';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const playerDir = join(here, DEFAULT_PLAYER_DIR);
+
+describe('buildStartingMaterials', () => {
+  const materials = buildStartingMaterials(playerDir);
+
+  it('собирает ровно 51 стартовый материал с номерами 01…51', () => {
+    expect(materials).toHaveLength(51);
+    expect(materials.map((m) => m.id)).toEqual(
+      Array.from({ length: 51 }, (_, i) => String(i + 1).padStart(2, '0')),
+    );
+  });
+
+  it('не включает вводную 00', () => {
+    expect(materials.some((m) => m.sourceFile.startsWith('00'))).toBe(false);
+  });
+
+  it('берёт название из первого заголовка', () => {
+    expect(materials[0]?.title).toBe('Входящее письмо');
+  });
+
+  it('кладёт устройства 24, 47, 48, 49, 50 в вид «Слева»', () => {
+    const evidence = materials.filter((m) => m.placement === 'evidence').map((m) => m.id);
+    expect(evidence).toEqual(['24', '47', '48', '49', '50']);
+  });
+
+  it('читает только player/ и не оставляет \r в тексте', () => {
+    for (const m of materials) {
+      expect(m.sourceFile).toMatch(/^\d{2}__.+\.md$/);
+      expect(readFileSync(join(playerDir, m.sourceFile), 'utf8').length).toBeGreaterThan(0);
+      expect(m.body.includes('\r')).toBe(false);
+    }
+  });
+
+  it('повторная сборка даёт тот же результат', () => {
+    expect(JSON.stringify(buildStartingMaterials(playerDir))).toBe(JSON.stringify(materials));
+  });
+});
