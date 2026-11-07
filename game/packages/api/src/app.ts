@@ -83,7 +83,7 @@ export function createApp({
     const index = serveStatic({ root: webDist, path: 'index.html' });
     app.use('/*', (c, next) => (isApi(c.req.path) ? next() : files(c, next)));
     // Любой другой путь страницы — та же игра (одна страница).
-    app.get('*', (c, next) => (isApi(c.req.path) ? c.notFound() : index(c, next)));
+    app.use('*', (c, next) => (isApi(c.req.path) ? next() : index(c, next)));
   }
 
   return app;
