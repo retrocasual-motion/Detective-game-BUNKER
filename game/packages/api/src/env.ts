@@ -18,4 +18,6 @@ export const env = {
   contentFile: fromRoot(e.CONTENT_FILE ?? 'packages/content/dist/starting.json'),
   pgDataDir: fromRoot(e.PG_DATA_DIR ?? '.data/pg'),
   pgPort: Number(e.PG_PORT ?? 5433),
+  /** Собранный клиент; задаётся в Docker (в разработке клиент отдаёт Vite). */
+  webDist: e.WEB_DIST ? fromRoot(e.WEB_DIST) : undefined,
 };

@@ -5,6 +5,7 @@ import {
   PlayerStateSchema,
   reconcile,
 } from '@bunker/shared';
+import { serveStatic } from '@hono/node-server/serve-static';
 import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
@@ -19,6 +20,8 @@ export interface AppDeps {
   production: boolean;
   /** Готова ли база (миграции применены); до этого health отвечает 503. */
   isReady?: () => boolean;
+  /** Папка собранного клиента (production, Docker): сервер отдаёт и игру, и API. */
+  webDist?: string;
 }
 
 /** Состояние ссылается только на материалы, которые у игрока есть, и в своих местах. */
@@ -32,7 +35,13 @@ function invalidReference(s: PlayerState, materials: Material[]): string | null 
   return null;
 }
 
-export function createApp({ db, materials, production, isReady = () => true }: AppDeps): Hono {
+export function createApp({
+  db,
+  materials,
+  production,
+  isReady = () => true,
+  webDist,
+}: AppDeps): Hono {
   const app = new Hono();
 
   app.get('/api/health', (c) => (isReady() ? c.json({ ok: true }) : c.json({ ok: false }, 503)));
@@ -67,6 +76,15 @@ export function createApp({ db, materials, production, isReady = () => true }: A
     await db.delete(playerState).where(eq(playerState.playerId, PLAYER_ID));
     return c.body(null, 204);
   });
+
+  if (webDist) {
+    const isApi = (path: string) => path === '/api' || path.startsWith('/api/');
+    const files = serveStatic({ root: webDist });
+    const index = serveStatic({ root: webDist, path: 'index.html' });
+    app.use('/*', (c, next) => (isApi(c.req.path) ? next() : files(c, next)));
+    // Любой другой путь страницы — та же игра (одна страница).
+    app.get('*', (c, next) => (isApi(c.req.path) ? c.notFound() : index(c, next)));
+  }
 
   return app;
 }

@@ -10,7 +10,13 @@ const materials = MaterialSchema.array().parse(JSON.parse(readFileSync(env.conte
 const { db } = connectDb(env.databaseUrl);
 
 let ready = false;
-const app = createApp({ db, materials, production: env.production, isReady: () => ready });
+const app = createApp({
+  db,
+  materials,
+  production: env.production,
+  isReady: () => ready,
+  webDist: env.webDist,
+});
 serve({ fetch: app.fetch, port: env.apiPort }, (info) => {
   console.log(`api: http://localhost:${info.port} (материалов: ${materials.length})`);
 });
