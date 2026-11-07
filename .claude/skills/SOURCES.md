@@ -1,11 +1,13 @@
 # Источники project skills
 
-В этой папке лежат 14 skills, скопированных из upstream-репозиториев по одному
-(не целыми наборами), и 4 собственных skill проекта (раздел ниже). Все три источника распространяются по лицензии MIT;
-текст лицензии с копирайтом автора лежит в каждой папке skill (`LICENSE`).
+В этой папке лежат 15 skills, скопированных из upstream-репозиториев по одному
+(не целыми наборами), и 4 собственных skill проекта (раздел ниже). Три источника
+распространяются по лицензии MIT, anthropics/skills — по Apache 2.0; текст лицензии
+лежит в каждой папке skill (`LICENSE` или `LICENSE.txt`).
 
-Planning with Files сюда не копируется: он подключён как плагин
-(`.claude/settings.json` и setup script облачной среды).
+Planning with Files, Superpowers и Context7 сюда не копируются: они подключены как
+плагины (`.claude/settings.json`; Planning with Files — ещё и в setup script облачной
+среды). Список инструментов разработки игры — `game/docs/STACK.md`, раздел 13.
 
 ## danjdewhurst/story-skills
 
@@ -60,6 +62,21 @@ verse-craft. Тексты skills иногда ссылаются на них («
 | Skill | Изменения |
 |---|---|
 | assumption-challenger | заменено только поле `description` во frontmatter. Исходное: «Identify and challenge implicit assumptions in plans, proposals, and technical decisions. Use when strategic-cto-mentor needs to surface hidden assumptions and wishful thinking before they become costly mistakes.» Оно привязывало skill к отсутствующему здесь `strategic-cto-mentor`, и Claude не вызывал бы его для сюжета. Тело skill не менялось. Ссылка на `wishful-thinking-patterns.md` битая уже в upstream (файла там нет). |
+
+## anthropics/skills
+
+`webapp-testing` в upstream входит только в плагин `example-skills` вместе с 11
+посторонними skills (рисование, гифки, бренд и т. п.). Чтобы не ставить лишнее
+(`game/docs/STACK.md`, раздел 13: «берём минимум»), skill скопирован отдельно.
+
+- Репозиторий: https://github.com/anthropics/skills
+- Коммит: `2c5958ecac7cee2b583967a2c4981d0f4a75c579` (2026-11-06)
+- Лицензия: Apache 2.0, © Anthropic (`LICENSE.txt` в папке skill)
+- Путь в upstream: `skills/webapp-testing/`
+
+| Skill | Изменения |
+|---|---|
+| webapp-testing | без изменений. Для разработки игры (`game/`), не для сюжета |
 
 ## Как обновить
 

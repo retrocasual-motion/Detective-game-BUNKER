@@ -20,6 +20,8 @@
 
 **2. Node.js** — среда, в которой работают игра и сервер.
 - https://nodejs.org → версия **LTS** → установщик, пункты по умолчанию.
+- Начиная с Node.js 25 в установщик не входит corepack, поэтому pnpm ставится
+  отдельно: `npm install -g pnpm` (делает Claude).
 
 **3. VS Code** — редактор, в котором работает Claude.
 - https://code.visualstudio.com → установщик. В Windows отметить «Добавить в PATH» и
@@ -68,35 +70,67 @@ Claude будет спрашивать разрешение на команды 
 
 ## 2. Что делает Claude после установки (чек-лист)
 
+Чек-лист годится и для нового компьютера: снять отметки и пройти заново.
+
 **Сначала — проверка установки и отчёт автору** (таблица «что проверено — результат —
 что исправить»), ничего не меняя без разрешения:
 
-- [ ] Git установлен; `git --version`.
-- [ ] Node.js — версия LTS; `node -v`, `npm -v`.
-- [ ] Расширение Claude Code работает (раз ты это читаешь — да); вход выполнен.
-- [ ] Репозиторий: путь `E:\Projects\Detective-game-BUNKER` (без пробелов и кириллицы,
+- [x] Git установлен; `git --version`.
+- [x] Node.js — версия LTS; `node -v`, `npm -v`; LTS ли — `node -p process.release.lts`
+      (печатает кодовое имя, например `Lithium`, а не `undefined`).
+- [x] Расширение Claude Code работает (раз ты это читаешь — да); вход выполнен.
+- [x] Репозиторий: путь `E:\Projects\Detective-game-BUNKER` (без пробелов и кириллицы,
       не в облачной папке); `git remote -v` → `retrocasual-motion/Detective-game-BUNKER`.
-- [ ] Связь с GitHub: `git fetch` проходит; ветка `main` совпадает с `origin/main`
-      (`git status`); право записи — `git push --dry-run` на новой ветке.
-- [ ] Имя и почта для коммитов: `git config user.name`, `git config user.email`
+- [x] Связь с GitHub: `git fetch` проходит; ветка `main` совпадает с `origin/main`
+      (`git status`); право записи — `git push --dry-run origin main:refs/heads/<имя>`
+      (ничего не создаёт ни локально, ни на GitHub).
+- [x] Имя и почта для коммитов: `git config user.name`, `git config user.email`
       (если пусто — спросить автора).
-- [ ] Свободное место на диске E: (нужно ~5–10 ГБ под зависимости и браузеры тестов).
-- [ ] Docker не требуется (локально без Docker — решение 06.11).
+- [x] Свободное место на диске E: (нужно ~5–10 ГБ под зависимости и браузеры тестов).
+- [x] Docker не требуется (локально без Docker — решение 06.11).
 
 Потом — настройка:
 
-- [ ] Проверить версии: git, Node.js (LTS).
-- [ ] База для разработки: PostgreSQL пакетом npm (встроенный в проект, та же
-      версия, что на сервере); Docker локально не используется.
-- [ ] Включить pnpm (`corepack enable`).
-- [ ] Настроить git: имя и почта автора для коммитов; проверить вход в GitHub.
-- [ ] Поставить браузеры для Playwright.
-- [ ] Поставить плагины и MCP (с разрешения автора): Superpowers, webapp-testing,
-      Context7 (`STACK.md`, раздел 13); planning-with-files — если не подключён.
-- [ ] Создать папку медиа вне git и прописать её в `.env` (образец — `.env.example`).
-- [ ] Когда появится код (M0): поставить зависимости, поднять базу, запустить игру,
-      прогнать тесты; вписать сюда раздел 3.
-- [ ] Записать здесь, что сделано и что не получилось.
+- [x] pnpm: `pnpm -v`. В Node.js 25+ нет corepack, `corepack enable` не работает —
+      ставить `npm install -g pnpm`.
+- [x] Настроить git: имя и почта автора для коммитов (глобально); проверить вход в
+      GitHub.
+- [x] Поставить плагины и MCP (с разрешения автора, `STACK.md`, раздел 13) — см.
+      «Плагины» ниже.
+- [x] Создать папку медиа вне git: `E:\Projects\bunker-media`.
+- [ ] Context7: войти один раз — в панели Claude команда `/mcp` → context7 →
+      Authenticate (делает автор, нужен клик в браузере).
+- [ ] Когда появится код (M0): прописать папку медиа в `.env` (образец —
+      `.env.example`); поставить зависимости (`pnpm install`), браузеры Playwright
+      (`pnpm exec playwright install chromium` — версия браузеров должна совпасть с
+      версией Playwright в проекте, поэтому не раньше); база — PostgreSQL пакетом npm
+      (встроенный в проект, та же версия, что на сервере), Docker локально не
+      используется; поднять базу, запустить игру, прогнать тесты; вписать сюда
+      раздел 3.
+
+**Плагины.** Ставятся консольной командой `claude`, встроенной в расширение (в PATH
+её нет): `%USERPROFILE%\.vscode\extensions\anthropic.claude-code-<версия>-win32-x64\resources\native-binary\claude.exe`.
+Уровень — проект (записываются в `.claude/settings.json`, попадают в git):
+
+- `planning-with-files@planning-with-files` — маркетплейс `OthmanAdi/planning-with-files`;
+- `superpowers@claude-plugins-official` и `context7@claude-plugins-official` —
+  официальный маркетплейс `anthropics/claude-plugins-official`;
+- webapp-testing — не плагин: в upstream он только в наборе `example-skills` с 11
+  лишними skills, поэтому скопирован один в `.claude/skills/webapp-testing/`
+  (источник — `.claude/skills/SOURCES.md`).
+
+Команды: `claude plugin marketplace add <репо>`, `claude plugin install <плагин> --scope project`,
+проверка — `claude plugin list`, `claude mcp list`.
+
+**Сделано 07.11.2026 (компьютер автора, Windows 11):** git 2.56.0; Node.js 26.13.0
+LTS, npm 11.20.0, pnpm 12.18.0; связь с GitHub и право записи — есть; имя и почта —
+`retrocasual-motion <gorlin.motion@gmail.com>` (как в истории репозитория); диск E: —
+525 ГБ свободно; плагины planning-with-files 3.28.1, Superpowers 7.0.0, Context7 —
+установлены и включены; webapp-testing — в skills проекта; папка медиа создана.
+Не сделано: вход в Context7 (`/mcp`); браузеры Playwright и `.env` — с кодом M0;
+синхронизацию папки медиа с облаком (шаг 8) включает автор.
+Изменения в плагинах и skills подхватываются после перезапуска панели Claude
+(новый разговор или перезагрузка окна VS Code).
 
 ## 3. Запуск и проверки
 
@@ -109,7 +143,7 @@ Claude будет спрашивать разрешение на команды 
 
 | Настройка | Зачем | Когда |
 |---|---|---|
-| папка медиа | где лежат медиа на компьютере автора | M0 |
+| папка медиа | где лежат медиа на компьютере автора (`E:\Projects\bunker-media`) | M0 |
 | режимы каналов (почта, телефон, сайты) | внутренний / настоящий (P-14) | M0 |
 | ключи Yandex Cloud Postbox | настоящие письма | когда включаем настоящую почту |
 | доступ к хранилищу S3 | медиа на сервере | переезд |
