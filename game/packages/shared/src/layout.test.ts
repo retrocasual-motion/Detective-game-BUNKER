@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultState, GRID_DY, reconcile } from './layout.ts';
+import { defaultState, reconcile, SCATTER_ROT_MAX, upgradeState } from './layout.ts';
 import type { Material, PlayerState } from './schemas.ts';
 
 const mat = (id: string, placement: Material['placement'] = 'desk'): Material => ({
@@ -25,10 +25,60 @@ describe('defaultState', () => {
     expect(s.board.threads).toEqual([]);
   });
 
-  it('раскладывает сеткой в 10 колонок', () => {
-    expect(s.desk.items[0]).toMatchObject({ materialId: '01', x: 0, y: 0 });
-    expect(s.desk.items[10]?.y).toBe(GRID_DY);
-    expect(s.desk.items[10]?.x).toBe(0);
+  it('россыпь одинаковая у всех: два вызова дают одно и то же', () => {
+    expect(defaultState(materials)).toEqual(s);
+  });
+
+  it('бумаги слегка повёрнуты, повороты разные и в пределах ±SCATTER_ROT_MAX', () => {
+    const rots = s.desk.items.map((i) => i.rot);
+    for (const r of rots) expect(Math.abs(r)).toBeLessThanOrEqual(SCATTER_ROT_MAX);
+    expect(new Set(rots.map((r) => r.toFixed(1))).size).toBeGreaterThan(20);
+  });
+
+  it('не ровная сетка: строки сдвинуты и разбросаны', () => {
+    const xs = new Set(s.desk.items.map((i) => Math.round(i.x)));
+    expect(xs.size).toBeGreaterThan(30);
+  });
+
+  it('ни одна бумага не закрыта другой целиком: центры разнесены', () => {
+    const items = s.desk.items;
+    for (const a of items)
+      for (const b of items) {
+        if (a === b) continue;
+        const far = Math.abs(a.x - b.x) >= 100 || Math.abs(a.y - b.y) >= 150;
+        expect(far, `${a.materialId} и ${b.materialId}`).toBe(true);
+      }
+  });
+});
+
+describe('upgradeState', () => {
+  it('принимает текущую версию как есть', () => {
+    const s = defaultState(materials);
+    expect(upgradeState(s, materials)).toEqual(s);
+  });
+
+  it('версия 1: стол раскладывается заново, доска и вид сохраняются', () => {
+    const board = {
+      camera: { x: 10, y: 20, zoom: 1.5 },
+      items: [{ id: 'a', materialId: '01', x: 1, y: 2 }],
+      threads: [],
+    };
+    const v1 = {
+      version: 1,
+      view: 'right',
+      desk: { camera: { x: 0, y: 0, zoom: 1 }, items: [{ materialId: '01', x: 0, y: 0, z: 1 }] },
+      board,
+    };
+    const up = upgradeState(v1, materials);
+    expect(up?.version).toBe(2);
+    expect(up?.view).toBe('right');
+    expect(up?.board).toEqual(board);
+    expect(up?.desk).toEqual(defaultState(materials).desk);
+  });
+
+  it('мусор → null', () => {
+    expect(upgradeState({ version: 7 }, materials)).toBeNull();
+    expect(upgradeState(null, materials)).toBeNull();
   });
 });
 
@@ -40,7 +90,7 @@ describe('reconcile', () => {
 
   it('убирает неизвестный материал вместе с его копиями и нитями', () => {
     const s: PlayerState = defaultState(materials);
-    s.desk.items.push({ materialId: '99', x: 5000, y: 5000, z: 999 });
+    s.desk.items.push({ materialId: '99', x: 5000, y: 5000, z: 999, rot: 0 });
     s.board.items.push(
       { id: 'a', materialId: '99', x: 0, y: 0 },
       { id: 'b', materialId: '01', x: 100, y: 0 },
@@ -58,7 +108,7 @@ describe('reconcile', () => {
     s.desk.items = s.desk.items.filter((i) => i.materialId !== '07');
     const r = reconcile(s, materials);
     const added = r.desk.items.find((i) => i.materialId === '07');
-    expect(added).toMatchObject({ x: original?.x, y: original?.y });
+    expect(added).toMatchObject({ x: original?.x, y: original?.y, rot: original?.rot });
     expect(r.desk.items).toHaveLength(46);
   });
 });

@@ -4,6 +4,7 @@ import {
   type PlayerState,
   PlayerStateSchema,
   reconcile,
+  upgradeState,
 } from '@bunker/shared';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { eq, sql } from 'drizzle-orm';
@@ -56,8 +57,9 @@ export function createApp({
 
   app.get('/api/state', async (c) => {
     const [row] = await db.select().from(playerState).where(eq(playerState.playerId, PLAYER_ID));
-    const parsed = row ? PlayerStateSchema.safeParse(row.state) : null;
-    const state = parsed?.success ? reconcile(parsed.data, materials) : defaultState(materials);
+    // Старое сохранение поднимается до текущей версии, нечитаемое — заменяется начальным.
+    const saved = row ? upgradeState(row.state, materials) : null;
+    const state = saved ? reconcile(saved, materials) : defaultState(materials);
     return c.json(state);
   });
 

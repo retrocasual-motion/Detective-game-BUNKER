@@ -24,6 +24,8 @@ export const DeskItemSchema = z.object({
   x: z.number(),
   y: z.number(),
   z: z.number().int(),
+  /** Поворот на столе, градусы (TECH_PLAN 4.2: «повернуть на столе», декоративно). */
+  rot: z.number().min(-180).max(180),
 });
 export type DeskItem = z.infer<typeof DeskItemSchema>;
 
@@ -46,8 +48,10 @@ export type BoardThread = z.infer<typeof BoardThreadSchema>;
 export const ViewSchema = z.enum(['desk', 'room', 'left', 'right']);
 export type View = z.infer<typeof ViewSchema>;
 
+export const STATE_VERSION = 2;
+
 export const PlayerStateSchema = z.object({
-  version: z.literal(1),
+  version: z.literal(STATE_VERSION),
   view: ViewSchema,
   desk: z.object({ camera: CameraSchema, items: z.array(DeskItemSchema) }),
   board: z.object({

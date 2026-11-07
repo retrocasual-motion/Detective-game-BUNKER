@@ -84,7 +84,7 @@ describe('API', () => {
   it('PUT → GET возвращает сохранённое', async () => {
     const s = defaultState(materials);
     s.view = 'right';
-    s.desk.items[0] = { materialId: '01', x: 777, y: -50, z: 100 };
+    s.desk.items[0] = { materialId: '01', x: 777, y: -50, z: 100, rot: 3 };
     expect((await put(s)).status).toBe(204);
     expect(await (await app().request('/api/state')).json()).toEqual(s);
   });
@@ -97,22 +97,37 @@ describe('API', () => {
 
   it('PUT с неизвестным материалом → 400', async () => {
     const s = defaultState(materials);
-    s.desk.items.push({ materialId: 'L214', x: 0, y: 0, z: 1 });
+    s.desk.items.push({ materialId: 'L214', x: 0, y: 0, z: 1, rot: 0 });
     expect((await put(s)).status).toBe(400);
   });
 
   it('PUT с устройством на столе → 400', async () => {
     const s = defaultState(materials);
-    s.desk.items.push({ materialId: '47', x: 0, y: 0, z: 1 });
+    s.desk.items.push({ materialId: '47', x: 0, y: 0, z: 1, rot: 0 });
     expect((await put(s)).status).toBe(400);
   });
 
   it('GET выкидывает материал, которого больше нет в контенте', async () => {
     const s: PlayerState = defaultState(materials);
-    s.desk.items.push({ materialId: '99', x: 9000, y: 9000, z: 999 });
+    s.desk.items.push({ materialId: '99', x: 9000, y: 9000, z: 999, rot: 0 });
     await db.insert(playerState).values({ playerId: 'local', state: s });
     const got = (await (await app().request('/api/state')).json()) as PlayerState;
     expect(got.desk.items.some((i) => i.materialId === '99')).toBe(false);
+  });
+
+  it('GET поднимает сохранение версии 1: доска остаётся, стол — россыпью', async () => {
+    const board = {
+      camera: { x: 5, y: 5, zoom: 1 },
+      items: [{ id: 'a', materialId: '01', x: 1, y: 2 }],
+      threads: [],
+    };
+    const v1 = { ...defaultState(materials), version: 1, board };
+    // Колонка типизирована текущей версией; старую кладём как есть.
+    await db.insert(playerState).values({ playerId: 'local', state: v1 as unknown as PlayerState });
+    const got = (await (await app().request('/api/state')).json()) as PlayerState;
+    expect(got.version).toBe(2);
+    expect(got.board).toEqual(board);
+    expect(got.desk).toEqual(defaultState(materials).desk);
   });
 
   it('DELETE → следующий GET = defaultState', async () => {
