@@ -8,6 +8,12 @@ body,
   height: 100%;
   overflow: hidden;
 }
+/* clip, а не hidden: hidden-контейнер браузер всё равно прокручивает к фокусу
+   (уголок папки выступает за низ экрана — комната уезжала вверх). */
+.room,
+.room-view {
+  overflow: clip;
+}
 body {
   background: var(--color-bg);
   color: var(--color-text);
@@ -53,7 +59,6 @@ button {
   position: relative;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
 }
 
 .room-overview {

@@ -61,3 +61,10 @@ test('при 1366×768 нет горизонтальной прокрутки, �
   await expect(page.getByTestId('view-tab-desk')).toBeInViewport();
   await expect(page.getByTestId('petition-corner')).toBeInViewport();
 });
+
+test('щелчок по уголку папки не сдвигает комнату', async ({ page }) => {
+  const before = await page.getByTestId('view-tab-desk').boundingBox();
+  await page.getByTestId('petition-corner').click();
+  const after = await page.getByTestId('view-tab-desk').boundingBox();
+  expect(after?.y).toBe(before?.y);
+});
