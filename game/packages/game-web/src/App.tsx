@@ -1,5 +1,7 @@
 import type { View } from '@bunker/shared';
 import { type ReactNode, useEffect } from 'react';
+import { BoardView } from './board/BoardView.tsx';
+import { pinToBoard } from './board/board-actions.ts';
 import { DeskView } from './desk/DeskView.tsx';
 import { PetitionCorner } from './petition/PetitionCorner.tsx';
 import { RoomOverview } from './room/RoomOverview.tsx';
@@ -20,7 +22,7 @@ function CurrentView({ view }: { view: View }): ReactNode {
     case 'left':
       return <div data-testid="view-left" className="placeholder" />;
     case 'right':
-      return <div data-testid="view-right" className="placeholder" />;
+      return <BoardView />;
   }
 }
 
@@ -53,7 +55,16 @@ export function App() {
       <div className="room-view">
         <CurrentView view={state.view} />
       </div>
-      {viewerId && <Viewer materialId={viewerId} />}
+      {viewerId && (
+        <Viewer
+          materialId={viewerId}
+          onPin={(id) =>
+            useGame
+              .getState()
+              .updateState(pinToBoard(id, { width: window.innerWidth, height: window.innerHeight }))
+          }
+        />
+      )}
       <PetitionCorner />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useGame } from '../store.ts';
@@ -16,6 +16,7 @@ interface ViewerProps {
 export function Viewer({ materialId, onPin }: ViewerProps) {
   const material = useGame((g) => g.materials.find((m) => m.id === materialId));
   const close = useGame((g) => g.closeViewer);
+  const [pinned, setPinned] = useState(0);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -33,8 +34,15 @@ export function Viewer({ materialId, onPin }: ViewerProps) {
         <span className="viewer-title">
           {material.id}. {material.title}
         </span>
+        {pinned > 0 && <span className="viewer-note">Прикреплено к доске</span>}
         {onPin && (
-          <button type="button" onClick={() => onPin(material.id)}>
+          <button
+            type="button"
+            onClick={() => {
+              onPin(material.id);
+              setPinned((n) => n + 1);
+            }}
+          >
             Прикрепить к доске
           </button>
         )}

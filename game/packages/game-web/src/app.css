@@ -220,3 +220,69 @@ button {
   border: 1px solid var(--color-border);
   padding: var(--space-1) var(--space-2);
 }
+
+.viewer-note {
+  align-self: center;
+  color: var(--color-accent);
+}
+.board {
+  position: absolute;
+  inset: 0;
+}
+.board-surface {
+  background: var(--color-board);
+}
+.board-toolbar {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 5;
+}
+.board-toolbar button {
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.board-toolbar button[aria-pressed="true"] {
+  border-color: var(--color-accent);
+}
+.board-threads {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
+  pointer-events: none;
+}
+.board-thread {
+  stroke: var(--color-thread);
+  stroke-width: 6;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+.board-thread-selected {
+  stroke: var(--color-accent);
+}
+.board-thread-label {
+  fill: var(--color-text);
+  font: var(--font-size-ui) var(--font-ui);
+  text-anchor: middle;
+}
+.card-selected {
+  outline: 3px solid var(--color-accent);
+}
+.card-pending {
+  outline: 3px dashed var(--color-accent);
+}
+.thread-label-input {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 200px;
+  margin-left: -100px;
+  padding: var(--space-1) var(--space-2);
+  font: inherit;
+  z-index: 10;
+}
