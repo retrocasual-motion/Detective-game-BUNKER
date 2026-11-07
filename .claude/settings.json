@@ -1,13 +1,21 @@
 {
+  "enabledPlugins": {
+    "planning-with-files@planning-with-files": true,
+    "superpowers@claude-plugins-official": true,
+    "context7@claude-plugins-official": true
+  },
   "extraKnownMarketplaces": {
     "planning-with-files": {
       "source": {
         "source": "github",
         "repo": "OthmanAdi/planning-with-files"
       }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
     }
-  },
-  "enabledPlugins": {
-    "planning-with-files@planning-with-files": true
   }
 }
