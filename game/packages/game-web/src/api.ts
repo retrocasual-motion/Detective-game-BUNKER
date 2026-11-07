@@ -5,6 +5,9 @@ async function check(res: Response): Promise<Response> {
   return res;
 }
 
+/** Предел тела запроса с keepalive в браузерах — 64 КБ. */
+const KEEPALIVE_LIMIT = 60_000;
+
 export const getMaterials = async (): Promise<Material[]> =>
   (await check(await fetch('/api/materials'))).json();
 
@@ -12,11 +15,14 @@ export const getState = async (): Promise<PlayerState> =>
   (await check(await fetch('/api/state'))).json();
 
 export const putState = async (s: PlayerState): Promise<void> => {
+  const body = JSON.stringify(s);
   await check(
     await fetch('/api/state', {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(s),
+      body,
+      // keepalive — чтобы запрос дошёл, даже если страницу закрывают.
+      keepalive: body.length < KEEPALIVE_LIMIT,
     }),
   );
 };

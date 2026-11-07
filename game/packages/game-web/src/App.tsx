@@ -1,5 +1,6 @@
 import type { View } from '@bunker/shared';
 import { type ReactNode, useEffect } from 'react';
+import { DeskView } from './desk/DeskView.tsx';
 import { PetitionCorner } from './petition/PetitionCorner.tsx';
 import { RoomOverview } from './room/RoomOverview.tsx';
 import { RoomTabs } from './room/RoomTabs.tsx';
@@ -14,7 +15,7 @@ function CurrentView({ view }: { view: View }): ReactNode {
     case 'room':
       return <RoomOverview />;
     case 'desk':
-      return <div data-testid="view-desk" className="placeholder" />;
+      return <DeskView />;
     case 'left':
       return <div data-testid="view-left" className="placeholder" />;
     case 'right':

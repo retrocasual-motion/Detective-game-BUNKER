@@ -1,6 +1,7 @@
 import type { Material, PlayerState, View } from '@bunker/shared';
 import { create } from 'zustand';
 import { getMaterials, getState, putState } from './api.ts';
+import { createSaver } from './save.ts';
 
 export type SaveStatus = 'saved' | 'saving' | 'error';
 
@@ -13,28 +14,33 @@ interface GameStore {
   updateState(fn: (s: PlayerState) => PlayerState): void;
 }
 
-export const useGame = create<GameStore>((set, get) => ({
-  materials: [],
-  state: null,
-  saveStatus: 'saved',
+export const useGame = create<GameStore>((set, get) => {
+  const saver = createSaver(putState, 500, (saveStatus) => set({ saveStatus }));
+  if (typeof window !== 'undefined') {
+    // Закрыли вкладку или перезагрузили раньше, чем истекла задержка, — дошлём сразу.
+    window.addEventListener('pagehide', () => void saver.flush());
+  }
 
-  async load() {
-    const [materials, state] = await Promise.all([getMaterials(), getState()]);
-    set({ materials, state });
-  },
+  return {
+    materials: [],
+    state: null,
+    saveStatus: 'saved',
 
-  setView(view) {
-    get().updateState((s) => ({ ...s, view }));
-  },
+    async load() {
+      const [materials, state] = await Promise.all([getMaterials(), getState()]);
+      set({ materials, state });
+    },
 
-  updateState(fn) {
-    const current = get().state;
-    if (!current) return;
-    const next = fn(current);
-    set({ state: next, saveStatus: 'saving' });
-    putState(next).then(
-      () => set({ saveStatus: 'saved' }),
-      () => set({ saveStatus: 'error' }),
-    );
-  },
-}));
+    setView(view) {
+      get().updateState((s) => ({ ...s, view }));
+    },
+
+    updateState(fn) {
+      const current = get().state;
+      if (!current) return;
+      const next = fn(current);
+      set({ state: next });
+      saver.schedule(next);
+    },
+  };
+});

@@ -124,3 +124,47 @@ button {
   color: var(--color-text-muted);
   padding: var(--space-4);
 }
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+.canvas-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+.desk {
+  background: var(--color-desk);
+}
+.card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--card-width);
+  height: var(--card-height);
+  padding: var(--space-2);
+  background: var(--color-card);
+  color: var(--color-card-text);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  overflow: hidden;
+}
+.card-dragging {
+  cursor: grabbing;
+  outline: 2px solid var(--color-accent);
+}
+.card-id {
+  font-weight: bold;
+  color: var(--color-text-muted);
+}
+.card-title {
+  margin-top: var(--space-2);
+  font-family: var(--font-paper);
+}
