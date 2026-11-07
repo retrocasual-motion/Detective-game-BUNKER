@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useGame } from '../store.ts';
 
 const FIELDS = ['Кому', 'Прошу', 'На основании'] as const;
 
 /** Уголок папки ходатайства — всегда внизу экрана (TECH_PLAN 4.11). Наполнение — этап 3. */
 export function PetitionCorner() {
-  const [open, setOpen] = useState(false);
+  const open = useGame((g) => g.petitionOpen);
+  const setOpen = useGame((g) => g.setPetitionOpen);
   return (
     <>
       <button

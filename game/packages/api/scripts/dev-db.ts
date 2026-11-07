@@ -17,7 +17,13 @@ const fresh = !existsSync(join(env.pgDataDir, 'PG_VERSION'));
 if (fresh) await pg.initialise();
 await pg.start();
 const dbName = new URL(env.databaseUrl).pathname.slice(1);
-if (fresh) await pg.createDatabase(dbName);
+// Создаём базу всегда, если её нет: первый запуск мог прерваться между initdb и созданием.
+try {
+  await pg.createDatabase(dbName);
+} catch (err) {
+  // 42P04 — duplicate_database (текст ошибки зависит от языка системы).
+  if ((err as { code?: string }).code !== '42P04') throw err;
+}
 console.log(`db: PostgreSQL на порту ${env.pgPort}, база ${dbName}, данные ${env.pgDataDir}`);
 
 const stop = async () => {

@@ -68,3 +68,23 @@ test('щелчок по уголку папки не сдвигает комна
   const after = await page.getByTestId('view-tab-desk').boundingBox();
   expect(after?.y).toBe(before?.y);
 });
+
+test('сервер ответил 503 при загрузке — игра повторяет запрос и открывается', async ({ page }) => {
+  let failures = 2;
+  await page.route('**/api/state', (route) => {
+    if (route.request().method() === 'GET' && failures > 0) {
+      failures--;
+      return route.fulfill({ status: 503, body: '{"error":"база не готова"}' });
+    }
+    return route.continue();
+  });
+  await page.reload();
+  await expect(page.getByTestId('view-desk')).toBeVisible({ timeout: 15_000 });
+});
+
+test('под открытой папкой стрелки не переключают вид', async ({ page }) => {
+  await page.getByTestId('petition-corner').click();
+  await page.keyboard.press('ArrowLeft');
+  await page.getByTestId('petition-folder').getByRole('button', { name: 'Закрыть' }).click();
+  await expect(page.getByTestId('view-desk')).toBeVisible();
+});

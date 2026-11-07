@@ -49,6 +49,28 @@ describe('API', () => {
     expect(await res.json()).toEqual({ ok: false });
   });
 
+  it('пока база не готова, /api/state и /api/materials → 503', async () => {
+    const notReady = createApp({ db, materials, production: false, isReady: () => false });
+    expect((await notReady.request('/api/state')).status).toBe(503);
+    expect((await notReady.request('/api/materials')).status).toBe(503);
+  });
+
+  it('старое сохранение, пришедшее позже нового, не затирает его', async () => {
+    const newer = defaultState(materials);
+    newer.view = 'right';
+    const older = defaultState(materials);
+    older.view = 'left';
+    const send = (s: PlayerState, seq: number) =>
+      app().request('/api/state', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json', 'x-state-seq': String(seq) },
+        body: JSON.stringify(s),
+      });
+    expect((await send(newer, 2000)).status).toBe(204);
+    expect((await send(older, 1000)).status).toBe(204);
+    expect(((await (await app().request('/api/state')).json()) as PlayerState).view).toBe('right');
+  });
+
   it('GET /api/materials → 51 материал', async () => {
     const res = await app().request('/api/materials');
     expect(((await res.json()) as Material[]).length).toBe(51);

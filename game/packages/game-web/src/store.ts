@@ -11,7 +11,12 @@ interface GameStore {
   saveStatus: SaveStatus;
   /** Материал, открытый в просмотрщике (null — закрыт). */
   viewerId: string | null;
+  /** Открыта папка ходатайства. */
+  petitionOpen: boolean;
+  /** Сервер не ответил при загрузке — игра повторяет запрос. */
+  loadFailed: boolean;
   load(): Promise<void>;
+  setPetitionOpen(open: boolean): void;
   openViewer(materialId: string): void;
   closeViewer(): void;
   setView(view: View): void;
@@ -30,6 +35,12 @@ export const useGame = create<GameStore>((set, get) => {
     state: null,
     saveStatus: 'saved',
     viewerId: null,
+    petitionOpen: false,
+    loadFailed: false,
+
+    setPetitionOpen(open) {
+      set({ petitionOpen: open });
+    },
 
     openViewer(materialId) {
       set({ viewerId: materialId });
@@ -40,8 +51,17 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     async load() {
-      const [materials, state] = await Promise.all([getMaterials(), getState()]);
-      set({ materials, state });
+      // Сервер мог ещё не подняться (503, пока база не готова) — повторяем раз в секунду.
+      for (;;) {
+        try {
+          const [materials, state] = await Promise.all([getMaterials(), getState()]);
+          set({ materials, state, loadFailed: false });
+          return;
+        } catch {
+          set({ loadFailed: true });
+          await new Promise((r) => setTimeout(r, 1000));
+        }
+      }
     },
 
     setView(view) {

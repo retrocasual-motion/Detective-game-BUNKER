@@ -81,6 +81,9 @@ export function BoardView() {
     const onKey = (e: KeyboardEvent) => {
       if ((e.key !== 'Delete' && e.key !== 'Backspace') || !selectedId || isTyping(e.target))
         return;
+      // Под открытым окном (просмотрщик, папка) доска не видна — ничего не удаляем.
+      const g = useGame.getState();
+      if (g.viewerId || g.petitionOpen) return;
       updateState(removeFromBoard(selectedId));
       setSelectedId(null);
     };

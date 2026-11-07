@@ -32,6 +32,7 @@ export function App() {
   const load = useGame((g) => g.load);
   const setView = useGame((g) => g.setView);
   const viewerId = useGame((g) => g.viewerId);
+  const loadFailed = useGame((g) => g.loadFailed);
 
   useEffect(() => {
     load();
@@ -40,7 +41,8 @@ export function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || isTyping(e.target)) return;
-      if (useGame.getState().viewerId) return;
+      const g = useGame.getState();
+      if (g.viewerId || g.petitionOpen) return;
       const view = useGame.getState().state?.view;
       if (view) setView(viewByArrow(view, e.key));
     };
@@ -48,7 +50,13 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [setView]);
 
-  if (!state) return <div className="placeholder">Загрузка…</div>;
+  if (!state) {
+    return (
+      <div className="placeholder">
+        {loadFailed ? 'Сервер пока не отвечает, пробуем ещё…' : 'Загрузка…'}
+      </div>
+    );
+  }
 
   return (
     <div className="room" data-testid="room">

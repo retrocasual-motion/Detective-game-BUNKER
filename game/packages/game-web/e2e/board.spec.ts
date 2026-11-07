@@ -80,3 +80,25 @@ test('нить и её подпись не закрыты карточками',
   );
   expect(topmost).toBe('одна дата');
 });
+
+test('Escape отменяет подпись нити', async ({ page }) => {
+  await pin(page, '01');
+  await pin(page, '03');
+  await page.getByTestId('view-tab-right').click();
+  await connectFirstTwo(page);
+  await threads(page).first().dblclick({ force: true });
+  await page.getByTestId('thread-label-input').fill('неверно');
+  await page.getByTestId('thread-label-input').press('Escape');
+  await expect(page.getByTestId('thread-label-input')).toBeHidden();
+  await expect(page.getByTestId('view-right')).not.toContainText('неверно');
+});
+
+test('под открытой папкой Delete не удаляет выделенную копию', async ({ page }) => {
+  await pin(page, '01');
+  await page.getByTestId('view-tab-right').click();
+  await items(page).first().click();
+  await page.getByTestId('petition-corner').click();
+  await page.keyboard.press('Delete');
+  await page.getByTestId('petition-folder').getByRole('button', { name: 'Закрыть' }).click();
+  await expect(items(page)).toHaveCount(1);
+});

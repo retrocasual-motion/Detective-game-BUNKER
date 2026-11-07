@@ -6,7 +6,7 @@ import {
   reconcile,
 } from '@bunker/shared';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { type Db, playerState } from './db/client.ts';
@@ -46,6 +46,12 @@ export function createApp({
 
   app.get('/api/health', (c) => (isReady() ? c.json({ ok: true }) : c.json({ ok: false }, 503)));
 
+  // Пока миграции не применены, данные недоступны — клиент повторит запрос.
+  app.use('/api/*', async (c, next) => {
+    if (!isReady()) return c.json({ error: 'база не готова' }, 503);
+    await next();
+  });
+
   app.get('/api/materials', (c) => c.json(materials));
 
   app.get('/api/state', async (c) => {
@@ -61,12 +67,15 @@ export function createApp({
     if (!parsed.success) return c.json({ error: 'неверное состояние' }, 400);
     const bad = invalidReference(parsed.data, materials);
     if (bad) return c.json({ error: bad }, 400);
+    const seqHeader = Number(c.req.header('x-state-seq'));
+    const seq = Number.isSafeInteger(seqHeader) && seqHeader > 0 ? seqHeader : Date.now() * 1000;
     await db
       .insert(playerState)
-      .values({ playerId: PLAYER_ID, state: parsed.data })
+      .values({ playerId: PLAYER_ID, state: parsed.data, seq })
       .onConflictDoUpdate({
         target: playerState.playerId,
-        set: { state: parsed.data, updatedAt: new Date() },
+        set: { state: parsed.data, seq, updatedAt: new Date() },
+        setWhere: sql`${playerState.seq} < ${seq}`,
       });
     return c.body(null, 204);
   });

@@ -76,4 +76,51 @@ describe('createSaver', () => {
     calls[0]?.resolve();
     await done;
   });
+
+  it('flush во время запроса шлёт отложенное сразу, не дожидаясь первого', async () => {
+    const { put, calls } = manualPut();
+    const saver = createSaver(put, 500, (s) => statuses.push(s));
+    saver.schedule(state('left'));
+    await vi.advanceTimersByTimeAsync(500);
+    saver.schedule(state('right'));
+    void saver.flush();
+    expect(calls.map((c) => c.s.view)).toEqual(['left', 'right']);
+  });
+
+  it('после ошибки состояние не теряется: flush шлёт его снова', async () => {
+    const { put, calls } = manualPut();
+    const saver = createSaver(put, 500, (s) => statuses.push(s));
+    saver.schedule(state('left'));
+    await vi.advanceTimersByTimeAsync(500);
+    calls[0]?.reject();
+    await vi.advanceTimersByTimeAsync(0);
+    void saver.flush();
+    expect(calls.map((c) => c.s.view)).toEqual(['left', 'left']);
+  });
+
+  it('после ошибки сохранение повторяется само через 3 с', async () => {
+    const { put, calls } = manualPut();
+    const saver = createSaver(put, 500, (s) => statuses.push(s));
+    saver.schedule(state('left'));
+    await vi.advanceTimersByTimeAsync(500);
+    calls[0]?.reject();
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(calls.map((c) => c.s.view)).toEqual(['left', 'left']);
+    calls[1]?.resolve();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(statuses.at(-1)).toBe('saved');
+  });
+
+  it('каждый запрос несёт номер версии, и он растёт', async () => {
+    const seqs: number[] = [];
+    const saver = createSaver(async (_s, seq) => {
+      seqs.push(seq);
+    });
+    saver.schedule(state('left'));
+    await saver.flush();
+    saver.schedule(state('right'));
+    await saver.flush();
+    expect(seqs).toHaveLength(2);
+    expect(seqs[1] ?? 0).toBeGreaterThan(seqs[0] ?? 0);
+  });
 });
