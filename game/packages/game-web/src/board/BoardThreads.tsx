@@ -1,5 +1,5 @@
 import type { BoardItem, BoardThread } from '@bunker/shared';
-import { CARD_H, CARD_W } from '../canvas/geometry.ts';
+import { CARD_W, PIN_Y } from '../canvas/geometry.ts';
 
 interface BoardThreadsProps {
   items: BoardItem[];
@@ -9,7 +9,10 @@ interface BoardThreadsProps {
   onEditLabel(id: string): void;
 }
 
-/** Нити доски — слой SVG под копиями, в мировых координатах. Игра их не проверяет (B-A). */
+/**
+ * Нити доски — слой SVG поверх копий, от булавки к булавке, в мировых координатах.
+ * Игра их не проверяет (B-A).
+ */
 export function BoardThreads({
   items,
   threads,
@@ -17,12 +20,12 @@ export function BoardThreads({
   onSelect,
   onEditLabel,
 }: BoardThreadsProps) {
-  const center = new Map(items.map((i) => [i.id, { x: i.x + CARD_W / 2, y: i.y + CARD_H / 2 }]));
+  const pin = new Map(items.map((i) => [i.id, { x: i.x + CARD_W / 2, y: i.y + PIN_Y }]));
   return (
     <svg className="board-threads" aria-hidden="true">
       {threads.map((t) => {
-        const a = center.get(t.from);
-        const b = center.get(t.to);
+        const a = pin.get(t.from);
+        const b = pin.get(t.to);
         if (!a || !b) return null;
         return (
           <g key={t.id}>
@@ -38,8 +41,17 @@ export function BoardThreads({
               onClick={() => onSelect(t.id)}
               onDoubleClick={() => onEditLabel(t.id)}
             />
+            <circle className="board-thread-pin" cx={a.x} cy={a.y} r={5} />
+            <circle className="board-thread-pin" cx={b.x} cy={b.y} r={5} />
             {t.label && (
-              <text className="board-thread-label" x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 - 8}>
+              // biome-ignore lint/a11y/noStaticElementInteractions: подпись нити — цель для мыши; доступ с клавиатуры — этап дизайна
+              <text
+                className="board-thread-label"
+                x={(a.x + b.x) / 2}
+                y={(a.y + b.y) / 2 - 8}
+                onPointerDown={(e) => e.stopPropagation()}
+                onDoubleClick={() => onEditLabel(t.id)}
+              >
                 {t.label}
               </text>
             )}

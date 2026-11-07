@@ -157,7 +157,9 @@ button {
   overflow: hidden;
   border: none;
   text-align: left;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 .card-dragging {
   cursor: grabbing;
@@ -265,8 +267,17 @@ button {
 .board-thread-selected {
   stroke: var(--color-accent);
 }
+.board-thread-pin {
+  fill: var(--color-thread);
+  pointer-events: none;
+}
 .board-thread-label {
   fill: var(--color-text);
+  paint-order: stroke;
+  stroke: var(--color-board);
+  stroke-width: 4px;
+  pointer-events: auto;
+  cursor: text;
   font: var(--font-size-ui) var(--font-ui);
   text-anchor: middle;
 }

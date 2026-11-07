@@ -75,3 +75,9 @@ test('сервер не сохраняет → «Не сохранено»; сл
   expect(await position(page, 'card-02')).toEqual(first);
   expect(await position(page, 'card-05')).toEqual(second);
 });
+
+test('номер материала — в верхней части карточки', async ({ page }) => {
+  const card = await page.getByTestId('card-01').boundingBox();
+  const id = await page.getByTestId('card-01').locator('.card-id').boundingBox();
+  expect((id?.y ?? 0) - (card?.y ?? 0)).toBeLessThan(20);
+});

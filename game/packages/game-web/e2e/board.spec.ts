@@ -62,3 +62,21 @@ test('удалённая копия забирает свои нити', async (
   await page.getByTestId('view-tab-desk').click();
   await expect(page.locator('[data-testid^="card-"]')).toHaveCount(46);
 });
+
+test('нить и её подпись не закрыты карточками', async ({ page }) => {
+  await pin(page, '01');
+  await pin(page, '03');
+  await page.getByTestId('view-tab-right').click();
+  await connectFirstTwo(page);
+  await threads(page).first().dblclick({ force: true });
+  await page.getByTestId('thread-label-input').fill('одна дата');
+  await page.getByTestId('thread-label-input').press('Enter');
+  const label = page.getByTestId('view-right').getByText('одна дата');
+  const box = await label.boundingBox();
+  if (!box) throw new Error('нет подписи');
+  const topmost = await page.evaluate(
+    ({ x, y }) => document.elementFromPoint(x, y)?.textContent ?? '',
+    { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+  );
+  expect(topmost).toBe('одна дата');
+});

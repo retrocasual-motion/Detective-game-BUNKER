@@ -67,3 +67,11 @@ test('стрелки при открытом просмотрщике не пе�
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('view-desk')).toBeVisible();
 });
+
+test('строки шапки письма не склеиваются: «Кому:» ниже «От:»', async ({ page }) => {
+  await page.getByTestId('card-01').dblclick();
+  const paper = page.getByTestId('viewer-paper');
+  const from = await paper.getByText('От:', { exact: true }).boundingBox();
+  const to = await paper.getByText('Кому:', { exact: true }).boundingBox();
+  expect(to?.y ?? 0).toBeGreaterThan((from?.y ?? 0) + 5);
+});

@@ -1,7 +1,7 @@
 import type { BoardItem, Camera, Material } from '@bunker/shared';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Canvas } from '../canvas/Canvas.tsx';
-import { CARD_H, CARD_W } from '../canvas/geometry.ts';
+import { CARD_W, PIN_Y } from '../canvas/geometry.ts';
 import { useDraggable } from '../canvas/useDraggable.ts';
 import { useGame } from '../store.ts';
 import { BoardThreads } from './BoardThreads.tsx';
@@ -96,7 +96,7 @@ export function BoardView() {
     const a = board.items.find((i) => i.id === editing.from);
     const b = board.items.find((i) => i.id === editing.to);
     if (!a || !b) return null;
-    return { x: (a.x + b.x + CARD_W) / 2, y: (a.y + b.y + CARD_H) / 2 };
+    return { x: (a.x + b.x + CARD_W) / 2, y: (a.y + b.y) / 2 + PIN_Y };
   })();
 
   return (
@@ -124,13 +124,6 @@ export function BoardView() {
         className="board-surface"
         onBackgroundClick={() => setSelectedId(null)}
       >
-        <BoardThreads
-          items={board.items}
-          threads={board.threads}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-          onEditLabel={setEditingId}
-        />
         {board.items.map((item) => {
           const material = byId.get(item.materialId);
           return material ? (
@@ -146,6 +139,14 @@ export function BoardView() {
             />
           ) : null;
         })}
+        {/* Нити — поверх копий, как настоящая нить поверх бумаги. */}
+        <BoardThreads
+          items={board.items}
+          threads={board.threads}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+          onEditLabel={setEditingId}
+        />
         {editing && editPos && (
           <input
             className="thread-label-input"
