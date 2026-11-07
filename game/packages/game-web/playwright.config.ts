@@ -10,8 +10,16 @@ export default defineConfig({
   workers: 1,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
-  use: { baseURL: `http://localhost:${E2E.WEB_PORT}`, viewport, trace: 'retain-on-failure' },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], viewport } }],
+  // Без анимаций (prefers-reduced-motion): переходы мгновенные; анимацию проверяет отдельный тест.
+  use: {
+    baseURL: `http://localhost:${E2E.WEB_PORT}`,
+    viewport,
+    reducedMotion: 'reduce',
+    trace: 'retain-on-failure',
+  },
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], viewport, reducedMotion: 'reduce' } },
+  ],
   // Два процесса напрямую, без вложенного pnpm --parallel (под Playwright он зависал).
   webServer: [
     {

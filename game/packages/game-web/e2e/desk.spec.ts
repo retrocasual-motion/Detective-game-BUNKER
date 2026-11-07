@@ -15,9 +15,13 @@ async function drag(page: Page, testId: string, dx: number, dy: number) {
   await page.mouse.up();
 }
 
+/** Место листа на столе — из его translate (рамка повёрнутого листа зависит от поворота и подъёма). */
 const position = async (page: Page, testId: string) => {
-  const box = await page.getByTestId(testId).boundingBox();
-  return { x: Math.round(box?.x ?? Number.NaN), y: Math.round(box?.y ?? Number.NaN) };
+  const t = await page.getByTestId(testId).evaluate((el) => (el as HTMLElement).style.translate);
+  const [x = Number.NaN, y = Number.NaN] = t
+    .split(' ')
+    .map((v) => Math.round(Number.parseFloat(v)));
+  return { x, y };
 };
 
 test('на столе 46 карточек', async ({ page }) => {
@@ -76,8 +80,55 @@ test('сервер не сохраняет → «Не сохранено»; сл
   expect(await position(page, 'card-05')).toEqual(second);
 });
 
-test('номер материала — в верхней части карточки', async ({ page }) => {
+test('номер материала — в верхней части листа', async ({ page }) => {
   const card = await page.getByTestId('card-01').boundingBox();
   const id = await page.getByTestId('card-01').locator('.card-id').boundingBox();
-  expect((id?.y ?? 0) - (card?.y ?? 0)).toBeLessThan(20);
+  expect((id?.y ?? 0) - (card?.y ?? 0)).toBeLessThan(40);
+});
+
+test('бумаги лежат вразброс: с поворотом, не ровной сеткой', async ({ page }) => {
+  const rots = await page
+    .locator('[data-testid^="card-"]')
+    .evaluateAll((els) => els.map((e) => Number.parseFloat((e as HTMLElement).style.rotate)));
+  expect(rots.filter((r) => r !== 0).length).toBeGreaterThan(30);
+  expect(Math.max(...rots.map(Math.abs))).toBeLessThanOrEqual(7);
+});
+
+test('поворот листа сохраняется после перетаскивания', async ({ page }) => {
+  const rot = () => page.getByTestId('card-07').evaluate((el) => (el as HTMLElement).style.rotate);
+  const before = await rot();
+  await drag(page, 'card-07', 120, 80);
+  expect(await rot()).toBe(before);
+});
+
+test('взятый лист приподнимается и наклоняется в движении', async ({ page }) => {
+  const box = await page.getByTestId('card-12').boundingBox();
+  if (!box) throw new Error('нет листа');
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  const base = await page.getByTestId('card-12').evaluate((el) => (el as HTMLElement).style.rotate);
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  for (let i = 1; i <= 6; i++) await page.mouse.move(x + i * 30, y);
+  await expect(page.getByTestId('card-12')).toHaveClass(/card-dragging/);
+  const during = await page
+    .getByTestId('card-12')
+    .evaluate((el) => (el as HTMLElement).style.rotate);
+  expect(during).not.toBe(base);
+  await page.mouse.up();
+  await expect(page.getByTestId('card-12')).not.toHaveClass(/card-dragging/);
+});
+
+test('рука остановилась, лист ещё в руке — наклон проходит', async ({ page }) => {
+  const box = await page.getByTestId('card-12').boundingBox();
+  if (!box) throw new Error('нет листа');
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  const rot = () => page.getByTestId('card-12').evaluate((el) => (el as HTMLElement).style.rotate);
+  const base = await rot();
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  for (let i = 1; i <= 6; i++) await page.mouse.move(x + i * 30, y);
+  await expect.poll(rot, { timeout: 1000 }).toBe(base);
+  await page.mouse.up();
 });

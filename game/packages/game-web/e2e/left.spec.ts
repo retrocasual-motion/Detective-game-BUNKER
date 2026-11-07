@@ -1,7 +1,7 @@
 import { expect, test } from './fixtures.ts';
 
 test.beforeEach(async ({ page }) => {
-  await page.getByTestId('view-tab-left').click();
+  await page.getByTestId('nav-left').click();
 });
 
 test('в виде «Слева» — 5 изъятых устройств, на столе их нет', async ({ page }) => {
@@ -9,7 +9,7 @@ test('в виде «Слева» — 5 изъятых устройств, на �
     .locator('[data-testid^="evidence-"]')
     .evaluateAll((els) => els.map((e) => e.getAttribute('data-testid')));
   expect(ids).toEqual(['evidence-24', 'evidence-47', 'evidence-48', 'evidence-49', 'evidence-50']);
-  await page.getByTestId('view-tab-desk').click();
+  await page.getByTestId('nav-right').click();
   for (const id of ['24', '47', '48', '49', '50']) {
     await expect(page.getByTestId(`card-${id}`)).toHaveCount(0);
   }
