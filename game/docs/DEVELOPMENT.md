@@ -101,23 +101,29 @@ Claude будет спрашивать разрешение на команды 
 - [x] Поставить плагины и MCP (с разрешения автора, `STACK.md`, раздел 13) — см.
       «Плагины» ниже.
 - [x] Создать папку медиа вне git: `E:\Projects\bunker-media`.
-- [ ] Context7: войти один раз — в панели Claude команда `/mcp` → context7 →
-      Authenticate (делает автор, нужен клик в браузере).
+- [x] Context7 — по ключу, на уровне пользователя (ключ в git не попадает). Автор
+      берёт ключ на context7.com (Dashboard → API Keys); Claude подключает:
+      `claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp --header "CONTEXT7_API_KEY: <ключ>"`.
+      Проверка — `claude mcp list` → `context7 … ✔ Connected`.
 - [ ] Когда появится код (M0): прописать папку медиа в `.env` (образец —
       `.env.example`); поставить зависимости (`pnpm install`), браузеры Playwright
       (`pnpm exec playwright install chromium` — версия браузеров должна совпасть с
       версией Playwright в проекте, поэтому не раньше); база — PostgreSQL пакетом npm
       (встроенный в проект, та же версия, что на сервере), Docker локально не
-      используется; поднять базу, запустить игру, прогнать тесты; вписать сюда
-      раздел 3.
+      используется; поднять базу, запустить игру, прогнать тесты; Python-пакет
+      Playwright для skill webapp-testing (`pip install playwright` и
+      `python -m playwright install chromium`); вписать сюда раздел 3.
 
 **Плагины.** Ставятся консольной командой `claude`, встроенной в расширение (в PATH
 её нет): `%USERPROFILE%\.vscode\extensions\anthropic.claude-code-<версия>-win32-x64\resources\native-binary\claude.exe`.
 Уровень — проект (записываются в `.claude/settings.json`, попадают в git):
 
 - `planning-with-files@planning-with-files` — маркетплейс `OthmanAdi/planning-with-files`;
-- `superpowers@claude-plugins-official` и `context7@claude-plugins-official` —
-  официальный маркетплейс `anthropics/claude-plugins-official`;
+- `superpowers@claude-plugins-official` — официальный маркетплейс
+  `anthropics/claude-plugins-official`;
+- Context7 — не плагин, а MCP-сервер по ключу на уровне пользователя (см. чек-лист).
+  Плагин `context7@claude-plugins-official` удалён 07.11: в нём только тот же сервер,
+  но со входом через браузер, и рядом с ключом он висел дублем «Needs authentication»;
 - webapp-testing — не плагин: в upstream он только в наборе `example-skills` с 11
   лишними skills, поэтому скопирован один в `.claude/skills/webapp-testing/`
   (источник — `.claude/skills/SOURCES.md`).
@@ -131,8 +137,13 @@ LTS, npm 11.20.0, pnpm 12.18.0; связь с GitHub и право записи 
 вход выполнен; диск E: —
 525 ГБ свободно; плагины planning-with-files 3.28.1, Superpowers 7.0.0, Context7 —
 установлены и включены; webapp-testing — в skills проекта; папка медиа создана.
-Не сделано: вход в Context7 (`/mcp`); браузеры Playwright и `.env` — с кодом M0;
+Не сделано: браузеры Playwright и `.env` — с кодом M0;
 синхронизацию папки медиа с облаком (шаг 8) включает автор.
+
+**Повторная проверка 07.11.2026:** всё из чек-листа на месте; Context7 подключён по
+ключу (user scope), отвечает на запросы; плагины — planning-with-files 3.28.1,
+Superpowers 7.0.0; Python 3.12.10 есть, пакета Playwright для webapp-testing ещё
+нет — ставится с кодом M0.
 Изменения в плагинах и skills подхватываются после перезапуска панели Claude
 (новый разговор или перезагрузка окна VS Code).
 
