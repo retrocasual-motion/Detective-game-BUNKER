@@ -5,10 +5,10 @@
 готовый к коду.
 
 ## Next Step
-Автор читает `stage1-plan.md`, говорит «да» и выбирает способ исполнения; затем — код этапа 1 на ветке `dev/m0-stage1`.
+Ревью ветки, PR #37, «мержим?». Следующий план — этап 2 (движок правил) в новой папке `.planning/`.
 
 ## Current Phase
-Phase 3
+Phase 4
 
 ## Phases
 
@@ -27,13 +27,14 @@ Phase 3
 
 ### Phase 3: План этапа 1
 - [x] Пошаговый план этапа 1 — `stage1-plan.md`
-- [ ] Утверждение автором и способ исполнения
-- **Status:** in_progress
+- [x] Утверждение автором и способ исполнения (07.11: «да», EXEC-A)
+- **Status:** complete
 
 ### Phase 4: Запись в документы игры
-- [ ] Этапы M0 — в `game/docs/TECH_PLAN.md` (разд. 12) и `DECISIONS.md`
-- [ ] PR, «мержим?»
-- **Status:** pending
+- [x] Код этапа 1 — 10 задач (журнал — `.superpowers/sdd/stage1-plan/progress.md`, вне git)
+- [x] Этапы M0 — в `game/docs/TECH_PLAN.md` (разд. 12) и `DECISIONS.md`; ARCHITECTURE, DEVELOPMENT
+- [ ] Ревью ветки, PR #37, «мержим?»
+- **Status:** in_progress
 
 ## Decisions Made
 | Decision | Rationale |

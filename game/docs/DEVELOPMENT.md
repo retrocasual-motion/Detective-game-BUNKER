@@ -105,14 +105,14 @@ Claude будет спрашивать разрешение на команды 
       берёт ключ на context7.com (Dashboard → API Keys); Claude подключает:
       `claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp --header "CONTEXT7_API_KEY: <ключ>"`.
       Проверка — `claude mcp list` → `context7 … ✔ Connected`.
-- [ ] Когда появится код (M0): прописать папку медиа в `.env` (образец —
-      `.env.example`); поставить зависимости (`pnpm install`), браузеры Playwright
-      (`pnpm exec playwright install chromium` — версия браузеров должна совпасть с
-      версией Playwright в проекте, поэтому не раньше); база — PostgreSQL пакетом npm
-      (встроенный в проект, та же версия, что на сервере), Docker локально не
-      используется; поднять базу, запустить игру, прогнать тесты; Python-пакет
-      Playwright для skill webapp-testing (`pip install playwright` и
-      `python -m playwright install chromium`); вписать сюда раздел 3.
+- [x] Код M0, этап 1 (07.11.2026): `pnpm install` в `game/`; браузер Playwright
+      (`pnpm --dir packages/game-web exec playwright install chromium`); база —
+      PostgreSQL 18.6 пакетом npm (`embedded-postgres`, та же версия, что образ
+      `postgres:18.6` на сервере), Docker локально не используется; игра запускается,
+      тесты зелёные; Python-пакет Playwright для skill webapp-testing
+      (`pip install playwright`, `python -m playwright install chromium`); раздел 3
+      вписан.
+- [ ] Папка медиа в `.env` — когда появятся медиа (M1); в `.env.example` её пока нет.
 
 **Плагины.** Ставятся консольной командой `claude`, встроенной в расширение (в PATH
 её нет): `%USERPROFILE%\.vscode\extensions\anthropic.claude-code-<версия>-win32-x64\resources\native-binary\claude.exe`.
@@ -142,15 +142,46 @@ LTS, npm 11.20.0, pnpm 12.18.0; связь с GitHub и право записи 
 
 **Повторная проверка 07.11.2026:** всё из чек-листа на месте; Context7 подключён по
 ключу (user scope), отвечает на запросы; плагины — planning-with-files 3.28.1,
-Superpowers 7.0.0; Python 3.12.10 есть, пакета Playwright для webapp-testing ещё
-нет — ставится с кодом M0.
+Superpowers 7.0.0; Python 3.12.10 есть; Python-пакет Playwright поставлен вместе с
+кодом этапа 1.
 Изменения в плагинах и skills подхватываются после перезапуска панели Claude
 (новый разговор или перезагрузка окна VS Code).
 
 ## 3. Запуск и проверки
 
-Появится вместе с кодом M0: команды запуска игры, сервера, сайтов; тесты движка
-(Vitest, сквозные проходы), тесты интерфейса (Playwright); где смотреть игру в браузере.
+Все команды — в папке `game/` (терминал VS Code: «Терминал → Создать терминал», затем
+`cd game`). Карта кода — `ARCHITECTURE.md`.
+
+**Первый раз на компьютере:** `pnpm install`, затем
+`pnpm --dir packages/game-web exec playwright install chromium` (браузер для автотестов).
+Файл `.env` не обязателен: без него берутся значения по умолчанию из `.env.example`.
+
+**Запустить игру:** `pnpm dev` → открыть в браузере **http://localhost:5173**.
+Поднимаются три процесса: база (PostgreSQL на порту 5433, данные — `game/.data/pg`,
+в git не попадают), сервер (порт 8787) и клиент (Vite, порт 5173; правки кода видны
+сразу, без перезапуска). Остановить — `Ctrl+C` в том же терминале
+(база останавливается вместе с остальными; если терминал закрыть крестиком, база может
+остаться висеть — см. «Если что-то не запускается»). Раскладка стола и доски хранится в базе и переживает
+перезапуск.
+
+**Проверки (то же, что CI на каждом PR):**
+
+| Команда | Что проверяет |
+|---|---|
+| `pnpm typecheck` | типы TypeScript во всех пакетах |
+| `pnpm lint` | линтер и форматирование (Biome); `pnpm format` — исправить форматирование |
+| `pnpm test` | модульные тесты (Vitest): сборка контента, состояние, сервер на настоящей базе |
+| `pnpm e2e` | клики в браузере (Playwright, экран 1366×768); своя база и порты (5434, 8788, 5174) — раскладку в `game/.data/pg` не трогает |
+
+CI (`.github/workflows/game.yml`) дополнительно собирает Docker-образ и проверяет, что
+игра в нём отвечает так же, как на сервере, и что пакета игрока в образе нет.
+
+**Если что-то не запускается:**
+- «порт занят» — не закрыт прошлый `pnpm dev`: закрыть его терминал или перезагрузить
+  окно VS Code;
+- база не стартует после аварийного завершения — в `game/` выполнить
+  `pnpm -F @bunker/api dev:db` и прочитать сообщение; крайний случай — удалить
+  `game/.data/pg` (раскладка сбросится к начальной).
 
 ## 4. Ключи и настройки
 
