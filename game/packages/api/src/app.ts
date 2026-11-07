@@ -1,0 +1,99 @@
+import {
+  defaultState,
+  type Material,
+  type PlayerState,
+  PlayerStateSchema,
+  reconcile,
+} from '@bunker/shared';
+import { serveStatic } from '@hono/node-server/serve-static';
+import { eq, sql } from 'drizzle-orm';
+import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
+import { type Db, playerState } from './db/client.ts';
+
+/** На этапе 1 игрок один; вход и аккаунты — этап 6. */
+const PLAYER_ID = 'local';
+
+export interface AppDeps {
+  db: Db;
+  materials: Material[];
+  production: boolean;
+  /** Готова ли база (миграции применены); до этого health отвечает 503. */
+  isReady?: () => boolean;
+  /** Папка собранного клиента (production, Docker): сервер отдаёт и игру, и API. */
+  webDist?: string;
+}
+
+/** Состояние ссылается только на материалы, которые у игрока есть, и в своих местах. */
+function invalidReference(s: PlayerState, materials: Material[]): string | null {
+  const deskIds = new Set(materials.filter((m) => m.placement === 'desk').map((m) => m.id));
+  const allIds = new Set(materials.map((m) => m.id));
+  const badDesk = s.desk.items.find((i) => !deskIds.has(i.materialId));
+  if (badDesk) return `на столе нет материала ${badDesk.materialId}`;
+  const badBoard = s.board.items.find((i) => !allIds.has(i.materialId));
+  if (badBoard) return `нет материала ${badBoard.materialId}`;
+  return null;
+}
+
+export function createApp({
+  db,
+  materials,
+  production,
+  isReady = () => true,
+  webDist,
+}: AppDeps): Hono {
+  const app = new Hono();
+
+  app.get('/api/health', (c) => (isReady() ? c.json({ ok: true }) : c.json({ ok: false }, 503)));
+
+  // Пока миграции не применены, данные недоступны — клиент повторит запрос.
+  app.use('/api/*', async (c, next) => {
+    if (!isReady()) return c.json({ error: 'база не готова' }, 503);
+    await next();
+  });
+
+  app.get('/api/materials', (c) => c.json(materials));
+
+  app.get('/api/state', async (c) => {
+    const [row] = await db.select().from(playerState).where(eq(playerState.playerId, PLAYER_ID));
+    const parsed = row ? PlayerStateSchema.safeParse(row.state) : null;
+    const state = parsed?.success ? reconcile(parsed.data, materials) : defaultState(materials);
+    return c.json(state);
+  });
+
+  app.put('/api/state', bodyLimit({ maxSize: 1024 * 1024 }), async (c) => {
+    const body = await c.req.json().catch(() => null);
+    const parsed = PlayerStateSchema.safeParse(body);
+    if (!parsed.success) return c.json({ error: 'неверное состояние' }, 400);
+    const bad = invalidReference(parsed.data, materials);
+    if (bad) return c.json({ error: bad }, 400);
+    const seqHeader = Number(c.req.header('x-state-seq'));
+    const seq = Number.isSafeInteger(seqHeader) && seqHeader > 0 ? seqHeader : Date.now() * 1000;
+    await db
+      .insert(playerState)
+      .values({ playerId: PLAYER_ID, state: parsed.data, seq })
+      .onConflictDoUpdate({
+        target: playerState.playerId,
+        set: { state: parsed.data, seq, updatedAt: new Date() },
+        setWhere: sql`${playerState.seq} < ${seq}`,
+      });
+    return c.body(null, 204);
+  });
+
+  app.delete('/api/state', async (c) => {
+    if (production) return c.notFound();
+    await db.delete(playerState).where(eq(playerState.playerId, PLAYER_ID));
+    return c.body(null, 204);
+  });
+
+  if (webDist) {
+    const isApi = (path: string) => path === '/api' || path.startsWith('/api/');
+    const files = serveStatic({ root: webDist });
+    const index = serveStatic({ root: webDist, path: 'index.html' });
+    app.use('/*', (c, next) => (isApi(c.req.path) ? next() : files(c, next)));
+    // Любой другой путь страницы — та же игра (одна страница).
+    app.use('*', (c, next) => (isApi(c.req.path) ? next() : index(c, next)));
+  }
+
+  return app;
+}

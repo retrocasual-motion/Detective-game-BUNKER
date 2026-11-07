@@ -1,0 +1,1 @@
+ALTER TABLE "player_state" ADD COLUMN "seq" bigint DEFAULT 0 NOT NULL;

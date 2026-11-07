@@ -1,0 +1,30 @@
+{
+  "name": "@bunker/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm run \"/^dev:/\"",
+    "dev:db": "tsx scripts/dev-db.ts",
+    "dev:server": "tsx watch src/server.ts",
+    "serve": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "db:generate": "drizzle-kit generate",
+    "test": "vitest run",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@bunker/shared": "workspace:*",
+    "@hono/node-server": "^2.1.6",
+    "drizzle-orm": "^0.45.4",
+    "embedded-postgres": "18.6.0-beta.19",
+    "hono": "^4.13.16",
+    "postgres": "^4.1.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "drizzle-kit": "^0.31.11",
+    "tsx": "^4.23.15",
+    "vitest": "^5.1.0"
+  }
+}

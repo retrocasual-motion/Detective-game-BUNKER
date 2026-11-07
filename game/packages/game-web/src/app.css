@@ -1,0 +1,364 @@
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+/* clip, а не hidden: hidden-контейнер браузер всё равно прокручивает к фокусу
+   (уголок папки выступает за низ экрана — комната уезжала вверх). */
+.room,
+.room-view {
+  overflow: clip;
+}
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: var(--font-size-ui) var(--font-ui);
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.room {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.room-tabs {
+  display: flex;
+  gap: var(--space-1);
+  height: var(--tabs-height);
+  padding: var(--space-1);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.room-tab {
+  padding: 0 var(--space-3);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.room-tab[aria-selected="true"] {
+  background: var(--color-surface-raised);
+  border-color: var(--color-accent);
+}
+.room-status {
+  margin-left: auto;
+  align-self: center;
+  padding: 0 var(--space-3);
+  color: var(--color-danger);
+}
+.room-view {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.room-overview {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: var(--space-3);
+  height: 100%;
+  padding: var(--space-4);
+}
+.room-zone {
+  flex: 1;
+  max-width: 360px;
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  font-size: 20px;
+}
+
+.petition-corner {
+  position: absolute;
+  right: var(--space-4);
+  bottom: 0;
+  width: var(--corner-width);
+  height: var(--corner-height);
+  background: var(--color-card);
+  color: var(--color-card-text);
+  border: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: var(--shadow);
+  transform: translateY(8px);
+  transition: transform 0.15s;
+  z-index: 50;
+}
+.petition-corner:hover {
+  transform: translateY(0);
+}
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 55%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.petition-folder {
+  width: min(640px, 90%);
+  padding: var(--space-4);
+  background: var(--color-card);
+  color: var(--color-card-text);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.petition-folder label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.petition-folder input {
+  padding: var(--space-2);
+  font: inherit;
+}
+.placeholder {
+  color: var(--color-text-muted);
+  padding: var(--space-4);
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+.canvas-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+.desk {
+  background: var(--color-desk);
+}
+.card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--card-width);
+  height: var(--card-height);
+  padding: var(--space-2);
+  background: var(--color-card);
+  color: var(--color-card-text);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  overflow: hidden;
+  border: none;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.card-dragging {
+  cursor: grabbing;
+  outline: 2px solid var(--color-accent);
+}
+.card-id {
+  display: block;
+  font-weight: bold;
+  color: var(--color-text-muted);
+}
+.card-title {
+  display: block;
+  margin-top: var(--space-2);
+  font-family: var(--font-paper);
+}
+
+.viewer {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: rgb(0 0 0 / 70%);
+}
+.viewer-bar {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+}
+.viewer-bar button {
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.viewer-title {
+  margin-right: auto;
+  align-self: center;
+}
+.viewer-paper {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  width: min(900px, 100%);
+  margin: var(--space-3) auto calc(var(--corner-height) + var(--space-3));
+  padding: var(--space-4);
+  background: var(--color-paper);
+  color: var(--color-paper-text);
+  font: var(--font-size-paper) / 1.5 var(--font-paper);
+  box-shadow: var(--shadow);
+  user-select: text;
+}
+.viewer-paper table {
+  border-collapse: collapse;
+}
+.viewer-paper th,
+.viewer-paper td {
+  border: 1px solid var(--color-border);
+  padding: var(--space-1) var(--space-2);
+}
+
+.viewer-note {
+  align-self: center;
+  color: var(--color-accent);
+}
+.board {
+  position: absolute;
+  inset: 0;
+}
+.board-surface {
+  background: var(--color-board);
+}
+.board-toolbar {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 5;
+}
+.board-toolbar button {
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.board-toolbar button[aria-pressed="true"] {
+  border-color: var(--color-accent);
+}
+.board-threads {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
+  pointer-events: none;
+}
+.board-thread {
+  stroke: var(--color-thread);
+  stroke-width: 6;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+.board-thread-selected {
+  stroke: var(--color-accent);
+}
+.board-thread-pin {
+  fill: var(--color-thread);
+  pointer-events: none;
+}
+.board-thread-label {
+  fill: var(--color-text);
+  paint-order: stroke;
+  stroke: var(--color-board);
+  stroke-width: 4px;
+  pointer-events: auto;
+  cursor: text;
+  font: var(--font-size-ui) var(--font-ui);
+  text-anchor: middle;
+}
+.card-selected {
+  outline: 3px solid var(--color-accent);
+}
+.card-pending {
+  outline: 3px dashed var(--color-accent);
+}
+.thread-label-input {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 200px;
+  margin-left: -100px;
+  padding: var(--space-1) var(--space-2);
+  font: inherit;
+  z-index: 10;
+}
+
+.left-view {
+  display: flex;
+  gap: var(--space-4);
+  height: 100%;
+  padding: var(--space-4) var(--space-4) calc(var(--corner-height) + var(--space-4));
+  overflow: auto;
+}
+.computer {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.computer-tabs {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+.computer-tabs button {
+  padding: var(--space-1) var(--space-3);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.computer-tabs button[aria-selected="true"] {
+  background: var(--color-surface-raised);
+  border-color: var(--color-accent);
+}
+.computer-panel {
+  flex: 1;
+  padding: var(--space-4);
+  color: var(--color-text-muted);
+}
+.evidence {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 220px;
+}
+.evidence-item {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  background: var(--color-card);
+  color: var(--color-card-text);
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.evidence-tag {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
