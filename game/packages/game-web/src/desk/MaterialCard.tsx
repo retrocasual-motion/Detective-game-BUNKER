@@ -29,9 +29,8 @@ export const MaterialCard = memo(function MaterialCard({
   const y = item.y + (drag.offset?.y ?? 0);
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
       aria-label={`${material.id}. ${material.title}`}
       className={`card${drag.offset ? ' card-dragging' : ''}`}
       data-testid={`card-${item.materialId}`}
@@ -44,8 +43,8 @@ export const MaterialCard = memo(function MaterialCard({
       }}
       {...drag.handlers}
     >
-      <div className="card-id">{material.id}</div>
-      <div className="card-title">{material.title}</div>
-    </div>
+      <span className="card-id">{material.id}</span>
+      <span className="card-title">{material.title}</span>
+    </button>
   );
 });

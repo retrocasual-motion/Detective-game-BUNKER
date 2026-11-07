@@ -155,16 +155,21 @@ button {
   box-shadow: var(--shadow);
   cursor: pointer;
   overflow: hidden;
+  border: none;
+  text-align: left;
+  display: block;
 }
 .card-dragging {
   cursor: grabbing;
   outline: 2px solid var(--color-accent);
 }
 .card-id {
+  display: block;
   font-weight: bold;
   color: var(--color-text-muted);
 }
 .card-title {
+  display: block;
   margin-top: var(--space-2);
   font-family: var(--font-paper);
 }
