@@ -3,6 +3,7 @@ import { type ReactNode, useEffect } from 'react';
 import { BoardView } from './board/BoardView.tsx';
 import { pinToBoard } from './board/board-actions.ts';
 import { DeskView } from './desk/DeskView.tsx';
+import { LeftView } from './left/LeftView.tsx';
 import { PetitionCorner } from './petition/PetitionCorner.tsx';
 import { RoomOverview } from './room/RoomOverview.tsx';
 import { RoomTabs } from './room/RoomTabs.tsx';
@@ -20,7 +21,7 @@ function CurrentView({ view }: { view: View }): ReactNode {
     case 'desk':
       return <DeskView onOpen={useGame.getState().openViewer} />;
     case 'left':
-      return <div data-testid="view-left" className="placeholder" />;
+      return <LeftView />;
     case 'right':
       return <BoardView />;
   }
