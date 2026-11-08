@@ -80,12 +80,12 @@
   --pin-size: 14px;
   --viewer-tools-width: 150px;
   --viewer-paper-width: 660px;
-  --folder-width: min(420px, 32vw);
-  --folder-height: min(72vh, 560px);
-  --corner-width: 180px;
-  --corner-height: 36px;
-  --inbox-width: min(320px, 26vw);
-  --inbox-height: min(60vh, 460px);
+  --folder-width: min(520px, 38vw);
+  --folder-height: min(82vh, 720px);
+  --corner-width: 240px;
+  --corner-height: 48px;
+  --inbox-width: min(440px, 34vw);
+  --inbox-height: min(78vh, 680px);
   --card-width: 160px;
   --card-height: 220px;
   --radius: 4px;

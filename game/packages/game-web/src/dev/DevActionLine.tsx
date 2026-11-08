@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { postActionLine } from '../api.ts';
+import { postActionLine, resetState } from '../api.ts';
 import { useGame } from '../store.ts';
 
 interface Entry {
@@ -13,7 +13,8 @@ interface Entry {
 /**
  * Служебная строка действий (E2-CHECK-A) — только в режиме разработки: проверить движок правил
  * руками, пока игровых действий в интерфейсе нет (папка — этап 3, замки и осмотр — этап 4).
- * Формат — как в сквозном проходе пакета: «ДЕЙСТВИЕ | ЦЕЛЬ | ЗНАЧЕНИЕ». В игре для игроков её нет.
+ * Формат — как в сквозном проходе пакета: «ДЕЙСТВИЕ | ЦЕЛЬ | ЗНАЧЕНИЕ» (хвост «=> …» и «# …»
+ * можно не убирать); «СБРОС» — начать дело заново. В игре для игроков её нет.
  */
 export function DevActionLine() {
   const [open, setOpen] = useState(false);
@@ -26,6 +27,12 @@ export function DevActionLine() {
     const text = line.trim();
     if (!text || busy) return;
     setBusy(true);
+    // «СБРОС» — начать дело заново: прогресс и раскладка (только в разработке).
+    if (text.toUpperCase() === 'СБРОС') {
+      await resetState().catch(() => undefined);
+      window.location.reload();
+      return;
+    }
     try {
       const r = await postActionLine(text);
       addReleased(r.released);

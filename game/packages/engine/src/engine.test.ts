@@ -3,6 +3,7 @@ import { act, type Content } from './engine.ts';
 import { pyRegex } from './pyre.ts';
 import { norm, qnorm } from './text.ts';
 import { type AccessRules, emptyProgress } from './types.ts';
+import { parseActionLine } from './walk.ts';
 
 describe('pyRegex — шаблоны Python в JavaScript', () => {
   it('границы слов и буквы (\\b, \\w) работают с русскими словами, как в Python', () => {
@@ -165,5 +166,15 @@ describe('доставка открытого и форма заключения
       11 * MIN,
     );
     expect(Object.keys(b.progress.fails)).toHaveLength(0);
+  });
+});
+
+describe('служебная строка', () => {
+  it('строка из сквозного прохода — целиком: ожидание и комментарий отрезаются', () => {
+    expect(parseActionLine('АДРЕС | браузер | vaultline-program.com => L101  # сайт')).toEqual({
+      action: 'АДРЕС',
+      target: 'браузер',
+      value: 'vaultline-program.com',
+    });
   });
 });

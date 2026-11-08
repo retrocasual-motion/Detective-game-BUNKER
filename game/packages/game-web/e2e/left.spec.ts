@@ -31,27 +31,32 @@ test('длинный текст радиопоста прокручиваетс�
   await expect(paper.getByText('Дальше до конца записи не размечено')).toBeInViewport();
 });
 
-test('компьютер следователя — монитор со значками разделов; в каждом пока «Пусто» (LEFT-B)', async ({
+test('компьютер в углу стола вещдоков: щелчок — экран крупно, значки разделов, «Пусто» (PC-A)', async ({
   page,
 }) => {
   const computer = page.getByTestId('computer');
-  await expect(computer.getByRole('tab')).toHaveCount(0);
+  const small = await computer.locator('.monitor').boundingBox();
+  // Монитор стоит в дальнем углу крыла — вверху справа.
+  expect((small?.x ?? 0) > 1366 / 2 && (small?.y ?? 999) < 768 / 3).toBe(true);
+  await page.getByTestId('computer-monitor').click();
+  const big = await computer.locator('.monitor').boundingBox();
+  expect((big?.width ?? 0) > (small?.width ?? 0) * 2).toBe(true);
   for (const name of ['Поступления', 'Почта', 'Приобщить страницу']) {
     await computer.getByTestId(`computer-tab-${name}`).click();
     await expect(computer.getByRole('dialog', { name })).toBeVisible();
     await expect(computer.getByTestId('computer-panel')).toHaveText('Пусто');
   }
-  await computer.getByRole('button', { name: 'Закрыть окно' }).click();
-  await expect(computer.getByRole('dialog')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('computer-monitor')).toBeVisible();
 });
 
-test('устройства лежат на столе вещдоков рядом с монитором, у каждого бирка «Изъято»', async ({
-  page,
-}) => {
-  const table = await page.locator('.evidence-table').boundingBox();
+test('устройства лежат на крыле стола, у каждого бирка «Изъято»', async ({ page }) => {
   for (const id of ['24', '47', '48', '49', '50']) {
     const box = await page.getByTestId(`evidence-${id}`).boundingBox();
-    expect(box && table && box.y + box.height <= table.y + table.height, id).toBe(true);
+    expect(
+      box && box.x >= 0 && box.y >= 0 && box.x + box.width <= 1366 && box.y + box.height <= 768,
+      id,
+    ).toBe(true);
     await expect(page.getByTestId(`evidence-${id}`)).toContainText(`Изъято · ${id}`);
   }
 });

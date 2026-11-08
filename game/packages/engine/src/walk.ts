@@ -70,7 +70,9 @@ function parseCard(text: string): Card {
 
 /** «ДЕЙСТВИЕ | ЦЕЛЬ | ЗНАЧЕНИЕ» → действие (служебная строка разработки, E2-CHECK-A). */
 export function parseActionLine(line: string): ActionInput | null {
-  const m = ACTION_RE.exec(line);
+  // Строку можно скопировать из сквозного прохода целиком: «=> ожидание» и «# …» отрезаются.
+  const bare = (line.split(' #')[0] ?? '').trimEnd();
+  const m = ACTION_RE.exec(EXPECT_RE.exec(bare)?.[1] ?? bare);
   if (!m) return null;
   const action = m[1] as ActionName;
   if (!ACTIONS.includes(action)) return null;
