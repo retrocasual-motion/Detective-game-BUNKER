@@ -19,6 +19,19 @@
 
   --color-desk: #575757;
   --color-desk-floor: #2a2a2a;
+  /* Стол вещдоков, монитор и устройства (LEFT-B) — серые заглушки. */
+  --color-evidence-table: #505050;
+  --color-monitor: #2f3033;
+  --color-screen: #1d2a2f;
+  --color-screen-text: #cfd8dc;
+  --color-screen-icon: #8fa3ad;
+  --color-screen-window: #d9d9d9;
+  --color-screen-title: #33495a;
+  --color-device: #6c6f74;
+  --color-device-edge: #44474b;
+  --color-tag: #ece6d2;
+  --color-tray: #4b4f55;
+  --color-dev: rgb(20 20 20 / 92%);
   /* Предметы стола по типу (UX-A1) — серые заглушки. */
   --color-paper-under: #d3d0c6;
   --color-paper-under-2: #c6c2b6;
@@ -67,10 +80,12 @@
   --pin-size: 14px;
   --viewer-tools-width: 150px;
   --viewer-paper-width: 660px;
-  --folder-width: min(420px, 32vw);
-  --folder-height: min(72vh, 560px);
-  --corner-width: 180px;
-  --corner-height: 36px;
+  --folder-width: min(520px, 38vw);
+  --folder-height: min(82vh, 720px);
+  --corner-width: 240px;
+  --corner-height: 48px;
+  --inbox-width: min(440px, 34vw);
+  --inbox-height: min(78vh, 680px);
   --card-width: 160px;
   --card-height: 220px;
   --radius: 4px;

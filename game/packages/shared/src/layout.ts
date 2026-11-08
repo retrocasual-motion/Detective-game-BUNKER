@@ -53,12 +53,15 @@ export function scatterSlot(k: number): { x: number; y: number; rot: number } {
   };
 }
 
+/** Закрытый материал, открытый игроком по ходу дела (L…), а не стартовый (01…51). */
+export const isReleased = (m: Pick<Material, 'id'>) => m.id.startsWith('L');
+
 const deskMaterials = (materials: Material[]) =>
   materials.filter((m) => m.placement === 'desk').sort((a, b) => a.id.localeCompare(b.id));
 
 const defaultDesk = (materials: Material[]): PlayerState['desk'] => ({
   camera: { x: 0, y: 0, zoom: 1 },
-  items: deskMaterials(materials).map(
+  items: deskMaterials(materials.filter((m) => !isReleased(m))).map(
     (m, k): DeskItem => ({ materialId: m.id, ...scatterSlot(k), z: k + 1 }),
   ),
 });
@@ -127,6 +130,11 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
   let k = 0;
   for (const m of deskMaterials(materials)) {
     if (seen.has(m.id)) continue;
+    // Открытое по ходу дела ложится в лоток «Входящие», свежее — сверху (E2-INBOX-A).
+    if (isReleased(m)) {
+      items.push({ materialId: m.id, x: 0, y: 0, rot: 0, z: ++z, tray: true });
+      continue;
+    }
     while (occupied.has(key(scatterSlot(k)))) k++;
     const slot = scatterSlot(k);
     occupied.add(key(slot));

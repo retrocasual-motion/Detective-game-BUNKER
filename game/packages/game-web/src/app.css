@@ -72,7 +72,7 @@ button {
   background: var(--color-desk);
 }
 .face-left {
-  background: var(--color-room-wall);
+  background: var(--color-desk);
 }
 .face-right {
   background: var(--color-room-wall);
@@ -196,6 +196,7 @@ button {
 }
 .petition-tab {
   align-self: flex-start;
+  font-size: 16px;
   width: var(--corner-width);
   height: var(--corner-height);
   flex: none;
@@ -746,64 +747,460 @@ button {
   border-radius: var(--radius);
 }
 
+/* ── Вид «Слева» (PC-A): крыло углового стола сверху — устройства с бирками, монитор в углу. ── */
 .left-view {
-  display: flex;
-  gap: var(--space-4);
+  position: relative;
   height: 100%;
-  padding: var(--space-4) var(--space-4) calc(var(--corner-height) + var(--space-4));
-  overflow: auto;
+  overflow: hidden;
 }
+/* Монитор стоит в дальнем углу крыла (вверху справа: у стены и у окна). */
 .computer {
-  flex: 2;
+  position: absolute;
+  right: 9%;
+  top: 5%;
+  width: min(300px, 26vw);
+  z-index: 2;
+}
+.monitor {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  padding: 10px 10px 18px;
+  background: var(--color-monitor);
+  border-radius: 6px;
+  box-shadow:
+    0 14px 0 -6px var(--color-device-edge),
+    0 18px 30px rgb(0 0 0 / 50%);
+  transition:
+    width 0.3s var(--ease-camera),
+    translate 0.3s var(--ease-camera);
+}
+.monitor-approach {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: transparent;
+  border: none;
+  cursor: zoom-in;
+}
+/* «Камера наезжает»: экран встаёт крупно по центру, стол вокруг слегка затемнён. */
+.computer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 44;
+  background: var(--color-viewer-backdrop);
+  border: none;
+  cursor: zoom-out;
+}
+.computer-near .monitor {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 45;
+  width: min(860px, 80vw, (100vh - 140px) * 4 / 3);
+  translate: -50% -50%;
+}
+.computer-close {
+  position: absolute;
+  top: 0;
+  left: calc(100% + var(--space-2));
+}
+.monitor-screen {
+  position: relative;
+  height: 100%;
+  padding: var(--space-3);
+  background: var(--color-screen);
+  overflow: hidden;
+}
+.desktop-icons {
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  align-items: flex-start;
+  gap: var(--space-3);
 }
-.computer-tabs {
+.desktop-icon {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: var(--space-1);
-  padding: var(--space-2);
-  border-bottom: 1px solid var(--color-border);
-}
-.computer-tabs button {
-  padding: var(--space-1) var(--space-3);
+  width: 104px;
+  padding: var(--space-1);
   background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  border: 1px solid transparent;
+  color: var(--color-screen-text);
+  font-size: 13px;
+  text-align: center;
 }
-.computer-tabs button[aria-selected="true"] {
-  background: var(--color-surface-raised);
-  border-color: var(--color-accent);
+.desktop-icon:hover,
+.desktop-icon[aria-pressed="true"] {
+  border-color: var(--color-screen-text);
 }
-.computer-panel {
+.desktop-icon-image {
+  width: 36px;
+  height: 30px;
+  background: var(--color-screen-icon);
+  border-radius: 2px;
+}
+.monitor-approach:hover + .monitor-screen {
+  outline: 2px solid var(--color-screen-text);
+}
+/* Пока монитор стоит в углу — экран маленький, значки без подписей. */
+.computer:not(.computer-near) .monitor-screen {
+  padding: var(--space-2);
+  font-size: 0;
+}
+.computer:not(.computer-near) .desktop-icon {
+  width: 30px;
+  padding: 2px;
+  font-size: 0;
+}
+.computer:not(.computer-near) .desktop-icon-image {
+  width: 14px;
+  height: 12px;
+}
+.screen-window {
+  position: absolute;
+  left: 26%;
+  right: 5%;
+  top: 8%;
+  bottom: 10%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-screen-window);
+  color: var(--color-card-text);
+  box-shadow: 2px 2px 0 rgb(0 0 0 / 50%);
+}
+.screen-window-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px var(--space-2);
+  background: var(--color-screen-title);
+  color: var(--color-screen-text);
+  font-size: 13px;
+}
+.screen-window-title button {
+  padding: 0 var(--space-1);
+  background: transparent;
+  border: none;
+}
+.screen-window-body {
   flex: 1;
-  padding: var(--space-4);
+  padding: var(--space-3);
   color: var(--color-text-muted);
 }
+/* Устройства лежат на крыле вразброс, как их положили после изъятия. */
 .evidence {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.evidence-item {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: 0;
+  background: transparent;
+  border: none;
+  text-align: left;
+  pointer-events: auto;
+}
+.device-47 {
+  left: 10%;
+  top: 14%;
+  rotate: -5deg;
+}
+.device-48 {
+  left: 40%;
+  top: 16%;
+  rotate: 7deg;
+}
+.device-24 {
+  left: 33%;
+  top: 56%;
+  rotate: -10deg;
+}
+.device-49 {
+  left: 54%;
+  top: 60%;
+  rotate: 14deg;
+}
+.device-50 {
+  left: 10%;
+  top: 54%;
+  rotate: 2deg;
+}
+.device {
+  display: block;
+  background: var(--color-device);
+  box-shadow: 0 4px 10px rgb(0 0 0 / 45%);
+  transition:
+    translate 0.15s ease-out,
+    box-shadow 0.15s ease-out;
+}
+/* Серые силуэты сверху (этап 4 заменит рисунками и 3D): закрытый ноутбук, телефон экраном
+   вверх, ручка, карта памяти, регистратор. */
+.device-47 .device {
+  width: 230px;
+  height: 160px;
+  border-radius: 8px;
+  border-bottom: 8px solid var(--color-device-edge);
+}
+.device-48 .device {
+  width: 74px;
+  height: 140px;
+  border-radius: 11px;
+  border: 6px solid var(--color-device-edge);
+  background: var(--color-screen);
+}
+.device-49 .device {
+  width: 200px;
+  height: 20px;
+  border-radius: 10px;
+}
+.device-24 .device {
+  width: 52px;
+  height: 66px;
+  border-radius: 2px 12px 2px 2px;
+  background: var(--color-device-edge);
+}
+.device-50 .device {
+  width: 180px;
+  height: 110px;
+  border-radius: 4px;
+  background:
+    radial-gradient(circle at 28% 45%, var(--color-device-edge) 0 24px, transparent 25px),
+    var(--color-device);
+}
+.evidence-item:hover .device {
+  translate: 0 -3px;
+  box-shadow: 0 10px 18px rgb(0 0 0 / 50%);
+}
+/* Бирка «Изъято»: бумажный ярлык. */
+.evidence-tag {
+  display: flex;
+  flex-direction: column;
+  max-width: 200px;
+  padding: 3px var(--space-2);
+  background: var(--color-tag);
+  color: var(--color-card-text);
+  font-size: 12px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 40%);
+  rotate: -2deg;
+}
+.evidence-tag-id {
+  color: var(--color-card-id);
+}
+.evidence-tag-title {
+  font-family: var(--font-paper);
+}
+
+/* ── Лоток «Входящие» (E2-INBOX-A): внизу справа на столе, зеркально папке ходатайства. ── */
+.inbox {
+  position: absolute;
+  /* Левее стрелки «Доска» у правого края: открытый лоток её не закрывает. */
+  right: calc(var(--nav-size) + var(--space-4));
+  bottom: 0;
+  z-index: 35;
+  width: var(--inbox-width);
+  height: var(--inbox-height);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  translate: 0 calc(100% - var(--corner-height) + 8px);
+  transition: translate 0.25s var(--ease-camera);
+  pointer-events: none;
+}
+.inbox-open {
+  translate: 0 0;
+}
+.inbox:not(.inbox-open):hover {
+  translate: 0 calc(100% - var(--corner-height) - 4px);
+}
+.inbox-tab {
+  position: relative;
+  font-size: 16px;
+  width: var(--corner-width);
+  height: var(--corner-height);
+  flex: none;
+  background: var(--color-tray);
+  color: var(--color-text);
+  border: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: var(--shadow);
+  pointer-events: auto;
+}
+/* Непустой лоток: из него выглядывают края листов. */
+.inbox-tab-full::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: -7px;
+  height: 7px;
+  background: var(--color-paper-sheet);
+  box-shadow:
+    4px -3px 0 var(--color-paper-under),
+    -3px -5px 0 var(--color-paper-under-2);
+}
+.inbox-panel {
   flex: 1;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  min-width: 220px;
+  padding: var(--space-3);
+  overflow-y: auto;
+  background: var(--color-tray);
+  border-radius: var(--radius) 0 0 0;
+  box-shadow: var(--shadow-paper-lifted);
+  pointer-events: auto;
 }
-.evidence-item {
-  display: block;
-  padding: var(--space-2) var(--space-3);
-  text-align: left;
-  background: var(--color-card);
+.inbox:not(.inbox-open) .inbox-panel {
+  visibility: hidden;
+  transition: visibility 0s 0.25s;
+}
+.inbox-empty {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+.inbox-item {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-1);
+}
+.inbox-paper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-paper-sheet);
   color: var(--color-card-text);
   border: none;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  border-radius: 1px;
+  box-shadow: var(--shadow-paper);
+  text-align: left;
+  cursor: grab;
 }
-.evidence-tag {
-  display: block;
+.inbox-paper .card-id {
+  font-size: 10px;
+  font-weight: normal;
+}
+.inbox-title {
+  font-family: var(--font-paper);
+  font-size: 14px;
+  line-height: 1.25;
+}
+.inbox-take {
+  flex: none;
+  padding: 0 var(--space-2);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 11px;
+}
+.inbox-ghost {
+  position: fixed;
+  z-index: 70;
+  max-width: 220px;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-paper-sheet);
+  color: var(--color-card-text);
+  box-shadow: var(--shadow-paper-lifted);
+  font: 12px var(--font-paper);
+  translate: -50% -50%;
+  rotate: -3deg;
+  pointer-events: none;
+}
+/* Записка о поступлении — над лотком, у места, куда легло новое (LT-3), а не в углу экрана. */
+.inbox-note {
+  position: absolute;
+  right: 0;
+  /* Над ярлыком лотка: ярлык — верх выдвижной части. */
+  bottom: calc(100% + var(--space-2));
+  max-width: 320px;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-tag);
+  color: var(--color-card-text);
+  border: none;
+  box-shadow: var(--shadow-paper);
+  font: 12px var(--font-paper);
+  text-align: left;
+  rotate: -1.5deg;
+  pointer-events: auto;
+}
+
+/* ── Служебная строка действий (E2-CHECK-A), только в разработке. ── */
+.dev-line {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 60;
+  width: min(720px, 70vw);
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.dev-line-tab {
+  padding: 2px var(--space-3);
+  background: var(--color-dev);
+  color: var(--color-text);
+  border: 1px dashed var(--color-border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  font-size: 11px;
+  opacity: 0.75;
+}
+.dev-line-body {
+  width: 100%;
+  order: -1;
+  padding: var(--space-2);
+  background: var(--color-dev);
+  border: 1px dashed var(--color-border);
+  border-top: none;
+}
+.dev-line-form {
+  display: flex;
+  gap: var(--space-2);
+}
+.dev-line-form button {
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.dev-line-form input {
+  flex: 1;
+  padding: var(--space-1) var(--space-2);
+  font:
+    13px ui-monospace,
+    monospace;
+}
+.dev-line-log {
+  max-height: 220px;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
   font-size: 12px;
+}
+.dev-line-log li {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-1) 0;
+  border-top: 1px solid var(--color-border);
+}
+.dev-line-cmd {
+  font-family: ui-monospace, monospace;
   color: var(--color-text-muted);
+}
+.dev-line-result {
+  color: var(--color-accent);
 }
 
 /* Без анимаций по желанию системы (и в автотестах). */

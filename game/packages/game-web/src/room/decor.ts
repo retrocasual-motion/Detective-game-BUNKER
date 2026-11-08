@@ -1,4 +1,14 @@
-import { faceCenter, type Pose, toCamera, toScreen, type Vec3 } from './camera.ts';
+import {
+  faceCenter,
+  type Pose,
+  ROOM_LEFT,
+  ROOM_RIGHT,
+  toCamera,
+  toScreen,
+  type Vec3,
+  WING_X,
+  WING_Z,
+} from './camera.ts';
 
 /**
  * Серый декор комнаты (стены, пол, окно, кромка и ножки стола) — рисуется на одном
@@ -33,7 +43,10 @@ export function roomPolys(
   const floor = 1.4 * p;
   const yc = (top + floor) / 2;
   const hy = (floor - top) / 2;
-  const hx = 1.2 * p;
+  const left = ROOM_LEFT * p;
+  const right = ROOM_RIGHT * p;
+  const xc = (left + right) / 2;
+  const hx = (right - left) / 2;
   const desk = faceCenter('desk', p);
   const deskFront = desk[2] + vp.height / 2;
   const hw = vp.width / 2;
@@ -46,11 +59,24 @@ export function roomPolys(
     ),
     color: col('--color-desk-edge'),
   });
+  // Крыло углового стола: грань «Слева» лежит сверху; под ней — столешница целиком (закрывает
+  // зазор с основным столом при любом соотношении сторон экрана), спереди — кромка и ножки.
+  const wing = { x: WING_X * p, z: WING_Z * p, hx: vp.height / 2 + 30, hz: vp.width / 2 + 10 };
+  const wingNear = wing.x + wing.hx;
+  const wingTop = desk[1] + 2;
+  const wingLeg = (z: number): Poly => ({
+    pts: rect(
+      [wing.x - wing.hx + 40, (legTop + floor) / 2, z],
+      [15, 0, 0],
+      [0, (floor - legTop) / 2, 0],
+    ),
+    color: col('--color-desk-edge'),
+  });
   return [
-    { pts: rect([0, floor, zc], [hx, 0, 0], [0, 0, hz]), color: col('--color-room-floor') },
-    { pts: rect([-hx, yc, zc], [0, 0, hz], [0, hy, 0]), color: col('--color-room-wall') },
-    { pts: rect([hx, yc, zc], [0, 0, hz], [0, hy, 0]), color: col('--color-room-wall') },
-    { pts: rect([0, yc, front], [hx, 0, 0], [0, hy, 0]), color: col('--color-room-wall-front') },
+    { pts: rect([xc, floor, zc], [hx, 0, 0], [0, 0, hz]), color: col('--color-room-floor') },
+    { pts: rect([left, yc, zc], [0, 0, hz], [0, hy, 0]), color: col('--color-room-wall') },
+    { pts: rect([right, yc, zc], [0, 0, hz], [0, hy, 0]), color: col('--color-room-wall') },
+    { pts: rect([xc, yc, front], [hx, 0, 0], [0, hy, 0]), color: col('--color-room-wall-front') },
     {
       pts: rect([0, 0.05 * p, front + 1], [0.47 * p, 0, 0], [0, 0.32 * p, 0]),
       color: col('--color-room-dark'),
@@ -59,8 +85,26 @@ export function roomPolys(
       pts: rect([0, 0.05 * p, front + 2], [0.45 * p, 0, 0], [0, 0.3 * p, 0]),
       color: col('--color-room-window'),
     },
+    wingLeg(wing.z - wing.hz + 40),
+    wingLeg(wing.z + wing.hz - 40),
     leg(-1),
     leg(1),
+    {
+      pts: rect([wing.x - 10, wingTop, wing.z], [wing.hx + 10, 0, 0], [0, 0, wing.hz]),
+      color: col('--color-desk'),
+    },
+    {
+      pts: rect([wing.x, desk[1] + 20, wing.z + wing.hz], [wing.hx, 0, 0], [0, 20, 0]),
+      color: col('--color-desk-edge'),
+    },
+    {
+      pts: rect(
+        [wingNear, desk[1] + 20, (deskFront + wing.z + wing.hz) / 2],
+        [0, 0, Math.max(1, (wing.z + wing.hz - deskFront) / 2)],
+        [0, 20, 0],
+      ),
+      color: col('--color-desk-edge'),
+    },
     {
       pts: rect([0, desk[1] + 20, deskFront], [hw, 0, 0], [0, 20, 0]),
       color: col('--color-desk-edge'),

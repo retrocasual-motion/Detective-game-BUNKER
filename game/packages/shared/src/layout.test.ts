@@ -147,3 +147,30 @@ describe('reconcile', () => {
     expect(r.desk.items).toHaveLength(46);
   });
 });
+
+describe('лоток «Входящие» (E2-INBOX-A)', () => {
+  it('открытый по ходу дела материал ложится в лоток, свежее — сверху', () => {
+    const s = defaultState(materials);
+    const withNew = [...materials, mat('L214'), mat('L215')];
+    const r = reconcile(s, withNew);
+    const a = r.desk.items.find((i) => i.materialId === 'L214');
+    const b = r.desk.items.find((i) => i.materialId === 'L215');
+    expect(a?.tray).toBe(true);
+    expect(b?.tray).toBe(true);
+    expect((b?.z ?? 0) > (a?.z ?? 0)).toBe(true);
+    // Стартовая россыпь не сдвинулась.
+    expect(r.desk.items.filter((i) => !i.tray)).toEqual(s.desk.items);
+  });
+
+  it('вынутый на стол материал остаётся на столе', () => {
+    const s = reconcile(defaultState(materials), [...materials, mat('L214')]);
+    s.desk.items = s.desk.items.map((i) =>
+      i.materialId === 'L214' ? { ...i, tray: false, x: 300, y: 300 } : i,
+    );
+    const r = reconcile(s, [...materials, mat('L214')]);
+    expect(r.desk.items.find((i) => i.materialId === 'L214')).toMatchObject({
+      tray: false,
+      x: 300,
+    });
+  });
+});

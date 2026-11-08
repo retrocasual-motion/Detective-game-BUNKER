@@ -16,6 +16,8 @@ export const env = {
   databaseUrl: e.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5433/bunker',
   apiPort: Number(e.API_PORT ?? 8787),
   contentFile: fromRoot(e.CONTENT_FILE ?? 'packages/content/dist/starting.json'),
+  /** Правила и закрытые материалы — только сервер (P-10). */
+  serverContentFile: fromRoot(e.SERVER_CONTENT_FILE ?? 'packages/content/dist/server.json'),
   pgDataDir: fromRoot(e.PG_DATA_DIR ?? '.data/pg'),
   pgPort: Number(e.PG_PORT ?? 5433),
   /** Собранный клиент; задаётся в Docker (в разработке клиент отдаёт Vite). */

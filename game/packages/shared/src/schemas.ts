@@ -21,7 +21,8 @@ export const MaterialKindSchema = z.enum([
 export type MaterialKind = z.infer<typeof MaterialKindSchema>;
 
 export const MaterialSchema = z.object({
-  id: z.string().regex(/^\d{2}$/),
+  /** 01…51 — стартовые; L101…L999 — закрытые (открываются действиями игрока). */
+  id: z.string().regex(/^(\d{2}|L\d{3})$/),
   title: z.string().min(1),
   placement: z.enum(['desk', 'evidence']),
   kind: MaterialKindSchema,
@@ -44,6 +45,8 @@ export const DeskItemSchema = z.object({
   z: z.number().int(),
   /** Поворот на столе, градусы (TECH_PLAN 4.2: «повернуть на столе», декоративно). */
   rot: z.number().min(-180).max(180),
+  /** Лежит в лотке «Входящие» и ещё не вынут на стол (E2-INBOX-A). */
+  tray: z.boolean().optional(),
 });
 export type DeskItem = z.infer<typeof DeskItemSchema>;
 

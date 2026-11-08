@@ -13,6 +13,7 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
+    "@bunker/engine": "workspace:*",
     "@bunker/shared": "workspace:*",
     "@hono/node-server": "^2.1.6",
     "drizzle-orm": "^0.45.4",

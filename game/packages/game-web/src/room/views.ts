@@ -2,7 +2,7 @@ import type { View } from '@bunker/shared';
 
 export const VIEW_LABELS: Record<View, string> = {
   room: 'Комната',
-  left: 'Компьютер',
+  left: 'Вещдоки',
   desk: 'Стол',
   right: 'Доска',
 };

@@ -15,6 +15,13 @@
       "when": 1794062116171,
       "tag": "0001_pale_vin_gonzales",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794157535324,
+      "tag": "0002_warm_nemesis",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { BoardView } from './board/BoardView.tsx';
 import { pinToBoard } from './board/board-actions.ts';
 import { DeskView } from './desk/DeskView.tsx';
+import { DevActionLine } from './dev/DevActionLine.tsx';
 import { LeftView } from './left/LeftView.tsx';
 import { PetitionCorner } from './petition/PetitionCorner.tsx';
 import { RoomScene } from './room/RoomScene.tsx';
@@ -74,6 +75,7 @@ export function App() {
         />
       )}
       <PetitionCorner />
+      {import.meta.env.DEV && <DevActionLine />}
     </div>
   );
 }

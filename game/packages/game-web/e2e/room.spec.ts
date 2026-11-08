@@ -148,7 +148,7 @@ test('стрелки вплотную к краю экрана, подписи �
   expect(right.x + right.width).toBe(1366);
   const down = await box('nav-down');
   expect(down.y + down.height).toBe(768);
-  await expect(page.getByTestId('nav-left')).toContainText('Компьютер');
+  await expect(page.getByTestId('nav-left')).toContainText('Вещдоки');
   await expect(page.getByTestId('nav-right')).toContainText('Доска');
   await expect(page.getByTestId('nav-down')).toContainText('Комната');
 });
