@@ -12,7 +12,8 @@ interface MaterialCardProps {
 }
 
 /**
- * Материал на столе — лист бумаги (DESK-A): лежит с поворотом, при взятии приподнимается
+ * Материал на столе (DESK-A, UX-A1) — предмет своего типа (лист, скреплённые листы, фото,
+ * пачка, тетрадь, диск, пакет вещдоков; форма — в app.css по kind): лежит с поворотом, при взятии приподнимается
  * (тень больше), в движении отстаёт от руки наклоном, после отпускания оседает.
  * Один клик (без перетаскивания) или Enter (у кнопки он тоже даёт click) — открыть.
  */
@@ -36,8 +37,9 @@ export const MaterialCard = memo(function MaterialCard({
     <button
       type="button"
       aria-label={`${material.id}. ${material.title}`}
-      className={`card paper${drag.offset ? ' card-dragging' : ''}`}
+      className={`card paper paper-${material.kind}${drag.offset ? ' card-dragging' : ''}`}
       data-testid={`card-${item.materialId}`}
+      data-kind={material.kind}
       style={{ translate: `${x}px ${y}px`, rotate: `${item.rot + drag.tilt}deg`, zIndex: item.z }}
       onClick={() => {
         if (!drag.wasDragged()) onOpen?.(item.materialId);
@@ -46,6 +48,7 @@ export const MaterialCard = memo(function MaterialCard({
     >
       <span className="card-id">{material.id}</span>
       <span className="card-title">{material.title}</span>
+      {material.kind === 'disc' && <span className="paper-disc-window" aria-hidden />}
     </button>
   );
 });

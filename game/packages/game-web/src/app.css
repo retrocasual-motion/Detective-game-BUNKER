@@ -111,8 +111,7 @@ button {
   background: var(--color-nav-bg);
   color: var(--color-text);
   border: none;
-  border-radius: var(--radius);
-  opacity: 0.55;
+  opacity: 0.7;
   transition: opacity 0.15s;
 }
 .nav-arrow:hover {
@@ -123,22 +122,22 @@ button {
   line-height: 1;
 }
 .nav-label {
-  font-size: 12px;
-  display: none;
-}
-.nav-arrow:hover .nav-label {
-  display: inline;
+  font-size: 11px;
 }
 .nav-left,
 .nav-right {
   top: 50%;
-  width: var(--nav-size);
+  min-width: var(--nav-size);
   min-height: calc(var(--nav-size) * 2);
   margin-top: calc(var(--nav-size) * -1);
+  padding: var(--space-1) var(--space-2);
   flex-direction: column;
+  white-space: nowrap;
 }
+/* Вплотную к краю экрана; скругление — только с внутренней стороны. */
 .nav-left {
-  left: var(--space-1);
+  left: 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
   transition: left 0.25s var(--ease-camera);
 }
 /* Открытая папка слева — стрелка встаёт у её края, а не под ней. */
@@ -146,7 +145,8 @@ button {
   left: calc(var(--space-4) + var(--folder-width) + var(--space-1));
 }
 .nav-right {
-  right: var(--space-1);
+  right: 0;
+  border-radius: var(--radius) 0 0 var(--radius);
 }
 .nav-up,
 .nav-down {
@@ -160,7 +160,8 @@ button {
   top: var(--space-1);
 }
 .nav-down {
-  bottom: var(--space-1);
+  bottom: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
 }
 .save-error {
   position: absolute;
@@ -267,7 +268,17 @@ button {
   transform-origin: 0 0;
 }
 .desk {
+  background: var(--color-desk-floor);
+}
+/* Столешница (UX-B1): у стола есть край, за ним — тёмный пол. */
+.canvas-surface {
+  position: absolute;
   background: var(--color-desk);
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 6px var(--color-desk-edge),
+    0 18px 40px rgb(0 0 0 / 45%);
+  pointer-events: none;
 }
 .card {
   position: absolute;
@@ -323,6 +334,212 @@ button {
   margin-top: var(--space-2);
   font-family: var(--font-paper);
 }
+/* Номер на столе — мелкий штамп описи, а не крупный ярлык карточки (UX-A1). Слева: правый
+   сосед в россыпи лежит поверх и мог бы закрыть номер. */
+.paper .card-id {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  font-weight: normal;
+}
+.paper .card-title {
+  margin-top: var(--space-1);
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+/* ── Предметы стола по типу (UX-A1, TECH_PLAN 4.2). Серые заглушки до этапа дизайна. ── */
+/* Скреплённые листы: под верхним видны края нижних, в углу скоба. */
+.paper-stapled {
+  box-shadow:
+    3px 3px 0 -1px var(--color-paper-under),
+    6px 5px 0 -2px var(--color-paper-under-2),
+    var(--shadow-paper);
+}
+.paper-stapled.card-dragging {
+  box-shadow:
+    3px 3px 0 -1px var(--color-paper-under),
+    6px 5px 0 -2px var(--color-paper-under-2),
+    var(--shadow-paper-lifted);
+}
+.paper-stapled::before {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 6px;
+  width: 16px;
+  height: 3px;
+  background: var(--color-metal);
+  rotate: -40deg;
+}
+/* Половина листа: низ оборван. */
+.paper-half {
+  height: 118px;
+  box-shadow: none;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 35%));
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% 88%,
+    92% 94%,
+    84% 89%,
+    75% 97%,
+    66% 90%,
+    57% 96%,
+    47% 88%,
+    38% 95%,
+    29% 89%,
+    20% 97%,
+    11% 90%,
+    4% 95%,
+    0 89%
+  );
+}
+/* Фото: отпечаток с белым полем, под ним край второго. */
+.paper-photos {
+  width: 168px;
+  height: 128px;
+  padding: 6px 7px;
+  background: var(--color-photo-border);
+  box-shadow:
+    5px -4px 0 -1px var(--color-photo-border-2),
+    var(--shadow-paper);
+  justify-content: flex-end;
+}
+.paper-photos.card-dragging {
+  box-shadow:
+    5px -4px 0 -1px var(--color-photo-border-2),
+    var(--shadow-paper-lifted);
+}
+.paper-photos::before {
+  content: "";
+  position: absolute;
+  inset: 7px 7px 34px;
+  background: var(--color-photo-image);
+}
+.paper-photos .card-id,
+.paper-photos .card-title {
+  position: relative;
+}
+.paper-photos .card-id {
+  position: absolute;
+  top: 10px;
+  right: 11px;
+  color: var(--color-photo-border);
+}
+.paper-photos .card-title {
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Пачка сканов: толщина листов видна торцом справа и снизу. */
+.paper-pack {
+  width: 170px;
+  height: 230px;
+  box-shadow:
+    1px 1px 0 var(--color-paper-under),
+    2px 2px 0 var(--color-paper-sheet),
+    3px 3px 0 var(--color-paper-under-2),
+    4px 4px 0 var(--color-paper-sheet),
+    5px 5px 0 var(--color-cardboard),
+    6px 6px 0 var(--color-paper-sheet),
+    7px 7px 0 var(--color-paper-under-2),
+    var(--shadow-paper);
+}
+.paper-pack.card-dragging {
+  box-shadow:
+    1px 1px 0 var(--color-paper-under),
+    2px 2px 0 var(--color-paper-sheet),
+    3px 3px 0 var(--color-paper-under-2),
+    4px 4px 0 var(--color-paper-sheet),
+    5px 5px 0 var(--color-cardboard),
+    6px 6px 0 var(--color-paper-sheet),
+    7px 7px 0 var(--color-paper-under-2),
+    var(--shadow-paper-lifted);
+}
+/* Тетрадь в твёрдой обложке: корешок слева, наклейка с названием. */
+.paper-notebook {
+  width: 152px;
+  height: 204px;
+  padding-left: 22px;
+  background: var(--color-notebook);
+  border-left: 12px solid var(--color-notebook-spine);
+  border-radius: 2px 4px 4px 2px;
+  color: var(--color-notebook-text);
+}
+.paper-notebook .card-title {
+  margin-top: var(--space-4);
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-paper);
+  color: var(--color-card-text);
+}
+/* Диск в бумажном конверте с окошком. */
+.paper-disc {
+  width: 150px;
+  height: 178px;
+  background: var(--color-envelope);
+}
+.paper-disc .card-title {
+  font-size: 11px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+.paper-disc-window {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  width: 84px;
+  height: 84px;
+  margin-left: -42px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    var(--color-envelope) 0 8px,
+    var(--color-disc-hub) 8px 15px,
+    var(--color-disc) 15px
+  );
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 25%);
+}
+/* Пакет вещдоков: прозрачный пластик, застёжка сверху, бирка с названием. */
+.paper-bag {
+  width: 184px;
+  height: 214px;
+  padding-top: 20px;
+  background: var(--color-bag);
+  border: 1px solid var(--color-bag-edge);
+  border-radius: 3px;
+}
+.paper-bag::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 6px;
+  height: 6px;
+  background: var(--color-bag-zip);
+}
+.paper-bag::after {
+  content: "";
+  position: absolute;
+  left: 22%;
+  right: 18%;
+  top: 46%;
+  bottom: 12%;
+  border-radius: 30% 40% 25% 35%;
+  background: var(--color-bag-contents);
+}
+.paper-bag .card-id {
+  color: var(--color-card-text);
+}
+.paper-bag .card-title {
+  position: relative;
+  z-index: 1;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-paper);
+}
 
 .viewer {
   position: absolute;
@@ -346,7 +563,8 @@ button {
   position: relative;
   display: flex;
   flex-direction: column;
-  width: min(820px, 100% - 2 * (var(--viewer-tools-width) + var(--space-2)));
+  /* Колонка ~66 знаков (UX-C1, RD-1): лист уже, шрифт крупнее. */
+  width: min(var(--viewer-paper-width), 100% - 2 * (var(--viewer-tools-width) + var(--space-2)));
   max-height: 100%;
 }
 .viewer-paper {
@@ -363,6 +581,7 @@ button {
 .viewer-tools {
   position: absolute;
   top: 0;
+  transition: top 0.15s ease-out;
   left: calc(100% + var(--space-2));
   display: flex;
   flex-direction: column;

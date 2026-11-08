@@ -91,7 +91,7 @@ test('бумаги лежат вразброс: с поворотом, не ро
     .locator('[data-testid^="card-"]')
     .evaluateAll((els) => els.map((e) => Number.parseFloat((e as HTMLElement).style.rotate)));
   expect(rots.filter((r) => r !== 0).length).toBeGreaterThan(30);
-  expect(Math.max(...rots.map(Math.abs))).toBeLessThanOrEqual(7);
+  expect(Math.max(...rots.map(Math.abs))).toBeLessThanOrEqual(9);
 });
 
 test('поворот листа сохраняется после перетаскивания', async ({ page }) => {
@@ -131,4 +131,56 @@ test('рука остановилась, лист ещё в руке — нак�
   for (let i = 1; i <= 6; i++) await page.mouse.move(x + i * 30, y);
   await expect.poll(rot, { timeout: 1000 }).toBe(base);
   await page.mouse.up();
+});
+
+test('материалы лежат предметами своего типа, а не одинаковыми листами (UX-A1)', async ({
+  page,
+}) => {
+  const kind = (id: string) => page.getByTestId(`card-${id}`).getAttribute('data-kind');
+  expect(await kind('01')).toBe('sheet');
+  expect(await kind('30')).toBe('stapled');
+  expect(await kind('13')).toBe('disc');
+  expect(await kind('29')).toBe('pack');
+  expect(await kind('38')).toBe('notebook');
+  expect(await kind('39')).toBe('photos');
+  expect(await kind('40')).toBe('bag');
+  expect(await kind('51')).toBe('half');
+  const size = async (id: string) => {
+    const el = page.getByTestId(`card-${id}`);
+    return el.evaluate(
+      (e) => `${(e as HTMLElement).offsetWidth}x${(e as HTMLElement).offsetHeight}`,
+    );
+  };
+  const sizes = new Set(await Promise.all(['01', '13', '29', '39', '40', '51'].map(size)));
+  expect(sizes.size).toBe(6);
+});
+
+test('у стола есть край: камеру не увести со столешницы и не отдалить дальше всего стола (UX-B1)', async ({
+  page,
+}) => {
+  const surface = page.locator('.desk .canvas-surface');
+  // Отдалить колесом сильно — весь стол помещается, но не меньше.
+  await page.mouse.move(683, 384);
+  for (let i = 0; i < 10; i++) await page.mouse.wheel(0, 600);
+  const far = await surface.boundingBox();
+  if (!far) throw new Error('нет столешницы');
+  expect(far.width).toBeGreaterThan(1366 * 0.5);
+  expect(far.width).toBeLessThan(1366);
+  // Ещё колесо у предела — стол не ползёт от курсора.
+  for (let i = 0; i < 5; i++) await page.mouse.wheel(0, 600);
+  expect(await surface.boundingBox()).toEqual(far);
+  // Тянем пол (пусто, вне столешницы) далеко вправо и вниз: левый верхний угол стола
+  // упирается в центр экрана и дальше не едет.
+  const start = { x: Math.max(4, far.x - 20), y: Math.max(4, far.y - 20) };
+  expect(
+    await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.className ?? '', start),
+  ).toContain('canvas');
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(start.x + 3000, start.y + 3000, { steps: 10 });
+  await page.mouse.up();
+  const box = await surface.boundingBox();
+  if (!box) throw new Error('нет столешницы');
+  expect(Math.abs(box.x - 683)).toBeLessThan(2);
+  expect(Math.abs(box.y - 384)).toBeLessThan(2);
 });

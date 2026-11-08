@@ -30,8 +30,14 @@ export const POSES: Record<View, Pose> = {
   room: { eye: [0, -0.3, 2.2], rx: 14, ry: 0 },
 };
 
-/** Длительность перехода между видами, мс. */
+/** Длительность перехода в общий вид комнаты и из него, мс. */
 export const TRANSITION_MS = 650;
+/** Длительность частых переходов между рабочими видами (стол ↔ доска, стол ↔ «Слева»), мс (MOVE-A). */
+export const TRANSITION_NEAR_MS = 400;
+
+/** Сколько длится переход: через общий вид — дольше, между рабочими видами — коротко (MOVE-A). */
+export const transitionMs = (from: View, to: View): number =>
+  from === 'room' || to === 'room' ? TRANSITION_MS : TRANSITION_NEAR_MS;
 
 export const perspectiveFor = (vp: { width: number; height: number }): number =>
   Math.round(Math.max(vp.width, vp.height) * 0.75);

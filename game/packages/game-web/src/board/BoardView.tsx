@@ -26,6 +26,30 @@ import {
 /** Двойной щелчок по нити — удалить; одиночный ждёт, не придёт ли второй щелчок. */
 const DOUBLE_CLICK_MS = 250;
 const UNDO_MS = 5000;
+/** Сдвиг мыши, до которого нажатие на булавку считается щелчком, а не протяжкой. */
+const CLICK_SLOP = 4;
+
+/**
+ * Щелчок, который закончил нить, не должен открыть копию под ним. Глушитель снимается сам
+ * сразу после отпускания кнопки — даже если click не пришёл (отпустили за окном).
+ */
+function swallowNextClick() {
+  const swallow = (e: Event) => {
+    e.stopPropagation();
+    e.preventDefault();
+  };
+  const release = () => setTimeout(() => window.removeEventListener('click', swallow, true), 0);
+  window.addEventListener('click', swallow, { capture: true, once: true });
+  window.addEventListener('pointerup', release, { capture: true, once: true });
+}
+
+/** Копия доски под точкой экрана — сквозь нити и подписи, которые лежат поверх копий. */
+const boardItemAt = (x: number, y: number): string | null =>
+  document
+    .elementsFromPoint(x, y)
+    .map((el) => el.closest('[data-board-item]'))
+    .find((el) => el !== null)
+    ?.getAttribute('data-board-item') ?? null;
 
 type Pt = { x: number; y: number };
 
@@ -49,11 +73,14 @@ interface BoardCardProps {
   onPullStart(id: string): void;
   onPull(p: Pt): void;
   onPullEnd(targetId: string | null): void;
+  /** Щелчок по булавке без протяжки — нить идёт за курсором до второго щелчка (UX-J1). */
+  onPullStick(): void;
   onRemove(id: string, e: MouseEvent): void;
 }
 
 function BoardCard(props: BoardCardProps) {
   const { item, material, camera } = props;
+  const pinDown = useRef<Pt | null>(null);
   const drag = useDraggable({
     zoom: camera.zoom,
     onDrop: (dx, dy) => props.onMove(item.id, item.x + dx, item.y + dy),
@@ -67,6 +94,7 @@ function BoardCard(props: BoardCardProps) {
       if (e.button !== 0) return;
       e.stopPropagation();
       e.currentTarget.setPointerCapture(e.pointerId);
+      pinDown.current = { x: e.clientX, y: e.clientY };
       props.onPullStart(item.id);
     },
     onPointerMove(e: PointerEvent<HTMLElement>) {
@@ -74,12 +102,13 @@ function BoardCard(props: BoardCardProps) {
     },
     onPointerUp(e: PointerEvent<HTMLElement>) {
       e.stopPropagation();
-      // Под точкой могут лежать нити и подписи (они поверх копий) — ищем копию сквозь них.
-      const under = document
-        .elementsFromPoint(e.clientX, e.clientY)
-        .map((el) => el.closest('[data-board-item]'))
-        .find((el) => el !== null);
-      props.onPullEnd(under?.getAttribute('data-board-item') ?? null);
+      const d = pinDown.current;
+      pinDown.current = null;
+      if (d && Math.abs(e.clientX - d.x) + Math.abs(e.clientY - d.y) <= CLICK_SLOP) {
+        props.onPullStick();
+        return;
+      }
+      props.onPullEnd(boardItemAt(e.clientX, e.clientY));
     },
     onPointerCancel() {
       props.onPullEnd(null);
@@ -110,7 +139,7 @@ function BoardCard(props: BoardCardProps) {
         className="board-pin"
         data-testid={`board-pin-${item.id}`}
         aria-label="Тянуть нить от булавки"
-        title="Потяните к другой копии — получится нить"
+        title="Потяните к другой копии или щёлкните и затем щёлкните по ней — получится нить"
         {...pullHandlers}
       />
       <button
@@ -130,7 +159,8 @@ function BoardCard(props: BoardCardProps) {
 
 /**
  * Доска (вид «Справа», TECH_PLAN 4.2; TH-B): копии, нити от булавки к булавке, подписи.
- * Щелчок по копии — открыть; булавку потянуть к другой копии — нить; ✕ — снять копию;
+ * Щелчок по копии — открыть; булавку потянуть к другой копии (или щёлкнуть булавку, затем
+ * копию — UX-J1) — нить; ✕ — снять копию;
  * щелчок по нити — подпись; двойной щелчок — удалить. Удалённое можно «Вернуть».
  */
 export function BoardView() {
@@ -139,7 +169,8 @@ export function BoardView() {
   const updateState = useGame((g) => g.updateState);
   const openViewer = useGame((g) => g.openViewer);
   const [live, setLive] = useState<{ id: string; dx: number; dy: number } | null>(null);
-  const [pull, setPull] = useState<{ from: string; to: Pt | null } | null>(null);
+  const [pull, setPull] = useState<{ from: string; to: Pt | null; sticky?: boolean } | null>(null);
+  const boardEl = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState<{ id: string; at: Pt } | null>(null);
   const [undo, setUndo] = useState<{ taken: Taken; text: string; at: Pt } | null>(null);
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -158,6 +189,55 @@ export function BoardView() {
     },
     [],
   );
+
+  // Нить «двумя щелчками» (UX-J1, DA-2): после щелчка по булавке нить идёт за курсором;
+  // щелчок по другой копии — привязать, мимо или Esc — отменить. Без удержания кнопки.
+  const sticky = pull?.sticky ? pull.from : null;
+  // Режим кончается сам, если игрок ушёл с доски или открыл лист (клавишей, стрелкой).
+  const onBoard = useGame((g) => g.state?.view === 'right' && g.viewerId === null);
+  useEffect(() => {
+    if (!onBoard) setPull((p) => (p?.sticky ? null : p));
+  }, [onBoard]);
+  useEffect(() => {
+    if (!sticky) return;
+    const canvasRect = () =>
+      boardEl.current?.querySelector('.canvas')?.getBoundingClientRect() ?? { left: 0, top: 0 };
+    const onMove = (e: globalThis.PointerEvent) => {
+      // Камера — живая: колесо в этом режиме работает, конец нити не отстаёт от курсора.
+      const camera = useGame.getState().state?.board.camera;
+      if (!camera) return;
+      const r = canvasRect();
+      const to = screenToWorld({ x: e.clientX - r.left, y: e.clientY - r.top }, camera);
+      setPull((p) => (p ? { ...p, to } : p));
+    };
+    const onDown = (e: globalThis.PointerEvent) => {
+      // Правая и средняя кнопки и щелчок вне доски (стрелка, папка, лист) — просто отмена;
+      // сам щелчок делает своё дело.
+      const top = document.elementFromPoint(e.clientX, e.clientY);
+      if (e.button !== 0 || !top || !boardEl.current?.contains(top)) {
+        setPull(null);
+        return;
+      }
+      e.stopPropagation();
+      e.preventDefault();
+      const exists = useGame.getState().state?.board.items.some((i) => i.id === sticky);
+      const target = boardItemAt(e.clientX, e.clientY);
+      if (exists && target && target !== sticky) updateState(addThread(sticky, target));
+      setPull(null);
+      swallowNextClick();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPull(null);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerdown', onDown, { capture: true });
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerdown', onDown, { capture: true });
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [sticky, updateState]);
 
   const setCamera = useCallback(
     (camera: Camera) => updateState((s) => ({ ...s, board: { ...s.board, camera } })),
@@ -187,7 +267,7 @@ export function BoardView() {
   const editingThread = editing ? board.threads.find((t) => t.id === editing.id) : undefined;
 
   return (
-    <div className="board" data-testid="view-right">
+    <div className="board" data-testid="view-right" ref={boardEl}>
       <Canvas camera={board.camera} onCameraChange={setCamera} className="board-surface">
         {board.items.map((item) => {
           const material = byId.get(item.materialId);
@@ -205,6 +285,7 @@ export function BoardView() {
               onLive={(id, dx, dy) => setLive(dx === 0 && dy === 0 ? null : { id, dx, dy })}
               onPullStart={(id) => setPull({ from: id, to: null })}
               onPull={(to) => setPull((p) => (p ? { ...p, to } : p))}
+              onPullStick={() => setPull((p) => (p ? { ...p, sticky: true } : p))}
               onPullEnd={(target) => {
                 if (pull && target && target !== pull.from)
                   updateState(addThread(pull.from, target));

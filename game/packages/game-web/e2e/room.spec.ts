@@ -113,10 +113,19 @@ test('сервер ответил 503 при загрузке — игра по�
 test.describe('с анимацией', () => {
   test.use({ reducedMotion: 'no-preference' });
 
+  test('щелчок во время перехода сразу ведёт к новой цели (MOVE-A)', async ({ page }) => {
+    await page.getByTestId('nav-left').click();
+    await expect(scene(page)).toHaveAttribute('data-moving', 'true');
+    await page.getByTestId('nav-down').click();
+    await expect(scene(page)).toHaveAttribute('data-view', 'room');
+    await expect(scene(page)).toHaveAttribute('data-moving', 'false');
+  });
+
   test('переход идёт движением камеры и заканчивается в покое', async ({ page }) => {
     await page.getByTestId('nav-left').click();
     await expect(scene(page)).toHaveAttribute('data-moving', 'true');
-    await expect(page.getByTestId('nav-right')).toBeHidden();
+    // Стрелки видны и во время перехода (MOVE-A).
+    await expect(page.getByTestId('nav-right')).toBeVisible();
     await expect(scene(page)).toHaveAttribute('data-moving', 'false');
     await expect(page.getByTestId('view-left')).toBeVisible();
     expect(await page.getByTestId('view-left').boundingBox()).toEqual({
@@ -126,4 +135,37 @@ test.describe('с анимацией', () => {
       height: 768,
     });
   });
+});
+
+test('стрелки вплотную к краю экрана, подписи видны всегда (UX-F1, F2)', async ({ page }) => {
+  const box = async (id: string) => {
+    const b = await page.getByTestId(id).boundingBox();
+    if (!b) throw new Error(`нет ${id}`);
+    return b;
+  };
+  expect((await box('nav-left')).x).toBe(0);
+  const right = await box('nav-right');
+  expect(right.x + right.width).toBe(1366);
+  const down = await box('nav-down');
+  expect(down.y + down.height).toBe(768);
+  await expect(page.getByTestId('nav-left')).toContainText('Компьютер');
+  await expect(page.getByTestId('nav-right')).toContainText('Доска');
+  await expect(page.getByTestId('nav-down')).toContainText('Комната');
+});
+
+test('значок по движению камеры: в комнату — «вверх», к столу — «вниз» (UX-F1)', async ({
+  page,
+}) => {
+  await expect(page.getByTestId('nav-down')).toContainText('˄');
+  await page.getByTestId('nav-down').click();
+  await expect(scene(page)).toHaveAttribute('data-view', 'room');
+  await expect(page.getByTestId('nav-down')).toContainText('˅');
+  await expect(page.getByTestId('nav-down')).toContainText('Стол');
+});
+
+test('двойной щелчок по стрелке «Комната» не возвращает обратно на стол (UN-2)', async ({
+  page,
+}) => {
+  await page.getByTestId('nav-down').dblclick();
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'room');
 });

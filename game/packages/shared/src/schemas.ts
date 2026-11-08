@@ -3,10 +3,28 @@ import { z } from 'zod';
 export const ZOOM_MIN = 0.25;
 export const ZOOM_MAX = 3;
 
+/**
+ * Каким предметом материал лежит на столе (TECH_PLAN 4.2, UX-A1): форма по типу, не по значимости.
+ * sheet — лист на бланке; stapled — скреплённые листы; half — половина листа; photos — отпечатки;
+ * pack — пачка сканов; notebook — тетрадь; disc — диск в конверте; bag — пакет вещдоков.
+ */
+export const MaterialKindSchema = z.enum([
+  'sheet',
+  'stapled',
+  'half',
+  'photos',
+  'pack',
+  'notebook',
+  'disc',
+  'bag',
+]);
+export type MaterialKind = z.infer<typeof MaterialKindSchema>;
+
 export const MaterialSchema = z.object({
   id: z.string().regex(/^\d{2}$/),
   title: z.string().min(1),
   placement: z.enum(['desk', 'evidence']),
+  kind: MaterialKindSchema,
   body: z.string(),
   sourceFile: z.string(),
 });
@@ -48,7 +66,7 @@ export type BoardThread = z.infer<typeof BoardThreadSchema>;
 export const ViewSchema = z.enum(['desk', 'room', 'left', 'right']);
 export type View = z.infer<typeof ViewSchema>;
 
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 
 export const PlayerStateSchema = z.object({
   version: z.literal(STATE_VERSION),

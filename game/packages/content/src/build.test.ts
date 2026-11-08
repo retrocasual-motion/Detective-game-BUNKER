@@ -38,6 +38,17 @@ describe('buildStartingMaterials', () => {
     }
   });
 
+  it('у каждого материала форма по типу (UX-A1): письма — листы, протоколы — скреплены, вещи — в пакетах', () => {
+    const kind = (id: string) => materials.find((m) => m.id === id)?.kind;
+    expect(kind('01')).toBe('sheet');
+    expect(kind('30')).toBe('stapled');
+    expect(kind('13')).toBe('disc');
+    expect(kind('29')).toBe('pack');
+    expect(kind('40')).toBe('bag');
+    expect(kind('51')).toBe('half');
+    expect(new Set(materials.map((m) => m.kind)).size).toBe(8);
+  });
+
   it('повторная сборка даёт тот же результат', () => {
     expect(JSON.stringify(buildStartingMaterials(playerDir))).toBe(JSON.stringify(materials));
   });
