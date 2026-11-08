@@ -2,7 +2,12 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { buildStartingMaterials, DEFAULT_PLAYER_DIR } from './build.ts';
+import {
+  buildServerContent,
+  buildStartingMaterials,
+  DEFAULT_PACK_DIR,
+  DEFAULT_PLAYER_DIR,
+} from './build.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const playerDir = join(here, DEFAULT_PLAYER_DIR);
@@ -47,6 +52,14 @@ describe('buildStartingMaterials', () => {
     expect(kind('40')).toBe('bag');
     expect(kind('51')).toBe('half');
     expect(new Set(materials.map((m) => m.kind)).size).toBe(8);
+  });
+
+  it('серверный контент: 73 закрытых материала L… и правила (P-10 — только для сервера)', () => {
+    const server = buildServerContent(join(here, DEFAULT_PACK_DIR));
+    expect(server.locked).toHaveLength(73);
+    expect(server.locked.every((m) => /^L\d{3}$/.test(m.id))).toBe(true);
+    expect(server.locked.find((m) => m.id === 'L462')?.kind).toBe('disc');
+    expect((server.rules as { rules: unknown[] }).rules.length).toBe(159);
   });
 
   it('повторная сборка даёт тот же результат', () => {

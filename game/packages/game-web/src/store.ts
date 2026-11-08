@@ -1,4 +1,4 @@
-import type { Material, PlayerState, View } from '@bunker/shared';
+import { type Material, type PlayerState, reconcile, type View } from '@bunker/shared';
 import { create } from 'zustand';
 import { getMaterials, getState, putState } from './api.ts';
 import { createSaver } from './save.ts';
@@ -15,6 +15,13 @@ interface GameStore {
   petitionOpen: boolean;
   /** Сервер не ответил при загрузке — игра повторяет запрос. */
   loadFailed: boolean;
+  /** Последнее поступление в дело (записка у лотка «Входящие»). */
+  arrival: { ids: string[]; at: number } | null;
+  /** Открыт лоток «Входящие». */
+  trayOpen: boolean;
+  setTrayOpen(open: boolean): void;
+  /** Движок открыл материалы: в дело и в лоток «Входящие» (E2-INBOX-A). */
+  addReleased(released: Material[]): void;
   load(): Promise<void>;
   setPetitionOpen(open: boolean): void;
   openViewer(materialId: string): void;
@@ -37,6 +44,22 @@ export const useGame = create<GameStore>((set, get) => {
     viewerId: null,
     petitionOpen: false,
     loadFailed: false,
+    arrival: null,
+    trayOpen: false,
+
+    setTrayOpen(open) {
+      set({ trayOpen: open });
+    },
+
+    addReleased(released) {
+      const { materials, state } = get();
+      const known = new Set(materials.map((m) => m.id));
+      const fresh = released.filter((m) => !known.has(m.id));
+      if (fresh.length === 0) return;
+      const all = [...materials, ...fresh];
+      set({ materials: all, arrival: { ids: fresh.map((m) => m.id), at: Date.now() } });
+      if (state) get().updateState((s) => reconcile(s, all));
+    },
 
     setPetitionOpen(open) {
       set({ petitionOpen: open });

@@ -1,6 +1,9 @@
 import { useGame } from '../store.ts';
 
-/** Изъятые устройства с бирками (TECH_PLAN 4.0, 4.6). Серый прототип: бирка — номер и название. */
+/**
+ * Изъятые устройства на столе вещдоков (TECH_PLAN 4.0, 4.6; LEFT-B): предмет своего вида и
+ * бирка «Изъято». Щелчок пока открывает описание; осмотр и «Включить» — этап 4.
+ */
 export function EvidenceShelf() {
   const materials = useGame((g) => g.materials);
   const openViewer = useGame((g) => g.openViewer);
@@ -11,12 +14,15 @@ export function EvidenceShelf() {
         <button
           key={m.id}
           type="button"
-          className="evidence-item"
+          className={`evidence-item device-${m.id}`}
           data-testid={`evidence-${m.id}`}
           onClick={() => openViewer(m.id)}
         >
-          <span className="evidence-tag">Изъято · {m.id}</span>
-          <span className="card-title">{m.title}</span>
+          <span className="device" aria-hidden />
+          <span className="evidence-tag">
+            <span className="evidence-tag-id">Изъято · {m.id}</span>
+            <span className="evidence-tag-title">{m.title}</span>
+          </span>
         </button>
       ))}
     </section>

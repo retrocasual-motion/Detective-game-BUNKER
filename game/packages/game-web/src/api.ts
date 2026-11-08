@@ -31,6 +31,28 @@ export const putState = async (s: PlayerState, seq: number): Promise<void> => {
   );
 };
 
+/** Ответ движка правил на действие (TECH_PLAN 6.1). */
+export interface ActionResult {
+  result: string;
+  reply: string;
+  /** Материалы, которые действие открыло. */
+  released: Material[];
+}
+
+/** Служебная строка действий — только в разработке (E2-CHECK-A). */
+export const postActionLine = async (line: string): Promise<ActionResult> => {
+  const res = await fetch('/api/dev/action-line', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ line }),
+  });
+  if (res.status === 400) {
+    const { error } = (await res.json()) as { error: string };
+    return { result: 'не разобрано', reply: error, released: [] };
+  }
+  return (await check(res)).json();
+};
+
 export const resetState = async (): Promise<void> => {
   await check(await fetch('/api/state', { method: 'DELETE' }));
 };

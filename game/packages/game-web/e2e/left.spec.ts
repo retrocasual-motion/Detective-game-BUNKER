@@ -31,11 +31,27 @@ test('длинный текст радиопоста прокручиваетс�
   await expect(paper.getByText('Дальше до конца записи не размечено')).toBeInViewport();
 });
 
-test('компьютер следователя: три раздела, в каждом «Пусто»', async ({ page }) => {
+test('компьютер следователя — монитор со значками разделов; в каждом пока «Пусто» (LEFT-B)', async ({
+  page,
+}) => {
   const computer = page.getByTestId('computer');
-  for (const tab of ['Поступления', 'Почта', 'Приобщить страницу']) {
-    await computer.getByRole('tab', { name: tab }).click();
-    await expect(computer.getByRole('tab', { name: tab })).toHaveAttribute('aria-selected', 'true');
+  await expect(computer.getByRole('tab')).toHaveCount(0);
+  for (const name of ['Поступления', 'Почта', 'Приобщить страницу']) {
+    await computer.getByTestId(`computer-tab-${name}`).click();
+    await expect(computer.getByRole('dialog', { name })).toBeVisible();
     await expect(computer.getByTestId('computer-panel')).toHaveText('Пусто');
+  }
+  await computer.getByRole('button', { name: 'Закрыть окно' }).click();
+  await expect(computer.getByRole('dialog')).toHaveCount(0);
+});
+
+test('устройства лежат на столе вещдоков рядом с монитором, у каждого бирка «Изъято»', async ({
+  page,
+}) => {
+  const table = await page.locator('.evidence-table').boundingBox();
+  for (const id of ['24', '47', '48', '49', '50']) {
+    const box = await page.getByTestId(`evidence-${id}`).boundingBox();
+    expect(box && table && box.y + box.height <= table.y + table.height, id).toBe(true);
+    await expect(page.getByTestId(`evidence-${id}`)).toContainText(`Изъято · ${id}`);
   }
 });
