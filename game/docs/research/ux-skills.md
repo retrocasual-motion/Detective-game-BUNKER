@@ -1,7 +1,8 @@
 # Skills и инструменты: дизайн интерфейса, UX, геймдизайн, против «ИИ-шаблонности»
 
-**Статус:** обзор от 08.11.2026 (задача UX-NEXT). **Ничего не установлено** — только рекомендация;
-решает автор (список решений — в конце `game/docs/UX_PRINCIPLES.md`). Уже установленные у нас skills —
+**Статус:** обзор от 08.11.2026 (задача UX-NEXT). **Решение автора 08.11 (SK, `DECISIONS.md`):**
+берём **frontend-design** (Anthropic) и **Impeccable** — без хука на каждую правку и без режима
+`live`, ставятся к этапу дизайна; playground не ставим. Пока ничего не установлено. Уже установленные у нас skills —
 `.claude/skills/` и плагины (webapp-testing, Story Skills, detective-skills, planning-with-files,
 superpowers).
 
