@@ -181,3 +181,29 @@ test('Escape отменяет подпись нити', async ({ page }) => {
   await expect(page.getByTestId('thread-label-input')).toBeHidden();
   await expect(page.getByTestId('view-right')).not.toContainText('неверно');
 });
+
+test('нить двумя щелчками: булавка, затем копия — без удержания кнопки (UX-J1)', async ({
+  page,
+}) => {
+  const [a, b] = await twoOnBoard(page);
+  await page.getByTestId(`board-pin-${a}`).click();
+  const target = await center(page, `board-item-${b}`);
+  await page.mouse.move(target.x, target.y, { steps: 6 });
+  await expect(page.getByTestId('board-thread-pulling')).toBeVisible();
+  await page.mouse.click(target.x, target.y);
+  await expect(threads(page)).toHaveCount(1);
+  // Щелчок, который привязал нить, не открыл копию.
+  await expect(page.getByTestId('viewer')).toBeHidden();
+});
+
+test('нить двумя щелчками отменяется щелчком мимо и Esc', async ({ page }) => {
+  const [a] = await twoOnBoard(page);
+  await page.getByTestId(`board-pin-${a}`).click();
+  await page.mouse.click(900, 600);
+  await expect(page.getByTestId('board-thread-pulling')).toHaveCount(0);
+  await page.getByTestId(`board-pin-${a}`).click();
+  await page.mouse.move(900, 600, { steps: 3 });
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('board-thread-pulling')).toHaveCount(0);
+  await expect(threads(page)).toHaveCount(0);
+});

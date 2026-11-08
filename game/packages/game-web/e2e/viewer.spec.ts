@@ -19,15 +19,18 @@ test('один щелчок по листу открывает материал,
 });
 
 test('лист — ровно по центру экрана: короткий, длинный и узкий документ', async ({ page }) => {
+  const widths = new Set<number>();
   for (const id of ['01', '07', '25', '11']) {
     await page.getByTestId(`card-${id}`).click();
     const box = await page.getByTestId('viewer-paper').boundingBox();
     if (!box) throw new Error(`нет листа ${id}`);
     expect(Math.abs(box.x + box.width / 2 - 1366 / 2), `${id}: по горизонтали`).toBeLessThan(2);
     expect(Math.abs(box.y + box.height / 2 - 768 / 2), `${id}: по вертикали`).toBeLessThan(2);
-    expect(box.width, `${id}: ширина листа не зависит от текста`).toBeGreaterThan(700);
+    expect(box.width, `${id}: ширина листа не зависит от текста`).toBeGreaterThan(600);
+    widths.add(Math.round(box.width));
     await page.keyboard.press('Escape');
   }
+  expect(widths.size, 'ширина одна у всех листов').toBe(1);
 });
 
 test('щелчок мимо листа закрывает просмотрщик', async ({ page }) => {
@@ -118,4 +121,78 @@ test('строки шапки письма не склеиваются: «Ком
   const from = await paper.getByText('От:', { exact: true }).boundingBox();
   const to = await paper.getByText('Кому:', { exact: true }).boundingBox();
   expect(to?.y ?? 0).toBeGreaterThan((from?.y ?? 0) + 5);
+});
+
+/** Знаков в каждой строке абзацев листа — по прямоугольникам символов. */
+const lineLengths = (page: Page) =>
+  page.getByTestId('viewer-paper').evaluate((paper) => {
+    const counts: number[] = [];
+    for (const p of paper.querySelectorAll('p, li')) {
+      const walker = document.createTreeWalker(p, NodeFilter.SHOW_TEXT);
+      const tops = new Map<number, number>();
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        const text = n.textContent ?? '';
+        for (let i = 0; i < text.length; i++) {
+          const r = document.createRange();
+          r.setStart(n, i);
+          r.setEnd(n, i + 1);
+          const rect = r.getBoundingClientRect();
+          if (rect.width === 0) continue;
+          const top = Math.round(rect.top / 4);
+          tops.set(top, (tops.get(top) ?? 0) + 1);
+        }
+      }
+      counts.push(...tops.values());
+    }
+    return counts;
+  });
+
+for (const vp of [
+  { width: 1366, height: 768 },
+  { width: 1920, height: 1080 },
+]) {
+  test(`строка листа — не длиннее ~75 знаков при ${vp.width}×${vp.height} (UX-C1)`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(vp);
+    for (const id of ['03', '07']) {
+      await page.getByTestId(`card-${id}`).click();
+      const lens = await lineLengths(page);
+      expect(Math.max(...lens), id).toBeLessThanOrEqual(80);
+      const full = lens.filter((n) => n > 40).sort((a, b) => a - b);
+      expect(full[Math.floor(full.length / 2)] ?? 0, id).toBeGreaterThanOrEqual(55);
+      await page.keyboard.press('Escape');
+    }
+  });
+}
+
+test('абзац не рвётся переносами из файла: строки склеены (UX-C1)', async ({ page }) => {
+  await page.getByTestId('card-03').click();
+  const p = page.getByTestId('viewer-paper').locator('p', { hasText: 'Следователь Б. Коннор' });
+  await expect(p).toContainText('по факту гибели Адама Коула, руководителя программы');
+  expect(await p.locator('br').count()).toBe(0);
+  // Шапка документа — по строкам, как в файле.
+  const head = page.getByTestId('viewer-paper').locator('p', { hasText: 'Дело № 09-1128' }).first();
+  expect(await head.locator('br').count()).toBeGreaterThan(0);
+});
+
+test('инструменты листа идут за курсором по высоте и стоят, когда к ним ведут мышь (UX-D1)', async ({
+  page,
+}) => {
+  await page.getByTestId('card-07').click();
+  const paper = await page.getByTestId('viewer-paper').boundingBox();
+  if (!paper) throw new Error('нет листа');
+  const y = paper.y + paper.height - 60;
+  await page.mouse.move(paper.x + paper.width / 2, y, { steps: 4 });
+  await page.waitForTimeout(250);
+  const tools = page.getByTestId('viewer-tools');
+  const near = await tools.boundingBox();
+  expect(Math.abs((near?.y ?? 0) + (near?.height ?? 0) / 2 - y)).toBeLessThan(60);
+  // Ведём мышь вправо к кнопке — колонка не уезжает.
+  await page.mouse.move(paper.x + paper.width + 20, y, { steps: 6 });
+  await page.waitForTimeout(250);
+  expect(await tools.boundingBox()).toEqual(near);
+  const pin = page.getByTestId('viewer').getByRole('button', { name: 'Прикрепить к доске' });
+  const pinBox = await pin.boundingBox();
+  expect(Math.abs((pinBox?.y ?? 0) - y)).toBeLessThan(80);
 });

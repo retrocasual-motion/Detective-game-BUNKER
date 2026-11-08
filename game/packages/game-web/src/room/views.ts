@@ -2,9 +2,9 @@ import type { View } from '@bunker/shared';
 
 export const VIEW_LABELS: Record<View, string> = {
   room: 'Комната',
-  left: 'Слева',
+  left: 'Компьютер',
   desk: 'Стол',
-  right: 'Справа',
+  right: 'Доска',
 };
 
 export type Dir = 'left' | 'right' | 'up' | 'down';

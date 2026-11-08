@@ -7,6 +7,7 @@ const mat = (id: string, placement: Material['placement'] = 'desk'): Material =>
   id,
   title: `Материал ${id}`,
   placement,
+  kind: 'sheet',
   body: `# Материал ${id}\n`,
   sourceFile: `${id}__x.md`,
 });
@@ -125,7 +126,7 @@ describe('API', () => {
     // Колонка типизирована текущей версией; старую кладём как есть.
     await db.insert(playerState).values({ playerId: 'local', state: v1 as unknown as PlayerState });
     const got = (await (await app().request('/api/state')).json()) as PlayerState;
-    expect(got.version).toBe(2);
+    expect(got.version).toBe(3);
     expect(got.board).toEqual(board);
     expect(got.desk).toEqual(defaultState(materials).desk);
   });

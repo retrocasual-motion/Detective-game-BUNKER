@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { defaultState, reconcile, SCATTER_ROT_MAX, upgradeState } from './layout.ts';
+import { DESK_BOUNDS, defaultState, reconcile, SCATTER_ROT_MAX, upgradeState } from './layout.ts';
 import type { Material, PlayerState } from './schemas.ts';
 
 const mat = (id: string, placement: Material['placement'] = 'desk'): Material => ({
   id,
   title: `Материал ${id}`,
   placement,
+  kind: 'sheet',
   body: '',
   sourceFile: `${id}__x.md`,
 });
@@ -51,6 +52,23 @@ describe('defaultState', () => {
   });
 });
 
+describe('столешница (UX-B1)', () => {
+  it('вся начальная россыпь лежит на столе с отступом от края', () => {
+    for (const i of defaultState(materials).desk.items) {
+      expect(i.x).toBeGreaterThan(DESK_BOUNDS.left + 100);
+      expect(i.y).toBeGreaterThan(DESK_BOUNDS.top + 100);
+      expect(i.x + 200).toBeLessThan(DESK_BOUNDS.right);
+      expect(i.y + 260).toBeLessThan(DESK_BOUNDS.bottom);
+    }
+  });
+
+  it('сдвиг рядов разный — не «через один»', () => {
+    const items = defaultState(materials).desk.items;
+    const firstX = [0, 10, 20, 30, 40].map((k) => items[k]?.x ?? 0);
+    expect(new Set(firstX.map((x) => Math.round(x / 20))).size).toBeGreaterThan(3);
+  });
+});
+
 describe('upgradeState', () => {
   it('принимает текущую версию как есть', () => {
     const s = defaultState(materials);
@@ -70,10 +88,27 @@ describe('upgradeState', () => {
       board,
     };
     const up = upgradeState(v1, materials);
-    expect(up?.version).toBe(2);
+    expect(up?.version).toBe(3);
     expect(up?.view).toBe('right');
     expect(up?.board).toEqual(board);
     expect(up?.desk).toEqual(defaultState(materials).desk);
+  });
+
+  it('версия 2 (россыпь 1b): стол раскладывается заново, доска и вид сохраняются', () => {
+    const cur = defaultState(materials);
+    const board = { camera: { x: 1, y: 2, zoom: 1 }, items: [], threads: [] };
+    const v2 = {
+      ...cur,
+      version: 2,
+      view: 'left',
+      desk: { camera: cur.desk.camera, items: [{ materialId: '01', x: 9, y: 9, z: 1, rot: 0 }] },
+      board,
+    };
+    const up = upgradeState(v2, materials);
+    expect(up?.version).toBe(3);
+    expect(up?.view).toBe('left');
+    expect(up?.board).toEqual(board);
+    expect(up?.desk).toEqual(cur.desk);
   });
 
   it('мусор → null', () => {

@@ -1,4 +1,4 @@
-import type { Camera, Material } from '@bunker/shared';
+import { type Camera, DESK_BOUNDS, type Material } from '@bunker/shared';
 import { useCallback, useMemo } from 'react';
 import { Canvas } from '../canvas/Canvas.tsx';
 import { useGame } from '../store.ts';
@@ -48,7 +48,14 @@ export function DeskView({ onOpen }: { onOpen?(materialId: string): void }) {
   if (!desk) return null;
 
   return (
-    <Canvas camera={desk.camera} onCameraChange={setCamera} className="desk" testId="view-desk">
+    <Canvas
+      camera={desk.camera}
+      onCameraChange={setCamera}
+      className="desk"
+      testId="view-desk"
+      bounds={DESK_BOUNDS}
+      surface={DESK_BOUNDS}
+    >
       {desk.items.map((item) => {
         const material = byId.get(item.materialId);
         return material ? (

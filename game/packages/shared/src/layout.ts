@@ -12,16 +12,23 @@ import {
 } from './schemas.ts';
 
 /**
- * Начальная раскладка стола — свободная россыпь (решение автора LAY-A, 07.11.2026):
- * ряды со сдвигом через один, небольшой разброс и поворот. Одинаковая у всех игроков
- * (разброс зависит только от номера места). Ни одна бумага не закрыта целиком.
+ * Начальная раскладка стола — свободная россыпь (LAY-A, 07.11; UX-B1, 08.11): у каждого ряда
+ * свой сдвиг, заметный разброс и поворот; ряды заходят друг на друга низом листов, шапки видны —
+ * издалека это не сетка. Одинаковая у всех игроков (разброс зависит только от номера места).
+ * Ни одна бумага не закрыта целиком.
  */
 export const SCATTER_COLS = 10;
-export const SCATTER_DX = 205;
-export const SCATTER_DY = 255;
-export const SCATTER_JITTER_X = 30;
-export const SCATTER_JITTER_Y = 24;
-export const SCATTER_ROT_MAX = 7;
+export const SCATTER_DX = 210;
+export const SCATTER_DY = 205;
+export const SCATTER_JITTER_X = 45;
+export const SCATTER_JITTER_Y = 25;
+export const SCATTER_ROT_MAX = 9;
+
+/**
+ * Столешница в мировых координатах (UX-B1): у стола есть край, камера за него не уезжает.
+ * Россыпь (10 столбцов × 5 рядов) лежит внутри с запасом места для своей раскладки.
+ */
+export const DESK_BOUNDS = { left: -420, top: -360, right: 2560, bottom: 1660 } as const;
 
 /** Псевдослучайное число 0…1 по номеру места и «оси» — без состояния, всегда одинаковое. */
 function noise(k: number, axis: number): number {
@@ -37,7 +44,8 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
 export function scatterSlot(k: number): { x: number; y: number; rot: number } {
   const row = Math.floor(k / SCATTER_COLS);
   const col = k % SCATTER_COLS;
-  const shift = row % 2 === 1 ? SCATTER_DX / 2 : 0;
+  // Сдвиг ряда — свой у каждого ряда, а не «через один»: иначе издалека видна сетка.
+  const shift = Math.round(noise(row, 4) * SCATTER_DX * 0.6);
   return {
     x: Math.round(col * SCATTER_DX + shift + (noise(k, 1) * 2 - 1) * SCATTER_JITTER_X),
     y: Math.round(row * SCATTER_DY + (noise(k, 2) * 2 - 1) * SCATTER_JITTER_Y),
@@ -64,6 +72,9 @@ export function defaultState(materials: Material[]): PlayerState {
   };
 }
 
+/** Сохранение версии 2 (этап 1b): стол лежал россыпью «через ряд» (до UX-B1). */
+const StateV2Schema = PlayerStateSchema.extend({ version: z.literal(2) });
+
 /** Сохранение версии 1 (этап 1): у бумаг не было поворота, стол лежал сеткой. */
 const StateV1Schema = z.object({
   version: z.literal(1),
@@ -77,11 +88,15 @@ const StateV1Schema = z.object({
 
 /**
  * Сохранённое состояние любой известной версии → текущая версия (или null, если не разобрать).
- * Версия 1: стол раскладывается заново россыпью, доска и вид остаются.
+ * Версии 1 и 2: стол раскладывается заново россыпью, доска и вид остаются.
  */
 export function upgradeState(raw: unknown, materials: Material[]): PlayerState | null {
   const current = PlayerStateSchema.safeParse(raw);
   if (current.success) return current.data;
+  const v2 = StateV2Schema.safeParse(raw);
+  if (v2.success) {
+    return { ...v2.data, version: STATE_VERSION, desk: defaultDesk(materials) };
+  }
   const v1 = StateV1Schema.safeParse(raw);
   if (v1.success) {
     return {

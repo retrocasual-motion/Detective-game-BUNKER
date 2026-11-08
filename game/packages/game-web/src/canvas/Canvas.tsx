@@ -1,12 +1,16 @@
 import type { Camera } from '@bunker/shared';
 import { type PointerEvent, type ReactNode, useRef, type WheelEvent } from 'react';
-import { zoomAt } from './math.ts';
+import { type Bounds, clampToBounds, zoomAt } from './math.ts';
 
 interface CanvasProps {
   camera: Camera;
   onCameraChange(camera: Camera): void;
   className?: string;
   testId?: string;
+  /** Край поверхности (стол): камера за него не уезжает. */
+  bounds?: Bounds;
+  /** Мировые размеры подложки под детьми (столешница). */
+  surface?: Bounds;
   /** Клик по пустому месту (без перетаскивания). */
   onBackgroundClick?(): void;
   children: ReactNode;
@@ -25,9 +29,17 @@ export function Canvas({
   className,
   testId,
   onBackgroundClick,
+  bounds,
+  surface,
   children,
 }: CanvasProps) {
   const pan = useRef<{ startX: number; startY: number; cam: Camera; moved: boolean } | null>(null);
+  const el = useRef<HTMLDivElement>(null);
+
+  const change = (cam: Camera) => {
+    const r = el.current?.getBoundingClientRect();
+    onCameraChange(bounds && r ? clampToBounds(cam, bounds, r) : cam);
+  };
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
@@ -41,7 +53,7 @@ export function Canvas({
     const dx = e.clientX - p.startX;
     const dy = e.clientY - p.startY;
     if (Math.abs(dx) + Math.abs(dy) > CLICK_SLOP) p.moved = true;
-    if (p.moved) onCameraChange({ ...p.cam, x: p.cam.x + dx, y: p.cam.y + dy });
+    if (p.moved) change({ ...p.cam, x: p.cam.x + dx, y: p.cam.y + dy });
   };
 
   const onPointerUp = () => {
@@ -52,11 +64,12 @@ export function Canvas({
   const onWheel = (e: WheelEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const point = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    onCameraChange(zoomAt(camera, point, Math.exp(-e.deltaY * WHEEL_SPEED)));
+    change(zoomAt(camera, point, Math.exp(-e.deltaY * WHEEL_SPEED)));
   };
 
   return (
     <div
+      ref={el}
       className={`canvas ${className ?? ''}`}
       data-testid={testId}
       onPointerDown={onPointerDown}
@@ -69,6 +82,17 @@ export function Canvas({
         className="canvas-world"
         style={{ transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.zoom})` }}
       >
+        {surface && (
+          <div
+            className="canvas-surface"
+            style={{
+              left: surface.left,
+              top: surface.top,
+              width: surface.right - surface.left,
+              height: surface.bottom - surface.top,
+            }}
+          />
+        )}
         {children}
       </div>
     </div>

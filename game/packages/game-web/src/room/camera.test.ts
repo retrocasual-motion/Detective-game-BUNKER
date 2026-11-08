@@ -100,3 +100,14 @@ describe('проекция декора', () => {
     expect(lerpPose(POSES.desk, POSES.left, 1)).toEqual(POSES.left);
   });
 });
+
+describe('длительность перехода (MOVE-A)', () => {
+  it('между рабочими видами — коротко, через общий вид — дольше', async () => {
+    const { transitionMs, TRANSITION_MS, TRANSITION_NEAR_MS } = await import('./camera.ts');
+    expect(TRANSITION_NEAR_MS).toBeLessThan(TRANSITION_MS);
+    expect(transitionMs('desk', 'right')).toBe(TRANSITION_NEAR_MS);
+    expect(transitionMs('left', 'desk')).toBe(TRANSITION_NEAR_MS);
+    expect(transitionMs('desk', 'room')).toBe(TRANSITION_MS);
+    expect(transitionMs('room', 'left')).toBe(TRANSITION_MS);
+  });
+});

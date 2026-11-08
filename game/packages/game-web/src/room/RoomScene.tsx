@@ -8,8 +8,8 @@ import {
   type Pose,
   perspectiveFor,
   poseOps,
-  TRANSITION_MS,
   toCss,
+  transitionMs,
 } from './camera.ts';
 import { drawRoom } from './decor.ts';
 import { NavArrows } from './NavArrows.tsx';
@@ -21,6 +21,8 @@ type FaceView = Exclude<View, 'room'>;
 interface Phase {
   /** Откуда едет камера — поза, а не вид: новый переход посреди старого начинается с места. */
   from: Pose;
+  /** Из какого вида уехали (для длительности перехода). */
+  fromView: View;
   to: View;
   moving: boolean;
 }
@@ -45,7 +47,12 @@ interface RoomSceneProps {
 export function RoomScene({ view, onGo, hideNav, faces }: RoomSceneProps) {
   const vp = useViewport();
   const p = perspectiveFor(vp);
-  const [ph, setPh] = useState<Phase>({ from: POSES[view], to: view, moving: false });
+  const [ph, setPh] = useState<Phase>({
+    from: POSES[view],
+    fromView: view,
+    to: view,
+    moving: false,
+  });
   const world = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   /** Где камера сейчас (в том числе посреди перехода). */
@@ -61,7 +68,12 @@ export function RoomScene({ view, onGo, hideNav, faces }: RoomSceneProps) {
     setPh((cur) =>
       cur.to === view
         ? cur
-        : { from: cur.moving ? live.current : POSES[cur.to], to: view, moving: !reducedMotion() },
+        : {
+            from: cur.moving ? live.current : POSES[cur.to],
+            fromView: cur.to,
+            to: view,
+            moving: !reducedMotion(),
+          },
     );
   }, [view]);
 
@@ -79,10 +91,11 @@ export function RoomScene({ view, onGo, hideNav, faces }: RoomSceneProps) {
     if (!ph.moving) return;
     const a = ph.from;
     const b = POSES[ph.to];
+    const duration = transitionMs(ph.fromView, ph.to);
     const start = performance.now();
     let raf = 0;
     const frame = (now: number) => {
-      const t = Math.min(1, (now - start) / TRANSITION_MS);
+      const t = Math.min(1, (now - start) / duration);
       apply(lerpPose(a, b, easeCamera(t)));
       if (t < 1) raf = requestAnimationFrame(frame);
       else setPh((c) => ({ ...c, moving: false }));
@@ -90,7 +103,7 @@ export function RoomScene({ view, onGo, hideNav, faces }: RoomSceneProps) {
     apply(a);
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [ph.moving, ph.from, ph.to]);
+  }, [ph.moving, ph.from, ph.fromView, ph.to]);
 
   const inRoom = !ph.moving && ph.to === 'room';
 
@@ -142,7 +155,8 @@ export function RoomScene({ view, onGo, hideNav, faces }: RoomSceneProps) {
           );
         })}
       </div>
-      {!ph.moving && !hideNav && <NavArrows view={ph.to} onGo={onGo} />}
+      {/* Стрелки видны и во время перехода: щелчок сразу ведёт к новой цели (MOVE-A). */}
+      {!hideNav && <NavArrows view={ph.to} onGo={onGo} />}
     </div>
   );
 }
