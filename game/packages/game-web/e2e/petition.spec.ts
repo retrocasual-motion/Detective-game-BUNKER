@@ -1,7 +1,7 @@
 import { expect, test } from './fixtures.ts';
 
 test('уголок папки внизу слева на всех видах', async ({ page }) => {
-  for (const arrow of [null, 'nav-left', 'nav-right', 'nav-right', 'nav-left', 'nav-up']) {
+  for (const arrow of [null, 'nav-left', 'nav-right', 'nav-right', 'nav-left', 'nav-down']) {
     if (arrow) await page.getByTestId(arrow).click();
     const box = await page.getByTestId('petition-corner').boundingBox();
     expect(box?.x ?? 9999).toBeLessThan(1366 / 3);

@@ -18,6 +18,18 @@ test('один щелчок по листу открывает материал,
   await expect(viewer).toBeHidden();
 });
 
+test('лист — ровно по центру экрана: короткий, длинный и узкий документ', async ({ page }) => {
+  for (const id of ['01', '07', '25', '11']) {
+    await page.getByTestId(`card-${id}`).click();
+    const box = await page.getByTestId('viewer-paper').boundingBox();
+    if (!box) throw new Error(`нет листа ${id}`);
+    expect(Math.abs(box.x + box.width / 2 - 1366 / 2), `${id}: по горизонтали`).toBeLessThan(2);
+    expect(Math.abs(box.y + box.height / 2 - 768 / 2), `${id}: по вертикали`).toBeLessThan(2);
+    expect(box.width, `${id}: ширина листа не зависит от текста`).toBeGreaterThan(700);
+    await page.keyboard.press('Escape');
+  }
+});
+
 test('щелчок мимо листа закрывает просмотрщик', async ({ page }) => {
   await page.getByTestId('card-01').click();
   await pastOpenGuard(page);
