@@ -1,36 +1,96 @@
-import { z } from 'zod';
 import {
-  BoardItemSchema,
-  BoardThreadSchema,
-  CameraSchema,
-  type DeskItem,
+  type Arrival,
+  type Camera,
   type Material,
   type PlayerState,
   PlayerStateSchema,
   STATE_VERSION,
-  ViewSchema,
 } from './schemas.ts';
 
 /**
- * Начальная раскладка стола — свободная россыпь (LAY-A, 07.11; UX-B1, 08.11): у каждого ряда
- * свой сдвиг, заметный разброс и поворот; ряды заходят друг на друга низом листов, шапки видны —
- * издалека это не сетка. Одинаковая у всех игроков (разброс зависит только от номера места).
- * Ни одна бумага не закрыта целиком.
+ * Стена (WALL-C, решение автора 08.11): вверху — колонки «как пришло», листы приколоты
+ * лесенкой внахлёст (HANG-A), видна шапка каждого; ниже — поле для своей версии. У материала
+ * одно место: в своей колонке (по умолчанию, положение вычисляется) или в поле (wall.items).
+ * Предметы со стола (устройства, пакеты вещдоков) висят карточками (ITEM-A).
  */
-export const SCATTER_COLS = 10;
-export const SCATTER_DX = 210;
-export const SCATTER_DY = 205;
-export const SCATTER_JITTER_X = 45;
-export const SCATTER_JITTER_Y = 25;
-export const SCATTER_ROT_MAX = 9;
+
+/** Размер листа на стене в мировых координатах (совпадает с --card-width/--card-height). */
+export const CARD_W = 160;
+export const CARD_H = 220;
+/** Ширина колонки с промежутком. */
+export const COL_W = 210;
+/** Высота шапки колонки (ярлык с номерами описи) вместе с отступом до первого листа. */
+export const COL_HEADER_H = 52;
+/** Шаг лесенки: столько видно от каждого листа, кроме последнего. */
+export const SHINGLE_STEP = 58;
+/** Колонок в ряду; следующие поступления начинают новый ряд ниже. */
+export const BAND_COLS = 10;
+export const BAND_ROW_GAP = 70;
+/** Отступ поля для своей версии от колонок. */
+export const FIELD_GAP = 140;
 
 /**
- * Столешница в мировых координатах (UX-B1): у стола есть край, камера за него не уезжает.
- * Россыпь (10 столбцов × 5 рядов) лежит внутри с запасом места для своей раскладки.
+ * Стартовые колонки — подряд идущие номера описи (файл 04). Подпись — только номера:
+ * названия групп — решение автора (P-1: не подсказывать, что важно).
  */
-export const DESK_BOUNDS = { left: -420, top: -360, right: 2560, bottom: 1660 } as const;
+export const STARTING_COLUMNS: readonly [number, number][] = [
+  [1, 5],
+  [6, 12],
+  [13, 17],
+  [18, 21],
+  [22, 29],
+  [30, 36],
+  [37, 39],
+  [40, 46],
+  [47, 51],
+];
 
-/** Псевдослучайное число 0…1 по номеру места и «оси» — без состояния, всегда одинаковое. */
+export const DEFAULT_WALL_CAMERA: Camera = { x: 40, y: 40, zoom: 0.62 };
+
+export interface Bounds {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+export interface Column {
+  key: string;
+  title: string;
+  ids: string[];
+}
+
+export interface ColumnBox extends Column {
+  x: number;
+  y: number;
+  /** Высота колонки вместе с шапкой. */
+  h: number;
+}
+
+export interface Slot {
+  x: number;
+  y: number;
+  rot: number;
+  /** Порядок в колонке: нижний лист лесенки лежит поверх верхнего. */
+  z: number;
+  col: string;
+}
+
+export interface WallLayout {
+  columns: ColumnBox[];
+  slots: Map<string, Slot>;
+  /** Нижний край колонок. */
+  bandBottom: number;
+  /** Верх поля для своей версии. */
+  fieldTop: number;
+  /** Край пробковой доски: камера за него не уезжает. */
+  bounds: Bounds;
+}
+
+/** Закрытый материал, открытый игроком по ходу дела (L…), а не стартовый (01…51). */
+export const isReleased = (m: Pick<Material, 'id'>) => m.id.startsWith('L');
+
+/** Псевдослучайное число 0…1 по номеру и «оси» — без состояния, всегда одинаковое. */
 function noise(k: number, axis: number): number {
   let t = (k * 2654435761 + axis * 40503 + 0x9e3779b9) >>> 0;
   t = Math.imul(t ^ (t >>> 15), t | 1);
@@ -38,116 +98,134 @@ function noise(k: number, axis: number): number {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 
+const num = (id: string) => Number(id.replace(/\D/g, ''));
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
-/** Место № k россыпи: координаты и поворот. */
-export function scatterSlot(k: number): { x: number; y: number; rot: number } {
-  const row = Math.floor(k / SCATTER_COLS);
-  const col = k % SCATTER_COLS;
-  // Сдвиг ряда — свой у каждого ряда, а не «через один»: иначе издалека видна сетка.
-  const shift = Math.round(noise(row, 4) * SCATTER_DX * 0.6);
+/** Лист на одной кнопке висит чуть косо — у каждого свой наклон, всегда одинаковый. */
+export const hangTilt = (id: string): number => round1((noise(num(id), 5) * 2 - 1) * 2.5);
+
+/** Колонки «как пришло»: стартовые по описи, затем по одной на каждое поступление (IN-B). */
+export function wallColumns(materials: Material[], arrivals: Arrival[]): Column[] {
+  const starting = materials.filter((m) => !isReleased(m)).map((m) => m.id);
+  const used = new Set<string>();
+  const columns: Column[] = STARTING_COLUMNS.map(([from, to]) => {
+    const ids = starting.filter((id) => num(id) >= from && num(id) <= to).sort();
+    for (const id of ids) used.add(id);
+    return { key: `s${from}`, title: `Опись № ${from}–${to}`, ids };
+  }).filter((c) => c.ids.length > 0);
+  const rest = starting.filter((id) => !used.has(id)).sort();
+  if (rest.length) columns.push({ key: 'rest', title: 'Опись', ids: rest });
+  const known = new Set(materials.map((m) => m.id));
+  arrivals.forEach((a, k) => {
+    const ids = a.ids.filter((id) => known.has(id));
+    if (ids.length) columns.push({ key: `a${k + 1}`, title: `Поступление № ${k + 1}`, ids });
+  });
+  return columns;
+}
+
+export const columnHeight = (n: number): number =>
+  COL_HEADER_H + Math.max(0, n - 1) * SHINGLE_STEP + CARD_H;
+
+/** Где висит каждая колонка и каждый лист в ней. */
+export function wallLayout(columns: Column[]): WallLayout {
+  const boxes: ColumnBox[] = [];
+  const slots = new Map<string, Slot>();
+  let rowTop = 0;
+  let rowH = 0;
+  columns.forEach((c, i) => {
+    const k = i % BAND_COLS;
+    if (k === 0 && i > 0) {
+      rowTop += rowH + BAND_ROW_GAP;
+      rowH = 0;
+    }
+    const box: ColumnBox = { ...c, x: k * COL_W, y: rowTop, h: columnHeight(c.ids.length) };
+    rowH = Math.max(rowH, box.h);
+    boxes.push(box);
+    c.ids.forEach((id, j) => {
+      slots.set(id, {
+        x: box.x,
+        y: box.y + COL_HEADER_H + j * SHINGLE_STEP,
+        rot: hangTilt(id),
+        z: j + 1,
+        col: c.key,
+      });
+    });
+  });
+  const bandBottom = rowTop + rowH;
+  const fieldTop = bandBottom + FIELD_GAP;
+  const bandRight = Math.min(columns.length, BAND_COLS) * COL_W;
   return {
-    x: Math.round(col * SCATTER_DX + shift + (noise(k, 1) * 2 - 1) * SCATTER_JITTER_X),
-    y: Math.round(row * SCATTER_DY + (noise(k, 2) * 2 - 1) * SCATTER_JITTER_Y),
-    rot: round1((noise(k, 3) * 2 - 1) * SCATTER_ROT_MAX),
+    columns: boxes,
+    slots,
+    bandBottom,
+    fieldTop,
+    bounds: {
+      left: -260,
+      top: -220,
+      right: Math.max(bandRight, 2200) + 1000,
+      bottom: fieldTop + 1700,
+    },
   };
 }
 
-/** Закрытый материал, открытый игроком по ходу дела (L…), а не стартовый (01…51). */
-export const isReleased = (m: Pick<Material, 'id'>) => m.id.startsWith('L');
-
-const deskMaterials = (materials: Material[]) =>
-  materials.filter((m) => m.placement === 'desk').sort((a, b) => a.id.localeCompare(b.id));
-
-const defaultDesk = (materials: Material[]): PlayerState['desk'] => ({
-  camera: { x: 0, y: 0, zoom: 1 },
-  items: deskMaterials(materials.filter((m) => !isReleased(m))).map(
-    (m, k): DeskItem => ({ materialId: m.id, ...scatterSlot(k), z: k + 1 }),
-  ),
-});
+/** Лист отпустили у его колонки — он возвращается на своё место в лесенке. */
+export function isOverOwnColumn(layout: WallLayout, id: string, x: number, y: number): boolean {
+  const slot = layout.slots.get(id);
+  const col = slot && layout.columns.find((c) => c.key === slot.col);
+  if (!col) return false;
+  return Math.abs(x - col.x) < COL_W / 2 && y > col.y - CARD_H / 2 && y < col.y + col.h;
+}
 
 export function defaultState(materials: Material[]): PlayerState {
-  return {
-    version: STATE_VERSION,
-    view: 'desk',
-    desk: defaultDesk(materials),
-    board: { camera: { x: 0, y: 0, zoom: 1 }, items: [], threads: [] },
-  };
+  return reconcile(
+    {
+      version: STATE_VERSION,
+      view: 'desk',
+      wall: { camera: DEFAULT_WALL_CAMERA, items: [], threads: [], arrivals: [] },
+    },
+    materials,
+  );
 }
-
-/** Сохранение версии 2 (этап 1b): стол лежал россыпью «через ряд» (до UX-B1). */
-const StateV2Schema = PlayerStateSchema.extend({ version: z.literal(2) });
-
-/** Сохранение версии 1 (этап 1): у бумаг не было поворота, стол лежал сеткой. */
-const StateV1Schema = z.object({
-  version: z.literal(1),
-  view: ViewSchema,
-  board: z.object({
-    camera: CameraSchema,
-    items: z.array(BoardItemSchema),
-    threads: z.array(BoardThreadSchema),
-  }),
-});
 
 /**
- * Сохранённое состояние любой известной версии → текущая версия (или null, если не разобрать).
- * Версии 1 и 2: стол раскладывается заново россыпью, доска и вид остаются.
+ * Сохранённое состояние → текущая версия или null. Версии 1–3 (стол сверху и доска с
+ * копиями) не переводятся: раскладка один раз начинается заново (решение «Стена», 08.11).
  */
-export function upgradeState(raw: unknown, materials: Material[]): PlayerState | null {
+export function upgradeState(raw: unknown, _materials: Material[]): PlayerState | null {
   const current = PlayerStateSchema.safeParse(raw);
-  if (current.success) return current.data;
-  const v2 = StateV2Schema.safeParse(raw);
-  if (v2.success) {
-    return { ...v2.data, version: STATE_VERSION, desk: defaultDesk(materials) };
-  }
-  const v1 = StateV1Schema.safeParse(raw);
-  if (v1.success) {
-    return {
-      version: STATE_VERSION,
-      view: v1.data.view,
-      desk: defaultDesk(materials),
-      board: v1.data.board,
-    };
-  }
-  return null;
+  return current.success ? current.data : null;
 }
 
-/** Приводит сохранённое состояние к текущему контенту: неизвестное убирает, недостающее кладёт в свободное место россыпи. */
+/**
+ * Приводит сохранённое состояние к текущему контенту: неизвестное убирает; открытое по ходу
+ * дела, но ещё не висящее на стене, вешает новой колонкой-поступлением (IN-B).
+ */
 export function reconcile(state: PlayerState, materials: Material[]): PlayerState {
-  const deskIds = new Set(deskMaterials(materials).map((m) => m.id));
-  const allIds = new Set(materials.map((m) => m.id));
+  const known = new Set(materials.map((m) => m.id));
 
-  const seen = new Set<string>();
-  const items = state.desk.items.filter((i) => {
-    if (!deskIds.has(i.materialId) || seen.has(i.materialId)) return false;
-    seen.add(i.materialId);
+  const seenItems = new Set<string>();
+  const items = state.wall.items.filter((i) => {
+    if (!known.has(i.materialId) || seenItems.has(i.materialId)) return false;
+    seenItems.add(i.materialId);
     return true;
   });
 
-  const key = (p: { x: number; y: number }) => `${p.x},${p.y}`;
-  const occupied = new Set(items.map(key));
-  let z = items.reduce((max, i) => Math.max(max, i.z), 0);
-  let k = 0;
-  for (const m of deskMaterials(materials)) {
-    if (seen.has(m.id)) continue;
-    // Открытое по ходу дела ложится в лоток «Входящие», свежее — сверху (E2-INBOX-A).
-    if (isReleased(m)) {
-      items.push({ materialId: m.id, x: 0, y: 0, rot: 0, z: ++z, tray: true });
-      continue;
-    }
-    while (occupied.has(key(scatterSlot(k)))) k++;
-    const slot = scatterSlot(k);
-    occupied.add(key(slot));
-    items.push({ materialId: m.id, ...slot, z: ++z });
+  const inArrival = new Set<string>();
+  const arrivals: Arrival[] = [];
+  for (const a of state.wall.arrivals) {
+    const ids = a.ids.filter((id) => known.has(id) && id.startsWith('L') && !inArrival.has(id));
+    for (const id of ids) inArrival.add(id);
+    if (ids.length) arrivals.push({ ids });
   }
+  const fresh = materials
+    .filter((m) => isReleased(m) && !inArrival.has(m.id))
+    .map((m) => m.id)
+    .sort();
+  if (fresh.length) arrivals.push({ ids: fresh });
 
-  const boardItems = state.board.items.filter((i) => allIds.has(i.materialId));
-  const boardIds = new Set(boardItems.map((i) => i.id));
-  const threads = state.board.threads.filter((t) => boardIds.has(t.from) && boardIds.has(t.to));
+  const threads = state.wall.threads.filter(
+    (t) => known.has(t.from) && known.has(t.to) && t.from !== t.to,
+  );
 
-  return {
-    ...state,
-    desk: { ...state.desk, items },
-    board: { ...state.board, items: boardItems, threads },
-  };
+  return { ...state, wall: { ...state.wall, items, threads, arrivals } };
 }

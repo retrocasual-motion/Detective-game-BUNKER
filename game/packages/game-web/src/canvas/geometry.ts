@@ -1,8 +1,7 @@
-/** Размер карточки в мировых координатах. Совпадает с --card-width/--card-height в tokens.css. */
-export const CARD_W = 160;
-export const CARD_H = 220;
+/** Размер листа в мировых координатах — общий со стеной (shared); совпадает с tokens.css. */
+export { CARD_H, CARD_W } from '@bunker/shared';
 
-/** Булавка копии на доске: нить крепится к верху карточки, а не к центру. */
-export const PIN_Y = 12;
+/** Кнопка листа на стене: нить крепится к верху листа, а не к центру. */
+export const PIN_Y = 10;
 
 export const newId = (): string => crypto.randomUUID();

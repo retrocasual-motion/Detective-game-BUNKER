@@ -7,8 +7,6 @@ import { unwrapLines } from './text.ts';
 
 interface ViewerProps {
   materialId: string;
-  /** «Прикрепить к доске». */
-  onPin?(materialId: string): void;
 }
 
 /** Щелчок сразу после открытия — второй щелчок двойного клика, а не «закрыть». */
@@ -41,11 +39,10 @@ function useToolsTop() {
  * Закрыть: щелчок мимо листа, крестик у края листа или Esc. Кнопки — у края листа на высоте
  * курсора (UX-D1), чтобы мышь ездила как можно меньше. App монтирует его заново для каждого материала (key).
  */
-export function Viewer({ materialId, onPin }: ViewerProps) {
+export function Viewer({ materialId }: ViewerProps) {
   const material = useGame((g) => g.materials.find((m) => m.id === materialId));
   const close = useGame((g) => g.closeViewer);
   const folderOpen = useGame((g) => g.petitionOpen);
-  const [pinned, setPinned] = useState(0);
   const openedAt = useRef(Date.now());
   const downOutside = useRef(false);
   const tools = useToolsTop();
@@ -104,19 +101,6 @@ export function Viewer({ materialId, onPin }: ViewerProps) {
           >
             ✕
           </button>
-          {onPin && (
-            <button
-              type="button"
-              className="tool"
-              onClick={() => {
-                onPin(material.id);
-                setPinned((n) => n + 1);
-              }}
-            >
-              Прикрепить к доске
-            </button>
-          )}
-          {pinned > 0 && <span className="viewer-note">Прикреплено</span>}
         </div>
       </div>
     </div>

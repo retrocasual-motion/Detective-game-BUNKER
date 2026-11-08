@@ -29,7 +29,7 @@ button {
   height: 100%;
 }
 
-/* ── Комната (ROOM-B): серая 3D-сцена ── */
+/* ── Комната («Стена», 08.11): стол от первого лица, доска на стене ── */
 .scene {
   position: absolute;
   inset: 0;
@@ -68,14 +68,8 @@ button {
   position: absolute;
   inset: 0;
 }
-.face-desk {
-  background: var(--color-desk);
-}
-.face-left {
-  background: var(--color-desk);
-}
-.face-right {
-  background: var(--color-room-wall);
+.face-wall {
+  background: var(--color-cork);
 }
 .face-zone {
   position: absolute;
@@ -98,6 +92,41 @@ button {
 }
 .scene-decor[hidden] {
   display: none;
+}
+/* Передний холст (предметы на столе) лежит поверх доски, но щелчки пропускает. */
+.scene-front {
+  pointer-events: none;
+}
+/* Щелчок по предмету на столе: прозрачная зона над ним, рамка при наведении. */
+.desk-hotspots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.desk-spot {
+  position: absolute;
+  padding: 0;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  pointer-events: auto;
+}
+.desk-spot:hover {
+  border-color: var(--color-accent);
+}
+/* Бирка «Изъято» у устройства — бумажный ярлык под предметом. */
+.device-tag {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  translate: -50% 2px;
+  padding: 1px 6px;
+  background: var(--color-tag);
+  color: var(--color-card-text);
+  font-size: 11px;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 45%);
+  rotate: -3deg;
 }
 
 /* Стрелки по краям экрана: маленькие, проявляются при наведении. */
@@ -157,7 +186,8 @@ button {
   transform: translateX(-50%);
 }
 .nav-up {
-  top: var(--space-1);
+  top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
 }
 .nav-down {
   bottom: 0;
@@ -268,17 +298,11 @@ button {
   top: 0;
   transform-origin: 0 0;
 }
-.desk {
-  background: var(--color-desk-floor);
-}
-/* Столешница (UX-B1): у стола есть край, за ним — тёмный пол. */
+/* Пробковая доска: у неё есть край (рама), за ним — стена. */
 .canvas-surface {
   position: absolute;
-  background: var(--color-desk);
-  border-radius: 6px;
-  box-shadow:
-    0 0 0 6px var(--color-desk-edge),
-    0 18px 40px rgb(0 0 0 / 45%);
+  background: var(--color-cork);
+  box-shadow: 0 0 0 14px var(--color-board-frame);
   pointer-events: none;
 }
 .card {
@@ -617,35 +641,59 @@ button {
 .viewer-note {
   color: var(--color-accent);
 }
-.board {
+.wall {
   position: absolute;
   inset: 0;
 }
-.board-surface {
-  background: var(--color-board);
+.wall-surface {
+  background: var(--color-cork);
 }
-/* Копия на доске (TH-B): тело — открыть и двигать, булавка — тянуть нить, ✕ — снять. */
-.board-card {
-  padding: 0;
-  overflow: visible;
-}
-.board-card-body {
+/* Лист на стене: висит на одной кнопке и качается вокруг неё (WALL-C). */
+.wall-card {
   position: absolute;
-  inset: 0;
-  padding: var(--space-2);
-  padding-top: calc(var(--space-2) + 10px);
-  background: transparent;
-  border: none;
-  border-radius: inherit;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  color: inherit;
+  left: 0;
+  top: 0;
+  width: var(--card-width);
+  height: var(--card-height);
+  transform-origin: 50% var(--pin-y);
+  transition: rotate var(--paper-settle);
 }
-.board-pin {
+.wall-card-dragging {
+  transition: none;
+}
+.wall-card .paper {
+  padding-top: calc(var(--pin-y) + var(--pin-size) / 2 + 2px);
+}
+/* Ярлык колонки «как пришло»: картонная полоска с номерами описи. */
+.column-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--card-width);
+  padding: 4px var(--space-2);
+  background: var(--color-cardboard);
+  color: var(--color-card-text);
+  font: 15px var(--font-paper);
+  box-shadow: var(--shadow-paper);
+}
+.column-label-arrival {
+  background: var(--color-tag);
+}
+/* След кнопки, откуда лист сняли в поле. */
+.pin-hole {
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-pin-hole);
+}
+.wall-pin {
   position: absolute;
   left: 50%;
   top: calc(var(--pin-y) - var(--pin-size) / 2);
+  z-index: 2;
   width: var(--pin-size);
   height: var(--pin-size);
   margin-left: calc(var(--pin-size) / -2);
@@ -657,30 +705,50 @@ button {
   box-shadow: 0 1px 2px rgb(0 0 0 / 50%);
   transition: scale 0.12s;
 }
-.board-pin:hover {
+.wall-pin:hover {
   scale: 1.35;
 }
-.board-remove {
+.wall-return {
   position: absolute;
   top: -10px;
   right: -10px;
-  width: 24px;
-  height: 24px;
+  z-index: 2;
+  width: 26px;
+  height: 26px;
   padding: 0;
   border: none;
   border-radius: 50%;
   background: var(--color-surface-raised);
   color: var(--color-text);
-  font-size: 12px;
+  font-size: 14px;
   opacity: 0;
   transition: opacity 0.12s;
 }
-.board-card:hover .board-remove,
-.board-remove:focus-visible {
+.wall-card:hover .wall-return,
+.wall-return:focus-visible {
   opacity: 1;
+}
+/* Карточка предмета со стола (ITEM-A): фото предмета и номер с бирки — ничего сверх бирки. */
+.paper-item {
+  height: 200px;
+  background: var(--color-photo-border);
+}
+.item-photo {
+  display: block;
+  flex: none;
+  height: 104px;
+  margin-top: auto;
+  background:
+    radial-gradient(ellipse at 50% 55%, var(--color-device) 0 34%, transparent 35%),
+    var(--color-photo-image);
+}
+.paper-item .card-title {
+  font-size: 12px;
 }
 .board-threads {
   position: absolute;
+  /* Нити — поверх листов (у листов свой порядок наложения). */
+  z-index: 9000;
   left: 0;
   top: 0;
   width: 1px;
@@ -709,7 +777,7 @@ button {
 .board-thread-label {
   fill: var(--color-text);
   paint-order: stroke;
-  stroke: var(--color-board);
+  stroke: var(--color-cork);
   stroke-width: 4px;
   pointer-events: auto;
   cursor: text;
@@ -725,7 +793,7 @@ button {
   margin-top: -14px;
   padding: var(--space-1) var(--space-2);
   font: inherit;
-  z-index: 10;
+  z-index: 9001;
 }
 .undo-toast {
   position: absolute;
@@ -747,58 +815,32 @@ button {
   border-radius: var(--radius);
 }
 
-/* ── Вид «Слева» (PC-A): крыло углового стола сверху — устройства с бирками, монитор в углу. ── */
-.left-view {
-  position: relative;
-  height: 100%;
-  overflow: hidden;
-}
-/* Монитор стоит в дальнем углу крыла (вверху справа: у стены и у окна). */
+/* ── Компьютер следователя крупно (щелчок по монитору на столе): экран по центру. ── */
 .computer {
-  position: absolute;
-  right: 9%;
-  top: 5%;
-  width: min(300px, 26vw);
-  z-index: 2;
-}
-.monitor {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  padding: 10px 10px 18px;
-  background: var(--color-monitor);
-  border-radius: 6px;
-  box-shadow:
-    0 14px 0 -6px var(--color-device-edge),
-    0 18px 30px rgb(0 0 0 / 50%);
-  transition:
-    width 0.3s var(--ease-camera),
-    translate 0.3s var(--ease-camera);
-}
-.monitor-approach {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  background: transparent;
-  border: none;
-  cursor: zoom-in;
-}
-/* «Камера наезжает»: экран встаёт крупно по центру, стол вокруг слегка затемнён. */
-.computer-backdrop {
   position: fixed;
+  inset: 0;
+  z-index: 44;
+}
+.computer-backdrop {
+  position: absolute;
   inset: 0;
   z-index: 44;
   background: var(--color-viewer-backdrop);
   border: none;
   cursor: zoom-out;
 }
-.computer-near .monitor {
+.monitor {
   position: fixed;
   left: 50%;
   top: 50%;
   z-index: 45;
   width: min(860px, 80vw, (100vh - 140px) * 4 / 3);
+  aspect-ratio: 4 / 3;
   translate: -50% -50%;
+  padding: 10px 10px 18px;
+  background: var(--color-monitor);
+  border-radius: 6px;
+  box-shadow: 0 18px 30px rgb(0 0 0 / 50%);
 }
 .computer-close {
   position: absolute;
@@ -841,23 +883,6 @@ button {
   background: var(--color-screen-icon);
   border-radius: 2px;
 }
-.monitor-approach:hover + .monitor-screen {
-  outline: 2px solid var(--color-screen-text);
-}
-/* Пока монитор стоит в углу — экран маленький, значки без подписей. */
-.computer:not(.computer-near) .monitor-screen {
-  padding: var(--space-2);
-  font-size: 0;
-}
-.computer:not(.computer-near) .desktop-icon {
-  width: 30px;
-  padding: 2px;
-  font-size: 0;
-}
-.computer:not(.computer-near) .desktop-icon-image {
-  width: 14px;
-  height: 12px;
-}
 .screen-window {
   position: absolute;
   left: 26%;
@@ -889,261 +914,39 @@ button {
   padding: var(--space-3);
   color: var(--color-text-muted);
 }
-/* Устройства лежат на крыле вразброс, как их положили после изъятия. */
-.evidence {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.evidence-item {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-1);
-  padding: 0;
-  background: transparent;
-  border: none;
-  text-align: left;
-  pointer-events: auto;
-}
-.device-47 {
-  left: 10%;
-  top: 14%;
-  rotate: -5deg;
-}
-.device-48 {
-  left: 40%;
-  top: 16%;
-  rotate: 7deg;
-}
-.device-24 {
-  left: 33%;
-  top: 56%;
-  rotate: -10deg;
-}
-.device-49 {
-  left: 54%;
-  top: 60%;
-  rotate: 14deg;
-}
-.device-50 {
-  left: 10%;
-  top: 54%;
-  rotate: 2deg;
-}
-.device {
-  display: block;
-  background: var(--color-device);
-  box-shadow: 0 4px 10px rgb(0 0 0 / 45%);
-  transition:
-    translate 0.15s ease-out,
-    box-shadow 0.15s ease-out;
-}
-/* Серые силуэты сверху (этап 4 заменит рисунками и 3D): закрытый ноутбук, телефон экраном
-   вверх, ручка, карта памяти, регистратор. */
-.device-47 .device {
-  width: 230px;
-  height: 160px;
-  border-radius: 8px;
-  border-bottom: 8px solid var(--color-device-edge);
-}
-.device-48 .device {
-  width: 74px;
-  height: 140px;
-  border-radius: 11px;
-  border: 6px solid var(--color-device-edge);
-  background: var(--color-screen);
-}
-.device-49 .device {
-  width: 200px;
-  height: 20px;
-  border-radius: 10px;
-}
-.device-24 .device {
-  width: 52px;
-  height: 66px;
-  border-radius: 2px 12px 2px 2px;
-  background: var(--color-device-edge);
-}
-.device-50 .device {
-  width: 180px;
-  height: 110px;
-  border-radius: 4px;
-  background:
-    radial-gradient(circle at 28% 45%, var(--color-device-edge) 0 24px, transparent 25px),
-    var(--color-device);
-}
-.evidence-item:hover .device {
-  translate: 0 -3px;
-  box-shadow: 0 10px 18px rgb(0 0 0 / 50%);
-}
-/* Бирка «Изъято»: бумажный ярлык. */
-.evidence-tag {
-  display: flex;
-  flex-direction: column;
-  max-width: 200px;
-  padding: 3px var(--space-2);
-  background: var(--color-tag);
-  color: var(--color-card-text);
-  font-size: 12px;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 40%);
-  rotate: -2deg;
-}
-.evidence-tag-id {
-  color: var(--color-card-id);
-}
-.evidence-tag-title {
-  font-family: var(--font-paper);
-}
 
-/* ── Лоток «Входящие» (E2-INBOX-A): внизу справа на столе, зеркально папке ходатайства. ── */
-.inbox {
+/* Записка о поступлении (IN-B): вверху по центру; щелчок — к новой колонке на стене. */
+.arrival-note {
   position: absolute;
-  /* Левее стрелки «Доска» у правого края: открытый лоток её не закрывает. */
-  right: calc(var(--nav-size) + var(--space-4));
-  bottom: 0;
-  z-index: 35;
-  width: var(--inbox-width);
-  height: var(--inbox-height);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  translate: 0 calc(100% - var(--corner-height) + 8px);
-  transition: translate 0.25s var(--ease-camera);
-  pointer-events: none;
-}
-.inbox-open {
-  translate: 0 0;
-}
-.inbox:not(.inbox-open):hover {
-  translate: 0 calc(100% - var(--corner-height) - 4px);
-}
-.inbox-tab {
-  position: relative;
-  font-size: 16px;
-  width: var(--corner-width);
-  height: var(--corner-height);
-  flex: none;
-  background: var(--color-tray);
-  color: var(--color-text);
-  border: none;
-  border-radius: var(--radius) var(--radius) 0 0;
-  box-shadow: var(--shadow);
-  pointer-events: auto;
-}
-/* Непустой лоток: из него выглядывают края листов. */
-.inbox-tab-full::before {
-  content: "";
-  position: absolute;
-  left: 18px;
-  right: 18px;
-  top: -7px;
-  height: 7px;
-  background: var(--color-paper-sheet);
-  box-shadow:
-    4px -3px 0 var(--color-paper-under),
-    -3px -5px 0 var(--color-paper-under-2);
-}
-.inbox-panel {
-  flex: 1;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  overflow-y: auto;
-  background: var(--color-tray);
-  border-radius: var(--radius) 0 0 0;
-  box-shadow: var(--shadow-paper-lifted);
-  pointer-events: auto;
-}
-.inbox:not(.inbox-open) .inbox-panel {
-  visibility: hidden;
-  transition: visibility 0s 0.25s;
-}
-.inbox-empty {
-  margin: 0;
-  color: var(--color-text-muted);
-}
-.inbox-item {
-  display: flex;
-  align-items: stretch;
-  gap: var(--space-1);
-}
-.inbox-paper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: var(--space-1) var(--space-2);
-  background: var(--color-paper-sheet);
-  color: var(--color-card-text);
-  border: none;
-  border-radius: 1px;
-  box-shadow: var(--shadow-paper);
-  text-align: left;
-  cursor: grab;
-}
-.inbox-paper .card-id {
-  font-size: 10px;
-  font-weight: normal;
-}
-.inbox-title {
-  font-family: var(--font-paper);
-  font-size: 14px;
-  line-height: 1.25;
-}
-.inbox-take {
-  flex: none;
-  padding: 0 var(--space-2);
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  font-size: 11px;
-}
-.inbox-ghost {
-  position: fixed;
-  z-index: 70;
-  max-width: 220px;
-  padding: var(--space-1) var(--space-2);
-  background: var(--color-paper-sheet);
-  color: var(--color-card-text);
-  box-shadow: var(--shadow-paper-lifted);
-  font: 12px var(--font-paper);
-  translate: -50% -50%;
-  rotate: -3deg;
-  pointer-events: none;
-}
-/* Записка о поступлении — над лотком, у места, куда легло новое (LT-3), а не в углу экрана. */
-.inbox-note {
-  position: absolute;
-  right: 0;
-  /* Над ярлыком лотка: ярлык — верх выдвижной части. */
-  bottom: calc(100% + var(--space-2));
-  max-width: 320px;
-  padding: var(--space-1) var(--space-2);
+  top: var(--space-3);
+  left: 50%;
+  z-index: 40;
+  translate: -50% 0;
+  max-width: 60vw;
+  padding: var(--space-2) var(--space-3);
   background: var(--color-tag);
   color: var(--color-card-text);
   border: none;
-  box-shadow: var(--shadow-paper);
-  font: 12px var(--font-paper);
-  text-align: left;
-  rotate: -1.5deg;
-  pointer-events: auto;
+  font: 15px var(--font-paper);
+  box-shadow: var(--shadow-paper-lifted);
+  rotate: -1deg;
 }
 
 /* ── Служебная строка действий (E2-CHECK-A), только в разработке. ── */
+/* Слева вверху: по центру сверху — стрелка «Стена». */
 .dev-line {
   position: absolute;
   top: 0;
-  left: 50%;
+  left: var(--space-4);
   z-index: 60;
-  width: min(720px, 70vw);
-  translate: -50% 0;
+  width: min(720px, 60vw);
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  pointer-events: none;
+}
+.dev-line > * {
+  pointer-events: auto;
 }
 .dev-line-tab {
   padding: 2px var(--space-3);

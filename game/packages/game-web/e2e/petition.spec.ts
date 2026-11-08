@@ -1,7 +1,7 @@
-import { expect, test } from './fixtures.ts';
+import { expect, STRIP, sheet, test, toWall } from './fixtures.ts';
 
 test('уголок папки внизу слева на всех видах', async ({ page }) => {
-  for (const arrow of [null, 'nav-left', 'nav-right', 'nav-right', 'nav-left', 'nav-down']) {
+  for (const arrow of [null, 'nav-up', 'nav-down']) {
     if (arrow) await page.getByTestId(arrow).click();
     const box = await page.getByTestId('petition-corner').boundingBox();
     expect(box?.x ?? 9999).toBeLessThan(1366 / 3);
@@ -32,17 +32,20 @@ test('уголок папки закрывает её повторным щел�
   await expect(page.getByTestId('petition-folder')).toBeHidden();
 });
 
-test('открытая папка не мешает: стол рядом работает, стрелки переключают вид', async ({ page }) => {
+test('открытая папка не мешает: стена рядом работает, стрелки переключают вид', async ({
+  page,
+}) => {
+  await toWall(page);
   await page.getByTestId('petition-corner').click();
-  await page.getByTestId('card-07').click();
+  await sheet(page, '36').click(STRIP);
   await expect(page.getByTestId('viewer')).toBeVisible();
   // Лист открывается правее папки — видны оба.
   const folder = await page.getByTestId('petition-folder').boundingBox();
   const paper = await page.getByTestId('viewer-paper').boundingBox();
   expect(paper?.x ?? 0).toBeGreaterThanOrEqual((folder?.x ?? 0) + (folder?.width ?? 0));
   await page.keyboard.press('Escape');
-  await page.keyboard.press('ArrowLeft');
-  await expect(page.getByTestId('view-left')).toBeVisible();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'desk');
   await expect(page.getByTestId('petition-folder')).toBeVisible();
 });
 
@@ -53,16 +56,17 @@ test('щелчок по уголку папки не сдвигает комна
   expect(after).toEqual(before);
 });
 
-test('открытая папка не закрывает стрелку «Слева»', async ({ page }) => {
+test('открытая папка не закрывает стрелку «Стол»', async ({ page }) => {
+  await toWall(page);
   await page.getByTestId('petition-corner').click();
-  const box = await page.getByTestId('nav-left').boundingBox();
+  const box = await page.getByTestId('nav-down').boundingBox();
   if (!box) throw new Error('нет стрелки');
   const onTop = await page.evaluate(
     ({ x, y }) =>
       document.elementFromPoint(x, y)?.closest('[data-testid]')?.getAttribute('data-testid'),
     { x: box.x + box.width - 4, y: box.y + box.height / 2 },
   );
-  expect(onTop).toBe('nav-left');
-  await page.getByTestId('nav-left').click();
-  await expect(page.getByTestId('view-left')).toBeVisible();
+  expect(onTop).toBe('nav-down');
+  await page.getByTestId('nav-down').click();
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'desk');
 });

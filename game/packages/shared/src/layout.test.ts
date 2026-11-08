@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { DESK_BOUNDS, defaultState, reconcile, SCATTER_ROT_MAX, upgradeState } from './layout.ts';
+import {
+  CARD_H,
+  COL_W,
+  defaultState,
+  isOverOwnColumn,
+  reconcile,
+  SHINGLE_STEP,
+  upgradeState,
+  wallColumns,
+  wallLayout,
+} from './layout.ts';
 import type { Material, PlayerState } from './schemas.ts';
 
 const mat = (id: string, placement: Material['placement'] = 'desk'): Material => ({
@@ -10,167 +20,122 @@ const mat = (id: string, placement: Material['placement'] = 'desk'): Material =>
   body: '',
   sourceFile: `${id}__x.md`,
 });
-const materials: Material[] = [
-  ...Array.from({ length: 51 }, (_, i) => String(i + 1).padStart(2, '0')).map((id) =>
-    mat(id, ['24', '47', '48', '49', '50'].includes(id) ? 'evidence' : 'desk'),
-  ),
-];
+const starting: Material[] = Array.from({ length: 51 }, (_, i) =>
+  String(i + 1).padStart(2, '0'),
+).map((id) => mat(id, ['24', '47', '48', '49', '50'].includes(id) ? 'evidence' : 'desk'));
 
 describe('defaultState', () => {
-  const s = defaultState(materials);
+  const s = defaultState(starting);
 
-  it('кладёт на стол только материалы стола, вид — «Стол», доска пустая', () => {
+  it('вид — «Стол», поле пустое, нитей и поступлений нет', () => {
     expect(s.view).toBe('desk');
-    expect(s.desk.items).toHaveLength(46);
-    expect(s.board.items).toEqual([]);
-    expect(s.board.threads).toEqual([]);
+    expect(s.wall.items).toEqual([]);
+    expect(s.wall.threads).toEqual([]);
+    expect(s.wall.arrivals).toEqual([]);
   });
 
-  it('россыпь одинаковая у всех: два вызова дают одно и то же', () => {
-    expect(defaultState(materials)).toEqual(s);
-  });
-
-  it('бумаги слегка повёрнуты, повороты разные и в пределах ±SCATTER_ROT_MAX', () => {
-    const rots = s.desk.items.map((i) => i.rot);
-    for (const r of rots) expect(Math.abs(r)).toBeLessThanOrEqual(SCATTER_ROT_MAX);
-    expect(new Set(rots.map((r) => r.toFixed(1))).size).toBeGreaterThan(20);
-  });
-
-  it('не ровная сетка: строки сдвинуты и разбросаны', () => {
-    const xs = new Set(s.desk.items.map((i) => Math.round(i.x)));
-    expect(xs.size).toBeGreaterThan(30);
-  });
-
-  it('ни одна бумага не закрыта другой целиком: центры разнесены', () => {
-    const items = s.desk.items;
-    for (const a of items)
-      for (const b of items) {
-        if (a === b) continue;
-        const far = Math.abs(a.x - b.x) >= 100 || Math.abs(a.y - b.y) >= 150;
-        expect(far, `${a.materialId} и ${b.materialId}`).toBe(true);
-      }
+  it('одинаковое у всех', () => {
+    expect(defaultState(starting)).toEqual(s);
   });
 });
 
-describe('столешница (UX-B1)', () => {
-  it('вся начальная россыпь лежит на столе с отступом от края', () => {
-    for (const i of defaultState(materials).desk.items) {
-      expect(i.x).toBeGreaterThan(DESK_BOUNDS.left + 100);
-      expect(i.y).toBeGreaterThan(DESK_BOUNDS.top + 100);
-      expect(i.x + 200).toBeLessThan(DESK_BOUNDS.right);
-      expect(i.y + 260).toBeLessThan(DESK_BOUNDS.bottom);
-    }
+describe('колонки «как пришло» (HANG-A)', () => {
+  const columns = wallColumns(starting, []);
+  const layout = wallLayout(columns);
+
+  it('все 51 стартовый материал висят ровно в одной колонке, по порядку описи', () => {
+    const ids = columns.flatMap((c) => c.ids);
+    expect(ids).toHaveLength(51);
+    expect(new Set(ids).size).toBe(51);
+    expect(ids).toEqual([...ids].sort());
   });
 
-  it('сдвиг рядов разный — не «через один»', () => {
-    const items = defaultState(materials).desk.items;
-    const firstX = [0, 10, 20, 30, 40].map((k) => items[k]?.x ?? 0);
-    expect(new Set(firstX.map((x) => Math.round(x / 20))).size).toBeGreaterThan(3);
+  it('подписи колонок — только номера описи', () => {
+    expect(columns[0]?.title).toBe('Опись № 1–5');
+    for (const c of columns) expect(c.title).toMatch(/^Опись № \d+–\d+$/);
+  });
+
+  it('лесенка: каждый следующий лист ниже на шаг и лежит поверх', () => {
+    const a = layout.slots.get('22');
+    const b = layout.slots.get('23');
+    expect(a && b && b.y - a.y).toBe(SHINGLE_STEP);
+    expect(a && b && b.z > a.z).toBe(true);
+    expect(a?.x).toBe(b?.x);
+  });
+
+  it('колонки не заходят друг на друга, поле — ниже колонок', () => {
+    const xs = layout.columns.filter((c) => c.y === 0).map((c) => c.x);
+    for (let i = 1; i < xs.length; i++) expect((xs[i] ?? 0) - (xs[i - 1] ?? 0)).toBe(COL_W);
+    for (const c of layout.columns) expect(c.y + c.h).toBeLessThanOrEqual(layout.bandBottom);
+    expect(layout.fieldTop).toBeGreaterThan(layout.bandBottom);
+    expect(layout.bounds.bottom).toBeGreaterThan(layout.fieldTop + CARD_H);
+  });
+
+  it('лист, отпущенный у своей колонки, возвращается; в поле — нет', () => {
+    const s = layout.slots.get('31');
+    expect(s && isOverOwnColumn(layout, '31', s.x + 10, s.y + 30)).toBe(true);
+    expect(isOverOwnColumn(layout, '31', 0, layout.fieldTop + 200)).toBe(false);
   });
 });
 
-describe('upgradeState', () => {
-  it('принимает текущую версию как есть', () => {
-    const s = defaultState(materials);
-    expect(upgradeState(s, materials)).toEqual(s);
+describe('поступления (IN-B)', () => {
+  const withL = [...starting, mat('L101'), mat('L102')];
+
+  it('открытое по ходу дела вешается новой колонкой «Поступление № 1»', () => {
+    const s = defaultState(withL);
+    expect(s.wall.arrivals).toEqual([{ ids: ['L101', 'L102'] }]);
+    const cols = wallColumns(withL, s.wall.arrivals);
+    expect(cols.at(-1)).toMatchObject({ title: 'Поступление № 1', ids: ['L101', 'L102'] });
   });
 
-  it('версия 1: стол раскладывается заново, доска и вид сохраняются', () => {
-    const board = {
-      camera: { x: 10, y: 20, zoom: 1.5 },
-      items: [{ id: 'a', materialId: '01', x: 1, y: 2 }],
-      threads: [],
-    };
-    const v1 = {
-      version: 1,
-      view: 'right',
-      desk: { camera: { x: 0, y: 0, zoom: 1 }, items: [{ materialId: '01', x: 0, y: 0, z: 1 }] },
-      board,
-    };
-    const up = upgradeState(v1, materials);
-    expect(up?.version).toBe(3);
-    expect(up?.view).toBe('right');
-    expect(up?.board).toEqual(board);
-    expect(up?.desk).toEqual(defaultState(materials).desk);
+  it('следующее поступление — следующая колонка, прежние не трогаются', () => {
+    const s1 = defaultState(withL);
+    const s2 = reconcile(s1, [...withL, mat('L205')]);
+    expect(s2.wall.arrivals).toEqual([{ ids: ['L101', 'L102'] }, { ids: ['L205'] }]);
   });
 
-  it('версия 2 (россыпь 1b): стол раскладывается заново, доска и вид сохраняются', () => {
-    const cur = defaultState(materials);
-    const board = { camera: { x: 1, y: 2, zoom: 1 }, items: [], threads: [] };
-    const v2 = {
-      ...cur,
-      version: 2,
-      view: 'left',
-      desk: { camera: cur.desk.camera, items: [{ materialId: '01', x: 9, y: 9, z: 1, rot: 0 }] },
-      board,
-    };
-    const up = upgradeState(v2, materials);
-    expect(up?.version).toBe(3);
-    expect(up?.view).toBe('left');
-    expect(up?.board).toEqual(board);
-    expect(up?.desk).toEqual(cur.desk);
-  });
-
-  it('мусор → null', () => {
-    expect(upgradeState({ version: 7 }, materials)).toBeNull();
-    expect(upgradeState(null, materials)).toBeNull();
+  it('одиннадцатая колонка начинает новый ряд', () => {
+    const arrivals = ['L101', 'L102', 'L103'].map((id) => ({ ids: [id] }));
+    const mats = [...starting, ...['L101', 'L102', 'L103'].map((id) => mat(id))];
+    const layout = wallLayout(wallColumns(mats, arrivals));
+    const second = layout.columns[10];
+    expect(second?.x).toBe(0);
+    expect(second?.y).toBeGreaterThan(0);
   });
 });
 
 describe('reconcile', () => {
   it('не меняет корректное состояние', () => {
-    const s = defaultState(materials);
-    expect(reconcile(s, materials)).toEqual(s);
+    const s = defaultState(starting);
+    expect(reconcile(s, starting)).toEqual(s);
   });
 
-  it('убирает неизвестный материал вместе с его копиями и нитями', () => {
-    const s: PlayerState = defaultState(materials);
-    s.desk.items.push({ materialId: '99', x: 5000, y: 5000, z: 999, rot: 0 });
-    s.board.items.push(
-      { id: 'a', materialId: '99', x: 0, y: 0 },
-      { id: 'b', materialId: '01', x: 100, y: 0 },
-    );
-    s.board.threads.push({ id: 't', from: 'a', to: 'b', label: 'x' });
-    const r = reconcile(s, materials);
-    expect(r.desk.items.some((i) => i.materialId === '99')).toBe(false);
-    expect(r.board.items.map((i) => i.id)).toEqual(['b']);
-    expect(r.board.threads).toEqual([]);
-  });
-
-  it('добавляет недостающий материал в свободную ячейку', () => {
-    const s = defaultState(materials);
-    const original = s.desk.items.find((i) => i.materialId === '07');
-    s.desk.items = s.desk.items.filter((i) => i.materialId !== '07');
-    const r = reconcile(s, materials);
-    const added = r.desk.items.find((i) => i.materialId === '07');
-    expect(added).toMatchObject({ x: original?.x, y: original?.y, rot: original?.rot });
-    expect(r.desk.items).toHaveLength(46);
+  it('убирает неизвестный материал, его нити и дубли', () => {
+    const s: PlayerState = defaultState(starting);
+    s.wall.items = [
+      { materialId: '99', x: 0, y: 0, z: 1, rot: 0 },
+      { materialId: '01', x: 5, y: 5, z: 2, rot: 0 },
+      { materialId: '01', x: 9, y: 9, z: 3, rot: 0 },
+    ];
+    s.wall.threads = [
+      { id: 't1', from: '01', to: '99', label: '' },
+      { id: 't2', from: '01', to: '02', label: 'x' },
+      { id: 't3', from: '02', to: '02', label: '' },
+    ];
+    const got = reconcile(s, starting);
+    expect(got.wall.items.map((i) => [i.materialId, i.x])).toEqual([['01', 5]]);
+    expect(got.wall.threads.map((t) => t.id)).toEqual(['t2']);
   });
 });
 
-describe('лоток «Входящие» (E2-INBOX-A)', () => {
-  it('открытый по ходу дела материал ложится в лоток, свежее — сверху', () => {
-    const s = defaultState(materials);
-    const withNew = [...materials, mat('L214'), mat('L215')];
-    const r = reconcile(s, withNew);
-    const a = r.desk.items.find((i) => i.materialId === 'L214');
-    const b = r.desk.items.find((i) => i.materialId === 'L215');
-    expect(a?.tray).toBe(true);
-    expect(b?.tray).toBe(true);
-    expect((b?.z ?? 0) > (a?.z ?? 0)).toBe(true);
-    // Стартовая россыпь не сдвинулась.
-    expect(r.desk.items.filter((i) => !i.tray)).toEqual(s.desk.items);
+describe('upgradeState', () => {
+  it('принимает текущую версию', () => {
+    const s = defaultState(starting);
+    expect(upgradeState(s, starting)).toEqual(s);
   });
 
-  it('вынутый на стол материал остаётся на столе', () => {
-    const s = reconcile(defaultState(materials), [...materials, mat('L214')]);
-    s.desk.items = s.desk.items.map((i) =>
-      i.materialId === 'L214' ? { ...i, tray: false, x: 300, y: 300 } : i,
-    );
-    const r = reconcile(s, [...materials, mat('L214')]);
-    expect(r.desk.items.find((i) => i.materialId === 'L214')).toMatchObject({
-      tray: false,
-      x: 300,
-    });
+  it('стол сверху и доска с копиями (версия 3) — раскладка начинается заново', () => {
+    expect(upgradeState({ version: 3, view: 'desk' }, starting)).toBeNull();
+    expect(upgradeState('мусор', starting)).toBeNull();
   });
 });

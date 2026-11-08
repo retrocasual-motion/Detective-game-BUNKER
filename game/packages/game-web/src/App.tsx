@@ -1,25 +1,24 @@
 import { useEffect, useMemo } from 'react';
-import { BoardView } from './board/BoardView.tsx';
-import { pinToBoard } from './board/board-actions.ts';
-import { DeskView } from './desk/DeskView.tsx';
+import { ComputerScreen } from './computer/ComputerScreen.tsx';
+import { ArrivalNote } from './desk/ArrivalNote.tsx';
 import { DevActionLine } from './dev/DevActionLine.tsx';
-import { LeftView } from './left/LeftView.tsx';
 import { PetitionCorner } from './petition/PetitionCorner.tsx';
 import { RoomScene } from './room/RoomScene.tsx';
 import { KEY_DIR, NAV } from './room/views.ts';
 import { useGame } from './store.ts';
 import { Viewer } from './viewer/Viewer.tsx';
+import { WallView } from './wall/WallView.tsx';
 
 const isTyping = (t: EventTarget | null) =>
   t instanceof HTMLElement && (t.isContentEditable || ['INPUT', 'TEXTAREA'].includes(t.tagName));
 
 export function App() {
-  // Только вид: стол и доска подписаны на своё сами, App не перерисовывает их на каждый сдвиг.
+  // Только вид: стена подписана на своё сама, App не перерисовывает её на каждый сдвиг.
   const view = useGame((g) => g.state?.view);
   const load = useGame((g) => g.load);
   const setView = useGame((g) => g.setView);
-  const openViewer = useGame((g) => g.openViewer);
   const viewerId = useGame((g) => g.viewerId);
+  const computerOpen = useGame((g) => g.computerOpen);
   const loadFailed = useGame((g) => g.loadFailed);
   const saveStatus = useGame((g) => g.saveStatus);
 
@@ -33,7 +32,7 @@ export function App() {
       const dir = KEY_DIR[e.key];
       if (!dir || isTyping(e.target)) return;
       const g = useGame.getState();
-      if (g.viewerId || !g.state) return;
+      if (g.viewerId || g.computerOpen || !g.state) return;
       const to = NAV[g.state.view][dir];
       if (to) setView(to);
     };
@@ -41,11 +40,7 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [setView]);
 
-  // Один и тот же набор видов — React не перерисовывает их вместе с App.
-  const faces = useMemo(
-    () => ({ desk: <DeskView onOpen={openViewer} />, left: <LeftView />, right: <BoardView /> }),
-    [openViewer],
-  );
+  const wall = useMemo(() => <WallView />, []);
 
   if (!view) {
     return (
@@ -57,23 +52,20 @@ export function App() {
 
   return (
     <div className="room" data-testid="room">
-      <RoomScene view={view} onGo={setView} hideNav={viewerId !== null} faces={faces} />
+      <RoomScene
+        view={view}
+        onGo={setView}
+        hideNav={viewerId !== null || computerOpen}
+        wall={wall}
+      />
       {saveStatus === 'error' && (
         <div className="save-error" data-testid="save-error">
           Не сохранено
         </div>
       )}
-      {viewerId && (
-        <Viewer
-          key={viewerId}
-          materialId={viewerId}
-          onPin={(id) =>
-            useGame
-              .getState()
-              .updateState(pinToBoard(id, { width: window.innerWidth, height: window.innerHeight }))
-          }
-        />
-      )}
+      <ArrivalNote />
+      <ComputerScreen />
+      {viewerId && <Viewer key={viewerId} materialId={viewerId} />}
       <PetitionCorner />
       {import.meta.env.DEV && <DevActionLine />}
     </div>
