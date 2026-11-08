@@ -17,12 +17,12 @@ test('стрелка у правого края открывает доску, �
   await expect(page.getByTestId('view-desk')).toBeVisible();
 });
 
-test('клавиши дублируют стрелки: ← «Слева», → стол, ↑ комната, ↓ стол', async ({ page }) => {
+test('клавиши дублируют стрелки: ← «Слева», → стол, ↓ комната, ↓ снова стол', async ({ page }) => {
   await page.keyboard.press('ArrowLeft');
   await expect(page.getByTestId('view-left')).toBeVisible();
   await page.keyboard.press('ArrowRight');
   await expect(page.getByTestId('view-desk')).toBeVisible();
-  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('ArrowDown');
   await expect(scene(page)).toHaveAttribute('data-view', 'room');
   await page.keyboard.press('ArrowDown');
   await expect(scene(page)).toHaveAttribute('data-view', 'desk');
@@ -41,18 +41,27 @@ test('вид сохраняется после перезагрузки', async 
 
 test('«Комната»: щелчок по зоне ведёт в вид', async ({ page }) => {
   for (const view of ['left', 'desk', 'right'] as const) {
-    await page.getByTestId('nav-up').click();
+    // Стрелка «Комната» внизу — с любого вида.
+    await page.getByTestId('nav-down').click();
     await expect(scene(page)).toHaveAttribute('data-view', 'room');
     await page.getByTestId(`zone-${view}`).click();
     await expect(page.getByTestId(`view-${view}`)).toBeVisible();
     await expect(scene(page)).toHaveAttribute('data-view', view);
-    // Обратно к столу — там стрелка «Комната».
-    if (view !== 'desk') await page.getByTestId(view === 'left' ? 'nav-right' : 'nav-left').click();
+  }
+});
+
+test('стрелка «Комната» — внизу по центру на столе, у компьютера и у доски', async ({ page }) => {
+  for (const arrow of [null, 'nav-left', 'nav-right', 'nav-right']) {
+    if (arrow) await page.getByTestId(arrow).click();
+    const box = await page.getByTestId('nav-down').boundingBox();
+    expect(Math.abs((box?.x ?? 0) + (box?.width ?? 0) / 2 - 683)).toBeLessThan(2);
+    expect((box?.y ?? 0) + (box?.height ?? 0)).toBeGreaterThan(740);
+    await expect(page.getByTestId('nav-down')).toHaveAccessibleName('Комната');
   }
 });
 
 test('в «Комнате» все три вида видны сразу (как стены и стол)', async ({ page }) => {
-  await page.getByTestId('nav-up').click();
+  await page.getByTestId('nav-down').click();
   for (const v of ['view-desk', 'view-left', 'view-right']) {
     await expect(page.getByTestId(v)).toBeVisible();
   }
@@ -65,7 +74,7 @@ test('при 1366×768 нет горизонтальной прокрутки, �
     () => document.documentElement.scrollWidth > window.innerWidth,
   );
   expect(overflow).toBe(false);
-  for (const id of ['nav-left', 'nav-right', 'nav-up', 'petition-corner']) {
+  for (const id of ['nav-left', 'nav-right', 'nav-down', 'petition-corner']) {
     await expect(page.getByTestId(id)).toBeInViewport();
   }
 });

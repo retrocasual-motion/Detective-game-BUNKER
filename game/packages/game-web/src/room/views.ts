@@ -10,13 +10,14 @@ export const VIEW_LABELS: Record<View, string> = {
 export type Dir = 'left' | 'right' | 'up' | 'down';
 
 /**
- * Куда ведёт каждая стрелка (TECH_PLAN 4.0): со стола — влево, вправо и назад в комнату;
- * из «Слева» и «Справа» — обратно к столу; из комнаты — к любой зоне.
+ * Куда ведёт каждая стрелка (TECH_PLAN 4.0): со стола — влево и вправо; из «Слева» и
+ * «Справа» — обратно к столу. Стрелка внизу по центру — на каждом виде, ведёт в комнату
+ * (решение автора 08.11.2026); в комнате та же стрелка возвращает к столу.
  */
 export const NAV: Record<View, Partial<Record<Dir, View>>> = {
-  desk: { left: 'left', right: 'right', up: 'room' },
-  left: { right: 'desk' },
-  right: { left: 'desk' },
+  desk: { left: 'left', right: 'right', down: 'room' },
+  left: { right: 'desk', down: 'room' },
+  right: { left: 'desk', down: 'room' },
   room: { left: 'left', right: 'right', down: 'desk' },
 };
 

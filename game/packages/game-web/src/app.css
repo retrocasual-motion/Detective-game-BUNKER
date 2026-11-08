@@ -329,25 +329,29 @@ button {
   inset: 0;
   z-index: 40;
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: var(--space-3) var(--space-4) calc(var(--corner-height) + var(--space-3));
+  /* Поля сверху и снизу равны — лист встаёт ровно в центр экрана. */
+  padding: calc(var(--corner-height) + var(--space-3)) var(--space-4);
   background: var(--color-viewer-backdrop);
   transition: padding-left 0.25s;
 }
-/* Открыта папка ходатайства — лист уезжает вправо, чтобы оба были видны. */
+/* Открыта папка ходатайства — лист встаёт по центру свободного места справа от неё. */
 .viewer-with-folder {
   padding-left: calc(var(--folder-width) + var(--space-4));
 }
+/* Лист всегда одной ширины (не по длине строк) и ровно по центру; кнопки — снаружи справа,
+   они не сдвигают лист. */
 .viewer-stage {
+  position: relative;
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  max-width: 100%;
-  min-height: 0;
+  flex-direction: column;
+  width: min(820px, 100% - 2 * (var(--viewer-tools-width) + var(--space-2)));
+  max-height: 100%;
 }
 .viewer-paper {
-  width: min(820px, 100%);
-  max-height: 100%;
+  width: 100%;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--space-4);
   background: var(--color-paper);
@@ -357,6 +361,9 @@ button {
   user-select: text;
 }
 .viewer-tools {
+  position: absolute;
+  top: 0;
+  left: calc(100% + var(--space-2));
   display: flex;
   flex-direction: column;
   align-items: flex-start;
