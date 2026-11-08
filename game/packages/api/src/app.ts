@@ -56,15 +56,16 @@ const ActionSchema = z.object({
   cards: z.tuple([CardSchema, CardSchema]).optional(),
 });
 
-/** Состояние ссылается только на материалы, которые у игрока есть, и в своих местах. */
+/** Состояние ссылается только на материалы, которые у игрока есть (P-10). */
 function invalidReference(s: PlayerState, materials: Material[]): string | null {
-  const deskIds = new Set(materials.filter((m) => m.placement === 'desk').map((m) => m.id));
   const allIds = new Set(materials.map((m) => m.id));
-  const badDesk = s.desk.items.find((i) => !deskIds.has(i.materialId));
-  if (badDesk) return `на столе нет материала ${badDesk.materialId}`;
-  const badBoard = s.board.items.find((i) => !allIds.has(i.materialId));
-  if (badBoard) return `нет материала ${badBoard.materialId}`;
-  return null;
+  const refs = [
+    ...s.wall.items.map((i) => i.materialId),
+    ...s.wall.threads.flatMap((t) => [t.from, t.to]),
+    ...s.wall.arrivals.flatMap((a) => a.ids),
+  ];
+  const bad = refs.find((id) => !allIds.has(id));
+  return bad ? `нет материала ${bad}` : null;
 }
 
 export function createApp({

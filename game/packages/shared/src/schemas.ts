@@ -38,47 +38,44 @@ export const CameraSchema = z.object({
 });
 export type Camera = z.infer<typeof CameraSchema>;
 
-export const DeskItemSchema = z.object({
+/** Материал, снятый игроком из колонки «как пришло» в поле стены (WALL-C). */
+export const WallItemSchema = z.object({
   materialId: z.string(),
   x: z.number(),
   y: z.number(),
   z: z.number().int(),
-  /** Поворот на столе, градусы (TECH_PLAN 4.2: «повернуть на столе», декоративно). */
+  /** Наклон листа на одной кнопке, градусы (декоративно). */
   rot: z.number().min(-180).max(180),
-  /** Лежит в лотке «Входящие» и ещё не вынут на стол (E2-INBOX-A). */
-  tray: z.boolean().optional(),
 });
-export type DeskItem = z.infer<typeof DeskItemSchema>;
+export type WallItem = z.infer<typeof WallItemSchema>;
 
-export const BoardItemSchema = z.object({
-  id: z.string().min(1).max(64),
-  materialId: z.string(),
-  x: z.number(),
-  y: z.number(),
-});
-export type BoardItem = z.infer<typeof BoardItemSchema>;
-
-export const BoardThreadSchema = z.object({
+/** Нить между двумя материалами на стене; игра её не читает и не проверяет (T-5-A). */
+export const ThreadSchema = z.object({
   id: z.string().min(1).max(64),
   from: z.string(),
   to: z.string(),
   label: z.string().max(200),
 });
-export type BoardThread = z.infer<typeof BoardThreadSchema>;
+export type Thread = z.infer<typeof ThreadSchema>;
 
-export const ViewSchema = z.enum(['desk', 'room', 'left', 'right']);
+/** Партия поступления: материалы, открытые одним действием, — одна колонка на стене (IN-B). */
+export const ArrivalSchema = z.object({ ids: z.array(z.string()).min(1) });
+export type Arrival = z.infer<typeof ArrivalSchema>;
+
+/** Виды: стол (от первого лица) и стена (рабочая поверхность) — решение автора 08.11. */
+export const ViewSchema = z.enum(['desk', 'wall']);
 export type View = z.infer<typeof ViewSchema>;
 
-export const STATE_VERSION = 3;
+export const STATE_VERSION = 4;
 
 export const PlayerStateSchema = z.object({
   version: z.literal(STATE_VERSION),
   view: ViewSchema,
-  desk: z.object({ camera: CameraSchema, items: z.array(DeskItemSchema) }),
-  board: z.object({
+  wall: z.object({
     camera: CameraSchema,
-    items: z.array(BoardItemSchema),
-    threads: z.array(BoardThreadSchema),
+    items: z.array(WallItemSchema),
+    threads: z.array(ThreadSchema),
+    arrivals: z.array(ArrivalSchema),
   }),
 });
 export type PlayerState = z.infer<typeof PlayerStateSchema>;

@@ -5,12 +5,6 @@ import { type Dir, NAV, VIEW_LABELS } from './views.ts';
 const GLYPH: Record<Dir, string> = { left: '‹', right: '›', up: '˄', down: '˅' };
 
 /**
- * Значок — по движению камеры (UX-F1, SP-1): к столу — «вниз» (наклон к столу), в комнату —
- * «вверх» (поднять голову и отойти), хотя обе стрелки внизу по центру (ROOM-ARROW).
- */
-const glyphFor = (dir: Dir, to: View) => (to === 'room' ? '˄' : GLYPH[dir]);
-
-/**
  * Стрелки по краям экрана — переход в соседний вид (ROOM-B). Вплотную к краю (UX-F1, MS-2:
  * к краю мышь «бросают» без прицела), подпись видна всегда (UX-F2).
  */
@@ -32,7 +26,7 @@ export function NavArrows({ view, onGo }: { view: View; onGo(view: View): void }
           aria-label={VIEW_LABELS[to]}
           onClick={(e) => go(to, e)}
         >
-          <span className="nav-glyph">{glyphFor(dir, to)}</span>
+          <span className="nav-glyph">{GLYPH[dir]}</span>
           <span className="nav-label">{VIEW_LABELS[to]}</span>
         </button>
       ))}

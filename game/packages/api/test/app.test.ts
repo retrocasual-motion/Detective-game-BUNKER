@@ -58,9 +58,9 @@ describe('API', () => {
 
   it('старое сохранение, пришедшее позже нового, не затирает его', async () => {
     const newer = defaultState(materials);
-    newer.view = 'right';
+    newer.view = 'wall';
     const older = defaultState(materials);
-    older.view = 'left';
+    older.view = 'desk';
     const send = (s: PlayerState, seq: number) =>
       app().request('/api/state', {
         method: 'PUT',
@@ -69,7 +69,7 @@ describe('API', () => {
       });
     expect((await send(newer, 2000)).status).toBe(204);
     expect((await send(older, 1000)).status).toBe(204);
-    expect(((await (await app().request('/api/state')).json()) as PlayerState).view).toBe('right');
+    expect(((await (await app().request('/api/state')).json()) as PlayerState).view).toBe('wall');
   });
 
   it('GET /api/materials → 51 материал', async () => {
@@ -84,56 +84,53 @@ describe('API', () => {
 
   it('PUT → GET возвращает сохранённое', async () => {
     const s = defaultState(materials);
-    s.view = 'right';
-    s.desk.items[0] = { materialId: '01', x: 777, y: -50, z: 100, rot: 3 };
+    s.view = 'wall';
+    s.wall.items.push({ materialId: '01', x: 777, y: -50, z: 100, rot: 3 });
+    s.wall.threads.push({ id: 't', from: '01', to: '47', label: 'ключ?' });
     expect((await put(s)).status).toBe(204);
     expect(await (await app().request('/api/state')).json()).toEqual(s);
   });
 
   it('PUT с масштабом вне 0.25…3 → 400', async () => {
     const s = defaultState(materials);
-    s.desk.camera.zoom = 10;
+    s.wall.camera.zoom = 10;
     expect((await put(s)).status).toBe(400);
   });
 
   it('PUT с неизвестным материалом → 400', async () => {
     const s = defaultState(materials);
-    s.desk.items.push({ materialId: 'L214', x: 0, y: 0, z: 1, rot: 0 });
+    s.wall.items.push({ materialId: 'L214', x: 0, y: 0, z: 1, rot: 0 });
     expect((await put(s)).status).toBe(400);
   });
 
-  it('PUT с устройством на столе → 400', async () => {
-    const s = defaultState(materials);
-    s.desk.items.push({ materialId: '47', x: 0, y: 0, z: 1, rot: 0 });
-    expect((await put(s)).status).toBe(400);
+  it('PUT с нитью или поступлением на неизвестный материал → 400', async () => {
+    const a = defaultState(materials);
+    a.wall.threads.push({ id: 't', from: '01', to: 'L214', label: '' });
+    expect((await put(a)).status).toBe(400);
+    const b = defaultState(materials);
+    b.wall.arrivals.push({ ids: ['L214'] });
+    expect((await put(b)).status).toBe(400);
   });
 
   it('GET выкидывает материал, которого больше нет в контенте', async () => {
     const s: PlayerState = defaultState(materials);
-    s.desk.items.push({ materialId: '99', x: 9000, y: 9000, z: 999, rot: 0 });
+    s.wall.items.push({ materialId: '99', x: 9000, y: 9000, z: 999, rot: 0 });
     await db.insert(playerState).values({ playerId: 'local', state: s });
     const got = (await (await app().request('/api/state')).json()) as PlayerState;
-    expect(got.desk.items.some((i) => i.materialId === '99')).toBe(false);
+    expect(got.wall.items.some((i) => i.materialId === '99')).toBe(false);
   });
 
-  it('GET поднимает сохранение версии 1: доска остаётся, стол — россыпью', async () => {
-    const board = {
-      camera: { x: 5, y: 5, zoom: 1 },
-      items: [{ id: 'a', materialId: '01', x: 1, y: 2 }],
-      threads: [],
-    };
-    const v1 = { ...defaultState(materials), version: 1, board };
+  it('GET: сохранение стола сверху и доски с копиями (версия 3) — раскладка заново', async () => {
+    const v3 = { version: 3, view: 'right', desk: { items: [] }, board: { items: [] } };
     // Колонка типизирована текущей версией; старую кладём как есть.
-    await db.insert(playerState).values({ playerId: 'local', state: v1 as unknown as PlayerState });
+    await db.insert(playerState).values({ playerId: 'local', state: v3 as unknown as PlayerState });
     const got = (await (await app().request('/api/state')).json()) as PlayerState;
-    expect(got.version).toBe(3);
-    expect(got.board).toEqual(board);
-    expect(got.desk).toEqual(defaultState(materials).desk);
+    expect(got).toEqual(defaultState(materials));
   });
 
   it('DELETE → следующий GET = defaultState', async () => {
     const s = defaultState(materials);
-    s.view = 'left';
+    s.view = 'wall';
     await put(s);
     expect((await app().request('/api/state', { method: 'DELETE' })).status).toBe(204);
     expect(await (await app().request('/api/state')).json()).toEqual(defaultState(materials));

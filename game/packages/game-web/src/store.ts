@@ -15,12 +15,13 @@ interface GameStore {
   petitionOpen: boolean;
   /** Сервер не ответил при загрузке — игра повторяет запрос. */
   loadFailed: boolean;
-  /** Последнее поступление в дело (записка у лотка «Входящие»). */
+  /** Последнее поступление в дело (записка «Поступило»). */
   arrival: { ids: string[]; at: number } | null;
-  /** Открыт лоток «Входящие». */
-  trayOpen: boolean;
-  setTrayOpen(open: boolean): void;
-  /** Движок открыл материалы: в дело и в лоток «Входящие» (E2-INBOX-A). */
+  dismissArrival(): void;
+  /** Компьютер следователя открыт крупно (щелчок по монитору на столе). */
+  computerOpen: boolean;
+  setComputerOpen(open: boolean): void;
+  /** Движок открыл материалы: в дело и новой колонкой на стену (IN-B). */
   addReleased(released: Material[]): void;
   load(): Promise<void>;
   setPetitionOpen(open: boolean): void;
@@ -45,10 +46,14 @@ export const useGame = create<GameStore>((set, get) => {
     petitionOpen: false,
     loadFailed: false,
     arrival: null,
-    trayOpen: false,
+    computerOpen: false,
 
-    setTrayOpen(open) {
-      set({ trayOpen: open });
+    dismissArrival() {
+      set({ arrival: null });
+    },
+
+    setComputerOpen(open) {
+      set({ computerOpen: open });
     },
 
     addReleased(released) {

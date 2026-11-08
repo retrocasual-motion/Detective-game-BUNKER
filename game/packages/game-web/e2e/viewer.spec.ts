@@ -1,5 +1,9 @@
 import type { Page } from '@playwright/test';
-import { expect, test } from './fixtures.ts';
+import { expect, STRIP, sheet, test, toWall } from './fixtures.ts';
+
+test.beforeEach(async ({ page }) => {
+  await toWall(page);
+});
 
 const center = async (page: Page, testId: string) => {
   const box = await page.getByTestId(testId).boundingBox();
@@ -11,7 +15,7 @@ const center = async (page: Page, testId: string) => {
 const pastOpenGuard = (page: Page) => page.waitForTimeout(450);
 
 test('один щелчок по листу открывает материал, Esc закрывает', async ({ page }) => {
-  await page.getByTestId('card-01').click();
+  await sheet(page, '01').click(STRIP);
   const viewer = page.getByTestId('viewer');
   await expect(viewer).toContainText('Дело № 09-1128 — возобновление');
   await page.keyboard.press('Escape');
@@ -21,7 +25,7 @@ test('один щелчок по листу открывает материал,
 test('лист — ровно по центру экрана: короткий, длинный и узкий документ', async ({ page }) => {
   const widths = new Set<number>();
   for (const id of ['01', '07', '25', '11']) {
-    await page.getByTestId(`card-${id}`).click();
+    await sheet(page, id).click(STRIP);
     const box = await page.getByTestId('viewer-paper').boundingBox();
     if (!box) throw new Error(`нет листа ${id}`);
     expect(Math.abs(box.x + box.width / 2 - 1366 / 2), `${id}: по горизонтали`).toBeLessThan(2);
@@ -34,14 +38,14 @@ test('лист — ровно по центру экрана: короткий, 
 });
 
 test('щелчок мимо листа закрывает просмотрщик', async ({ page }) => {
-  await page.getByTestId('card-01').click();
+  await sheet(page, '01').click(STRIP);
   await pastOpenGuard(page);
   await page.mouse.click(20, 400);
   await expect(page.getByTestId('viewer')).toBeHidden();
 });
 
 test('крестик — у угла листа, закрывает', async ({ page }) => {
-  await page.getByTestId('card-01').click();
+  await sheet(page, '01').click(STRIP);
   const close = page.getByTestId('viewer').getByRole('button', { name: 'Закрыть' });
   const paper = await page.getByTestId('viewer-paper').boundingBox();
   const btn = await close.boundingBox();
@@ -52,13 +56,13 @@ test('крестик — у угла листа, закрывает', async ({ p
 });
 
 test('двойной клик по листу открывает и не закрывает сразу', async ({ page }) => {
-  await page.getByTestId('card-02').dblclick();
+  await sheet(page, '02').dblclick(STRIP);
   await page.waitForTimeout(200);
   await expect(page.getByTestId('viewer')).toBeVisible();
 });
 
 test('выделение текста, законченное мимо листа, не закрывает', async ({ page }) => {
-  await page.getByTestId('card-01').click();
+  await sheet(page, '01').click(STRIP);
   await pastOpenGuard(page);
   const p = await center(page, 'viewer-paper');
   await page.mouse.move(p.x, p.y);
@@ -69,24 +73,13 @@ test('выделение текста, законченное мимо лист�
 });
 
 test('Enter на листе в фокусе открывает материал', async ({ page }) => {
-  await page.getByTestId('card-04').focus();
+  await sheet(page, '04').getByRole('button', { name: /^04\./ }).focus();
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('viewer')).toBeVisible();
 });
 
-test('щелчок сразу после перетаскивания не открывает материал', async ({ page }) => {
-  const p = await center(page, 'card-02');
-  await page.mouse.move(p.x, p.y);
-  await page.mouse.down();
-  await page.mouse.move(p.x + 60, p.y + 60, { steps: 6 });
-  await page.mouse.up();
-  await page.mouse.click(p.x + 60, p.y + 60);
-  await page.waitForTimeout(200);
-  await expect(page.getByTestId('viewer')).toBeHidden();
-});
-
 test('длинный материал прокручивается до конца', async ({ page }) => {
-  await page.getByTestId('card-07').click();
+  await sheet(page, '07').click(STRIP);
   const paper = page.getByTestId('viewer-paper');
   await expect(paper).toContainText('План объекта');
   const scrollable = await paper.evaluate((el) => el.scrollHeight > el.clientHeight);
@@ -97,26 +90,26 @@ test('длинный материал прокручивается до конц
   await expect(paper.getByText('служебная лестница и общая лестница')).toBeInViewport();
 });
 
-test('при открытом просмотрщике колесо не масштабирует стол', async ({ page }) => {
-  const before = (await page.getByTestId('card-01').boundingBox())?.width;
-  await page.getByTestId('card-01').click();
+test('при открытом просмотрщике колесо не масштабирует стену', async ({ page }) => {
+  const before = (await sheet(page, '01').boundingBox())?.width;
+  await sheet(page, '01').click(STRIP);
   await page.mouse.move(600, 400);
   await page.mouse.wheel(0, -600);
   await page.keyboard.press('Escape');
   await page.mouse.move(1300, 700);
-  expect((await page.getByTestId('card-01').boundingBox())?.width).toBe(before);
+  expect((await sheet(page, '01').boundingBox())?.width).toBe(before);
 });
 
 test('стрелки при открытом просмотрщике не переключают вид', async ({ page }) => {
-  await page.getByTestId('card-01').click();
-  await page.keyboard.press('ArrowLeft');
+  await sheet(page, '01').click(STRIP);
+  await page.keyboard.press('ArrowDown');
   await expect(page.getByTestId('viewer')).toBeVisible();
   await page.keyboard.press('Escape');
-  await expect(page.getByTestId('view-desk')).toBeVisible();
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'wall');
 });
 
 test('строки шапки письма не склеиваются: «Кому:» ниже «От:»', async ({ page }) => {
-  await page.getByTestId('card-01').click();
+  await sheet(page, '01').click(STRIP);
   const paper = page.getByTestId('viewer-paper');
   const from = await paper.getByText('От:', { exact: true }).boundingBox();
   const to = await paper.getByText('Кому:', { exact: true }).boundingBox();
@@ -156,7 +149,7 @@ for (const vp of [
   }) => {
     await page.setViewportSize(vp);
     for (const id of ['03', '07']) {
-      await page.getByTestId(`card-${id}`).click();
+      await sheet(page, id).click(STRIP);
       const lens = await lineLengths(page);
       expect(Math.max(...lens), id).toBeLessThanOrEqual(80);
       const full = lens.filter((n) => n > 40).sort((a, b) => a - b);
@@ -167,7 +160,7 @@ for (const vp of [
 }
 
 test('абзац не рвётся переносами из файла: строки склеены (UX-C1)', async ({ page }) => {
-  await page.getByTestId('card-03').click();
+  await sheet(page, '03').click(STRIP);
   const p = page.getByTestId('viewer-paper').locator('p', { hasText: 'Следователь Б. Коннор' });
   await expect(p).toContainText('по факту гибели Адама Коула, руководителя программы');
   expect(await p.locator('br').count()).toBe(0);
@@ -179,7 +172,7 @@ test('абзац не рвётся переносами из файла: стр�
 test('инструменты листа идут за курсором по высоте и стоят, когда к ним ведут мышь (UX-D1)', async ({
   page,
 }) => {
-  await page.getByTestId('card-07').click();
+  await sheet(page, '07').click(STRIP);
   const paper = await page.getByTestId('viewer-paper').boundingBox();
   if (!paper) throw new Error('нет листа');
   const y = paper.y + paper.height - 60;
@@ -192,7 +185,4 @@ test('инструменты листа идут за курсором по вы
   await page.mouse.move(paper.x + paper.width + 20, y, { steps: 6 });
   await page.waitForTimeout(250);
   expect(await tools.boundingBox()).toEqual(near);
-  const pin = page.getByTestId('viewer').getByRole('button', { name: 'Прикрепить к доске' });
-  const pinBox = await pin.boundingBox();
-  expect(Math.abs((pinBox?.y ?? 0) - y)).toBeLessThan(80);
 });

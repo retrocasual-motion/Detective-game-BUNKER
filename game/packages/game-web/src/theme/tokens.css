@@ -17,10 +17,16 @@
   --color-danger: #d9534f;
   --color-border: #5a5a5a;
 
-  --color-desk: #575757;
-  --color-desk-floor: #2a2a2a;
-  /* Стол вещдоков, монитор и устройства (LEFT-B) — серые заглушки. */
-  --color-evidence-table: #505050;
+  /* Стол, доска, предметы (черновик «Стены», 08.11; реф. автора: тёмное дерево, пробка, лампа). */
+  --color-desk: #4a3a2c;
+  --color-desk-edge: #33281f;
+  --color-cork: #8c7457;
+  --color-board-frame: #3d3024;
+  --color-pin-hole: rgb(0 0 0 / 55%);
+  --color-lamp: #8f7a4a;
+  --color-lamp-light: rgb(255 214 140 / 22%);
+  --color-box: #8a7656;
+  --color-phone: #2a2a2a;
   --color-monitor: #2f3033;
   --color-screen: #1d2a2f;
   --color-screen-text: #cfd8dc;
@@ -30,7 +36,6 @@
   --color-device: #6c6f74;
   --color-device-edge: #44474b;
   --color-tag: #ece6d2;
-  --color-tray: #4b4f55;
   --color-dev: rgb(20 20 20 / 92%);
   /* Предметы стола по типу (UX-A1) — серые заглушки. */
   --color-paper-under: #d3d0c6;
@@ -50,7 +55,6 @@
   --color-bag-edge: rgb(255 255 255 / 55%);
   --color-bag-zip: #a33b3b;
   --color-bag-contents: rgb(70 70 70 / 45%);
-  --color-board: #6b6458;
   --color-card: #d4d4d4;
   --color-card-text: #222;
   --color-paper: #f2f0ea;
@@ -62,21 +66,19 @@
   --color-folder: #c9b98f;
   --color-folder-slot: #7d6f4c;
 
-  /* Серая комната (ROOM-B) — заглушка до нарисованных кадров. */
-  --color-room-dark: #1f1f1f;
-  --color-room-wall: #4a4a4a;
-  --color-room-wall-front: #444;
-  --color-room-floor: #333;
-  --color-room-window: #7d8790;
-  --color-desk-edge: #3f3f3f;
+  /* Комната — заглушка до нарисованных кадров (R-A): тёмные стены, как на референсах. */
+  --color-room-dark: #141517;
+  --color-room-wall: #22282c;
+  --color-room-wall-front: #283035;
+  --color-room-floor: #1b1b1c;
   --color-nav-bg: rgb(0 0 0 / 45%);
   /* Стол под листом виден (UX-E1). */
   --color-viewer-backdrop: rgb(0 0 0 / 30%);
   --ease-camera: cubic-bezier(0.45, 0, 0.25, 1);
 
   --nav-size: 36px;
-  /* Булавка копии: центр — на --pin-y от верха (совпадает с PIN_Y в canvas/geometry.ts). */
-  --pin-y: 12px;
+  /* Кнопка листа на стене: центр — на --pin-y от верха (совпадает с PIN_Y в canvas/geometry.ts). */
+  --pin-y: 10px;
   --pin-size: 14px;
   --viewer-tools-width: 150px;
   --viewer-paper-width: 660px;
@@ -84,8 +86,6 @@
   --folder-height: min(82vh, 720px);
   --corner-width: 240px;
   --corner-height: 48px;
-  --inbox-width: min(440px, 34vw);
-  --inbox-height: min(78vh, 680px);
   --card-width: 160px;
   --card-height: 220px;
   --radius: 4px;
