@@ -38,8 +38,8 @@ function useToolsTop() {
  * Просмотрщик материала (TECH_PLAN 4.3). Серый прототип: текст пакета дословно; строки внутри
  * абзаца склеены (unwrapLines, UX-C1), остальные переносы — как в файле (remark-breaks).
  * HTML из текста не исполняется.
- * Закрыть: щелчок мимо листа, крестик у угла листа или Esc. Кнопки — рядом с листом,
- * чтобы мышь ездила как можно меньше. App монтирует его заново для каждого материала (key).
+ * Закрыть: щелчок мимо листа, крестик у края листа или Esc. Кнопки — у края листа на высоте
+ * курсора (UX-D1), чтобы мышь ездила как можно меньше. App монтирует его заново для каждого материала (key).
  */
 export function Viewer({ materialId, onPin }: ViewerProps) {
   const material = useGame((g) => g.materials.find((m) => m.id === materialId));
@@ -49,7 +49,15 @@ export function Viewer({ materialId, onPin }: ViewerProps) {
   const openedAt = useRef(Date.now());
   const downOutside = useRef(false);
   const tools = useToolsTop();
-  const body = useMemo(() => (material ? unwrapLines(material.body) : ''), [material]);
+  // Разбор Markdown — один раз на материал, а не на каждое движение мыши (инструменты двигаются).
+  const doc = useMemo(
+    () => (
+      <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+        {material ? unwrapLines(material.body) : ''}
+      </Markdown>
+    ),
+    [material],
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -84,7 +92,7 @@ export function Viewer({ materialId, onPin }: ViewerProps) {
           data-testid="viewer-paper"
           onPointerMove={tools.onPaperMove}
         >
-          <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{body}</Markdown>
+          {doc}
         </article>
         <div className="viewer-tools" data-testid="viewer-tools" style={{ top: tools.top }}>
           <button

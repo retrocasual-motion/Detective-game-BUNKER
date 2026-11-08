@@ -4,7 +4,13 @@ import { Canvas } from '../canvas/Canvas.tsx';
 import { useGame } from '../store.ts';
 import { MaterialCard } from './MaterialCard.tsx';
 
-/** Стол следователя: стартовые материалы на бесконечной поверхности (TECH_PLAN 4.2). */
+/** Лист нельзя уронить за край стола (UX-B1): угол листа остаётся на столешнице. */
+const onDesk = (x: number, y: number) => ({
+  x: Math.min(DESK_BOUNDS.right - 60, Math.max(DESK_BOUNDS.left, x)),
+  y: Math.min(DESK_BOUNDS.bottom - 60, Math.max(DESK_BOUNDS.top, y)),
+});
+
+/** Стол следователя: стартовые материалы на столешнице с краем (TECH_PLAN 4.2, UX-B1). */
 export function DeskView({ onOpen }: { onOpen?(materialId: string): void }) {
   const desk = useGame((g) => g.state?.desk);
   const materials = useGame((g) => g.materials);
@@ -39,7 +45,9 @@ export function DeskView({ onOpen }: { onOpen?(materialId: string): void }) {
         ...s,
         desk: {
           ...s.desk,
-          items: s.desk.items.map((i) => (i.materialId === materialId ? { ...i, x, y } : i)),
+          items: s.desk.items.map((i) =>
+            i.materialId === materialId ? { ...i, ...onDesk(x, y) } : i,
+          ),
         },
       })),
     [updateState],

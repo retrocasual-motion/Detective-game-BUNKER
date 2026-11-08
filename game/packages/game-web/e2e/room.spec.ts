@@ -162,3 +162,10 @@ test('значок по движению камеры: в комнату — «�
   await expect(page.getByTestId('nav-down')).toContainText('˅');
   await expect(page.getByTestId('nav-down')).toContainText('Стол');
 });
+
+test('двойной щелчок по стрелке «Комната» не возвращает обратно на стол (UN-2)', async ({
+  page,
+}) => {
+  await page.getByTestId('nav-down').dblclick();
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'room');
+});

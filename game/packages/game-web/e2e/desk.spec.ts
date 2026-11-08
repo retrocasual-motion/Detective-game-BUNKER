@@ -159,19 +159,28 @@ test('у стола есть край: камеру не увести со ст�
   page,
 }) => {
   const surface = page.locator('.desk .canvas-surface');
-  // Тянем фон далеко вправо и вниз — с пустого места у края экрана.
-  await page.mouse.move(683, 760);
-  await page.mouse.down();
-  await page.mouse.move(683 + 3000, 760 + 3000, { steps: 10 });
-  await page.mouse.up();
-  const box = await surface.boundingBox();
-  if (!box) throw new Error('нет столешницы');
-  expect(box.x).toBeLessThanOrEqual(683);
-  expect(box.y).toBeLessThanOrEqual(384);
   // Отдалить колесом сильно — весь стол помещается, но не меньше.
   await page.mouse.move(683, 384);
   for (let i = 0; i < 10; i++) await page.mouse.wheel(0, 600);
   const far = await surface.boundingBox();
-  expect(far?.width ?? 0).toBeGreaterThan(1366 * 0.5);
-  expect(far?.width ?? 9999).toBeLessThan(1366);
+  if (!far) throw new Error('нет столешницы');
+  expect(far.width).toBeGreaterThan(1366 * 0.5);
+  expect(far.width).toBeLessThan(1366);
+  // Ещё колесо у предела — стол не ползёт от курсора.
+  for (let i = 0; i < 5; i++) await page.mouse.wheel(0, 600);
+  expect(await surface.boundingBox()).toEqual(far);
+  // Тянем пол (пусто, вне столешницы) далеко вправо и вниз: левый верхний угол стола
+  // упирается в центр экрана и дальше не едет.
+  const start = { x: Math.max(4, far.x - 20), y: Math.max(4, far.y - 20) };
+  expect(
+    await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.className ?? '', start),
+  ).toContain('canvas');
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(start.x + 3000, start.y + 3000, { steps: 10 });
+  await page.mouse.up();
+  const box = await surface.boundingBox();
+  if (!box) throw new Error('нет столешницы');
+  expect(Math.abs(box.x - 683)).toBeLessThan(2);
+  expect(Math.abs(box.y - 384)).toBeLessThan(2);
 });

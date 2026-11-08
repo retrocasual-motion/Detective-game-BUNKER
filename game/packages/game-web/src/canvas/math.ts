@@ -31,13 +31,18 @@ export interface Bounds {
  * Камера не уезжает за край стола (UX-B1): точка мира в центре экрана остаётся на столешнице,
  * а отдалить можно не дальше, чем до всего стола целиком (с небольшим полем).
  */
+/** Самый мелкий масштаб, при котором виден весь стол (с полем), — но не крупнее 1. */
+export function minZoomFor(b: Bounds, viewport: { width: number; height: number }): number {
+  const fit = Math.min(viewport.width / (b.right - b.left), viewport.height / (b.bottom - b.top));
+  return Math.min(1, clampZoom(fit * 0.9));
+}
+
 export function clampToBounds(
   cam: Camera,
   b: Bounds,
   viewport: { width: number; height: number },
 ): Camera {
-  const fit = Math.min(viewport.width / (b.right - b.left), viewport.height / (b.bottom - b.top));
-  const zoom = Math.max(cam.zoom, Math.min(1, clampZoom(fit * 0.9)));
+  const zoom = Math.max(cam.zoom, minZoomFor(b, viewport));
   // Центр экрана в мире — при текущем x, y и (возможно, поднятом) масштабе.
   const cx = viewport.width / 2;
   const cy = viewport.height / 2;

@@ -1,6 +1,6 @@
 import type { Camera } from '@bunker/shared';
-import { type PointerEvent, type ReactNode, useRef, type WheelEvent } from 'react';
-import { type Bounds, clampToBounds, zoomAt } from './math.ts';
+import { type PointerEvent, type ReactNode, useEffect, useRef, type WheelEvent } from 'react';
+import { type Bounds, clampToBounds, minZoomFor, zoomAt } from './math.ts';
 
 interface CanvasProps {
   camera: Camera;
@@ -41,6 +41,22 @@ export function Canvas({
     onCameraChange(bounds && r ? clampToBounds(cam, bounds, r) : cam);
   };
 
+  // Старая сохранённая камера и смена размера окна: поправить сразу, а не на первом жесте.
+  const latest = useRef({ camera, onCameraChange, bounds });
+  latest.current = { camera, onCameraChange, bounds };
+  useEffect(() => {
+    const fix = () => {
+      const { camera: cam, onCameraChange: set, bounds: b } = latest.current;
+      const r = el.current?.getBoundingClientRect();
+      if (!b || !r || r.width === 0) return;
+      const c = clampToBounds(cam, b, r);
+      if (c.x !== cam.x || c.y !== cam.y || c.zoom !== cam.zoom) set(c);
+    };
+    fix();
+    window.addEventListener('resize', fix);
+    return () => window.removeEventListener('resize', fix);
+  }, []);
+
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -64,7 +80,11 @@ export function Canvas({
   const onWheel = (e: WheelEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const point = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    change(zoomAt(camera, point, Math.exp(-e.deltaY * WHEEL_SPEED)));
+    let factor = Math.exp(-e.deltaY * WHEEL_SPEED);
+    // У предела масштаб не уходит ниже, иначе ограничение вернуло бы его вокруг центра и стол
+    // «пополз» бы от курсора.
+    if (bounds) factor = Math.max(factor, minZoomFor(bounds, rect) / camera.zoom);
+    change(zoomAt(camera, point, factor));
   };
 
   return (

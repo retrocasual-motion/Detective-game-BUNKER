@@ -334,9 +334,9 @@ button {
   margin-top: var(--space-2);
   font-family: var(--font-paper);
 }
-/* Номер на столе — мелкий штамп описи, а не крупный ярлык карточки (UX-A1). */
+/* Номер на столе — мелкий штамп описи, а не крупный ярлык карточки (UX-A1). Слева: правый
+   сосед в россыпи лежит поверх и мог бы закрыть номер. */
 .paper .card-id {
-  align-self: flex-end;
   font-size: 10px;
   letter-spacing: 0.06em;
   font-weight: normal;
@@ -354,6 +354,12 @@ button {
     3px 3px 0 -1px var(--color-paper-under),
     6px 5px 0 -2px var(--color-paper-under-2),
     var(--shadow-paper);
+}
+.paper-stapled.card-dragging {
+  box-shadow:
+    3px 3px 0 -1px var(--color-paper-under),
+    6px 5px 0 -2px var(--color-paper-under-2),
+    var(--shadow-paper-lifted);
 }
 .paper-stapled::before {
   content: "";
@@ -399,6 +405,11 @@ button {
     var(--shadow-paper);
   justify-content: flex-end;
 }
+.paper-photos.card-dragging {
+  box-shadow:
+    5px -4px 0 -1px var(--color-photo-border-2),
+    var(--shadow-paper-lifted);
+}
 .paper-photos::before {
   content: "";
   position: absolute;
@@ -434,6 +445,17 @@ button {
     6px 6px 0 var(--color-paper-sheet),
     7px 7px 0 var(--color-paper-under-2),
     var(--shadow-paper);
+}
+.paper-pack.card-dragging {
+  box-shadow:
+    1px 1px 0 var(--color-paper-under),
+    2px 2px 0 var(--color-paper-sheet),
+    3px 3px 0 var(--color-paper-under-2),
+    4px 4px 0 var(--color-paper-sheet),
+    5px 5px 0 var(--color-cardboard),
+    6px 6px 0 var(--color-paper-sheet),
+    7px 7px 0 var(--color-paper-under-2),
+    var(--shadow-paper-lifted);
 }
 /* Тетрадь в твёрдой обложке: корешок слева, наклейка с названием. */
 .paper-notebook {

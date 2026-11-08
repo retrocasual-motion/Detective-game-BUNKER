@@ -207,3 +207,37 @@ test('нить двумя щелчками отменяется щелчком �
   await expect(page.getByTestId('board-thread-pulling')).toHaveCount(0);
   await expect(threads(page)).toHaveCount(0);
 });
+
+test('после отмены нити правой кнопкой следующий щелчок по копии открывает её', async ({
+  page,
+}) => {
+  const [a, b] = await twoOnBoard(page);
+  await page.getByTestId(`board-pin-${a}`).click();
+  await page.mouse.click(900, 600, { button: 'right' });
+  await expect(page.getByTestId('board-thread-pulling')).toHaveCount(0);
+  await page.getByTestId(`board-item-${b}`).click();
+  await expect(page.getByTestId('viewer')).toBeVisible();
+  await expect(threads(page)).toHaveCount(0);
+});
+
+test('ушёл с доски клавишей — режим нити кончился, на столе щелчок открывает лист', async ({
+  page,
+}) => {
+  const [a] = await twoOnBoard(page);
+  await page.getByTestId(`board-pin-${a}`).click();
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.getByTestId('view-desk')).toBeVisible();
+  await page.getByTestId('card-07').click();
+  await expect(page.getByTestId('viewer')).toBeVisible();
+});
+
+test('щелчок по стрелке в режиме нити: нить не привязывается, стрелка работает', async ({
+  page,
+}) => {
+  const [a] = await twoOnBoard(page);
+  await page.getByTestId(`board-pin-${a}`).click();
+  await page.getByTestId('nav-left').click();
+  await expect(page.getByTestId('view-desk')).toBeVisible();
+  await page.getByTestId('nav-right').click();
+  await expect(threads(page)).toHaveCount(0);
+});

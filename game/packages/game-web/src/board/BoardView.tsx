@@ -29,6 +29,20 @@ const UNDO_MS = 5000;
 /** Сдвиг мыши, до которого нажатие на булавку считается щелчком, а не протяжкой. */
 const CLICK_SLOP = 4;
 
+/**
+ * Щелчок, который закончил нить, не должен открыть копию под ним. Глушитель снимается сам
+ * сразу после отпускания кнопки — даже если click не пришёл (отпустили за окном).
+ */
+function swallowNextClick() {
+  const swallow = (e: Event) => {
+    e.stopPropagation();
+    e.preventDefault();
+  };
+  const release = () => setTimeout(() => window.removeEventListener('click', swallow, true), 0);
+  window.addEventListener('click', swallow, { capture: true, once: true });
+  window.addEventListener('pointerup', release, { capture: true, once: true });
+}
+
 /** Копия доски под точкой экрана — сквозь нити и подписи, которые лежат поверх копий. */
 const boardItemAt = (x: number, y: number): string | null =>
   document
@@ -179,29 +193,38 @@ export function BoardView() {
   // Нить «двумя щелчками» (UX-J1, DA-2): после щелчка по булавке нить идёт за курсором;
   // щелчок по другой копии — привязать, мимо или Esc — отменить. Без удержания кнопки.
   const sticky = pull?.sticky ? pull.from : null;
+  // Режим кончается сам, если игрок ушёл с доски или открыл лист (клавишей, стрелкой).
+  const onBoard = useGame((g) => g.state?.view === 'right' && g.viewerId === null);
+  useEffect(() => {
+    if (!onBoard) setPull((p) => (p?.sticky ? null : p));
+  }, [onBoard]);
   useEffect(() => {
     if (!sticky) return;
-    const camera = useGame.getState().state?.board.camera;
     const canvasRect = () =>
       boardEl.current?.querySelector('.canvas')?.getBoundingClientRect() ?? { left: 0, top: 0 };
     const onMove = (e: globalThis.PointerEvent) => {
+      // Камера — живая: колесо в этом режиме работает, конец нити не отстаёт от курсора.
+      const camera = useGame.getState().state?.board.camera;
       if (!camera) return;
       const r = canvasRect();
       const to = screenToWorld({ x: e.clientX - r.left, y: e.clientY - r.top }, camera);
       setPull((p) => (p ? { ...p, to } : p));
     };
-    const swallowClick = (e: Event) => {
-      e.stopPropagation();
-      e.preventDefault();
-    };
     const onDown = (e: globalThis.PointerEvent) => {
+      // Правая и средняя кнопки и щелчок вне доски (стрелка, папка, лист) — просто отмена;
+      // сам щелчок делает своё дело.
+      const top = document.elementFromPoint(e.clientX, e.clientY);
+      if (e.button !== 0 || !top || !boardEl.current?.contains(top)) {
+        setPull(null);
+        return;
+      }
       e.stopPropagation();
       e.preventDefault();
+      const exists = useGame.getState().state?.board.items.some((i) => i.id === sticky);
       const target = boardItemAt(e.clientX, e.clientY);
-      if (target && target !== sticky) updateState(addThread(sticky, target));
+      if (exists && target && target !== sticky) updateState(addThread(sticky, target));
       setPull(null);
-      // Этот щелчок не должен открыть копию или потянуть доску.
-      window.addEventListener('click', swallowClick, { capture: true, once: true });
+      swallowNextClick();
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setPull(null);
