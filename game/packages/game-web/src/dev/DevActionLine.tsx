@@ -34,7 +34,7 @@ export function DevActionLine() {
           {
             id: Date.now(),
             line: text,
-            result: r.result,
+            result: r.result ?? '',
             reply: r.reply,
             opened: r.released.map((m) => m.id),
           },
@@ -42,6 +42,13 @@ export function DevActionLine() {
         ].slice(0, 6),
       );
       setLine('');
+    } catch {
+      setLog((l) =>
+        [
+          { id: Date.now(), line: text, result: 'ошибка', reply: 'Сервер не ответил.', opened: [] },
+          ...l,
+        ].slice(0, 6),
+      );
     } finally {
       setBusy(false);
     }

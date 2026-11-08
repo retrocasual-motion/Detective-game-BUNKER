@@ -139,7 +139,7 @@ export function walk(content: Content, script: string): WalkReport {
       action === 'ХОДАТАЙСТВО'
         ? { action, target, value, cards: parsePetition(value) }
         : { action, target, value };
-    const r = act(content, progress, input, now);
+    const r = act(content, progress, input, now, DEFAULT_CONFIG, { autoSeen: false });
     progress = r.progress;
     const { result, rule, released: opened } = r.outcome;
     let ok = true;

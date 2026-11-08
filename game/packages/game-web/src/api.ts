@@ -33,7 +33,8 @@ export const putState = async (s: PlayerState, seq: number): Promise<void> => {
 
 /** Ответ движка правил на действие (TECH_PLAN 6.1). */
 export interface ActionResult {
-  result: string;
+  /** Вид итога — только в разработке (служебная строка). */
+  result?: string;
   reply: string;
   /** Материалы, которые действие открыло. */
   released: Material[];

@@ -1,7 +1,8 @@
 /**
  * Регулярные выражения пакета (`access.json`) написаны для Python `re`. В JavaScript `\b`, `\w`,
  * `\W` понимают только латиницу, а правила ловят русские слова, поэтому шаблон переводится:
- * `\w` → буква, цифра или «_» по Unicode (как в Python), `\b` — граница такого слова.
+ * `\w` → буква, цифра или «_» по Unicode (как в Python), `\b` — граница такого слова,
+ * `\d` — любая десятичная цифра Unicode, «.» — любой символ, кроме перевода строки.
  * Флаги всегда как в прототипе: без учёта регистра (IGNORECASE) и Unicode.
  */
 const W = '\\p{L}\\p{N}_';
@@ -26,7 +27,12 @@ export function translatePattern(src: string): string {
         if (inClass) throw new Error(`\\W внутри [] не поддержан: ${src}`);
         out += NOT_WORD;
       } else if (n === 'b') out += inClass ? '\\x08' : BOUNDARY;
-      else if (n === 'B' || n === 'A' || n === 'Z') throw new Error(`\\${n} не поддержан: ${src}`);
+      else if (n === 'd') out += '\\p{Nd}';
+      else if (n === 'D') {
+        if (inClass) throw new Error(`\\D внутри [] не поддержан: ${src}`);
+        out += '\\P{Nd}';
+      } else if (n === 'B' || n === 'A' || n === 'Z')
+        throw new Error(`\\${n} не поддержан: ${src}`);
       else if (/[A-Za-z0-9]/.test(n)) out += `\\${n}`;
       else if (n === '-') out += inClass ? '\\-' : '-';
       else if (SYNTAX.has(n)) out += `\\${n}`;
@@ -51,6 +57,11 @@ export function translatePattern(src: string): string {
       continue;
     }
     if (c === ']' && inClass) inClass = false;
+    // «.» в Python не совпадает только с \n; в JS ещё и с \r, \u2028, \u2029.
+    if (c === '.' && !inClass) {
+      out += '[^\\n]';
+      continue;
+    }
     out += c;
   }
   return out;

@@ -7,10 +7,10 @@
 материалы появляются на столе игрока; закрытые не попадают в браузер до открытия (P-10).
 
 ## Next Step
-Независимое ревью → исправления → PR.
+Ждать проверки автора и «мержим?».
 
 ## Current Phase
-Phase 6
+все фазы завершены
 
 ## Phases
 
@@ -48,8 +48,8 @@ Phase 6
 
 ### Phase 6: Проверка и сдача
 - [x] typecheck, lint, test (engine 14, shared 16, content 8, api 31, game-web 46), e2e 79; снимки; чек-лист итога памятки
-- [ ] ARCHITECTURE, DEVELOPMENT, DECISIONS; независимое ревью; PR; «мержим?»
-- **Status:** in_progress
+- [x] ARCHITECTURE, DEVELOPMENT, DECISIONS; независимое ревью (критичное 1, важные 2–3 и мелкие 5–15 исправлены; 4 — в DECISIONS на этап 6); PR; «мержим?»
+- **Status:** complete
 
 ## Чек-лист плана этапа (UX_PRINCIPLES)
 1. Что видит → делает → получает: новые материалы ложатся в лоток (E2-INBOX) — да.

@@ -95,7 +95,7 @@ describe('act', () => {
     expect(r.progress.released).toEqual([]);
   });
 
-  it('после «Решить дело» новые действия закрыты (P-9), ФИНАЛ — после доставки формы', () => {
+  it('после «Решить дело» новые действия закрыты (P-9)', () => {
     const f = act(
       content,
       emptyProgress(),
@@ -105,12 +105,65 @@ describe('act', () => {
     expect(f.outcome.released).toEqual(['L999']);
     const pw = act(content, f.progress, { action: 'ПАРОЛЬ', target: 'сейф', value: 'верно' }, 1);
     expect(pw.outcome.result).toBe('форма открыта');
-    const early = act(content, f.progress, { action: 'ФИНАЛ', target: 'дело', value: '' }, 2);
-    expect(early.outcome.result).toBe('нет формы');
   });
 
   it('неизвестная цель — «нет правила» с ответом по умолчанию', () => {
     const r = act(content, emptyProgress(), { action: 'ПАРОЛЬ', target: 'дверь', value: 'x' }, 0);
     expect(r.outcome.result).toBe('нет правила');
+  });
+});
+
+describe('pyRegex — тонкости Python', () => {
+  it('\\d — любые десятичные цифры Unicode, «.» не совпадает только с \\n', () => {
+    expect(pyRegex(String.raw`^\d{2}$`).test('１２')).toBe(true);
+    expect(pyRegex(String.raw`^\D*$`).test('１')).toBe(false);
+    expect(pyRegex('^a.b$').test('a\rb')).toBe(true);
+    expect(pyRegex('^a.b$').test('a\nb')).toBe(false);
+  });
+});
+
+describe('доставка открытого и форма заключения в игре', () => {
+  it('ФИНАЛ после «Решить дело» — со следующего действия, без отдельной доставки', () => {
+    const f = act(
+      content,
+      emptyProgress(),
+      { action: 'РЕШИТЬ', target: 'дело', value: 'продолжить' },
+      0,
+    );
+    const fin = act(content, f.progress, { action: 'ФИНАЛ', target: 'дело', value: '' }, 1);
+    expect(fin.outcome.result).toBe('конец');
+  });
+
+  it('в сквозном проходе (autoSeen: false) — только после границы раунда', () => {
+    const f = act(
+      content,
+      emptyProgress(),
+      { action: 'РЕШИТЬ', target: 'дело', value: 'продолжить' },
+      0,
+    );
+    const fin = act(
+      content,
+      f.progress,
+      { action: 'ФИНАЛ', target: 'дело', value: '' },
+      1,
+      undefined,
+      {
+        autoSeen: false,
+      },
+    );
+    expect(fin.outcome.result).toBe('нет формы');
+  });
+
+  it('давние неверные попытки удаляются из прогресса', () => {
+    const a = act(content, emptyProgress(), { action: 'ПАРОЛЬ', target: 'сейф', value: 'нет' }, 0);
+    expect(Object.keys(a.progress.fails)).toHaveLength(1);
+    // Действие без лимита попыток: новых записей не добавляет, давние — убирает.
+    const b = act(
+      content,
+      a.progress,
+      { action: 'РЕШИТЬ', target: 'дело', value: 'нет' },
+      11 * MIN,
+    );
+    expect(Object.keys(b.progress.fails)).toHaveLength(0);
   });
 });

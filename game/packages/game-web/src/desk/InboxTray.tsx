@@ -119,6 +119,11 @@ function TrayItem({
     }
     if (dragged.current) setGhost({ x: e.clientX, y: e.clientY });
   };
+  const cancel = () => {
+    down.current = null;
+    dragged.current = false;
+    setGhost(null);
+  };
   const onPointerUp = (e: PointerEvent<HTMLButtonElement>) => {
     down.current = null;
     setGhost(null);
@@ -143,8 +148,15 @@ function TrayItem({
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
+        onPointerCancel={cancel}
+        onLostPointerCapture={() => setGhost(null)}
         onClick={() => {
-          if (!dragged.current) onOpen();
+          // Щелчок, которым кончился перенос, — не «открыть»; следующий (или Enter) — открыть.
+          if (dragged.current) {
+            dragged.current = false;
+            return;
+          }
+          onOpen();
         }}
       >
         <span className="card-id">{material.id}</span>

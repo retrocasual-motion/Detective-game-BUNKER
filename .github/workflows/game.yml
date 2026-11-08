@@ -61,6 +61,10 @@ jobs:
           test "$(curl -fsS localhost:8787/api/materials | jq length)" = 51
           curl -fsS localhost:8787/ | grep -q 'id="root"'
       - name: Пакета игрока в образе нет (P-10)
-        run: docker compose exec -T app sh -c 'test ! -d /app/playtest'
+        run: |
+          docker compose exec -T app sh -c 'test ! -d /app/playtest'
+          # Правила и закрытые материалы сервер читает сам, но не отдаёт как файл.
+          ! curl -fsS localhost:8787/packages/content/dist/server.json | grep -q '"rules"'
+          ! curl -fsS localhost:8787/server.json | grep -q '"rules"'
       - if: failure()
         run: docker compose logs

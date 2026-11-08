@@ -19,6 +19,11 @@ import {
   type Rule,
 } from './types.ts';
 
+export interface ActOptions {
+  /** Считать открытое прошлыми действиями доставленным игроку (в игре — да; в сквозном проходе — по `---`). */
+  autoSeen?: boolean;
+}
+
 /** Тексты материалов: стартовые (01…51) и закрытые (L…). */
 export interface Content {
   rules: AccessRules;
@@ -109,18 +114,27 @@ export function availableTexts(c: Content, p: Progress): Map<string, string> {
   return out;
 }
 
+/** Номер файла карточки: «l214», «Л 214» → «L214»; «почта…» → «почта» (как parse_card прототипа). */
+export function normalizeCardFile(file: string): string {
+  const f = file.replace(/\s+/gu, '');
+  if (f.toLowerCase().startsWith('почт')) return MAIL;
+  return 'lLлЛ'.includes(f[0] ?? '') ? `L${f.slice(1)}` : f;
+}
+
 function checkCard(card: Card, files: Map<string, string>): CheckedCard | string {
-  const raw = card.quote.trim();
-  if (!card.file || !raw) {
+  // Переводы строк внутри цитаты — пробел: строка карточки — одна строка (как в прототипе).
+  const raw = card.quote.replace(/\s+/gu, ' ').trim();
+  const file = normalizeCardFile(card.file);
+  if (!file || !raw) {
     return 'Карточка не оформлена: укажите файл и строку из него.';
   }
-  const text = files.get(card.file);
-  if (text === undefined) return `Карточка не из материалов дела: файла ${card.file} в деле нет.`;
+  const text = files.get(file);
+  if (text === undefined) return `Карточка не из материалов дела: файла ${file} в деле нет.`;
   const line = findQuote(text, raw);
   if (line === null) {
-    return `В файле ${card.file} такой строки нет: карточка — точная строка или деталь материала.`;
+    return `В файле ${file} такой строки нет: карточка — точная строка или деталь материала.`;
   }
-  return { file: card.file, quote: raw.toLowerCase().replaceAll('ё', 'е'), line };
+  return { file, quote: raw.toLowerCase().replaceAll('ё', 'е'), line };
 }
 
 /**
@@ -261,11 +275,18 @@ export function act(
   input: ActionInput,
   now: number,
   cfg: EngineConfig = DEFAULT_CONFIG,
+  opts: ActOptions = {},
 ): { progress: Progress; outcome: Outcome } {
+  // Всё открытое прошлыми действиями игрок уже получил в их ответах — оно «видено» (раунд
+  // прототипа в игре = следующее действие). Сквозной проход отмечает видимое сам, по `---`.
+  const autoSeen = opts.autoSeen ?? true;
   const p: Progress = {
     released: [...progress.released],
-    seen: [...progress.seen],
-    fails: { ...progress.fails },
+    seen: autoSeen ? [...progress.released] : [...progress.seen],
+    // Неверные попытки старше паузы ничего не значат — прогресс не растёт без предела.
+    fails: Object.fromEntries(
+      Object.entries(progress.fails).filter(([, f]) => now - f.last < cfg.pauseMs),
+    ),
     mail: progress.mail,
     ended: progress.ended,
   };

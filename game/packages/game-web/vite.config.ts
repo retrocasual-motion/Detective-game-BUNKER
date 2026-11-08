@@ -8,6 +8,10 @@ export default defineConfig({
   server: {
     port: Number(process.env.WEB_PORT ?? 5173),
     strictPort: true,
+    // Правила и закрытые материалы (server.json) и пакет игрока — не для браузера даже в разработке.
+    fs: {
+      deny: ['.env', '.env.*', '*.{crt,pem}', '**/content/dist/server.json', '**/playtest/**'],
+    },
     proxy: { '/api': `http://localhost:${apiPort}` },
   },
 });

@@ -163,3 +163,37 @@ describe('движок правил на сервере', () => {
     expect(Object.values(row?.progress.fails ?? {})[0]?.n).toBe(2);
   });
 });
+
+describe('доставка и гонки', () => {
+  it('чтение материалов не меняет прогресс и не затирает открытое действием', async () => {
+    const a = app();
+    await Promise.all([
+      a.request('/api/materials'),
+      post('/api/action', { action: 'ПАРОЛЬ', target: 'сейф', value: 'верно' }, a),
+      a.request('/api/materials'),
+    ]);
+    expect(await ids()).toEqual(['01', '02', 'L101']);
+  });
+
+  it('карточка с «л101» — тот же файл L101', async () => {
+    await post('/api/action', { action: 'ПАРОЛЬ', target: 'сейф', value: 'верно' });
+    const res = await post('/api/action', {
+      action: 'ХОДАТАЙСТВО',
+      target: 'zapros@bureau.org',
+      cards: [
+        { file: '01', quote: 'Материал 01' },
+        { file: 'л101', quote: 'Материал L101' },
+      ],
+    });
+    expect(((await res.json()) as { reply: string }).reply).toBe('Бюро ответило.');
+  });
+
+  it('в production: ФИНАЛ и СТОП не принимаются, вида итога в ответе нет', async () => {
+    const prod = app(true);
+    expect((await post('/api/action', { action: 'СТОП', target: 'дело' }, prod)).status).toBe(400);
+    const r = await post('/api/action', { action: 'ПАРОЛЬ', target: 'сейф', value: 'нет' }, prod);
+    const body = (await r.json()) as Record<string, unknown>;
+    expect(body.result).toBeUndefined();
+    expect(body.reply).toBe('Неверно.');
+  });
+});

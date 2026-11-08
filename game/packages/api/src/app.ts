@@ -3,7 +3,6 @@ import {
   act,
   type Content,
   emptyProgress,
-  markSeen,
   type Progress,
   parseActionLine,
 } from '@bunker/engine';
@@ -113,12 +112,9 @@ export function createApp({
     ...progress.released.flatMap((id) => lockedById.get(id) ?? []),
   ];
 
-  app.get('/api/materials', async (c) => {
-    const progress = await loadProgress();
-    // Открытое доставлено игроку — дальше это «видено» (форма заключения, TECH_PLAN 4.16).
-    if (progress.seen.length !== progress.released.length) await saveProgress(markSeen(progress));
-    return c.json(playerMaterials(progress));
-  });
+  // Только чтение: «видено» отмечает сам движок на следующем действии (ответ уже доставил
+  // открытое) — запись отсюда шла бы мимо очереди действий и могла затереть открытое.
+  app.get('/api/materials', async (c) => c.json(playerMaterials(await loadProgress())));
 
   app.get('/api/state', async (c) => {
     const [row] = await db.select().from(playerState).where(eq(playerState.playerId, PLAYER_ID));
@@ -132,13 +128,16 @@ export function createApp({
   /** Одно действие через движок: ответ правила и материалы, которые оно открыло. */
   async function runAction(input: ActionInput) {
     if (!engine) return null;
-    // Действия одного игрока идут по очереди: иначе два запроса подряд затёрли бы прогресс.
+    // Действия идут по очереди: иначе два запроса подряд затёрли бы прогресс. Очередь — в
+    // одном процессе; несколько процессов сервера (этап 6) — транзакция с блокировкой строки.
     const run = queue.then(async () => {
       const before = await loadProgress();
       const { progress, outcome } = act(engine.content, before, input, now());
       await saveProgress(progress);
       return {
-        result: outcome.result,
+        // Вид итога («нет правила», «нет доступа»…) говорит об устройстве правил — только в
+        // разработке (служебная строка); игроку хватает ответа и открытого.
+        ...(production ? {} : { result: outcome.result }),
         reply: outcome.reply,
         released: outcome.released.flatMap((id) => lockedById.get(id) ?? []),
       };
@@ -152,6 +151,10 @@ export function createApp({
     if (!engine) return c.notFound();
     const parsed = ActionSchema.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'неверное действие' }, 400);
+    // «Решить дело» до конца (ФИНАЛ, СТОП) — этап 5: пока в production закрывать дело нельзя.
+    if (production && (parsed.data.action === 'ФИНАЛ' || parsed.data.action === 'СТОП')) {
+      return c.json({ error: 'неверное действие' }, 400);
+    }
     return c.json(await runAction(parsed.data));
   });
 
