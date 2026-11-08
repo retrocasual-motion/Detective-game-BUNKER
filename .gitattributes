@@ -1,0 +1,2 @@
+# Файлы запуска Windows — только с переводами строк Windows.
+*.cmd text eol=crlf
