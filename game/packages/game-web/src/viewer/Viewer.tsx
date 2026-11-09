@@ -1,4 +1,4 @@
-import { inboxIds } from '@bunker/shared';
+import { inboxIds, PERSONS } from '@bunker/shared';
 import { type PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
@@ -24,6 +24,8 @@ const INSIDE = '.viewer-paper, .viewer-tools';
  */
 export function Viewer({ materialId }: ViewerProps) {
   const material = useGame((g) => g.materials.find((m) => m.id === materialId));
+  // Карточка персонажа — посмотреть поближе (правка автора 09.11).
+  const person = PERSONS.find((p) => p.id === materialId);
   const close = useGame((g) => g.closeViewer);
   const folderOpen = useGame((g) => g.petitionOpen);
   const openedAt = useRef(Date.now());
@@ -51,7 +53,7 @@ export function Viewer({ materialId }: ViewerProps) {
     return () => window.removeEventListener('keydown', onKey);
   }, [close]);
 
-  if (!material) return null;
+  if (!material && !person) return null;
 
   const isOutside = (e: PointerEvent<HTMLElement>) =>
     !(e.target instanceof Element && e.target.closest(INSIDE));
@@ -71,9 +73,17 @@ export function Viewer({ materialId }: ViewerProps) {
       }}
     >
       <div className="viewer-stage">
-        <article className="viewer-paper" data-testid="viewer-paper">
-          {doc}
-        </article>
+        {person ? (
+          <article className="viewer-paper viewer-person" data-testid="viewer-paper">
+            <div className="viewer-person-photo" aria-hidden />
+            <h1 className="viewer-person-name">{person.name}</h1>
+            <p className="viewer-person-role">{person.role}</p>
+          </article>
+        ) : (
+          <article className="viewer-paper" data-testid="viewer-paper">
+            {doc}
+          </article>
+        )}
         <div className="viewer-tools" data-testid="viewer-tools">
           <button
             type="button"

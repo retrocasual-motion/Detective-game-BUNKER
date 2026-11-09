@@ -28,8 +28,8 @@ export const GRID_TOP = 320;
 
 /** Размер шрифта и ширина записки и ярлыка по умолчанию; пределы правки (как в Miro). */
 export const NOTE_STYLE = {
-  note: { size: 16, width: 170 },
-  label: { size: 22, width: 240 },
+  note: { size: 20, width: 190 },
+  label: { size: 24, width: 260 },
   minSize: 10,
   maxSize: 64,
   minWidth: 80,

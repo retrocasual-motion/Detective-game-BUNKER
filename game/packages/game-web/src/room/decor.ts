@@ -48,7 +48,8 @@ function inboxObjects(r: Room, col: Col, inbox: string[]): DeskObject[] {
     max: [(x + w / 2) * p, deskY - lift * p, (z + d / 2) * p] as Vec3,
     color,
   });
-  const X = -0.3;
+  // Справа на столе, слева от лампы (правка автора 09.11).
+  const X = 0.5;
   const Z = 0.2;
   const tray = col('--color-tray');
   const shown = inbox.slice(0, INBOX_SHOWN);
@@ -183,9 +184,11 @@ export function deskObjects(r: Room, col: Col, inbox: string[] = []): DeskObject
       key: 'bags',
       label: 'Коробка: личные вещи членов группы (40–46)',
       boxes: [
-        box(0.46, 0.16, 0.24, 0.18, 0.1, col('--color-box')),
-        box(0.44, 0.15, 0.17, 0.12, 0.02, col('--color-bag'), 0.1),
+        box(-0.3, 0.16, 0.24, 0.18, 0.1, col('--color-box')),
+        box(-0.32, 0.15, 0.17, 0.12, 0.02, col('--color-bag'), 0.1),
       ],
+      tag: 'Личные вещи · 40–46',
+      testId: 'bags-box',
     },
     {
       key: 'monitor',

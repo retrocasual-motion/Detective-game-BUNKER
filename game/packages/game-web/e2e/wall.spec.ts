@@ -56,11 +56,14 @@ test('на стене все персонажи и все 51 материал; �
   await expect(page.locator('.column-label')).toHaveCount(0);
 });
 
-test('щелчок по листу открывает его; по персонажу — ничего не открывает', async ({ page }) => {
+test('щелчок по листу открывает его; по персонажу — карточка крупно', async ({ page }) => {
   await sheet(page, '22').click(STRIP);
   await expect(page.getByTestId('viewer')).toContainText('Протокол осмотра');
   await page.keyboard.press('Escape');
   await sheet(page, 'p:cole').click(STRIP);
+  await expect(page.getByTestId('viewer-paper')).toContainText('Адам Коул');
+  await expect(page.getByTestId('viewer-paper')).toContainText('руководитель программы');
+  await page.keyboard.press('Escape');
   await expect(page.getByTestId('viewer')).toBeHidden();
 });
 
@@ -262,15 +265,15 @@ test('чистую карточку можно перетащить на дос�
 test('у записки — размер шрифта (A−, A+) и ширина ручкой справа; сохраняется', async ({ page }) => {
   await page.getByTestId('new-note').click();
   await page.keyboard.type('Крупно');
-  await expect(page.getByTestId('font-size')).toHaveText('16');
-  await page.getByTestId('font-up').click();
-  await page.getByTestId('font-up').click();
   await expect(page.getByTestId('font-size')).toHaveText('20');
+  await page.getByTestId('font-up').click();
+  await page.getByTestId('font-up').click();
+  await expect(page.getByTestId('font-size')).toHaveText('24');
   // Правка не прервалась: текст можно дописать.
   await page.keyboard.type('!');
   await page.mouse.click(1300, 120);
   const note = page.locator('.wall-card-note');
-  await expect(note.locator('.note-text')).toHaveCSS('font-size', '20px');
+  await expect(note.locator('.note-text')).toHaveCSS('font-size', '24px');
   await expect(note).toContainText('Крупно!');
 
   const before = await note.boundingBox();
@@ -286,7 +289,7 @@ test('у записки — размер шрифта (A−, A+) и ширина
   expect((after?.width ?? 0) - before.width).toBeGreaterThan(80);
   await saved;
   await page.reload();
-  await expect(page.locator('.wall-card-note .note-text')).toHaveCSS('font-size', '20px');
+  await expect(page.locator('.wall-card-note .note-text')).toHaveCSS('font-size', '24px');
   const reloaded = await page.locator('.wall-card-note').boundingBox();
   expect(Math.abs((reloaded?.width ?? 0) - (after?.width ?? 0))).toBeLessThan(3);
 });

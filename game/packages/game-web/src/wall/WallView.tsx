@@ -212,7 +212,7 @@ export function WallView() {
   const activate = useCallback(
     (id: string) => {
       if (id.startsWith('n:')) setEditingNote(id);
-      else if (!id.startsWith('p:')) openViewer(id);
+      else openViewer(id);
     },
     [openViewer],
   );

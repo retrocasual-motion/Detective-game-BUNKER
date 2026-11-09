@@ -724,6 +724,26 @@ button {
     radial-gradient(ellipse at 50% 100%, var(--color-person-shape) 0 42%, transparent 43%),
     var(--color-photo-image);
 }
+/* Персонаж поближе — в просмотрщике: фото крупно (этап дизайна), имя, роль. */
+.viewer-person {
+  text-align: center;
+}
+.viewer-person-photo {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background:
+    radial-gradient(circle at 50% 38%, var(--color-person-shape) 0 17%, transparent 18%),
+    radial-gradient(ellipse at 50% 100%, var(--color-person-shape) 0 42%, transparent 43%),
+    var(--color-photo-image);
+}
+.viewer-person-name {
+  margin: var(--space-3) 0 var(--space-1);
+  font: bold 30px var(--font-paper);
+}
+.viewer-person-role {
+  margin: 0;
+  color: var(--color-card-id);
+}
 .person-name {
   font: bold 19px / 1.15 var(--font-paper);
 }
