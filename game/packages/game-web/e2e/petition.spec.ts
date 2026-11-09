@@ -174,6 +174,35 @@ test('лист со стены можно бросить в поле — кар�
   expect(await sheet(page, '39').boundingBox()).toEqual(before);
 });
 
+test('карточку тянут в другое поле: в пустое — переходит, с занятым — меняются местами', async ({
+  page,
+}) => {
+  const ask = page.getByTestId('petition-field-ask');
+  const basis = page.getByTestId('petition-field-basis');
+  const drag = async (from: typeof ask, to: typeof ask) => {
+    const a = await from.getByTestId('petition-card').boundingBox();
+    const b = await to.boundingBox();
+    if (!a || !b) throw new Error('нет карточки или поля');
+    await page.mouse.move(a.x + 20, a.y + a.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(b.x + 200, b.y + b.height / 2, { steps: 8 });
+    await expect(to).toHaveClass(/petition-field-target/);
+    await page.mouse.up();
+  };
+  await toWall(page);
+  await cardFrom(page, '25', 'ключ плоский металлический');
+  await expect(ask).toContainText('ключ плоский');
+  await drag(ask, basis);
+  await expect(basis).toContainText('ключ плоский');
+  await expect(ask.getByTestId('petition-card')).toHaveCount(0);
+  await page.getByTestId('petition-field-ask').locator('.petition-line').click();
+  await cardFrom(page, '45', 'Бумажник');
+  await expect(ask).toContainText('Бумажник');
+  await drag(basis, ask);
+  await expect(ask).toContainText('ключ плоский');
+  await expect(basis).toContainText('Бумажник');
+});
+
 test('черновики — стопкой папок: «+» — новая, язычки видны и закрытыми; выбросить и вернуть', async ({
   page,
 }) => {

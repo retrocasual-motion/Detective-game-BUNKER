@@ -9,6 +9,7 @@ import {
   missingFields,
   removeDraft,
   setField,
+  swapCards,
 } from './drafts.ts';
 
 /** Сколько видно штамп «Отправлено», прежде чем папка уедет, мс. */
@@ -54,6 +55,8 @@ interface PetitionStore {
   /** Адрес — в «Кому» (из книги или выделения). */
   setTo(address: string): void;
   clear(f: DraftField): void;
+  /** Карточку перетащили в другое поле: переходит или меняется местами с той, что там. */
+  moveCard(from: 'ask' | 'basis'): void;
   deleteDraft(): void;
   send(): Promise<void>;
 }
@@ -158,6 +161,18 @@ export const usePetition = create<PetitionStore>((set, get) => {
       const id = get().activeId;
       if (id) game().updateState(setField(id, f, null));
       set({ field: f });
+    },
+
+    moveCard(from) {
+      const id = get().activeId;
+      if (!id) return;
+      const to = from === 'ask' ? 'basis' : 'ask';
+      game().updateState(swapCards(id, from));
+      set({
+        field: to,
+        error: null,
+        missing: get().missing.filter((m) => draft()?.[m] == null),
+      });
     },
 
     deleteDraft() {

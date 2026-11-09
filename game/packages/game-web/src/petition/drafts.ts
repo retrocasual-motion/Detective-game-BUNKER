@@ -35,6 +35,19 @@ export const setField =
     drafts: s.drafts.map((d) => (d.id === draftId ? { ...d, [field]: value } : d)),
   });
 
+/**
+ * Перетащить карточку между «Прошу» и «На основании» (правка автора 09.11): в пустое поле она
+ * переходит, с занятым — карточки меняются местами.
+ */
+export const swapCards =
+  (draftId: string, from: 'ask' | 'basis'): Update =>
+  (s) => ({
+    ...s,
+    drafts: s.drafts.map((d) =>
+      d.id === draftId && d[from] ? { ...d, ask: d.basis, basis: d.ask } : d,
+    ),
+  });
+
 /** Пустые поля черновика — их подсвечивает папка при отправке (E-A). */
 export const missingFields = (d: Draft): DraftField[] =>
   (['to', 'ask', 'basis'] as const).filter((f) => !d[f]);

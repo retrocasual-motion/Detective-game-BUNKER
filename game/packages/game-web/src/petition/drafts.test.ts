@@ -8,6 +8,7 @@ import {
   missingFields,
   quoteCard,
   setField,
+  swapCards,
   wholeCard,
 } from './drafts.ts';
 
@@ -27,6 +28,21 @@ describe('черновики ходатайств', () => {
     const d = s.drafts[0];
     expect(d?.ask).toEqual({ file: '06', quote: 'два' });
     expect(d && missingFields(d)).toEqual(['to', 'basis']);
+  });
+
+  it('карточку тянут в другое поле: в пустое — переходит, с занятым — меняются местами', () => {
+    const one = { file: '04', quote: 'один' };
+    const two = { file: '06', quote: 'два' };
+    let s = addDraft('a')(defaultState([]));
+    s = setField('a', 'ask', one)(s);
+    s = swapCards('a', 'ask')(s);
+    expect(s.drafts[0]).toMatchObject({ ask: null, basis: one });
+    s = setField('a', 'ask', two)(s);
+    s = swapCards('a', 'basis')(s);
+    expect(s.drafts[0]).toMatchObject({ ask: one, basis: two });
+    // Из пустого поля тянуть нечего.
+    s = setField('a', 'ask', null)(s);
+    expect(swapCards('a', 'ask')(s)).toEqual(s);
   });
 });
 
