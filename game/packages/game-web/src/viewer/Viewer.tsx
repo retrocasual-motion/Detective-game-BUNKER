@@ -3,8 +3,10 @@ import { type MouseEvent, type PointerEvent, useEffect, useMemo, useRef, useStat
 import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
+import { trackReading } from '../dev/readingLog.ts';
 import { emailIn, quoteCard, wholeCard } from '../petition/drafts.ts';
 import { usePetition } from '../petition/petition-store.ts';
+import { clearFind, highlightFind } from '../search/highlight.ts';
 import { useGame } from '../store.ts';
 import { isLetter, takeOutOfBin } from '../wall/wall-actions.ts';
 import { sameRange, snapToWords, unitRangeAt } from './selectUnit.ts';
@@ -44,6 +46,17 @@ export function Viewer({ materialId }: ViewerProps) {
   const petition = useMemo(() => (letter ? letterPetition(letter.body) : null), [letter]);
   const inTrash = useGame((g) => g.state?.trash.includes(materialId) ?? false);
   const [noRoom, setNoRoom] = useState(false);
+
+  // Открыт из поиска (RD-C): найденное подсвечено, лист прокручен к нему.
+  const find = useGame((g) => g.find);
+  useEffect(() => {
+    const paper = document.querySelector('[data-testid="viewer-paper"]');
+    if (find && paper) highlightFind(paper, find.q, find.k);
+    return clearFind;
+  }, [find]);
+
+  // Время чтения (RD-A) — только в разработке.
+  useEffect(() => (import.meta.env.DEV ? trackReading(materialId) : undefined), [materialId]);
   // Выделенная строка листа — кнопка «В ходатайство» у её конца (K-A).
   const [sel, setSel] = useState<{ text: string; x: number; y: number } | null>(null);
   const toAddress = usePetition((p) => p.field === 'to');

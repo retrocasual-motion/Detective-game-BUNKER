@@ -7,6 +7,7 @@ import { DevActionLine } from './dev/DevActionLine.tsx';
 import { PetitionCorner } from './petition/PetitionCorner.tsx';
 import { RoomScene } from './room/RoomScene.tsx';
 import { KEY_DIR, NAV } from './room/views.ts';
+import { SearchPanel } from './search/SearchPanel.tsx';
 import { useGame } from './store.ts';
 import { Viewer } from './viewer/Viewer.tsx';
 import { WallView } from './wall/WallView.tsx';
@@ -74,6 +75,7 @@ export function App() {
       <ArrivalNote />
       <ComputerScreen />
       <TrashView />
+      <SearchPanel />
       <ThrowToast />
       {viewerId && <Viewer key={viewerId} materialId={viewerId} />}
       <PetitionCorner />

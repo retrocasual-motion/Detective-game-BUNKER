@@ -47,7 +47,13 @@ interface GameStore {
   checkMailIn(ms: number): void;
   load(): Promise<void>;
   setPetitionOpen(open: boolean): void;
-  openViewer(materialId: string): void;
+  /** Открыть материал; из поиска — с найденным словом (k — какое совпадение показать). */
+  openViewer(materialId: string, find?: { q: string; k: number }): void;
+  /** Лист открыт из поиска (RD-C): что подсветить. */
+  find: { q: string; k: number } | null;
+  /** Поиск по делу открыт (RD-C). */
+  searchOpen: boolean;
+  setSearchOpen(open: boolean): void;
   closeViewer(): void;
   setView(view: View): void;
   updateState(fn: (s: PlayerState) => PlayerState): void;
@@ -70,6 +76,8 @@ export const useGame = create<GameStore>((set, get) => {
     arrival: null,
     computerOpen: false,
     trashOpen: false,
+    find: null,
+    searchOpen: false,
     binned: null,
 
     dismissArrival() {
@@ -126,12 +134,16 @@ export const useGame = create<GameStore>((set, get) => {
       set({ petitionOpen: open });
     },
 
-    openViewer(materialId) {
-      set({ viewerId: materialId });
+    openViewer(materialId, find) {
+      set({ viewerId: materialId, find: find ?? null });
     },
 
     closeViewer() {
-      set({ viewerId: null });
+      set({ viewerId: null, find: null });
+    },
+
+    setSearchOpen(open) {
+      set({ searchOpen: open });
     },
 
     checkMailIn(ms) {

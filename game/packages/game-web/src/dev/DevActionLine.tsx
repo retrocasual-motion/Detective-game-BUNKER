@@ -2,6 +2,7 @@ import { arrangeWall } from '@bunker/shared';
 import { useState } from 'react';
 import { postActionLine, resetState } from '../api.ts';
 import { useGame } from '../store.ts';
+import { clearReading, loadReading, mmss, readingRows, readingTsv } from './readingLog.ts';
 
 /**
  * «ПОДГОТОВКА» — одним вводом открыть всё, что нужно для проверки ходатайств по списку
@@ -44,6 +45,13 @@ export function DevActionLine() {
   const [busy, setBusy] = useState(false);
   const [log, setLog] = useState<Entry[]>([]);
   const addReleased = useGame((g) => g.addReleased);
+  const [reading, setReading] = useState<ReturnType<typeof readingRows> | null>(null);
+
+  /** Время чтения (RD-A): таблица по материалам; повторное нажатие — обновить. */
+  const showReading = () => {
+    const titles = new Map(useGame.getState().materials.map((m) => [m.id, m.title]));
+    setReading(readingRows(loadReading(), titles));
+  };
 
   const note = (text: string, reply: string) =>
     setLog((l) =>
@@ -176,7 +184,58 @@ export function DevActionLine() {
             >
               Подготовка к ходатайствам
             </button>
+            <button type="button" data-testid="dev-reading" onClick={showReading}>
+              Время чтения
+            </button>
           </div>
+          {reading && (
+            <div className="dev-reading" data-testid="dev-reading-table">
+              <div className="dev-reading-tools">
+                <button
+                  type="button"
+                  onClick={() => void navigator.clipboard?.writeText(readingTsv(reading))}
+                >
+                  Скопировать таблицу
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearReading();
+                    setReading([]);
+                  }}
+                >
+                  Сбросить
+                </button>
+                <button type="button" onClick={() => setReading(null)}>
+                  Скрыть
+                </button>
+              </div>
+              {reading.length ? (
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Материал</th>
+                      <th>Время</th>
+                      <th>Открыт</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reading.map((r) => (
+                      <tr key={r.id}>
+                        <td>
+                          {r.id} {r.title}
+                        </td>
+                        <td>{mmss(r.seconds)}</td>
+                        <td>{r.opens}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p>Пока ничего не читали.</p>
+              )}
+            </div>
+          )}
           <ol className="dev-line-log" data-testid="dev-line-log">
             {log.map((e) => (
               <li key={e.id}>
