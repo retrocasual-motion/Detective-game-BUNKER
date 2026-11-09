@@ -1,4 +1,4 @@
-import type { Material, PlayerState } from '@bunker/shared';
+import type { Card, Material, PlayerState } from '@bunker/shared';
 
 async function check(res: Response): Promise<Response> {
   if (!res.ok) throw new Error(`${res.status} ${res.url}`);
@@ -57,3 +57,27 @@ export const postActionLine = async (line: string): Promise<ActionResult> => {
 export const resetState = async (): Promise<void> => {
   await check(await fetch('/api/state', { method: 'DELETE' }));
 };
+
+/** Итог отправки ходатайства: номер и задержка ответа — или ошибка оформления (FORM-B). */
+export type PetitionResult =
+  | { ok: true; n: number; delayMs: number }
+  | { ok: false; error: string };
+
+/** Отправить ходатайство из папки (этап 3). */
+export const postPetition = async (to: string, ask: Card, basis: Card): Promise<PetitionResult> => {
+  const res = await fetch('/api/petition', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ to, ask, basis }),
+  });
+  if (res.status === 422 || res.status === 400) {
+    const { error } = (await res.json()) as { error: string };
+    return { ok: false, error };
+  }
+  const { n, delayMs } = (await check(res).then((r) => r.json())) as { n: number; delayMs: number };
+  return { ok: true, n, delayMs };
+};
+
+/** Письма в пути: через сколько мс каждое ляжет во «Входящие». */
+export const getPendingMail = async (): Promise<number[]> =>
+  ((await (await check(await fetch('/api/mail/pending'))).json()) as { inMs: number[] }).inMs;

@@ -20,6 +20,9 @@ import {
 import { Canvas } from '../canvas/Canvas.tsx';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
+import { wholeCard } from '../petition/drafts.ts';
+import { petitionFieldAt } from '../petition/fieldAt.ts';
+import { usePetition } from '../petition/petition-store.ts';
 import { useGame } from '../store.ts';
 import { isItemCard, type PinHandlers, WallCard } from './WallCard.tsx';
 import { type At, pinOf, WallThreads } from './WallThreads.tsx';
@@ -199,8 +202,17 @@ export function WallView() {
   );
 
   const drop = useCallback(
-    (id: string, x: number, y: number) => {
+    (id: string, x: number, y: number, at: { x: number; y: number }) => {
       setLive(null);
+      // Лист отпустили на поле открытой папки — карточка «материал целиком» (K-A), лист
+      // остаётся на стене, где висел.
+      const f = petitionFieldAt(at.x, at.y);
+      const m = useGame.getState().materials.find((mm) => mm.id === id);
+      if (f && f !== 'to' && m) {
+        usePetition.getState().setActiveField(f);
+        usePetition.getState().addCard(wholeCard(m));
+        return;
+      }
       updateState(moveItem(id, x, y));
     },
     [updateState],

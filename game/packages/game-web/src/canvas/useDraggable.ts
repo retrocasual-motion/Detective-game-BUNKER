@@ -26,8 +26,8 @@ export interface DragResult {
 
 interface DragOptions {
   zoom: number;
-  /** Конец жеста: итоговое смещение в мировых координатах. */
-  onDrop(dx: number, dy: number): void;
+  /** Конец жеста: итоговое смещение в мировых координатах и точка экрана, где отпустили. */
+  onDrop(dx: number, dy: number, at: { x: number; y: number }): void;
   onGrab?(): void;
   /** Каждое движение — для тех, кто должен следовать за объектом (нити доски). */
   onMove?(dx: number, dy: number): void;
@@ -61,7 +61,7 @@ export function useDraggable({ zoom, onDrop, onGrab, onMove }: DragOptions): Dra
     setOffset(null);
     stopTilt();
     if (dragged.current) lastDragEnd.current = Date.now();
-    if (commit && dragged.current) onDrop(dx, dy);
+    if (commit && dragged.current) onDrop(dx, dy, { x: e.clientX, y: e.clientY });
     else if (dragged.current) onMove?.(0, 0);
   };
 

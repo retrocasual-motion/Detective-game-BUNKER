@@ -71,6 +71,11 @@
   --color-pin-edge: #6e1a1a;
   --color-folder: #c9b98f;
   --color-folder-slot: #7d6f4c;
+  --color-folder-2: #b9a87c;
+  --color-folder-active: rgb(255 255 255 / 30%);
+  --color-stamp: #a52a2a;
+  --color-error-bg: #f1d6cf;
+  --color-letter-stripe: #4a6a8a;
 
   /* Комната — заглушка до нарисованных кадров (R-A): тёмные стены, как на референсах. */
   --color-room-dark: #141517;

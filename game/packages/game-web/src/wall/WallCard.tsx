@@ -29,7 +29,7 @@ interface WallCardProps {
   children: ReactNode;
   /** Щелчок без перетаскивания: открыть материал или править записку. */
   onActivate?(id: string): void;
-  onDrop(id: string, x: number, y: number): void;
+  onDrop(id: string, x: number, y: number, at: { x: number; y: number }): void;
   onLive(id: string, dx: number, dy: number): void;
   pin: PinHandlers;
   /** Только у записок: ✕ — снять со стены (с «Вернуть»). */
@@ -71,7 +71,7 @@ export const WallCard = memo(function WallCard({
   const w = liveW ?? width;
   const drag = useDraggable({
     zoom,
-    onDrop: (dx, dy) => onDrop(id, place.x + dx, place.y + dy),
+    onDrop: (dx, dy, at) => onDrop(id, place.x + dx, place.y + dy, at),
     onMove: (dx, dy) => onLive(id, dx, dy),
   });
   const x = place.x + (drag.offset?.x ?? 0);

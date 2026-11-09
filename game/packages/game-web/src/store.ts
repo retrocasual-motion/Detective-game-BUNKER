@@ -1,6 +1,6 @@
 import { type Material, type PlayerState, reconcile, type View } from '@bunker/shared';
 import { create } from 'zustand';
-import { getMaterials, getState, putState } from './api.ts';
+import { getMaterials, getPendingMail, getState, putState } from './api.ts';
 import { createSaver } from './save.ts';
 import { moveItem } from './wall/wall-actions.ts';
 
@@ -26,6 +26,8 @@ interface GameStore {
   pinToWall(materialId: string): void;
   /** Движок открыл материалы: в дело и во «Входящие» на столе (правка автора 09.11). */
   addReleased(released: Material[]): void;
+  /** Через ms заглянуть, не пришёл ли ответ на ходатайство (MAIL-B: письмо во «Входящие»). */
+  checkMailIn(ms: number): void;
   load(): Promise<void>;
   setPetitionOpen(open: boolean): void;
   openViewer(materialId: string): void;
@@ -93,12 +95,29 @@ export const useGame = create<GameStore>((set, get) => {
       set({ viewerId: null });
     },
 
+    checkMailIn(ms) {
+      setTimeout(async () => {
+        try {
+          get().addReleased(await getMaterials());
+        } catch {
+          // Сервер не ответил — заглянем ещё раз чуть позже.
+          get().checkMailIn(3000);
+        }
+      }, Math.max(0, ms) + 300);
+    },
+
     async load() {
       // Сервер мог ещё не подняться (503, пока база не готова) — повторяем раз в секунду.
       for (;;) {
         try {
           const [materials, state] = await Promise.all([getMaterials(), getState()]);
           set({ materials, state, loadFailed: false });
+          // Письма, которые ещё в пути (ходатайство отправили до перезагрузки).
+          getPendingMail()
+            .then((inMs) => {
+              for (const ms of inMs) get().checkMailIn(ms);
+            })
+            .catch(() => undefined);
           return;
         } catch {
           set({ loadFailed: true });
