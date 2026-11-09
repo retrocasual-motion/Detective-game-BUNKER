@@ -586,6 +586,10 @@ button {
   top: 0;
   transform-origin: 0 0;
 }
+/* Камера летит со стены к столу — масштаб стены возвращается к обычному так же плавно. */
+.scene[data-moving="true"] .canvas-world {
+  transition: transform 450ms ease;
+}
 /* Пробковая доска: у неё есть край (рама), за ним — стена. */
 .canvas-surface {
   position: absolute;
@@ -1454,6 +1458,15 @@ button {
   font:
     13px ui-monospace,
     monospace;
+}
+.dev-line-tools {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+.dev-line-tools button {
+  padding: 2px var(--space-2);
+  font-size: 12px;
 }
 .dev-line-log {
   max-height: 220px;

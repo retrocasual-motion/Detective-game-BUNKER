@@ -107,6 +107,39 @@ export function defaultState(materials: Material[]): PlayerState {
   );
 }
 
+/**
+ * Разложить стену по порядку (служебная кнопка для проверок, просьба автора 09.11): персонажи и
+ * стартовые материалы — на начальные места (01, 02… сеткой по описи), повешенные письма и
+ * записки — рядами под сеткой, по номеру. Нити и тексты записок остаются, камера — исходная.
+ */
+export function arrangeWall(state: PlayerState, materials: Material[]): PlayerState {
+  const rows = Math.ceil(startingIds(materials).length / GRID_COLS);
+  const restTop = GRID_TOP + rows * GRID_DY;
+  const noteOrder = new Map(state.wall.notes.map((n, i) => [n.id, i]));
+  const rest = state.wall.items
+    .filter((i) => !startSlot(i.id, materials))
+    .sort((a, b) => {
+      const na = noteOrder.get(a.id);
+      const nb = noteOrder.get(b.id);
+      if (na !== undefined || nb !== undefined) return (na ?? -1) - (nb ?? -1);
+      return a.id.localeCompare(b.id);
+    })
+    .map((i) => i.id);
+  const place = (id: string) => {
+    const slot = startSlot(id, materials);
+    if (slot) return slot;
+    const k = rest.indexOf(id);
+    return { x: (k % GRID_COLS) * GRID_DX, y: restTop + Math.floor(k / GRID_COLS) * GRID_DY };
+  };
+  const ordered = [...state.wall.items].sort((a, b) => {
+    const pa = place(a.id);
+    const pb = place(b.id);
+    return pa.y - pb.y || pa.x - pb.x;
+  });
+  const items = ordered.map((i, k) => ({ ...i, ...place(i.id), z: k + 1, rot: hangTilt(i.id) }));
+  return { ...state, wall: { ...state.wall, camera: DEFAULT_WALL_CAMERA, items } };
+}
+
 /** Сохранение версии 4 (колонки «как пришло»): снятое в поле и нити остаются. */
 interface StateV4 {
   version: 4;

@@ -72,11 +72,14 @@ export const emailIn = (text: string): string | null =>
 
 /**
  * Адресная книга (4.7): каждый адрес почты из материалов, которые у игрока есть, попадает
- * в неё сам. Пометок «для официальных запросов» нет (A-249).
+ * в неё сам. Пометок «для официальных запросов» нет (A-249). Адрес с нелатинскими буквами —
+ * образец формата («имя@mailbridge.net» на сайте почты), а не настоящий ящик: в книгу
+ * не попадает (ADDR-A, 09.11).
  */
 export function addressBook(materials: Pick<Material, 'body'>[]): string[] {
   const all = new Set<string>();
   for (const m of materials)
-    for (const a of m.body.match(EMAIL) ?? []) all.add(a.toLowerCase().replace(/\.$/, ''));
+    for (const a of m.body.match(EMAIL) ?? [])
+      if (/^[\x21-\x7e]+$/.test(a)) all.add(a.toLowerCase().replace(/\.$/, ''));
   return [...all].sort();
 }
