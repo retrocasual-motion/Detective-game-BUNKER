@@ -28,6 +28,8 @@ export const CLOSEUP_AT = 2.4;
 const ZOOM_MAX = 4;
 const ZOOM_STEP = 1.2;
 const CLICK_PX = 4;
+/** Наклон листа вверх-вниз, пока его держат, градусы. */
+const TILT_MAX = 45;
 
 export interface Zoom {
   s: number;
@@ -129,7 +131,9 @@ export function useSheet(
   }, [refs, step]);
 
   // ── Переворот ──
+  // Пока держат — свободно, как фото: влево-вправо и наклон (без крена); отпустили — ровно.
   const [angle, setAngle] = useState(0);
+  const [tilt, setTilt] = useState(0);
   const [flipping, setFlipping] = useState(false);
   const side: 'front' | 'back' = Math.round(angle / 180) % 2 !== 0 ? 'back' : 'front';
   const moved = useRef(0);
@@ -164,20 +168,26 @@ export function useSheet(
     void ask('перевернуть').then(setBack);
   }, [side, back, ask, materialId]);
 
-  /** Тянуть за поле или край — перевернуть; по тексту — это выделение, не трогаем. */
+  /**
+   * Зажать и тянуть — вертеть лист (с поля, с края или мимо листа — правка автора 09.11); по
+   * тексту — это выделение, не трогаем. Отпустили — лист ложится ровно, лицом или оборотом.
+   */
   const onFlipDown = (e: ReactPointerEvent<HTMLElement>) => {
     if (e.button !== 0) return;
     const t = e.target as Element;
-    if (t.closest('.viewer-flow')) return;
+    if (t.closest('.viewer-flow, button')) return;
     const x0 = e.clientX;
+    const y0 = e.clientY;
     const a0 = angle;
     moved.current = 0;
     const move = (ev: PointerEvent) => {
       const dx = ev.clientX - x0;
-      moved.current = Math.abs(dx);
+      const dy = ev.clientY - y0;
+      moved.current = Math.hypot(dx, dy);
       if (moved.current < CLICK_PX) return;
       setFlipping(true);
-      setAngle(a0 + dx * 0.6);
+      setAngle(a0 + dx * 0.5);
+      setTilt(Math.max(-TILT_MAX, Math.min(TILT_MAX, -dy * 0.35)));
     };
     const up = () => {
       window.removeEventListener('pointermove', move);
@@ -185,6 +195,7 @@ export function useSheet(
       setFlipping(false);
       // Лист ложится ровно: лицом или оборотом, как ближе.
       setAngle((a) => Math.round(a / 180) * 180);
+      setTilt(0);
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
@@ -235,6 +246,7 @@ export function useSheet(
     showX,
     paged: pageH !== null,
     angle,
+    tilt,
     side,
     flipping,
     back,

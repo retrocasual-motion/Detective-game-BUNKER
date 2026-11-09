@@ -1,5 +1,13 @@
 import { inboxIds, letterPetition, PERSONS } from '@bunker/shared';
-import { type MouseEvent, type PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  type CSSProperties,
+  type MouseEvent,
+  type PointerEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
@@ -19,7 +27,7 @@ interface ViewerProps {
 
 /** Щелчок сразу после открытия — второй щелчок двойного клика, а не «закрыть». */
 const OPEN_GUARD_MS = 400;
-const INSIDE = '.viewer-paper, .viewer-tools, .to-petition, .viewer-closeup';
+const INSIDE = '.viewer-paper, .viewer-tools, .to-petition, .viewer-closeup, .viewer-stack-hit';
 
 /**
  * Просмотрщик материала (TECH_PLAN 4.3). Серый прототип: текст пакета дословно; строки внутри
@@ -192,13 +200,19 @@ export function Viewer({ materialId }: ViewerProps) {
           return;
         }
         downOutside.current = e.button === 0 && isOutside(e);
+        if (downOutside.current) sheet.onFlipDown(e);
       }}
       onMouseDown={(e) => {
         if (e.button === 1) e.preventDefault();
       }}
       onPointerUp={(e) => {
         // Выделение текста, начатое на листе и законченное снаружи, — не «закрыть».
-        if (downOutside.current && isOutside(e) && Date.now() - openedAt.current > OPEN_GUARD_MS)
+        if (
+          downOutside.current &&
+          isOutside(e) &&
+          !sheet.wasDrag() &&
+          Date.now() - openedAt.current > OPEN_GUARD_MS
+        )
           close();
         downOutside.current = false;
       }}
@@ -216,8 +230,49 @@ export function Viewer({ materialId }: ViewerProps) {
             className={`viewer-flip${sheet.flipping ? ' viewer-flipping' : ''}`}
             data-testid="viewer-flip"
             data-side={sheet.side}
-            style={{ transform: `rotateY(${sheet.angle}deg)` }}
+            style={{ transform: `rotateX(${sheet.tilt}deg) rotateY(${sheet.angle}deg)` }}
           >
+            {sheet.pages > 1 && (
+              <div className="viewer-stack" aria-hidden>
+                {/* Следующие страницы — справа, прочитанные — слева; ключ — номер страницы. */}
+                {[1, 2, 3]
+                  .filter((d) => sheet.page + d < sheet.pages)
+                  .map((d) => (
+                    <span
+                      key={`next-${sheet.page + d}`}
+                      className="viewer-stack-sheet"
+                      style={{ '--k': d } as CSSProperties}
+                    />
+                  ))}
+                {[1, 2, 3]
+                  .filter((d) => sheet.page - d >= 0)
+                  .map((d) => (
+                    <span
+                      key={`read-${sheet.page - d}`}
+                      className="viewer-stack-sheet viewer-stack-read"
+                      style={{ '--k': d } as CSSProperties}
+                    />
+                  ))}
+              </div>
+            )}
+            {sheet.pages > 1 && sheet.page < sheet.pages - 1 && (
+              <button
+                type="button"
+                className="viewer-stack-hit viewer-stack-next"
+                data-testid="page-next"
+                aria-label="Следующая страница"
+                onClick={() => sheet.goTo(sheet.page + 1)}
+              />
+            )}
+            {sheet.pages > 1 && sheet.page > 0 && (
+              <button
+                type="button"
+                className="viewer-stack-hit viewer-stack-prev"
+                data-testid="page-prev"
+                aria-label="Предыдущая страница"
+                onClick={() => sheet.goTo(sheet.page - 1)}
+              />
+            )}
             {person ? (
               <article
                 className="viewer-paper viewer-person"
@@ -245,33 +300,17 @@ export function Viewer({ materialId }: ViewerProps) {
                     {doc}
                   </div>
                 </div>
-                {sheet.pages > 1 && sheet.page > 0 && (
+                {sheet.page < sheet.pages - 1 && (
                   <button
                     type="button"
-                    className="viewer-edge viewer-edge-prev"
-                    data-testid="page-prev"
-                    aria-label="Предыдущая страница"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!sheet.wasDrag()) sheet.goTo(sheet.page - 1);
-                    }}
-                  >
-                    ‹
-                  </button>
-                )}
-                {sheet.pages > 1 && sheet.page < sheet.pages - 1 && (
-                  <button
-                    type="button"
-                    className="viewer-edge viewer-edge-next"
-                    data-testid="page-next"
+                    className="viewer-corner viewer-corner-next"
+                    data-testid="page-corner"
                     aria-label="Следующая страница"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (!sheet.wasDrag()) sheet.goTo(sheet.page + 1);
+                      sheet.goTo(sheet.page + 1);
                     }}
-                  >
-                    ›
-                  </button>
+                  />
                 )}
                 {sheet.pages > 1 && (
                   <span className="viewer-page-no" data-testid="page-no">

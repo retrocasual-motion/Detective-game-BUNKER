@@ -906,7 +906,7 @@ button {
 .viewer-tools {
   position: absolute;
   top: 0;
-  left: calc(100% + var(--space-2));
+  left: calc(100% + var(--space-2) + 30px);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1924,7 +1924,7 @@ button {
 .viewer-flip {
   position: relative;
   transform-style: preserve-3d;
-  transition: transform 0.35s ease;
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 .viewer-flipping {
   transition: none;
@@ -1949,30 +1949,69 @@ button {
   font-style: italic;
   text-align: center;
 }
-/* Край листа: навёл — стрелка страницы; щелчок — страница; протянул — переворот. */
-.viewer-edge {
+/* Стопка листов (правка автора 09.11): края следующих страниц торчат справа и снизу, прочитанных —
+   слева. Щелчок по торчащей стопке — перелистнуть; навёл — стопка чуть раздвигается. */
+.viewer-stack {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.viewer-stack-sheet {
+  position: absolute;
+  inset: 0;
+  background: var(--color-paper);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 35%);
+  backface-visibility: hidden;
+  transform: translate3d(calc(var(--k) * 6px), calc(var(--k) * 5px), calc(var(--k) * -1px));
+  transition: transform 0.15s ease-out;
+}
+.viewer-stack-read {
+  transform: translate3d(calc(var(--k) * -6px), calc(var(--k) * 5px), calc(var(--k) * -1px));
+}
+.viewer-flip:has(.viewer-stack-next:hover) .viewer-stack-sheet:not(.viewer-stack-read) {
+  transform: translate3d(calc(var(--k) * 10px), calc(var(--k) * 6px), calc(var(--k) * -1px));
+}
+.viewer-flip:has(.viewer-stack-prev:hover) .viewer-stack-read {
+  transform: translate3d(calc(var(--k) * -10px), calc(var(--k) * 6px), calc(var(--k) * -1px));
+}
+/* Зона щелчка по торчащей стопке — шире самих краёв. */
+.viewer-stack-hit {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: var(--space-4);
+  width: 40px;
   padding: 0;
-  color: var(--color-paper-text);
-  font-size: 28px;
   background: none;
   border: 0;
-  opacity: 0;
   cursor: pointer;
-  transition: opacity 0.15s;
+  backface-visibility: hidden;
 }
-.viewer-edge:hover,
-.viewer-edge:focus-visible {
-  opacity: 0.65;
+.viewer-stack-next {
+  left: 100%;
 }
-.viewer-edge-prev {
-  left: 0;
+.viewer-stack-prev {
+  right: 100%;
 }
-.viewer-edge-next {
+/* Загнутый уголок внизу справа — тоже следующая страница. */
+.viewer-corner {
+  position: absolute;
   right: 0;
+  bottom: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: linear-gradient(315deg, var(--color-room-dark, #2a2a2a) 50%, #d9d4c6 50%);
+  border: 0;
+  box-shadow: -2px -2px 4px rgb(0 0 0 / 18%);
+  cursor: pointer;
+  transition:
+    width 0.15s,
+    height 0.15s;
+}
+.viewer-corner:hover {
+  width: 44px;
+  height: 44px;
 }
 .viewer-page-no {
   position: absolute;

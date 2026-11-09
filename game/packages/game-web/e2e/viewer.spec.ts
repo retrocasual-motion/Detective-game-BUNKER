@@ -119,6 +119,31 @@ test('лист переворачивают, потянув за поле; на 
   await expect(page.getByTestId('viewer')).toBeVisible();
 });
 
+test('лист вертят и мимо него: зажал и тянешь — поворот, лист открыт; щелчок мимо — закрыть; уголок — следующая страница', async ({
+  page,
+}) => {
+  await sheet(page, '07').click(STRIP);
+  const flip = page.getByTestId('viewer-flip');
+  // Мимо листа, слева: зажать и тянуть вправо и чуть вниз.
+  await page.mouse.move(120, 300);
+  await page.mouse.down();
+  await page.mouse.move(470, 360, { steps: 12 });
+  await page.mouse.up();
+  await expect(flip).toHaveAttribute('data-side', 'back');
+  await expect(page.getByTestId('viewer')).toBeVisible();
+  await page.mouse.click(683, 384, { button: 'middle' });
+  await expect(flip).toHaveAttribute('data-side', 'front');
+  await expect(page.getByTestId('page-no')).toHaveText(/^1 \//);
+  await page.getByTestId('page-corner').click();
+  await expect(page.getByTestId('page-no')).toHaveText(/^2 \//);
+  await page.getByTestId('page-prev').click();
+  await expect(page.getByTestId('page-no')).toHaveText(/^1 \//);
+  // Щелчок сразу после открытия — второй щелчок двойного, не «закрыть» (OPEN_GUARD_MS).
+  await page.waitForTimeout(450);
+  await page.mouse.click(120, 300);
+  await expect(page.getByTestId('viewer')).toBeHidden();
+});
+
 test('колесо — ближе к точке под курсором: она остаётся под курсором; глубоко — крупный план от дела', async ({
   page,
 }) => {
@@ -226,7 +251,8 @@ test('крестик неподвижен у верхнего правого у�
   const close = page.getByTestId('viewer').getByRole('button', { name: 'Закрыть' });
   const top = await close.boundingBox();
   expect(Math.abs((top?.y ?? 0) - paper.y)).toBeLessThan(12);
-  expect((top?.x ?? 0) - (paper.x + paper.width)).toBeLessThan(24);
+  // Правее торчащей стопки страниц (этап 4b).
+  expect((top?.x ?? 0) - (paper.x + paper.width)).toBeLessThan(56);
   await page.mouse.move(paper.x + paper.width / 2, paper.y + paper.height - 40, { steps: 4 });
   await page.waitForTimeout(250);
   expect(await close.boundingBox()).toEqual(top);
