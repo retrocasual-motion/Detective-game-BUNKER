@@ -1,3 +1,11 @@
+import {
+  CONTAINERS,
+  type ContainerId,
+  containerContents,
+  OFF_WALL_IDS,
+  openedOf,
+  sealedIds,
+} from './archive.ts';
 import { PERSONS } from './persons.ts';
 import {
   type Camera,
@@ -7,6 +15,7 @@ import {
   PlayerStateSchema,
   STATE_VERSION,
   type WallItem,
+  ZOOM_MIN,
 } from './schemas.ts';
 
 /**
@@ -103,6 +112,8 @@ export function defaultState(materials: Material[]): PlayerState {
       wall: { camera: DEFAULT_WALL_CAMERA, items: [], threads: [], notes: [] },
       drafts: [],
       trash: [],
+      // Новое дело (A-260): конверты на столе ещё опечатаны.
+      opened: [],
     },
     materials,
   );
@@ -221,8 +232,12 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
   const kept = notes.filter((n) => seen.has(n.id));
 
   let z = items.reduce((max, i) => Math.max(max, i.z), 0);
+  // Стартовое — на стену, кроме невскрытого (A-260) и того, что лежит на столе или в браузере.
+  // Сохранение до конвертов (нет `opened`) — как раньше: всё на стене.
+  const sealed = sealedIds(state);
+  const legacy = state.opened === undefined;
   for (const id of [...PERSONS.map((p) => p.id), ...startingIds(materials)]) {
-    if (seen.has(id)) continue;
+    if (seen.has(id) || sealed.has(id) || (!legacy && OFF_WALL_IDS.has(id))) continue;
     const slot = startSlot(id, materials);
     if (!slot) continue;
     items.push({ id, ...slot, z: ++z, rot: hangTilt(id) });
@@ -244,4 +259,132 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
   }));
 
   return { ...state, wall: { ...state.wall, items, threads, notes: kept }, drafts, trash };
+}
+
+/** Ярлык группы конверта на стене. */
+export const containerLabelId = (id: ContainerId) => `n:archive-${id}`;
+
+const LABEL_H = 80;
+
+/** Свободное место на стене под блок w × h: сверху вниз, сначала слева, потом правее сетки. */
+function freeBlock(items: WallItem[], w: number, h: number): { x: number; y: number } {
+  const gap = 30;
+  const busy = (x: number, y: number) =>
+    items.some(
+      (i) =>
+        i.x < x + w + gap && i.x + CARD_W + gap > x && i.y < y + h + gap && i.y + CARD_H + gap > y,
+    );
+  // Сначала под стартовыми материалами (левый край), потом правее сетки.
+  for (const x of [0, GRID_COLS * GRID_DX + 100])
+    for (let y = GRID_TOP; y + h <= WALL_BOUNDS.bottom; y += 30)
+      if (x + w <= WALL_BOUNDS.right && !busy(x, y)) return { x, y };
+  const bottom = items.reduce((m, i) => Math.max(m, i.y + CARD_H), GRID_TOP);
+  return onWall(0, bottom + gap);
+}
+
+/**
+ * Вскрыть конверт архива (A-260): содержимое — на стену группой под ярлыком с названием
+ * конверта, на свободное место (со стола доска видна целиком — fitCamera).
+ * Уже вскрытый — без изменений.
+ */
+export function openContainer(
+  state: PlayerState,
+  materials: Material[],
+  id: ContainerId,
+): PlayerState {
+  const c = CONTAINERS.find((x) => x.id === id);
+  if (!c || openedOf(state).includes(id)) return state;
+  const opened = [...(state.opened ?? []), id];
+  const have = new Set(materials.map((m) => m.id));
+  const onWallNow = new Set(state.wall.items.map((i) => i.id));
+  const ids = containerContents(c).filter((m) => have.has(m) && !onWallNow.has(m));
+  if (!ids.length) return { ...state, opened };
+  const cols = Math.min(GRID_COLS, ids.length);
+  const rows = Math.ceil(ids.length / cols);
+  const at = freeBlock(state.wall.items, cols * GRID_DX, LABEL_H + rows * GRID_DY);
+  let z = state.wall.items.reduce((m, i) => Math.max(m, i.z), 0);
+  const labelId = containerLabelId(id);
+  // Ярлык — в одну строку, по длине названия.
+  const label: Note = {
+    id: labelId,
+    kind: 'label',
+    text: c.label,
+    width: Math.min(NOTE_STYLE.maxWidth, 60 + c.label.length * 15),
+  };
+  const placed: WallItem[] = [
+    { id: labelId, x: at.x, y: at.y, z: ++z, rot: 0 },
+    ...ids.map((m, k) => ({
+      id: m,
+      x: at.x + (k % cols) * GRID_DX,
+      y: at.y + LABEL_H + Math.floor(k / cols) * GRID_DY,
+      z: ++z,
+      rot: hangTilt(m),
+    })),
+  ];
+  const keepNotes = state.wall.notes.filter((n) => n.id !== labelId);
+  return {
+    ...state,
+    opened,
+    wall: {
+      ...state.wall,
+      items: [...state.wall.items.filter((i) => i.id !== labelId), ...placed],
+      notes: [...keepNotes, label],
+    },
+  };
+}
+
+/** Вскрыть всё сразу (служебная кнопка «Подготовка», автотесты): стартовая сетка, как до конвертов. */
+export function openAll(state: PlayerState, materials: Material[]): PlayerState {
+  return reconcile({ ...state, opened: CONTAINERS.map((c) => c.id) }, materials);
+}
+
+/**
+ * Камера «вся стена» (правка автора 09.11): со стола доска видна целиком — всё, что на ней
+ * висит, вписано в экран с полями; крупнее обычного масштаба не становится. Тем же видом
+ * стена встречает, когда к ней подходят.
+ */
+export function fitCamera(
+  wall: Pick<PlayerState['wall'], 'items' | 'notes'>,
+  vp: { width: number; height: number },
+): Camera {
+  if (!wall.items.length) return DEFAULT_WALL_CAMERA;
+  const width = new Map(
+    wall.notes.map((n) => [n.id, n.width ?? NOTE_STYLE[n.kind].width] as const),
+  );
+  let left = Number.POSITIVE_INFINITY;
+  let top = Number.POSITIVE_INFINITY;
+  let right = Number.NEGATIVE_INFINITY;
+  let bottom = Number.NEGATIVE_INFINITY;
+  for (const i of wall.items) {
+    left = Math.min(left, i.x);
+    top = Math.min(top, i.y);
+    right = Math.max(right, i.x + (width.get(i.id) ?? CARD_W));
+    bottom = Math.max(bottom, i.y + CARD_H);
+  }
+  const pad = { x: DEFAULT_WALL_CAMERA.x, y: DEFAULT_WALL_CAMERA.y };
+  const zoom = Math.max(
+    ZOOM_MIN,
+    Math.min(
+      DEFAULT_WALL_CAMERA.zoom,
+      (vp.width - 2 * pad.x) / (right - left),
+      (vp.height - 2 * pad.y) / (bottom - top),
+    ),
+  );
+  const round = (n: number) => Math.round(n * 1000) / 1000;
+  // От левого и верхнего поля, как обычный вид; за край пробки камера не заглядывает.
+  return {
+    x: Math.round(Math.min(pad.x - left * zoom, -WALL_BOUNDS.left * zoom)),
+    y: Math.round(Math.min(pad.y - top * zoom, -WALL_BOUNDS.top * zoom)),
+    zoom: round(zoom),
+  };
+}
+
+/** Камера стены обычного масштаба, подведённая к точке стены (левый верхний угол с полями). */
+export function focusCamera(x: number, y: number): Camera {
+  const { zoom } = DEFAULT_WALL_CAMERA;
+  return {
+    x: Math.round(Math.min(DEFAULT_WALL_CAMERA.x - x * zoom, -WALL_BOUNDS.left * zoom)),
+    y: Math.round(Math.min(DEFAULT_WALL_CAMERA.y - y * zoom, -WALL_BOUNDS.top * zoom)),
+    zoom,
+  };
 }

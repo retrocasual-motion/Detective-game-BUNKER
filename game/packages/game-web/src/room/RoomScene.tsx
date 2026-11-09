@@ -1,4 +1,4 @@
-import type { View } from '@bunker/shared';
+import type { ContainerId, View } from '@bunker/shared';
 import { type ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   boardOps,
@@ -37,6 +37,8 @@ interface RoomSceneProps {
   inbox: string[];
   /** Сколько писем в корзине (комки). */
   trash: number;
+  /** Вскрытые конверты архива (A-260). */
+  opened: readonly ContainerId[];
 }
 
 /**
@@ -46,7 +48,7 @@ interface RoomSceneProps {
  * доску). Камера в движении ведётся кадрами из JS, чтобы холсты и доска не расходились.
  * В покое на виде «Стена» доска лежит плоско (без 3D), холсты скрыты.
  */
-export function RoomScene({ view, onGo, hideNav, wall, inbox, trash }: RoomSceneProps) {
+export function RoomScene({ view, onGo, hideNav, wall, inbox, trash, opened }: RoomSceneProps) {
   const vp = useViewport();
   const room = useMemo(() => roomFor(vp), [vp]);
   const [ph, setPh] = useState<Phase>({ from: room.poses[view], to: view, moving: false });
@@ -60,7 +62,7 @@ export function RoomScene({ view, onGo, hideNav, wall, inbox, trash }: RoomScene
     if (pose) live.current = pose;
     if (world.current) world.current.style.transform = pose ? toCss(poseOps(pose, room.p)) : 'none';
     if (pose && back.current) drawRoom(back.current, pose, room);
-    if (pose && front.current) drawObjects(front.current, pose, room, inbox, trash);
+    if (pose && front.current) drawObjects(front.current, pose, room, inbox, trash, opened);
   };
 
   useLayoutEffect(() => {
@@ -139,7 +141,7 @@ export function RoomScene({ view, onGo, hideNav, wall, inbox, trash }: RoomScene
         </div>
       </div>
       <canvas ref={front} className="scene-decor scene-front" hidden={flat} />
-      {atDesk && <DeskHotspots room={room} inbox={inbox} trash={trash} />}
+      {atDesk && <DeskHotspots room={room} inbox={inbox} trash={trash} opened={opened} />}
       {/* Стрелки видны и во время перехода: щелчок сразу ведёт к новой цели (MOVE-A). */}
       {!hideNav && <NavArrows view={ph.to} onGo={onGo} />}
     </div>

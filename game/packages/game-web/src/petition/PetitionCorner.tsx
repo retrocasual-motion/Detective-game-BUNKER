@@ -1,7 +1,7 @@
 import { type Card, type Draft, type DraftField, MAX_DRAFTS } from '@bunker/shared';
 import { type PointerEvent, useMemo } from 'react';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
-import { useGame } from '../store.ts';
+import { useGame, useVisibleMaterials } from '../store.ts';
 import { addressBook } from './drafts.ts';
 import { petitionFieldAt } from './fieldAt.ts';
 import { usePetition } from './petition-store.ts';
@@ -107,7 +107,8 @@ function Field({ draft, f }: { draft: Draft; f: DraftField }) {
 
 /** Адресная книга (4.7): открывается из поля «Кому»; адреса — из материалов игрока. */
 function AddressBook() {
-  const materials = useGame((g) => g.materials);
+  // Адреса — только из того, что игрок видит (невскрытые конверты — нет, A-260).
+  const materials = useVisibleMaterials();
   const setTo = usePetition((p) => p.setTo);
   const book = useMemo(() => addressBook(materials), [materials]);
   return (

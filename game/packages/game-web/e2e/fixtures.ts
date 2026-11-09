@@ -1,15 +1,20 @@
 import { test as base, expect, type Page } from '@playwright/test';
 
-/** Каждый тест начинает с чистого состояния игрока. */
-export const test = base.extend({
-  page: async ({ page, request }, use) => {
+/**
+ * Каждый тест начинает с чистого состояния игрока. По умолчанию конверты архива вскрыты
+ * (`?opened=all`, A-260) — тесты стены и листов работают со всеми стартовыми материалами;
+ * `test.use({ sealed: true })` — новое дело как у игрока: конверты опечатаны.
+ */
+export const test = base.extend<{ sealed: boolean }>({
+  sealed: [false, { option: true }],
+  page: async ({ page, request, sealed }, use) => {
     // Сервер слушает сразу, а база готова чуть позже — ждём готовности.
     await expect
       .poll(async () => (await request.get('/api/health')).status(), { timeout: 60_000 })
       .toBe(200);
     const res = await request.delete('/api/state');
     expect(res.status()).toBe(204);
-    await page.goto('/');
+    await page.goto(sealed ? '/' : '/?opened=all');
     await expect(page.getByTestId('room')).toBeVisible();
     await use(page);
   },

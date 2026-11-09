@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
+import { sealedIds } from './archive.ts';
 import {
   arrangeWall,
+  containerLabelId,
   defaultState,
+  fitCamera,
   GRID_TOP,
   inboxIds,
   onWall,
+  openAll,
+  openContainer,
   reconcile,
   upgradeState,
   WALL_BOUNDS,
@@ -27,9 +32,19 @@ const starting: Material[] = Array.from({ length: 51 }, (_, i) =>
 describe('defaultState', () => {
   const s = defaultState(starting);
 
-  it('вид — «Стол»; на стене все 51 материал и все персонажи, записок и нитей нет', () => {
+  it('вид — «Стол»; на стене персонажи и 01–07, остальное в конвертах (A-260)', () => {
     expect(s.view).toBe('desk');
-    expect(s.wall.items).toHaveLength(51 + PERSONS.length);
+    expect(s.opened).toEqual([]);
+    expect(s.wall.items.map((i) => i.id).filter((id) => /^\d/.test(id))).toEqual([
+      '01',
+      '02',
+      '03',
+      '04',
+      '05',
+      '06',
+      '07',
+    ]);
+    expect(s.wall.items).toHaveLength(7 + PERSONS.length);
     expect(s.wall.notes).toEqual([]);
     expect(s.wall.threads).toEqual([]);
   });
@@ -180,5 +195,65 @@ describe('корзина (TR-A)', () => {
     const got = reconcile(hung, withM);
     expect(got.trash).toEqual(['M001']);
     expect(got.wall.items.some((i) => i.id === 'M001')).toBe(false);
+  });
+});
+
+describe('конверты архива (A-260)', () => {
+  const s = defaultState(starting);
+
+  it('вскрытие: содержимое — на стену группой под ярлыком, ничего не накрыто', () => {
+    const o = openContainer(s, starting, 'protocols');
+    expect(o.opened).toEqual(['protocols']);
+    const ids = ['30', '31', '32', '33', '34', '35', '36'];
+    const label = o.wall.items.find((i) => i.id === containerLabelId('protocols'));
+    expect(o.wall.notes.find((n) => n.id === containerLabelId('protocols'))?.text).toBe(
+      'Протоколы опроса',
+    );
+    const placed = o.wall.items.filter((i) => ids.includes(i.id));
+    expect(placed).toHaveLength(7);
+    for (const i of placed) expect(i.y).toBeGreaterThan(label?.y ?? 0);
+    const others = o.wall.items.filter((i) => !ids.includes(i.id) && i.id !== label?.id);
+    for (const a of placed)
+      for (const b of others)
+        expect(Math.abs(a.x - b.x) >= 160 || Math.abs(a.y - b.y) >= 220).toBe(true);
+    // Повторно — без изменений; reconcile не трогает разложенное.
+    expect(openContainer(o, starting, 'protocols')).toBe(o);
+    expect(reconcile(o, starting).wall.items).toEqual(o.wall.items);
+  });
+
+  it('устройства приходят с конвертом места; невскрытое не видно', () => {
+    expect(sealedIds(s).has('48')).toBe(true);
+    const o = openContainer(s, starting, 'scene');
+    expect(sealedIds(o).has('48')).toBe(false);
+    expect(o.wall.items.some((i) => i.id === '48')).toBe(true);
+    expect(sealedIds(o).has('30')).toBe(true);
+  });
+
+  it('вскрыть всё — стартовая сетка без газеты и закладок; старое сохранение — всё вскрыто', () => {
+    const all = openAll(s, starting);
+    const onWall = new Set(all.wall.items.map((i) => i.id));
+    expect(onWall.has('25')).toBe(true);
+    expect(['15', '16', '17'].some((id) => onWall.has(id))).toBe(false);
+    const { opened: _, ...legacy } = s;
+    expect(sealedIds({ opened: undefined }).size).toBe(0);
+    expect(reconcile(legacy, starting).wall.items.some((i) => i.id === '15')).toBe(true);
+  });
+});
+
+describe('стена целиком со стола (fitCamera)', () => {
+  const vp = { width: 1366, height: 768 };
+
+  it('мало вещей — обычный масштаб; много — мельче, но всё в экране и не за краем пробки', () => {
+    const s = defaultState(starting);
+    expect(fitCamera(s.wall, vp).zoom).toBe(0.55);
+    const all = openAll(s, starting);
+    const cam = fitCamera(all.wall, vp);
+    expect(cam.zoom).toBeLessThan(0.55);
+    for (const i of all.wall.items) {
+      expect(i.x * cam.zoom + cam.x).toBeGreaterThanOrEqual(0);
+      expect((i.y + 220) * cam.zoom + cam.y).toBeLessThanOrEqual(vp.height);
+      expect((i.x + 160) * cam.zoom + cam.x).toBeLessThanOrEqual(vp.width);
+    }
+    expect(cam.x).toBeLessThanOrEqual(300 * cam.zoom);
   });
 });

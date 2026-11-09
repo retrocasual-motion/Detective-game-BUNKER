@@ -1,7 +1,8 @@
+import { BOOKMARK_IDS } from '@bunker/shared';
 import { useEffect, useState } from 'react';
 import { useGame } from '../store.ts';
 
-const SECTIONS = ['Поступления', 'Почта', 'Приобщить страницу'] as const;
+const SECTIONS = ['Закладки', 'Поступления', 'Почта', 'Приобщить страницу'] as const;
 type Section = (typeof SECTIONS)[number];
 
 /**
@@ -13,6 +14,9 @@ export function ComputerScreen() {
   const open = useGame((g) => g.computerOpen);
   const setOpen = useGame((g) => g.setComputerOpen);
   const [section, setSection] = useState<Section | null>(null);
+  const materials = useGame((g) => g.materials);
+  // Закладки браузера (E44): сайт газеты — объявления и архив номеров (A-260).
+  const bookmarks = materials.filter((m) => (BOOKMARK_IDS as readonly string[]).includes(m.id));
 
   useEffect(() => {
     if (!open) return;
@@ -59,7 +63,26 @@ export function ComputerScreen() {
                 </button>
               </div>
               <div className="screen-window-body" data-testid="computer-panel">
-                Пусто
+                {section === 'Закладки' && bookmarks.length ? (
+                  <ul className="bookmarks">
+                    {bookmarks.map((m) => (
+                      <li key={m.id}>
+                        <button
+                          type="button"
+                          data-testid={`bookmark-${m.id}`}
+                          onClick={() => {
+                            setOpen(false);
+                            useGame.getState().openViewer(m.id);
+                          }}
+                        >
+                          {m.title}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  'Пусто'
+                )}
               </div>
             </div>
           )}

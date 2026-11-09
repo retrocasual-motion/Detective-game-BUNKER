@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CONTAINER_IDS } from './archive.ts';
 
 export const ZOOM_MIN = 0.25;
 export const ZOOM_MAX = 3;
@@ -125,5 +126,10 @@ export const PlayerStateSchema = z.object({
     .array(z.string().regex(/^M\d{3}$/))
     .max(999)
     .default([]),
+  /**
+   * Вскрытые конверты архива (A-260). Нет поля — сохранение из времени до конвертов: всё уже
+   * на стене, конверты считаются вскрытыми (openedOf).
+   */
+  opened: z.array(z.enum(CONTAINER_IDS)).max(CONTAINER_IDS.length).optional(),
 });
 export type PlayerState = z.infer<typeof PlayerStateSchema>;

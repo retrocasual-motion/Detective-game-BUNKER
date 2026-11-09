@@ -49,10 +49,13 @@ const PERSONS = [
   'Р. Хейл',
 ];
 
-test('на стене все персонажи и все 51 материал; групп и подписей описи нет', async ({ page }) => {
+test('конверты вскрыты: на стене все персонажи и 48 материалов (газета на столе, сайт — в закладках); групп описи нет', async ({
+  page,
+}) => {
   for (const name of PERSONS)
     await expect(page.locator('.paper-person', { hasText: name })).toHaveCount(1);
-  await expect(page.locator('[data-wall-item]')).toHaveCount(51 + PERSONS.length);
+  await expect(page.locator('[data-wall-item]')).toHaveCount(48 + PERSONS.length);
+  await expect(sheet(page, '15')).toHaveCount(0);
   await expect(page.locator('.column-label')).toHaveCount(0);
 });
 

@@ -1,11 +1,11 @@
-import { CARD_W } from '@bunker/shared';
+import { CARD_W, type ContainerId } from '@bunker/shared';
 import { useMemo } from 'react';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
 import { wholeCard } from '../petition/drafts.ts';
 import { petitionFieldAt } from '../petition/fieldAt.ts';
 import { usePetition } from '../petition/petition-store.ts';
-import { useGame } from '../store.ts';
+import { shownCamera, useGame } from '../store.ts';
 import { isLetter, moveItem } from '../wall/wall-actions.ts';
 import { type Room, screenToBoard } from './camera.ts';
 import { deskObjects, screenRect } from './decor.ts';
@@ -22,21 +22,23 @@ export function DeskHotspots({
   room,
   inbox,
   trash,
+  opened,
 }: {
   room: Room;
   inbox: string[];
   trash: number;
+  opened: readonly ContainerId[];
 }) {
   const openViewer = useGame((g) => g.openViewer);
   const setComputerOpen = useGame((g) => g.setComputerOpen);
   const updateState = useGame((g) => g.updateState);
   const spots = useMemo(
     () =>
-      deskObjects(room, noColor, inbox, trash).map((o) => ({
+      deskObjects(room, noColor, inbox, trash, opened).map((o) => ({
         o,
         r: screenRect(o, room.poses.desk, room),
       })),
-    [room, inbox, trash],
+    [room, inbox, trash, opened],
   );
   // Письмо-ответ из лотка можно бросить прямо в корзину (TR-A).
   const bin = spots.find((s) => s.o.key === 'trash')?.r;
@@ -91,7 +93,8 @@ export function DeskHotspots({
                     return;
                   }
                   const b = screenToBoard(pt, room.poses.desk, room);
-                  const cam = useGame.getState().state?.wall.camera;
+                  const st = useGame.getState().state;
+                  const cam = st ? shownCamera(st) : null;
                   if (!b || !cam) return;
                   const w = screenToWorld(b, cam);
                   updateState(moveItem(id, w.x - CARD_W / 2, w.y - 20));
@@ -106,10 +109,15 @@ export function DeskHotspots({
               if (o.key.startsWith('inbox-') && e.detail > 0) return;
               if (h?.kind === 'computer') setComputerOpen(true);
               else if (h?.kind === 'trash') useGame.getState().setTrashOpen(true);
+              else if (h?.kind === 'container') useGame.getState().setInspecting(h.id);
               else if (h) openViewer(h.id);
             }}
           >
-            {o.tag && <span className="device-tag">{o.tag}</span>}
+            {o.tag && (
+              <span className={`device-tag${o.tagInside ? ' device-tag-inside' : ''}`}>
+                {o.tag}
+              </span>
+            )}
           </button>
         ) : o.tag ? (
           <div

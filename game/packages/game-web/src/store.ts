@@ -1,14 +1,26 @@
 import {
-  DEFAULT_WALL_CAMERA,
+  type ContainerId,
+  fitCamera,
   type Material,
+  openAll,
+  openContainer,
+  openedOf,
   type PlayerState,
   reconcile,
+  sealedIds,
   type View,
 } from '@bunker/shared';
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { getMaterials, getPendingMail, getState, putState } from './api.ts';
 import { createSaver } from './save.ts';
 import { type Binned, binLetter, moveItem, takeLetter, unbinLetter } from './wall/wall-actions.ts';
+
+const screen = () => ({ width: window.innerWidth, height: window.innerHeight });
+
+/** Камера, с которой доска видна сейчас: со стола — вся целиком, у стены — своя. */
+export const shownCamera = (s: PlayerState) =>
+  s.view === 'desk' ? fitCamera(s.wall, screen()) : s.wall.camera;
 
 /** Сколько можно «Вернуть» выброшенное письмо, мс. */
 const UNDO_MS = 6000;
@@ -31,9 +43,14 @@ interface GameStore {
   /** Компьютер следователя открыт крупно (щелчок по монитору на столе). */
   computerOpen: boolean;
   setComputerOpen(open: boolean): void;
+  /** Вскрыть конверт архива или коробку (A-260): содержимое — на стену группой. */
+  openContainer(id: ContainerId): void;
   /** Окно корзины у стола открыто (TR-A). */
   trashOpen: boolean;
   setTrashOpen(open: boolean): void;
+  /** Конверт или коробка в руках (A-260): крупно, повертеть, «Вскрыть». */
+  inspecting: ContainerId | null;
+  setInspecting(id: ContainerId | null): void;
   /** Только что выброшенное письмо — его можно «Вернуть» несколько секунд. */
   binned: Binned | null;
   /** Письмо-ответ — в корзину (со стены или из «Входящих»); остальное не выбрасывается. */
@@ -76,6 +93,7 @@ export const useGame = create<GameStore>((set, get) => {
     arrival: null,
     computerOpen: false,
     trashOpen: false,
+    inspecting: null,
     find: null,
     searchOpen: false,
     binned: null,
@@ -86,6 +104,15 @@ export const useGame = create<GameStore>((set, get) => {
 
     setComputerOpen(open) {
       set({ computerOpen: open });
+    },
+
+    openContainer(id) {
+      const { materials } = get();
+      get().updateState((s) => openContainer(s, materials, id));
+    },
+
+    setInspecting(id) {
+      set({ inspecting: id });
     },
 
     setTrashOpen(open) {
@@ -111,7 +138,7 @@ export const useGame = create<GameStore>((set, get) => {
     pinToWall(materialId) {
       get().updateState((s) => {
         if (s.wall.items.some((i) => i.id === materialId)) return s;
-        const c = s.wall.camera;
+        const c = shownCamera(s);
         const cx = (window.innerWidth / 2 - c.x) / c.zoom;
         const cy = (window.innerHeight / 2 - c.y) / c.zoom;
         // Несколько подряд — не стопкой: каждый следующий чуть ниже и правее.
@@ -163,6 +190,12 @@ export const useGame = create<GameStore>((set, get) => {
         try {
           const [materials, state] = await Promise.all([getMaterials(), getState()]);
           set({ materials, state, loadFailed: false });
+          // Только в разработке: «?opened=all» — все конверты вскрыты (автотесты и проверки).
+          if (
+            import.meta.env.DEV &&
+            new URLSearchParams(window.location.search).get('opened') === 'all'
+          )
+            get().updateState((s) => openAll(s, materials));
           // Письма, которые ещё в пути (ходатайство отправили до перезагрузки).
           getPendingMail()
             .then((inMs) => {
@@ -178,13 +211,9 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     setView(view) {
-      // Ушли со стены — её масштаб возвращается к обычному: со стола видна вся доска,
-      // а не карточка, которую разглядывали вблизи (правка автора 09.11).
-      get().updateState((s) =>
-        s.view === 'wall' && view !== 'wall'
-          ? { ...s, view, wall: { ...s.wall, camera: DEFAULT_WALL_CAMERA } }
-          : { ...s, view },
-      );
+      // Камеру стены вид не трогает: со стола доска и так видна целиком (shownCamera), у
+      // стены — масштаб, на котором игрок её оставил.
+      get().updateState((s) => (s.view === view ? s : { ...s, view }));
     },
 
     updateState(fn) {
@@ -196,3 +225,16 @@ export const useGame = create<GameStore>((set, get) => {
     },
   };
 });
+
+/**
+ * Материалы, которые игрок видит: без невскрытых конвертов архива (A-260). По ним — поиск по
+ * делу (A-196: «по открытым текстам») и адресная книга ходатайства.
+ */
+export function useVisibleMaterials(): Material[] {
+  const materials = useGame((g) => g.materials);
+  const key = useGame((g) => (g.state ? openedOf(g.state).join(',') : ''));
+  return useMemo(() => {
+    const sealed = sealedIds({ opened: (key ? key.split(',') : []) as ContainerId[] });
+    return materials.filter((m) => !sealed.has(m.id));
+  }, [materials, key]);
+}
