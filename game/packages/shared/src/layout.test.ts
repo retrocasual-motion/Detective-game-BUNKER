@@ -25,9 +25,10 @@ const mat = (id: string, placement: Material['placement'] = 'desk'): Material =>
   body: '',
   sourceFile: `${id}__x.md`,
 });
-const starting: Material[] = Array.from({ length: 51 }, (_, i) =>
-  String(i + 1).padStart(2, '0'),
-).map((id) => mat(id, ['24', '47', '48', '49', '50'].includes(id) ? 'evidence' : 'desk'));
+// Как в контенте: 01…51 без 16 (лента объявлений снята, A-262).
+const starting: Material[] = Array.from({ length: 51 }, (_, i) => String(i + 1).padStart(2, '0'))
+  .filter((id) => id !== '16')
+  .map((id) => mat(id, ['24', '47', '48', '49', '50'].includes(id) ? 'evidence' : 'desk'));
 
 describe('defaultState', () => {
   const s = defaultState(starting);
@@ -130,7 +131,7 @@ describe('upgradeState', () => {
     const got = upgradeState(v4, starting);
     expect(got?.view).toBe('wall');
     expect(got?.wall.items.find((i) => i.id === '03')).toMatchObject({ x: 2000, y: 1500 });
-    expect(got?.wall.items).toHaveLength(51 + PERSONS.length);
+    expect(got?.wall.items).toHaveLength(starting.length + PERSONS.length);
     expect(got?.wall.threads).toHaveLength(1);
   });
 

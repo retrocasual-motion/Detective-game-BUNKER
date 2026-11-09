@@ -95,9 +95,12 @@ test('поиск не видит невскрытого; после вскрыт
 test('газета на столе — бумажный номер; сайт газеты — закладки на компьютере', async ({ page }) => {
   await page.getByTestId('newspaper').click();
   await expect(page.getByTestId('viewer')).toContainText('номер от 16 ноября 2009');
+  // Колонка «Помним» (A-262): Том — одна из трёх записей.
+  await expect(page.getByTestId('viewer')).toContainText('Гарольд Финч');
+  await expect(page.getByTestId('viewer')).toContainText('Вчера, 15 ноября, ему исполнилось бы 35');
   await page.keyboard.press('Escape');
   await page.getByTestId('computer-monitor').click();
   await page.getByTestId('computer-tab-Закладки').click();
-  await page.getByTestId('bookmark-16').click();
-  await expect(page.getByTestId('viewer')).toContainText('Год, как не стало');
+  await page.getByTestId('bookmark-17').click();
+  await expect(page.getByTestId('viewer')).toContainText('Выпуск открывается по дате');
 });

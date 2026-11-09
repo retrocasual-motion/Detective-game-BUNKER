@@ -15,10 +15,12 @@ const playerDir = join(here, DEFAULT_PLAYER_DIR);
 describe('buildStartingMaterials', () => {
   const materials = buildStartingMaterials(playerDir);
 
-  it('собирает ровно 51 стартовый материал с номерами 01…51', () => {
-    expect(materials).toHaveLength(51);
+  it('собирает 50 стартовых материалов 01…51 — без 16 (лента объявлений снята, A-262)', () => {
+    expect(materials).toHaveLength(50);
     expect(materials.map((m) => m.id)).toEqual(
-      Array.from({ length: 51 }, (_, i) => String(i + 1).padStart(2, '0')),
+      Array.from({ length: 51 }, (_, i) => String(i + 1).padStart(2, '0')).filter(
+        (id) => id !== '16',
+      ),
     );
   });
 
