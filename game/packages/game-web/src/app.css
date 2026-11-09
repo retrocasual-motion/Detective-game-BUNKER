@@ -1431,12 +1431,13 @@ button {
   border-top: none;
   border-radius: 0 0 var(--radius) var(--radius);
   font-size: 11px;
-  opacity: 0.75;
 }
+/* Служебная строка: светлый текст на тёмном — читается поверх любой сцены. */
 .dev-line-body {
   width: 100%;
   order: -1;
   padding: var(--space-2);
+  color: var(--color-text);
   background: var(--color-dev);
   border: 1px dashed var(--color-border);
   border-top: none;
@@ -1455,6 +1456,10 @@ button {
 .dev-line-form input {
   flex: 1;
   padding: var(--space-1) var(--space-2);
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   font:
     13px ui-monospace,
     monospace;
@@ -1464,8 +1469,13 @@ button {
   gap: var(--space-1);
   margin-top: var(--space-1);
 }
-.dev-line-tools button {
+.dev-line-tools button,
+.dev-reading-tools button {
   padding: 2px var(--space-2);
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   font-size: 12px;
 }
 .dev-line-log {
@@ -1485,6 +1495,9 @@ button {
 .dev-line-cmd {
   font-family: ui-monospace, monospace;
   color: var(--color-text-muted);
+}
+.dev-line-reply {
+  color: var(--color-text);
 }
 .dev-line-result {
   color: var(--color-accent);
