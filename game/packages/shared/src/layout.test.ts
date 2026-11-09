@@ -162,3 +162,23 @@ describe('разложить по порядку (служебная кнопк�
     expect(s.wall.camera).toEqual(base.wall.camera);
   });
 });
+
+describe('корзина (TR-A)', () => {
+  const withM = [...starting, mat('L101'), mat('M001'), mat('M002')];
+  const s = defaultState(withM);
+
+  it('выброшенное письмо не стоит во «Входящих»', () => {
+    expect(inboxIds({ ...s, trash: ['M001'] }, withM)).toEqual(['M002', 'L101']);
+  });
+
+  it('reconcile: в корзине только свои письма-ответы без повторов; со стены выброшенное снято', () => {
+    const hung = {
+      ...s,
+      wall: { ...s.wall, items: [...s.wall.items, { id: 'M001', x: 0, y: 0, z: 999, rot: 0 }] },
+      trash: ['M001', 'M001', 'L101', 'M404'],
+    };
+    const got = reconcile(hung, withM);
+    expect(got.trash).toEqual(['M001']);
+    expect(got.wall.items.some((i) => i.id === 'M001')).toBe(false);
+  });
+});

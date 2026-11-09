@@ -31,6 +31,7 @@ import {
   addNote,
   addThread,
   editNote,
+  isLetter,
   labelThread,
   moveItem,
   removeNote,
@@ -126,6 +127,7 @@ export function WallView() {
   const wall = useGame((g) => g.state?.wall);
   const materials = useGame((g) => g.materials);
   const updateState = useGame((g) => g.updateState);
+  const throwAway = useGame((g) => g.throwAway);
   const openViewer = useGame((g) => g.openViewer);
   const [live, setLive] = useState<{ id: string; dx: number; dy: number } | null>(null);
   const [pull, setPull] = useState<{ from: string; to: Pt | null; sticky?: boolean } | null>(null);
@@ -463,7 +465,8 @@ export function WallView() {
         onDrop={drop}
         onLive={onLive}
         pin={pin}
-        onDelete={note ? deleteNote : undefined}
+        onDelete={note ? deleteNote : isLetter(item.id) ? throwAway : undefined}
+        deleteLabel={note ? undefined : 'В корзину'}
         hidden={ghost?.id === item.id}
         editing={editingNote === item.id}
         width={width}

@@ -11,6 +11,7 @@ import {
 import {
   type Card,
   defaultState,
+  letterBody,
   type Material,
   PERSONS,
   CardSchema as PlayerCardSchema,
@@ -88,6 +89,8 @@ function invalidReference(s: PlayerState, materials: Material[]): string | null 
     .flatMap((d) => [d.ask, d.basis])
     .find((c) => c !== null && !own.has(c.file));
   if (card) return `нет материала ${card.file}`;
+  const binned = s.trash.find((id) => !own.has(id));
+  if (binned) return `нет материала ${binned}`;
   const allIds = new Set([
     ...materials.map((m) => m.id),
     ...PERSONS.map((p) => p.id),
@@ -282,23 +285,14 @@ export function createApp({
       if (GENERAL_REFUSAL_IDS.has(outcome.rule)) return { refused: outcome.reply };
       const n = (letters.at(-1)?.n ?? 0) + 1;
       const titled = (id: string) => `${id} — ${lockedById.get(id)?.title ?? ''}`;
-      const body = [
-        `# Ответ на ходатайство № ${n}`,
-        '',
-        `**От:** ${to}`,
-        '**Кому:** вам',
-        '',
-        outcome.reply,
-        '',
-        ...(outcome.released.length
-          ? [`**Вложения:** ${outcome.released.map(titled).join('; ')}`, '']
-          : []),
-        '---',
-        '',
-        `Ваше ходатайство № ${n}`,
-        `Прошу: ${ask.file} — «${ask.quote}»`,
-        `На основании: ${basis.file} — «${basis.quote}»`,
-      ].join('\n');
+      const body = letterBody({
+        n,
+        to,
+        reply: outcome.reply,
+        attached: outcome.released.map(titled),
+        ask,
+        basis,
+      });
       await db.insert(playerLetters).values({
         playerId: PLAYER_ID,
         n,

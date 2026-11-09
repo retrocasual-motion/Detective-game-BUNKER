@@ -83,3 +83,22 @@ export function addressBook(materials: Pick<Material, 'body'>[]): string[] {
       if (/^[\x21-\x7e]+$/.test(a)) all.add(a.toLowerCase().replace(/\.$/, ''));
   return [...all].sort();
 }
+
+/**
+ * «Повторить ходатайство» (RP-A, решение автора 09.11): новый черновик с тем же адресом и
+ * карточками — в пустой черновик, если он есть, иначе новым (если есть место).
+ * Возвращает id черновика или null, если все черновики заняты.
+ */
+export function repeatDraft(
+  s: PlayerState,
+  id: string,
+  p: { to: string; ask: Card; basis: Card },
+): { state: PlayerState; id: string } | null {
+  const empty = s.drafts.find(isEmptyDraft);
+  const target = empty?.id ?? id;
+  const filled: Draft = { id: target, to: p.to, ask: p.ask, basis: p.basis };
+  if (empty)
+    return { state: { ...s, drafts: s.drafts.map((d) => (d === empty ? filled : d)) }, id: target };
+  if (s.drafts.length >= MAX_DRAFTS) return null;
+  return { state: { ...s, drafts: [...s.drafts, filled] }, id: target };
+}

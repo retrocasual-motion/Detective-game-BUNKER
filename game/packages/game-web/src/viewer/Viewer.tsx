@@ -1,4 +1,4 @@
-import { inboxIds, PERSONS } from '@bunker/shared';
+import { inboxIds, letterPetition, PERSONS } from '@bunker/shared';
 import { type MouseEvent, type PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { emailIn, quoteCard, wholeCard } from '../petition/drafts.ts';
 import { usePetition } from '../petition/petition-store.ts';
 import { useGame } from '../store.ts';
+import { isLetter, takeOutOfBin } from '../wall/wall-actions.ts';
 import { sameRange, snapToWords, unitRangeAt } from './selectUnit.ts';
 import { unwrapLines } from './text.ts';
 
@@ -38,6 +39,11 @@ export function Viewer({ materialId }: ViewerProps) {
   );
   const pinToWall = useGame((g) => g.pinToWall);
   const [pinned, setPinned] = useState(false);
+  // Письмо-ответ (этап 3): повторить ходатайство (RP-A), выбросить или достать (TR-A).
+  const letter = material && isLetter(material.id) ? material : null;
+  const petition = useMemo(() => (letter ? letterPetition(letter.body) : null), [letter]);
+  const inTrash = useGame((g) => g.state?.trash.includes(materialId) ?? false);
+  const [noRoom, setNoRoom] = useState(false);
   // Выделенная строка листа — кнопка «В ходатайство» у её конца (K-A).
   const [sel, setSel] = useState<{ text: string; x: number; y: number } | null>(null);
   const toAddress = usePetition((p) => p.field === 'to');
@@ -198,6 +204,46 @@ export function Viewer({ materialId }: ViewerProps) {
               onClick={() => usePetition.getState().addCard(wholeCard(material))}
             >
               В ходатайство целиком
+            </button>
+          )}
+          {petition && (
+            <button
+              type="button"
+              className="tool"
+              data-testid="viewer-repeat"
+              title="Новый черновик с тем же адресом и карточками — замените ту, что не подошла"
+              onClick={() => setNoRoom(!usePetition.getState().repeat(petition))}
+            >
+              Повторить ходатайство
+            </button>
+          )}
+          {noRoom && (
+            <p className="viewer-tools-note" data-testid="viewer-no-room">
+              Все черновики заняты — отправьте или выбросьте один.
+            </p>
+          )}
+          {letter && !inTrash && (
+            <button
+              type="button"
+              className="tool"
+              data-testid="viewer-to-trash"
+              title="Убрать письмо в корзину у стола; в деле оно останется"
+              onClick={() => {
+                useGame.getState().throwAway(letter.id);
+                close();
+              }}
+            >
+              В корзину
+            </button>
+          )}
+          {letter && inTrash && (
+            <button
+              type="button"
+              className="tool"
+              data-testid="viewer-from-trash"
+              onClick={() => useGame.getState().updateState(takeOutOfBin(letter.id))}
+            >
+              Достать из корзины
             </button>
           )}
           {(inInbox || pinned) && (

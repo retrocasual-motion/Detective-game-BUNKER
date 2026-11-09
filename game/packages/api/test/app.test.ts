@@ -105,6 +105,12 @@ describe('API', () => {
     expect((await put(s)).status).toBe(400);
   });
 
+  it('PUT с письмом в корзине, которого у игрока нет → 400 (TR-A)', async () => {
+    const s = defaultState(materials);
+    s.trash = ['M001'];
+    expect((await put(s)).status).toBe(400);
+  });
+
   it('PUT с нитью на неизвестное или записка без текста в notes → 400', async () => {
     const a = defaultState(materials);
     a.wall.threads.push({ id: 't', from: '01', to: 'L214', label: '' });

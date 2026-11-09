@@ -7,6 +7,7 @@ import {
   emailIn,
   missingFields,
   quoteCard,
+  repeatDraft,
   setField,
   swapCards,
   wholeCard,
@@ -70,5 +71,27 @@ describe('карточки и адреса', () => {
       'documents@vaultline-program.com',
     );
     expect(emailIn('нет адреса')).toBeNull();
+  });
+});
+
+describe('«Повторить ходатайство» (RP-A)', () => {
+  const p = {
+    to: 'zapros@okrug-bureau.org',
+    ask: { file: '04', quote: 'строка 53' },
+    basis: { file: '29', quote: 'П-05' },
+  };
+
+  it('в пустой черновик, если он есть; иначе новый; все четыре заняты — null', () => {
+    let s = addDraft('a')(defaultState([]));
+    const r1 = repeatDraft(s, 'new', p);
+    expect(r1?.id).toBe('a');
+    expect(r1?.state.drafts).toEqual([{ id: 'a', ...p }]);
+    s = r1?.state ?? s;
+    const r2 = repeatDraft(s, 'b', p);
+    expect(r2?.state.drafts.map((d) => d.id)).toEqual(['a', 'b']);
+    for (const id of ['c', 'd']) s = repeatDraft(s, id, p)?.state ?? s;
+    s = repeatDraft(s, 'b', p)?.state ?? s;
+    expect(s.drafts).toHaveLength(4);
+    expect(repeatDraft(s, 'e', p)).toBeNull();
   });
 });

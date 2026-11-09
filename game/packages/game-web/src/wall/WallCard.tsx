@@ -32,8 +32,10 @@ interface WallCardProps {
   onDrop(id: string, x: number, y: number, at: { x: number; y: number }): void;
   onLive(id: string, dx: number, dy: number, at?: { x: number; y: number }): void;
   pin: PinHandlers;
-  /** Только у записок: ✕ — снять со стены (с «Вернуть»). */
+  /** У записок и писем-ответов: ✕ — снять со стены или в корзину (с «Вернуть»). */
   onDelete?(id: string): void;
+  /** Подпись ✕: «Снять со стены» (записка) или «В корзину» (письмо). */
+  deleteLabel?: string;
   /** Записку правят — перетаскивание выключено, щелчки идут в поле ввода. */
   editing?: boolean;
   /** Своя ширина (записка, ярлык), мировые px. */
@@ -63,6 +65,7 @@ export const WallCard = memo(function WallCard({
   onLive,
   pin,
   onDelete,
+  deleteLabel = 'Снять со стены',
   editing,
   width,
   onResize,
@@ -159,8 +162,8 @@ export const WallCard = memo(function WallCard({
           type="button"
           className="wall-delete"
           data-testid={`delete-${id}`}
-          aria-label="Снять со стены"
-          title="Снять со стены"
+          aria-label={deleteLabel}
+          title={deleteLabel}
           onPointerDown={(e) => e.stopPropagation()}
           onClick={() => onDelete(id)}
         >
