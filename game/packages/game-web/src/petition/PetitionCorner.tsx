@@ -1,7 +1,9 @@
 import { type Card, type Draft, type DraftField, MAX_DRAFTS } from '@bunker/shared';
-import { useMemo } from 'react';
+import { type PointerEvent, useMemo } from 'react';
+import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { useGame } from '../store.ts';
 import { addressBook } from './drafts.ts';
+import { petitionFieldAt } from './fieldAt.ts';
 import { usePetition } from './petition-store.ts';
 
 /** Шаг язычков папок в стопке, px. */
@@ -22,9 +24,35 @@ const HINT: Record<DraftField, string> = {
   basis: 'выделите строку в документе и нажмите «В ходатайство» или перетащите сюда лист со стены',
 };
 
-function CardView({ card }: { card: Card }) {
+/**
+ * Карточку в поле можно взять мышью и перетащить в другое поле карточек (правка автора 09.11):
+ * в пустое — переходит, с занятым — меняются местами.
+ */
+function dragCard(e: PointerEvent, card: Card, from: 'ask' | 'basis') {
+  const other = from === 'ask' ? 'basis' : 'ask';
+  const pet = usePetition.getState();
+  startGhostDrag(e.nativeEvent, {
+    label: `${card.file} · «${card.quote}»`,
+    className: 'drag-ghost-paper',
+    canDrop: (pt) => {
+      const ok = petitionFieldAt(pt.x, pt.y) === other;
+      pet.setDrag(true, ok ? other : null);
+      return ok;
+    },
+    onDrop: () => pet.moveCard(from),
+    onEnd: () => pet.setDrag(false, null),
+    onClick: () => pet.setActiveField(from),
+  });
+}
+
+function CardView({ card, from }: { card: Card; from: 'ask' | 'basis' }) {
   return (
-    <span className="petition-card" data-testid="petition-card">
+    <span
+      className="petition-card"
+      data-testid="petition-card"
+      title="Перетащите в другое поле — карточки поменяются местами"
+      onPointerDown={(e) => dragCard(e, card, from)}
+    >
       <span className="petition-card-file">{card.file}</span>
       <span className="petition-card-quote">«{card.quote}»</span>
     </span>
@@ -56,7 +84,7 @@ function Field({ draft, f }: { draft: Draft; f: DraftField }) {
           typeof value === 'string' ? (
             <span className="petition-address">{value}</span>
           ) : (
-            <CardView card={value} />
+            <CardView card={value} from={f === 'ask' ? 'ask' : 'basis'} />
           )
         ) : (
           <span className="petition-blank">{active ? HINT[f] : ''}</span>

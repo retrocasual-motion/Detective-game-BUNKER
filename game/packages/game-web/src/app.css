@@ -402,6 +402,9 @@ button {
   font-size: 16px;
 }
 .petition-card {
+  /* Карточку можно перетащить в другое поле (поменять местами). */
+  cursor: grab;
+  touch-action: none;
   display: flex;
   flex-direction: column;
   gap: 2px;
