@@ -1,4 +1,4 @@
-import { inboxIds } from '@bunker/shared';
+import { type ContainerId, inboxIds, openedOf } from '@bunker/shared';
 import { useEffect, useMemo } from 'react';
 import { ComputerScreen } from './computer/ComputerScreen.tsx';
 import { ArrivalNote } from './desk/ArrivalNote.tsx';
@@ -48,6 +48,12 @@ export function App() {
   const inboxKey = useGame((g) => (g.state ? inboxIds(g.state, g.materials).join(',') : ''));
   const inbox = useMemo(() => (inboxKey ? inboxKey.split(',') : []), [inboxKey]);
   const trash = useGame((g) => g.state?.trash.length ?? 0);
+  // Строкой — по той же причине, что и «Входящие».
+  const openedKey = useGame((g) => (g.state ? openedOf(g.state).join(',') : ''));
+  const opened = useMemo(
+    () => (openedKey ? (openedKey.split(',') as ContainerId[]) : []),
+    [openedKey],
+  );
 
   if (!view) {
     return (
@@ -66,6 +72,7 @@ export function App() {
         wall={wall}
         inbox={inbox}
         trash={trash}
+        opened={opened}
       />
       {saveStatus === 'error' && (
         <div className="save-error" data-testid="save-error">

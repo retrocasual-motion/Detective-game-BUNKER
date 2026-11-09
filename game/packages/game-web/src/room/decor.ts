@@ -1,3 +1,4 @@
+import { CONTAINER_IDS, CONTAINERS, type ContainerId } from '@bunker/shared';
 import { type Pose, type Room, toCamera, toScreen, type Vec3 } from './camera.ts';
 
 /**
@@ -13,7 +14,11 @@ export interface Poly {
 }
 
 /** Что делает щелчок по предмету: компьютер или материал дела (устройство). */
-export type Hotspot = { kind: 'computer' } | { kind: 'trash' } | { kind: 'material'; id: string };
+export type Hotspot =
+  | { kind: 'computer' }
+  | { kind: 'trash' }
+  | { kind: 'container'; id: ContainerId }
+  | { kind: 'material'; id: string };
 
 interface Box {
   min: Vec3;
@@ -30,6 +35,8 @@ export interface DeskObject {
   hotspot?: Hotspot;
   /** Бумажный ярлык под предметом: «Изъято · 47», «Входящие». */
   tag?: string;
+  /** Ярлык — на самом предмете (надпись на конверте), а не под ним. */
+  tagInside?: boolean;
   /** Для автотестов. */
   testId?: string;
 }
@@ -187,7 +194,20 @@ export function roomPolys(r: Room, col: Col): Poly[] {
  * Предметы на столе. Положение — в долях p: x от центра доски, z от стены, h — высота.
  * Устройства — из описи (24, 47–50); пакеты 40–46 лежат в коробке.
  */
-export function deskObjects(r: Room, col: Col, inbox: string[] = [], trash = 0): DeskObject[] {
+/** Где лежит конверт на столе (доли p): ближний ряд, по порядку. */
+const ENVELOPE_AT: Record<Exclude<ContainerId, 'personal'>, [number, number]> = {
+  protocols: [-0.2, 0.56],
+  scene: [0.04, 0.56],
+  bunker: [0.28, 0.56],
+};
+
+export function deskObjects(
+  r: Room,
+  col: Col,
+  inbox: string[] = [],
+  trash = 0,
+  opened: readonly ContainerId[] = CONTAINER_IDS,
+): DeskObject[] {
   const { p, deskY } = r;
   const box = (
     x: number,
@@ -206,7 +226,7 @@ export function deskObjects(r: Room, col: Col, inbox: string[] = [], trash = 0):
   const edge = col('--color-device-edge');
   const monitor = box(-0.66, 0.2, 0.32, 0.24, 0.25, col('--color-monitor'), 0.04);
   monitor.screen = col('--color-screen');
-  return [
+  const all: DeskObject[] = [
     ...inboxObjects(r, col, inbox),
     trashObject(r, col, trash),
     {
@@ -226,16 +246,57 @@ export function deskObjects(r: Room, col: Col, inbox: string[] = [], trash = 0):
       tag: 'Изъято · 50',
       testId: 'device-50',
     },
+    // Коробка «Личные вещи» (A-260): опечатана — крышка; вскрыта — пакеты сверху.
+    opened.includes('personal')
+      ? {
+          key: 'bags',
+          label: 'Коробка: личные вещи членов группы (40–46)',
+          boxes: [
+            box(-0.3, 0.16, 0.24, 0.18, 0.1, col('--color-box')),
+            box(-0.32, 0.15, 0.17, 0.12, 0.02, col('--color-bag'), 0.1),
+          ],
+          tag: 'Личные вещи · 40–46',
+          testId: 'bags-box',
+        }
+      : {
+          key: 'bags',
+          label: 'Коробка «Личные вещи», опечатана — вскрыть',
+          boxes: [
+            box(-0.3, 0.16, 0.24, 0.18, 0.1, col('--color-box')),
+            box(-0.3, 0.16, 0.25, 0.19, 0.012, col('--color-box-lid'), 0.1),
+            box(-0.3, 0.16, 0.02, 0.19, 0.014, col('--color-seal'), 0.1),
+          ],
+          hotspot: { kind: 'container' as const, id: 'personal' as const },
+          tag: 'Личные вещи',
+          testId: 'container-personal',
+        },
+    // Газета (E44, A-260): свежий номер, сложен; бытовая вещь — без бирки.
     {
-      key: 'bags',
-      label: 'Коробка: личные вещи членов группы (40–46)',
+      key: 'newspaper',
+      label: 'Газета',
       boxes: [
-        box(-0.3, 0.16, 0.24, 0.18, 0.1, col('--color-box')),
-        box(-0.32, 0.15, 0.17, 0.12, 0.02, col('--color-bag'), 0.1),
+        box(-0.37, 0.33, 0.19, 0.13, 0.01, col('--color-newspaper')),
+        box(-0.37, 0.29, 0.17, 0.025, 0.002, col('--color-newspaper-ink'), 0.01),
       ],
-      tag: 'Личные вещи · 40–46',
-      testId: 'bags-box',
+      hotspot: { kind: 'material' as const, id: '15' },
+      testId: 'newspaper',
     },
+    // Конверты архива (A-260): опечатаны, у каждого — название; вскрытый со стола уходит.
+    ...CONTAINERS.filter((c) => c.id !== 'personal' && !opened.includes(c.id)).map((c) => {
+      const [x, z] = ENVELOPE_AT[c.id as Exclude<ContainerId, 'personal'>];
+      return {
+        key: `envelope-${c.id}`,
+        label: `Конверт «${c.label}», опечатан — вскрыть`,
+        boxes: [
+          box(x, z, 0.2, 0.12, 0.008, col('--color-archive-envelope')),
+          box(x + 0.07, z - 0.035, 0.03, 0.02, 0.003, col('--color-seal'), 0.008),
+        ],
+        hotspot: { kind: 'container' as const, id: c.id },
+        tag: c.label,
+        tagInside: true,
+        testId: `container-${c.id}`,
+      };
+    }),
     {
       key: 'monitor',
       label: 'Компьютер следователя',
@@ -245,7 +306,7 @@ export function deskObjects(r: Room, col: Col, inbox: string[] = [], trash = 0):
     {
       key: 'laptop',
       label: 'Ноутбук руководителя',
-      boxes: [box(-0.1, 0.44, 0.28, 0.2, 0.022, device)],
+      boxes: [box(-0.1, 0.36, 0.28, 0.2, 0.022, device)],
       hotspot: { kind: 'material', id: '47' },
       tag: 'Изъято · 47',
       testId: 'device-47',
@@ -261,7 +322,7 @@ export function deskObjects(r: Room, col: Col, inbox: string[] = [], trash = 0):
     {
       key: 'card',
       label: 'Карта памяти камеры инженера',
-      boxes: [box(0.12, 0.52, 0.035, 0.045, 0.005, edge)],
+      boxes: [box(0.12, 0.44, 0.035, 0.045, 0.005, edge)],
       hotspot: { kind: 'material', id: '24' },
       tag: 'Изъято · 24',
       testId: 'device-24',
@@ -269,7 +330,7 @@ export function deskObjects(r: Room, col: Col, inbox: string[] = [], trash = 0):
     {
       key: 'mobile',
       label: 'Телефон (владелец не установлен)',
-      boxes: [box(0.3, 0.5, 0.07, 0.13, 0.012, col('--color-screen'))],
+      boxes: [box(0.32, 0.42, 0.07, 0.13, 0.012, col('--color-screen'))],
       hotspot: { kind: 'material', id: '48' },
       tag: 'Изъято · 48',
       testId: 'device-48',
@@ -288,7 +349,12 @@ export function deskObjects(r: Room, col: Col, inbox: string[] = [], trash = 0):
       ],
     },
   ];
+  // Устройства лежат на столе, когда вскрыт конверт «Место происшествия и улики» (A-260).
+  return opened.includes('scene') ? all : all.filter((o) => !DEVICE_KEYS.has(o.key));
 }
+
+/** Изъятые устройства на столе (24, 47–50). */
+const DEVICE_KEYS = new Set(['radio', 'laptop', 'pen', 'card', 'mobile']);
 
 /** Отсечь многоугольник плоскостью z = zMax (всё, что за зрителем, выбрасывается). */
 export function clipNear(pts: Vec3[], zMax: number): Vec3[] {
@@ -481,11 +547,12 @@ export function drawObjects(
   r: Room,
   inbox: string[] = [],
   trash = 0,
+  opened: readonly ContainerId[] = CONTAINER_IDS,
 ): void {
   const ctx = prepare(canvas, r);
   if (!ctx) return;
   const col = colors(canvas);
-  for (const o of sortObjects(deskObjects(r, col, inbox, trash), pose.eye)) {
+  for (const o of sortObjects(deskObjects(r, col, inbox, trash, opened), pose.eye)) {
     const boxes = [...o.boxes].sort(
       (a, b) => dist(center(b), pose.eye) - dist(center(a), pose.eye),
     );

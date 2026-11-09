@@ -30,6 +30,12 @@
   --color-box: #8a7656;
   --color-phone: #2a2a2a;
   --color-tray: #5c4a36;
+  /* Конверты архива, крышка коробки, печать, газета (A-260, 09.11). */
+  --color-archive-envelope: #b58f5a;
+  --color-box-lid: #9a8462;
+  --color-seal: #8e2b25;
+  --color-newspaper: #d8d3c6;
+  --color-newspaper-ink: #5c5a55;
   /* Корзина у стола и комки бумаги в ней (TR-A, 09.11). */
   --color-bin: #3e4240;
   --color-bin-inside: #1f2120;

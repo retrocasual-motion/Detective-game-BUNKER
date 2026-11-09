@@ -1,4 +1,4 @@
-import { CARD_W } from '@bunker/shared';
+import { CARD_W, type ContainerId } from '@bunker/shared';
 import { useMemo } from 'react';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
@@ -22,21 +22,23 @@ export function DeskHotspots({
   room,
   inbox,
   trash,
+  opened,
 }: {
   room: Room;
   inbox: string[];
   trash: number;
+  opened: readonly ContainerId[];
 }) {
   const openViewer = useGame((g) => g.openViewer);
   const setComputerOpen = useGame((g) => g.setComputerOpen);
   const updateState = useGame((g) => g.updateState);
   const spots = useMemo(
     () =>
-      deskObjects(room, noColor, inbox, trash).map((o) => ({
+      deskObjects(room, noColor, inbox, trash, opened).map((o) => ({
         o,
         r: screenRect(o, room.poses.desk, room),
       })),
-    [room, inbox, trash],
+    [room, inbox, trash, opened],
   );
   // Письмо-ответ из лотка можно бросить прямо в корзину (TR-A).
   const bin = spots.find((s) => s.o.key === 'trash')?.r;
@@ -106,10 +108,15 @@ export function DeskHotspots({
               if (o.key.startsWith('inbox-') && e.detail > 0) return;
               if (h?.kind === 'computer') setComputerOpen(true);
               else if (h?.kind === 'trash') useGame.getState().setTrashOpen(true);
+              else if (h?.kind === 'container') useGame.getState().openContainer(h.id);
               else if (h) openViewer(h.id);
             }}
           >
-            {o.tag && <span className="device-tag">{o.tag}</span>}
+            {o.tag && (
+              <span className={`device-tag${o.tagInside ? ' device-tag-inside' : ''}`}>
+                {o.tag}
+              </span>
+            )}
           </button>
         ) : o.tag ? (
           <div

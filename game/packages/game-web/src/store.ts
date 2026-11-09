@@ -1,10 +1,16 @@
 import {
+  type ContainerId,
   DEFAULT_WALL_CAMERA,
   type Material,
+  openAll,
+  openContainer,
+  openedOf,
   type PlayerState,
   reconcile,
+  sealedIds,
   type View,
 } from '@bunker/shared';
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { getMaterials, getPendingMail, getState, putState } from './api.ts';
 import { createSaver } from './save.ts';
@@ -31,6 +37,8 @@ interface GameStore {
   /** Компьютер следователя открыт крупно (щелчок по монитору на столе). */
   computerOpen: boolean;
   setComputerOpen(open: boolean): void;
+  /** Вскрыть конверт архива или коробку (A-260): содержимое — на стену группой. */
+  openContainer(id: ContainerId): void;
   /** Окно корзины у стола открыто (TR-A). */
   trashOpen: boolean;
   setTrashOpen(open: boolean): void;
@@ -86,6 +94,11 @@ export const useGame = create<GameStore>((set, get) => {
 
     setComputerOpen(open) {
       set({ computerOpen: open });
+    },
+
+    openContainer(id) {
+      const { materials } = get();
+      get().updateState((s) => openContainer(s, materials, id));
     },
 
     setTrashOpen(open) {
@@ -163,6 +176,12 @@ export const useGame = create<GameStore>((set, get) => {
         try {
           const [materials, state] = await Promise.all([getMaterials(), getState()]);
           set({ materials, state, loadFailed: false });
+          // Только в разработке: «?opened=all» — все конверты вскрыты (автотесты и проверки).
+          if (
+            import.meta.env.DEV &&
+            new URLSearchParams(window.location.search).get('opened') === 'all'
+          )
+            get().updateState((s) => openAll(s, materials));
           // Письма, которые ещё в пути (ходатайство отправили до перезагрузки).
           getPendingMail()
             .then((inMs) => {
@@ -196,3 +215,16 @@ export const useGame = create<GameStore>((set, get) => {
     },
   };
 });
+
+/**
+ * Материалы, которые игрок видит: без невскрытых конвертов архива (A-260). По ним — поиск по
+ * делу (A-196: «по открытым текстам») и адресная книга ходатайства.
+ */
+export function useVisibleMaterials(): Material[] {
+  const materials = useGame((g) => g.materials);
+  const key = useGame((g) => (g.state ? openedOf(g.state).join(',') : ''));
+  return useMemo(() => {
+    const sealed = sealedIds({ opened: (key ? key.split(',') : []) as ContainerId[] });
+    return materials.filter((m) => !sealed.has(m.id));
+  }, [materials, key]);
+}

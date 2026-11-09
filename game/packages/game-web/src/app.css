@@ -1748,3 +1748,29 @@ button {
   background-color: var(--color-find, #e8c95a);
   color: #1d1d1d;
 }
+
+/* Закладки браузера на компьютере следователя (E44, A-260). */
+.bookmarks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bookmarks button {
+  display: block;
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  background: none;
+  border: none;
+  color: inherit;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Надпись на конверте архива (A-260): ярлык на самом конверте, по центру. */
+.device-tag-inside {
+  top: 50%;
+  translate: -50% -50%;
+  rotate: -2deg;
+  font-size: 12px;
+}

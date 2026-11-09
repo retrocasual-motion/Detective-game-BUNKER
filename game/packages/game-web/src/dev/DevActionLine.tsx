@@ -1,4 +1,4 @@
-import { arrangeWall } from '@bunker/shared';
+import { arrangeWall, openAll } from '@bunker/shared';
 import { useState } from 'react';
 import { postActionLine, resetState } from '../api.ts';
 import { useGame } from '../store.ts';
@@ -68,6 +68,9 @@ export function DevActionLine() {
   const prepare = async () => {
     if (busy) return;
     setBusy(true);
+    // Конверты архива (A-260) — все вскрыты: карточки берутся из стартовых материалов.
+    const g = useGame.getState();
+    g.updateState((s) => openAll(s, g.materials));
     const opened: string[] = [];
     for (const l of PREPARE) {
       const r = await postActionLine(l).catch(() => null);

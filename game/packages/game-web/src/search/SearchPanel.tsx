@@ -1,5 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
-import { useGame } from '../store.ts';
+import { useGame, useVisibleMaterials } from '../store.ts';
 import { MIN_QUERY, searchCase } from './searchCase.ts';
 
 /** Сколько строк показывать у одного материала (остальные — «ещё N»). */
@@ -13,7 +13,7 @@ const PER_MATERIAL = 5;
 export function SearchPanel() {
   const open = useGame((g) => g.searchOpen);
   const setOpen = useGame((g) => g.setSearchOpen);
-  const materials = useGame((g) => g.materials);
+  const materials = useVisibleMaterials();
   const viewerOpen = useGame((g) => g.viewerId !== null);
   const [query, setQuery] = useState('');
   const deferred = useDeferredValue(query);
