@@ -33,6 +33,8 @@ interface RoomSceneProps {
   hideNav: boolean;
   /** Содержимое доски (стена). */
   wall: ReactNode;
+  /** «Входящие» на столе: что стоит в лотке, свежее — первым. */
+  inbox: string[];
 }
 
 /**
@@ -42,7 +44,7 @@ interface RoomSceneProps {
  * доску). Камера в движении ведётся кадрами из JS, чтобы холсты и доска не расходились.
  * В покое на виде «Стена» доска лежит плоско (без 3D), холсты скрыты.
  */
-export function RoomScene({ view, onGo, hideNav, wall }: RoomSceneProps) {
+export function RoomScene({ view, onGo, hideNav, wall, inbox }: RoomSceneProps) {
   const vp = useViewport();
   const room = useMemo(() => roomFor(vp), [vp]);
   const [ph, setPh] = useState<Phase>({ from: room.poses[view], to: view, moving: false });
@@ -56,7 +58,7 @@ export function RoomScene({ view, onGo, hideNav, wall }: RoomSceneProps) {
     if (pose) live.current = pose;
     if (world.current) world.current.style.transform = pose ? toCss(poseOps(pose, room.p)) : 'none';
     if (pose && back.current) drawRoom(back.current, pose, room);
-    if (pose && front.current) drawObjects(front.current, pose, room);
+    if (pose && front.current) drawObjects(front.current, pose, room, inbox);
   };
 
   useLayoutEffect(() => {
@@ -135,7 +137,7 @@ export function RoomScene({ view, onGo, hideNav, wall }: RoomSceneProps) {
         </div>
       </div>
       <canvas ref={front} className="scene-decor scene-front" hidden={flat} />
-      {atDesk && <DeskHotspots room={room} />}
+      {atDesk && <DeskHotspots room={room} inbox={inbox} />}
       {/* Стрелки видны и во время перехода: щелчок сразу ведёт к новой цели (MOVE-A). */}
       {!hideNav && <NavArrows view={ph.to} onGo={onGo} />}
     </div>

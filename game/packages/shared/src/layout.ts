@@ -1,90 +1,51 @@
+import { PERSONS } from './persons.ts';
 import {
-  type Arrival,
   type Camera,
   type Material,
+  type Note,
   type PlayerState,
   PlayerStateSchema,
   STATE_VERSION,
+  type WallItem,
 } from './schemas.ts';
 
 /**
- * Стена (WALL-C, решение автора 08.11): вверху — колонки «как пришло», листы приколоты
- * лесенкой внахлёст (HANG-A), видна шапка каждого; ниже — поле для своей версии. У материала
- * одно место: в своей колонке (по умолчанию, положение вычисляется) или в поле (wall.items).
- * Предметы со стола (устройства, пакеты вещдоков) висят карточками (ITEM-A).
+ * Стена (WALL-C; правки автора 09.11): всё висит свободно, игрок раскладывает как хочет —
+ * групп и колонок нет. С начала: карточки персонажей рядом сверху, ниже стартовые материалы
+ * сеткой по номеру описи (нейтральный порядок, без подписей). Открытое по ходу дела ждёт во
+ * «Входящих» на столе, пока игрок не повесит его на стену.
  */
 
 /** Размер листа на стене в мировых координатах (совпадает с --card-width/--card-height). */
 export const CARD_W = 160;
 export const CARD_H = 220;
-/** Ширина колонки с промежутком. */
-export const COL_W = 210;
-/** Высота шапки колонки (ярлык с номерами описи) вместе с отступом до первого листа. */
-export const COL_HEADER_H = 52;
-/** Шаг лесенки: столько видно от каждого листа, кроме последнего. */
-export const SHINGLE_STEP = 58;
-/** Колонок в ряду; следующие поступления начинают новый ряд ниже. */
-export const BAND_COLS = 10;
-export const BAND_ROW_GAP = 70;
-/** Отступ поля для своей версии от колонок. */
-export const FIELD_GAP = 140;
+/** Шаг начальной сетки. */
+export const GRID_DX = 200;
+export const GRID_DY = 270;
+export const GRID_COLS = 10;
+/** Начальная сетка материалов — ниже ряда персонажей. */
+export const GRID_TOP = 320;
 
-/**
- * Стартовые колонки — подряд идущие номера описи (файл 04). Подпись — только номера:
- * названия групп — решение автора (P-1: не подсказывать, что важно).
- */
-export const STARTING_COLUMNS: readonly [number, number][] = [
-  [1, 5],
-  [6, 12],
-  [13, 17],
-  [18, 21],
-  [22, 29],
-  [30, 36],
-  [37, 39],
-  [40, 46],
-  [47, 51],
-];
+/** Размер шрифта и ширина записки и ярлыка по умолчанию; пределы правки (как в Miro). */
+export const NOTE_STYLE = {
+  note: { size: 20, width: 190 },
+  label: { size: 24, width: 260 },
+  minSize: 10,
+  maxSize: 64,
+  minWidth: 80,
+  maxWidth: 900,
+} as const;
 
-export const DEFAULT_WALL_CAMERA: Camera = { x: 40, y: 40, zoom: 0.62 };
+/** Край пробковой доски: камера и вещи за него не уходят. */
+export const WALL_BOUNDS = { left: -300, top: -300, right: 3700, bottom: 2700 } as const;
+
+export const DEFAULT_WALL_CAMERA: Camera = { x: 40, y: 50, zoom: 0.55 };
 
 export interface Bounds {
   left: number;
   top: number;
   right: number;
   bottom: number;
-}
-
-export interface Column {
-  key: string;
-  title: string;
-  ids: string[];
-}
-
-export interface ColumnBox extends Column {
-  x: number;
-  y: number;
-  /** Высота колонки вместе с шапкой. */
-  h: number;
-}
-
-export interface Slot {
-  x: number;
-  y: number;
-  rot: number;
-  /** Порядок в колонке: нижний лист лесенки лежит поверх верхнего. */
-  z: number;
-  col: string;
-}
-
-export interface WallLayout {
-  columns: ColumnBox[];
-  slots: Map<string, Slot>;
-  /** Нижний край колонок. */
-  bandBottom: number;
-  /** Верх поля для своей версии. */
-  fieldTop: number;
-  /** Край пробковой доски: камера за него не уезжает. */
-  bounds: Bounds;
 }
 
 /** Закрытый материал, открытый игроком по ходу дела (L…), а не стартовый (01…51). */
@@ -98,82 +59,40 @@ function noise(k: number, axis: number): number {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 
-const num = (id: string) => Number(id.replace(/\D/g, ''));
+const hash = (id: string) => [...id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
-/** Лист на одной кнопке висит чуть косо — у каждого свой наклон, всегда одинаковый. */
-export const hangTilt = (id: string): number => round1((noise(num(id), 5) * 2 - 1) * 2.5);
+/** Вещь на одной кнопке висит чуть косо — у каждой свой наклон, всегда одинаковый. */
+export const hangTilt = (id: string): number => round1((noise(hash(id), 5) * 2 - 1) * 2.5);
 
-/** Колонки «как пришло»: стартовые по описи, затем по одной на каждое поступление (IN-B). */
-export function wallColumns(materials: Material[], arrivals: Arrival[]): Column[] {
-  const starting = materials.filter((m) => !isReleased(m)).map((m) => m.id);
-  const used = new Set<string>();
-  const columns: Column[] = STARTING_COLUMNS.map(([from, to]) => {
-    const ids = starting.filter((id) => num(id) >= from && num(id) <= to).sort();
-    for (const id of ids) used.add(id);
-    return { key: `s${from}`, title: `Опись № ${from}–${to}`, ids };
-  }).filter((c) => c.ids.length > 0);
-  const rest = starting.filter((id) => !used.has(id)).sort();
-  if (rest.length) columns.push({ key: 'rest', title: 'Опись', ids: rest });
-  const known = new Set(materials.map((m) => m.id));
-  arrivals.forEach((a, k) => {
-    const ids = a.ids.filter((id) => known.has(id));
-    if (ids.length) columns.push({ key: `a${k + 1}`, title: `Поступление № ${k + 1}`, ids });
-  });
-  return columns;
+/** Вещь не уходит за край доски: верхний левый угол остаётся на пробке. */
+export const onWall = (x: number, y: number) => ({
+  x: Math.min(WALL_BOUNDS.right - 80, Math.max(WALL_BOUNDS.left, x)),
+  y: Math.min(WALL_BOUNDS.bottom - 80, Math.max(WALL_BOUNDS.top, y)),
+});
+
+const startingIds = (materials: Material[]) =>
+  materials
+    .filter((m) => !isReleased(m))
+    .map((m) => m.id)
+    .sort();
+
+/** Начальное место: персонажи — ряд сверху, материалы — сетка по описи. */
+export function startSlot(id: string, materials: Material[]): { x: number; y: number } | null {
+  const p = PERSONS.findIndex((x) => x.id === id);
+  if (p >= 0) return { x: p * GRID_DX, y: 0 };
+  const k = startingIds(materials).indexOf(id);
+  if (k < 0) return null;
+  return { x: (k % GRID_COLS) * GRID_DX, y: GRID_TOP + Math.floor(k / GRID_COLS) * GRID_DY };
 }
 
-export const columnHeight = (n: number): number =>
-  COL_HEADER_H + Math.max(0, n - 1) * SHINGLE_STEP + CARD_H;
-
-/** Где висит каждая колонка и каждый лист в ней. */
-export function wallLayout(columns: Column[]): WallLayout {
-  const boxes: ColumnBox[] = [];
-  const slots = new Map<string, Slot>();
-  let rowTop = 0;
-  let rowH = 0;
-  columns.forEach((c, i) => {
-    const k = i % BAND_COLS;
-    if (k === 0 && i > 0) {
-      rowTop += rowH + BAND_ROW_GAP;
-      rowH = 0;
-    }
-    const box: ColumnBox = { ...c, x: k * COL_W, y: rowTop, h: columnHeight(c.ids.length) };
-    rowH = Math.max(rowH, box.h);
-    boxes.push(box);
-    c.ids.forEach((id, j) => {
-      slots.set(id, {
-        x: box.x,
-        y: box.y + COL_HEADER_H + j * SHINGLE_STEP,
-        rot: hangTilt(id),
-        z: j + 1,
-        col: c.key,
-      });
-    });
-  });
-  const bandBottom = rowTop + rowH;
-  const fieldTop = bandBottom + FIELD_GAP;
-  const bandRight = Math.min(columns.length, BAND_COLS) * COL_W;
-  return {
-    columns: boxes,
-    slots,
-    bandBottom,
-    fieldTop,
-    bounds: {
-      left: -260,
-      top: -220,
-      right: Math.max(bandRight, 2200) + 1000,
-      bottom: fieldTop + 1700,
-    },
-  };
-}
-
-/** Лист отпустили у его колонки — он возвращается на своё место в лесенке. */
-export function isOverOwnColumn(layout: WallLayout, id: string, x: number, y: number): boolean {
-  const slot = layout.slots.get(id);
-  const col = slot && layout.columns.find((c) => c.key === slot.col);
-  if (!col) return false;
-  return Math.abs(x - col.x) < COL_W / 2 && y > col.y - CARD_H / 2 && y < col.y + col.h;
+/** «Входящие» на столе: открытое по ходу дела, но ещё не повешенное; свежее — первым. */
+export function inboxIds(state: PlayerState, materials: Material[]): string[] {
+  const onWallIds = new Set(state.wall.items.map((i) => i.id));
+  return materials
+    .filter((m) => isReleased(m) && !onWallIds.has(m.id))
+    .map((m) => m.id)
+    .reverse();
 }
 
 export function defaultState(materials: Material[]): PlayerState {
@@ -181,51 +100,100 @@ export function defaultState(materials: Material[]): PlayerState {
     {
       version: STATE_VERSION,
       view: 'desk',
-      wall: { camera: DEFAULT_WALL_CAMERA, items: [], threads: [], arrivals: [] },
+      wall: { camera: DEFAULT_WALL_CAMERA, items: [], threads: [], notes: [] },
     },
     materials,
   );
 }
 
+/** Сохранение версии 4 (колонки «как пришло»): снятое в поле и нити остаются. */
+interface StateV4 {
+  version: 4;
+  view: 'desk' | 'wall';
+  wall: {
+    camera: Camera;
+    items: { materialId: string; x: number; y: number; z: number; rot: number }[];
+    threads: PlayerState['wall']['threads'];
+  };
+}
+
+const isV4 = (raw: unknown): raw is StateV4 => {
+  const r = raw as StateV4 | null;
+  return (
+    !!r &&
+    r.version === 4 &&
+    Array.isArray(r.wall?.items) &&
+    Array.isArray(r.wall?.threads) &&
+    r.wall.items.every((i) => typeof i.materialId === 'string' && Number.isFinite(i.x))
+  );
+};
+
 /**
- * Сохранённое состояние → текущая версия или null. Версии 1–3 (стол сверху и доска с
- * копиями) не переводятся: раскладка один раз начинается заново (решение «Стена», 08.11).
+ * Сохранённое состояние → текущая версия или null. Версия 4: снятое в поле и нити
+ * остаются, остальное вешается сеткой. Версии 1–3 не переводятся.
  */
-export function upgradeState(raw: unknown, _materials: Material[]): PlayerState | null {
+export function upgradeState(raw: unknown, materials: Material[]): PlayerState | null {
   const current = PlayerStateSchema.safeParse(raw);
-  return current.success ? current.data : null;
+  if (current.success) return current.data;
+  if (!isV4(raw)) return null;
+  const next = PlayerStateSchema.safeParse({
+    version: STATE_VERSION,
+    view: raw.view,
+    wall: {
+      camera: raw.wall.camera,
+      items: raw.wall.items.map(({ materialId, x, y, z, rot }) => ({
+        id: materialId,
+        x,
+        y,
+        z,
+        rot,
+      })),
+      threads: raw.wall.threads,
+      notes: [],
+    },
+  });
+  return next.success ? reconcile(next.data, materials) : null;
 }
 
 /**
- * Приводит сохранённое состояние к текущему контенту: неизвестное убирает; открытое по ходу
- * дела, но ещё не висящее на стене, вешает новой колонкой-поступлением (IN-B).
+ * Приводит сохранённое состояние к текущему контенту: неизвестное убирает; недостающих
+ * персонажей и стартовые материалы вешает на их начальные места. Открытое по ходу дела
+ * на стену само не вешается — оно во «Входящих».
  */
 export function reconcile(state: PlayerState, materials: Material[]): PlayerState {
-  const known = new Set(materials.map((m) => m.id));
-
-  const seenItems = new Set<string>();
-  const items = state.wall.items.filter((i) => {
-    if (!known.has(i.materialId) || seenItems.has(i.materialId)) return false;
-    seenItems.add(i.materialId);
+  const seenNotes = new Set<string>();
+  const notes: Note[] = state.wall.notes.filter((n) => {
+    if (seenNotes.has(n.id)) return false;
+    seenNotes.add(n.id);
     return true;
   });
+  const known = new Set([
+    ...materials.map((m) => m.id),
+    ...PERSONS.map((p) => p.id),
+    ...notes.map((n) => n.id),
+  ]);
 
-  const inArrival = new Set<string>();
-  const arrivals: Arrival[] = [];
-  for (const a of state.wall.arrivals) {
-    const ids = a.ids.filter((id) => known.has(id) && id.startsWith('L') && !inArrival.has(id));
-    for (const id of ids) inArrival.add(id);
-    if (ids.length) arrivals.push({ ids });
+  const seen = new Set<string>();
+  const items: WallItem[] = state.wall.items.filter((i) => {
+    if (!known.has(i.id) || seen.has(i.id)) return false;
+    seen.add(i.id);
+    return true;
+  });
+  // Записка без места на стене не нужна.
+  const kept = notes.filter((n) => seen.has(n.id));
+
+  let z = items.reduce((max, i) => Math.max(max, i.z), 0);
+  for (const id of [...PERSONS.map((p) => p.id), ...startingIds(materials)]) {
+    if (seen.has(id)) continue;
+    const slot = startSlot(id, materials);
+    if (!slot) continue;
+    items.push({ id, ...slot, z: ++z, rot: hangTilt(id) });
+    seen.add(id);
   }
-  const fresh = materials
-    .filter((m) => isReleased(m) && !inArrival.has(m.id))
-    .map((m) => m.id)
-    .sort();
-  if (fresh.length) arrivals.push({ ids: fresh });
 
   const threads = state.wall.threads.filter(
-    (t) => known.has(t.from) && known.has(t.to) && t.from !== t.to,
+    (t) => seen.has(t.from) && seen.has(t.to) && t.from !== t.to,
   );
 
-  return { ...state, wall: { ...state.wall, items, threads, arrivals } };
+  return { ...state, wall: { ...state.wall, items, threads, notes: kept } };
 }

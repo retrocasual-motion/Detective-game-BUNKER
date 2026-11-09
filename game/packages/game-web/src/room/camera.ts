@@ -147,3 +147,42 @@ export const toCss = (ops: Op[]): string =>
       return `${op[0]}(${n(op[1])}deg)`;
     })
     .join(' ');
+
+/** Координаты камеры → мир: обратное к toCamera. */
+function fromCamera([a, b, c]: Vec3, { eye, rx, ry }: Pose, p: number): Vec3 {
+  const cx = Math.cos(rad(-rx));
+  const sx = Math.sin(rad(-rx));
+  const y2 = b;
+  const z2 = c - p;
+  const dy = y2 * cx + z2 * sx;
+  const z1 = -y2 * sx + z2 * cx;
+  const cy = Math.cos(rad(-ry));
+  const sy = Math.sin(rad(-ry));
+  const dx = a * cy - z1 * sy;
+  const dz = a * sy + z1 * cy;
+  return [eye[0] + dx, eye[1] + dy, eye[2] + dz];
+}
+
+/**
+ * Точка экрана → точка на доске (в пикселях доски-экрана, от её левого верхнего угла) или
+ * null, если луч взгляда не попадает в доску. Нужна, чтобы со стола бросить лист на доску.
+ */
+export function screenToBoard(
+  pt: { x: number; y: number },
+  pose: Pose,
+  room: Room,
+): { x: number; y: number } | null {
+  const { p, vp } = room;
+  const viewer = fromCamera([0, 0, p], pose, p);
+  const onScreen = fromCamera([pt.x - vp.width / 2, pt.y - vp.height / 2, 0], pose, p);
+  const dz = onScreen[2] - viewer[2];
+  if (Math.abs(dz) < 1e-9) return null;
+  const t = -viewer[2] / dz;
+  if (t <= 0) return null;
+  const wx = viewer[0] + (onScreen[0] - viewer[0]) * t;
+  const wy = viewer[1] + (onScreen[1] - viewer[1]) * t;
+  const x = wx / BOARD_SCALE + vp.width / 2;
+  const y = wy / BOARD_SCALE + vp.height / 2;
+  if (x < 0 || y < 0 || x > vp.width || y > vp.height) return null;
+  return { x, y };
+}

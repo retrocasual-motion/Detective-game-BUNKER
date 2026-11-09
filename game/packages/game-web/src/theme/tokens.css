@@ -5,6 +5,8 @@
 :root {
   --font-ui: system-ui, "Segoe UI", Roboto, sans-serif;
   --font-paper: Georgia, "Times New Roman", serif;
+  /* Почерк игрока на записках (этап дизайна подберёт рукописный шрифт). */
+  --font-hand: "Segoe Print", "Comic Sans MS", cursive;
   --font-size-ui: 14px;
   --font-size-paper: 17px;
 
@@ -27,6 +29,10 @@
   --color-lamp-light: rgb(255 214 140 / 22%);
   --color-box: #8a7656;
   --color-phone: #2a2a2a;
+  --color-tray: #5c4a36;
+  /* Записка и фото персонажа (правки автора 09.11). */
+  --color-note: #efe3a8;
+  --color-person-shape: #6f6f6f;
   --color-monitor: #2f3033;
   --color-screen: #1d2a2f;
   --color-screen-text: #cfd8dc;

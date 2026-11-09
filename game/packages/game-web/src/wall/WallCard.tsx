@@ -1,5 +1,5 @@
 import type { Material } from '@bunker/shared';
-import { memo, type PointerEvent } from 'react';
+import { memo, type PointerEvent, type ReactNode, useRef, useState } from 'react';
 import { useDraggable } from '../canvas/useDraggable.ts';
 
 export interface Place {
@@ -12,42 +12,63 @@ export interface Place {
 /** Предмет со стола висит на стене карточкой (ITEM-A): устройство или пакет вещдоков. */
 export const isItemCard = (m: Material) => m.placement === 'evidence' || m.kind === 'bag';
 
+export interface PinHandlers {
+  onPointerDown(e: PointerEvent<HTMLElement>, id: string): void;
+  onPointerMove(e: PointerEvent<HTMLElement>): void;
+  onPointerUp(e: PointerEvent<HTMLElement>): void;
+  onPointerCancel(): void;
+}
+
 interface WallCardProps {
-  material: Material;
+  id: string;
   place: Place;
-  /** Снят в поле (иначе висит в своей колонке). */
-  onField: boolean;
   zoom: number;
-  onOpen(materialId: string): void;
-  onDrop(materialId: string, x: number, y: number): void;
-  onLive(materialId: string, dx: number, dy: number): void;
-  onReturn(materialId: string): void;
-  pin: {
-    onPointerDown(e: PointerEvent<HTMLElement>, materialId: string): void;
-    onPointerMove(e: PointerEvent<HTMLElement>): void;
-    onPointerUp(e: PointerEvent<HTMLElement>): void;
-    onPointerCancel(): void;
-  };
+  /** Вид вещи — по нему форма (`.paper-<kind>`, персонаж, записка, ярлык). */
+  kind: string;
+  label: string;
+  children: ReactNode;
+  /** Щелчок без перетаскивания: открыть материал или править записку. */
+  onActivate?(id: string): void;
+  onDrop(id: string, x: number, y: number): void;
+  onLive(id: string, dx: number, dy: number): void;
+  pin: PinHandlers;
+  /** Только у записок: ✕ — снять со стены (с «Вернуть»). */
+  onDelete?(id: string): void;
+  /** Записку правят — перетаскивание выключено, щелчки идут в поле ввода. */
+  editing?: boolean;
+  /** Своя ширина (записка, ярлык), мировые px. */
+  width?: number;
+  /** Ручка справа — потянуть, чтобы изменить ширину (как в Miro). */
+  onResize?(id: string, width: number): void;
+  /** Панель над вещью (размер шрифта у записки). */
+  toolbar?: ReactNode;
 }
 
 /**
- * Материал на стене: лист своего типа на одной кнопке (слегка косо) или карточка предмета со
- * стола — фото и номер с бирки, ничего сверх бирки (ITEM-A). Щелчок — открыть (у предмета —
- * «взять в руки», OPEN-A); потянуть — снять в поле или передвинуть; от кнопки — нить.
- * В поле у листа есть «↩» — вернуть в колонку.
+ * Вещь на стене на одной кнопке (слегка косо): лист своего типа, карточка предмета со стола
+ * (ITEM-A), карточка персонажа, записка или ярлык игрока. Потянуть — передвинуть (куда
+ * отпустили, там и висит); от кнопки — нить; щелчок — открыть (у записки — править).
  */
 export const WallCard = memo(function WallCard({
-  material,
+  id,
   place,
-  onField,
   zoom,
-  onOpen,
+  kind,
+  label,
+  children,
+  onActivate,
   onDrop,
   onLive,
-  onReturn,
   pin,
+  onDelete,
+  editing,
+  width,
+  onResize,
+  toolbar,
 }: WallCardProps) {
-  const id = material.id;
+  const [liveW, setLiveW] = useState<number | null>(null);
+  const resize = useRef<{ x: number; w: number } | null>(null);
+  const w = liveW ?? width;
   const drag = useDraggable({
     zoom,
     onDrop: (dx, dy) => onDrop(id, place.x + dx, place.y + dy),
@@ -55,67 +76,92 @@ export const WallCard = memo(function WallCard({
   });
   const x = place.x + (drag.offset?.x ?? 0);
   const y = place.y + (drag.offset?.y ?? 0);
-  const item = isItemCard(material);
-  const kind = item ? 'item' : material.kind;
+  const paperClass = `card paper paper-${kind}${drag.offset ? ' card-dragging' : ''}`;
 
   return (
     <div
-      className={`wall-card${drag.offset ? ' wall-card-dragging' : ''}`}
+      className={`wall-card wall-card-${kind}${drag.offset ? ' wall-card-dragging' : ''}`}
       data-testid={`wall-${id}`}
       data-wall-item={id}
-      data-place={onField ? 'field' : 'column'}
       style={{
         translate: `${x}px ${y}px`,
         rotate: `${place.rot + drag.tilt}deg`,
-        zIndex: drag.offset ? 5000 : place.z,
+        zIndex: drag.offset ? 100000 : place.z,
+        ...(w ? { width: w } : {}),
       }}
     >
-      <button
-        type="button"
-        aria-label={`${id}. ${material.title}`}
-        className={`card paper paper-${kind}${drag.offset ? ' card-dragging' : ''}`}
-        data-kind={kind}
-        onClick={() => {
-          if (!drag.wasDragged()) onOpen(id);
-        }}
-        {...drag.handlers}
-      >
-        {item ? (
-          <>
-            <span className="card-id">Изъято · {id}</span>
-            <span className="card-title">{material.title}</span>
-            <span className={`item-photo item-photo-${id}`} aria-hidden />
-          </>
-        ) : (
-          <>
-            <span className="card-id">{id}</span>
-            <span className="card-title">{material.title}</span>
-            {material.kind === 'disc' && <span className="paper-disc-window" aria-hidden />}
-          </>
-        )}
-      </button>
+      {toolbar}
+      {editing ? (
+        <div className={paperClass} data-kind={kind}>
+          {children}
+        </div>
+      ) : (
+        <button
+          type="button"
+          aria-label={label}
+          className={paperClass}
+          data-kind={kind}
+          onClick={() => {
+            if (!drag.wasDragged()) onActivate?.(id);
+          }}
+          {...drag.handlers}
+        >
+          {children}
+        </button>
+      )}
       <button
         type="button"
         className="wall-pin"
         data-testid={`pin-${id}`}
         aria-label="Тянуть нить от кнопки"
-        title="Потяните к другому листу или щёлкните и затем щёлкните по нему — получится нить"
+        title="Потяните к другой вещи на стене или щёлкните и затем щёлкните по ней — получится нить"
         onPointerDown={(e) => pin.onPointerDown(e, id)}
         onPointerMove={pin.onPointerMove}
         onPointerUp={pin.onPointerUp}
         onPointerCancel={pin.onPointerCancel}
       />
-      {onField && (
+      {onResize && w && (
+        // biome-ignore lint/a11y/noStaticElementInteractions: ручка ширины — цель для мыши; клавиатура — этап дизайна
+        <span
+          className="wall-resize"
+          data-testid={`resize-${id}`}
+          title="Потяните, чтобы изменить ширину"
+          onMouseDown={(e) => e.preventDefault()}
+          onPointerDown={(e) => {
+            if (e.button !== 0) return;
+            e.stopPropagation();
+            e.preventDefault();
+            e.currentTarget.setPointerCapture(e.pointerId);
+            resize.current = { x: e.clientX, w };
+          }}
+          onPointerMove={(e) => {
+            const r = resize.current;
+            if (r) setLiveW(Math.max(80, Math.min(900, r.w + (e.clientX - r.x) / zoom)));
+          }}
+          onPointerUp={(e) => {
+            e.stopPropagation();
+            const r = resize.current;
+            resize.current = null;
+            if (r) onResize(id, Math.max(80, Math.min(900, r.w + (e.clientX - r.x) / zoom)));
+            setLiveW(null);
+          }}
+          onPointerCancel={() => {
+            resize.current = null;
+            setLiveW(null);
+          }}
+        />
+      )}
+      {onDelete && !editing && (
         <button
           type="button"
-          className="wall-return"
-          data-testid={`return-${id}`}
-          aria-label="Вернуть в колонку"
-          title="Вернуть в колонку"
+          className="wall-delete"
+          data-testid={`delete-${id}`}
+          aria-label="Снять со стены"
+          title="Снять со стены"
           onPointerDown={(e) => e.stopPropagation()}
-          onClick={() => onReturn(id)}
+          onClick={() => onDelete(id)}
         >
-          ↩
+          ✕
         </button>
       )}
     </div>

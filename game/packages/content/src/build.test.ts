@@ -66,3 +66,15 @@ describe('buildStartingMaterials', () => {
     expect(JSON.stringify(buildStartingMaterials(playerDir))).toBe(JSON.stringify(materials));
   });
 });
+
+describe('персонажи на стене (решение автора 09.11)', () => {
+  it('имя и роль каждого — дословно из стартового файла 06 (игрок знает их с начала)', async () => {
+    const { PERSONS } = await import('@bunker/shared');
+    const roster = buildStartingMaterials(playerDir).find((m) => m.id === '06')?.body ?? '';
+    for (const p of PERSONS) {
+      expect(roster, p.name).toContain(p.name);
+      const role = p.role.replace(/ \(.*\)$/, '');
+      expect(roster.toLowerCase(), p.role).toContain(role.toLowerCase());
+    }
+  });
+});

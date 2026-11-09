@@ -1,7 +1,16 @@
-import { type Camera, isOverOwnColumn, type Thread, wallColumns, wallLayout } from '@bunker/shared';
+import {
+  type Camera,
+  NOTE_STYLE,
+  type Note,
+  PERSONS,
+  type Thread,
+  WALL_BOUNDS,
+  type WallItem,
+} from '@bunker/shared';
 import {
   type MouseEvent,
   type PointerEvent,
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
@@ -9,18 +18,24 @@ import {
   useState,
 } from 'react';
 import { Canvas } from '../canvas/Canvas.tsx';
-import { PIN_Y } from '../canvas/geometry.ts';
+import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
 import { useGame } from '../store.ts';
-import { type Place, WallCard } from './WallCard.tsx';
-import { pinOf, WallThreads } from './WallThreads.tsx';
+import { isItemCard, type PinHandlers, WallCard } from './WallCard.tsx';
+import { type At, pinOf, WallThreads } from './WallThreads.tsx';
 import {
+  addNote,
   addThread,
+  editNote,
   labelThread,
-  placeOnField,
+  moveItem,
+  removeNote,
   removeThread,
+  restoreNote,
   restoreThread,
-  returnToColumn,
+  styleNote,
+  type TakenNote,
+  takeNote,
 } from './wall-actions.ts';
 
 /** Двойной щелчок по нити — удалить; одиночный ждёт, не придёт ли второй щелчок. */
@@ -28,13 +43,12 @@ const DOUBLE_CLICK_MS = 250;
 const UNDO_MS = 5000;
 /** Сдвиг мыши, до которого нажатие на кнопку считается щелчком, а не протяжкой. */
 const CLICK_SLOP = 4;
-/** Поле — выше колонок по порядку наложения. */
-const FIELD_Z = 1000;
 
 type Pt = { x: number; y: number };
+type Undo = { text: string; at: Pt; restore(): void };
 
 /**
- * Щелчок, который закончил нить, не должен открыть лист под ним. Глушитель снимается сам
+ * Щелчок, который закончил нить, не должен открыть вещь под ним. Глушитель снимается сам
  * сразу после отпускания кнопки — даже если click не пришёл (отпустили за окном).
  */
 function swallowNextClick() {
@@ -47,7 +61,7 @@ function swallowNextClick() {
   window.addEventListener('pointerup', release, { capture: true, once: true });
 }
 
-/** Материал стены под точкой экрана — сквозь нити и подписи поверх листов. */
+/** Вещь стены под точкой экрана — сквозь нити и подписи поверх листов. */
 const wallItemAt = (x: number, y: number): string | null =>
   document
     .elementsFromPoint(x, y)
@@ -64,12 +78,45 @@ function toWorld(
   return screenToWorld({ x: e.clientX - rect.left, y: e.clientY - rect.top }, camera);
 }
 
+const personById = new Map(PERSONS.map((p) => [p.id, p]));
+
+/** Поле ввода записки или ярлыка: сохраняет при уходе фокуса; Esc — тоже; у ярлыка — Enter. */
+function NoteEditor({
+  note,
+  size,
+  onDone,
+}: {
+  note: Note;
+  size: number;
+  onDone(text: string): void;
+}) {
+  return (
+    <textarea
+      className="note-input"
+      style={{ fontSize: size }}
+      data-testid={`note-input-${note.id}`}
+      aria-label={note.kind === 'label' ? 'Ярлык' : 'Записка'}
+      defaultValue={note.text}
+      maxLength={500}
+      // biome-ignore lint/a11y/noAutofocus: поле появляется по щелчку на записке — фокус ожидаем
+      autoFocus
+      onPointerDown={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape' || (e.key === 'Enter' && note.kind === 'label')) {
+          e.preventDefault();
+          e.currentTarget.blur();
+        }
+      }}
+      onBlur={(e) => onDone(e.currentTarget.value.trim())}
+    />
+  );
+}
+
 /**
- * Стена (WALL-C, решение автора 08.11): пробковая доска. Вверху — колонки «как пришло»
- * (стартовые по описи, затем поступления, IN-B), листы лесенкой. Ниже — поле для своей
- * версии. У материала одно место: потянуть лист из колонки — он переезжает в поле; отпустить
- * у своей колонки или «↩» — возвращается. Нити — от кнопки к кнопке, между любыми листами,
- * в колонке или в поле; щелчок по нити — подпись, двойной — удалить (с «Вернуть»).
+ * Стена (WALL-C; правки автора 09.11): пробковая доска, всё висит свободно — персонажи,
+ * материалы дела, записки и ярлыки игрока. Куда отпустили, там и висит (без «магнита»).
+ * Нити — от кнопки к кнопке между любыми вещами; щелчок по нити — подпись, двойной —
+ * удалить (с «Вернуть»). Внизу справа — чистые карточки: «Записка» и «Ярлык».
  */
 export function WallView() {
   const wall = useGame((g) => g.state?.wall);
@@ -80,17 +127,12 @@ export function WallView() {
   const [pull, setPull] = useState<{ from: string; to: Pt | null; sticky?: boolean } | null>(null);
   const el = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState<{ id: string; at: Pt } | null>(null);
-  const [undo, setUndo] = useState<{ thread: Thread; at: Pt } | null>(null);
+  const [editingNote, setEditingNote] = useState<string | null>(null);
+  const [undo, setUndo] = useState<Undo | null>(null);
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pinDown = useRef<Pt | null>(null);
   const pullRef = useRef(pull);
   pullRef.current = pull;
-
-  const arrivals = wall?.arrivals;
-  const layout = useMemo(
-    () => wallLayout(wallColumns(materials, arrivals ?? [])),
-    [materials, arrivals],
-  );
 
   useEffect(() => {
     if (!undo) return;
@@ -106,12 +148,14 @@ export function WallView() {
   );
 
   // Нить «двумя щелчками» (UX-J1): после щелчка по кнопке нить идёт за курсором; щелчок по
-  // другому листу — привязать, мимо или Esc — отменить. Режим кончается сам при уходе со стены.
+  // другой вещи — привязать, мимо или Esc — отменить. Режим кончается сам при уходе со стены.
   const sticky = pull?.sticky ? pull.from : null;
-  const onWall = useGame((g) => g.state?.view === 'wall' && g.viewerId === null && !g.computerOpen);
+  const onWallView = useGame(
+    (g) => g.state?.view === 'wall' && g.viewerId === null && !g.computerOpen,
+  );
   useEffect(() => {
-    if (!onWall) setPull((p) => (p?.sticky ? null : p));
-  }, [onWall]);
+    if (!onWallView) setPull((p) => (p?.sticky ? null : p));
+  }, [onWallView]);
   useEffect(() => {
     if (!sticky) return;
     const canvasRect = () =>
@@ -157,18 +201,23 @@ export function WallView() {
   const drop = useCallback(
     (id: string, x: number, y: number) => {
       setLive(null);
-      updateState(isOverOwnColumn(layout, id, x, y) ? returnToColumn(id) : placeOnField(id, x, y));
+      updateState(moveItem(id, x, y));
     },
-    [layout, updateState],
+    [updateState],
   );
   const onLive = useCallback(
     (id: string, dx: number, dy: number) => setLive(dx === 0 && dy === 0 ? null : { id, dx, dy }),
     [],
   );
-  const onReturn = useCallback((id: string) => updateState(returnToColumn(id)), [updateState]);
+  const activate = useCallback(
+    (id: string) => {
+      if (id.startsWith('n:')) setEditingNote(id);
+      else openViewer(id);
+    },
+    [openViewer],
+  );
 
-  const camera = wall?.camera;
-  const pin = useMemo(
+  const pin: PinHandlers = useMemo(
     () => ({
       onPointerDown(e: PointerEvent<HTMLElement>, id: string) {
         if (e.button !== 0) return;
@@ -204,28 +253,195 @@ export function WallView() {
     [updateState],
   );
 
+  const showUndo = (text: string, e: MouseEvent, restore: () => void) => {
+    const rect = el.current?.getBoundingClientRect();
+    setUndo({
+      text,
+      restore,
+      at: { x: e.clientX - (rect?.left ?? 0), y: e.clientY - (rect?.top ?? 0) },
+    });
+  };
+
+  const deleteNote = useCallback(
+    (id: string) => {
+      const s = useGame.getState().state;
+      const taken: TakenNote | null = s ? takeNote(id, s) : null;
+      if (!taken) return;
+      updateState(removeNote(id));
+      const box = document
+        .querySelector(`[data-wall-item="${CSS.escape(id)}"]`)
+        ?.getBoundingClientRect();
+      const rect = el.current?.getBoundingClientRect();
+      setUndo({
+        text: 'Записка снята',
+        restore: () => updateState(restoreNote(taken)),
+        at: { x: (box?.left ?? 0) - (rect?.left ?? 0), y: (box?.top ?? 0) - (rect?.top ?? 0) },
+      });
+    },
+    [updateState],
+  );
+
+  const camera = wall?.camera;
   if (!wall || !camera) return null;
 
   const byId = new Map(materials.map((m) => [m.id, m]));
-  const field = new Map(wall.items.map((i) => [i.materialId, i]));
-  const places = new Map<string, Place>();
-  for (const [id, slot] of layout.slots) {
-    const f = field.get(id);
-    places.set(id, f ? { x: f.x, y: f.y, rot: f.rot, z: FIELD_Z + f.z } : slot);
+  const notes = new Map(wall.notes.map((n) => [n.id, n]));
+  // Нити идут за вещью сразу, пока её тянут.
+  const at = new Map<string, At>();
+  for (const i of wall.items) {
+    const n = notes.get(i.id);
+    const w = n ? (n.width ?? NOTE_STYLE[n.kind].width) : undefined;
+    at.set(i.id, live?.id === i.id ? { x: i.x + live.dx, y: i.y + live.dy, w } : { ...i, w });
   }
-  // Нити идут за листом сразу, пока его тянут.
-  const at = new Map<string, Pt>();
-  for (const [id, p] of places)
-    at.set(id, live?.id === id ? { x: p.x + live.dx, y: p.y + live.dy } : p);
   const pullFrom = pull ? at.get(pull.from) : undefined;
   const editingThread = editing ? wall.threads.find((t) => t.id === editing.id) : undefined;
 
-  const removeWithUndo = (id: string, e: MouseEvent) => {
-    const thread = wall.threads.find((t) => t.id === id);
-    if (!thread) return;
-    updateState(removeThread(id));
-    const rect = el.current?.getBoundingClientRect();
-    setUndo({ thread, at: { x: e.clientX - (rect?.left ?? 0), y: e.clientY - (rect?.top ?? 0) } });
+  /** Новая записка или ярлык: кнопка вещи — под точкой (x, y) стены; сразу правится. */
+  const newNoteAt = (kind: Note['kind'], x: number, y: number) => {
+    const id = `n:${crypto.randomUUID()}`;
+    updateState(addNote(kind, x - NOTE_STYLE[kind].width / 2, y - 12, id));
+    setEditingNote(id);
+  };
+  const newNote = (kind: Note['kind']) => {
+    const r = el.current?.getBoundingClientRect();
+    const c = screenToWorld({ x: (r?.width ?? 0) / 2, y: (r?.height ?? 0) / 2 }, camera);
+    const jitter = (wall.notes.length % 5) * 24;
+    newNoteAt(kind, c.x + jitter, c.y - 80 + jitter);
+  };
+  /** Карточку можно взять и отпустить на доске — как в Miro; щелчок — в середину видимой стены. */
+  const overWall = (pt: { x: number; y: number }) => {
+    const top = document.elementFromPoint(pt.x, pt.y);
+    return !!top?.closest('.wall .canvas');
+  };
+  const blankDown = (kind: Note['kind']) => (e: PointerEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    startGhostDrag(e.nativeEvent, {
+      label: kind === 'label' ? 'Ярлык' : 'Записка',
+      className: `drag-ghost-${kind}`,
+      canDrop: overWall,
+      onDrop: (pt) => {
+        const r = el.current?.querySelector('.canvas')?.getBoundingClientRect();
+        const cam = useGame.getState().state?.wall.camera;
+        if (!r || !cam) return;
+        const w = screenToWorld({ x: pt.x - r.left, y: pt.y - r.top }, cam);
+        newNoteAt(kind, w.x, w.y);
+      },
+      onClick: () => newNote(kind),
+    });
+  };
+
+  const render = (item: WallItem) => {
+    const m = byId.get(item.id);
+    const person = personById.get(item.id);
+    const note = notes.get(item.id);
+    let kind: string;
+    let label: string;
+    let content: ReactNode;
+    let size: number | undefined;
+    let width: number | undefined;
+    let toolbar: ReactNode = null;
+    if (m) {
+      const isItem = isItemCard(m);
+      kind = isItem ? 'item' : m.kind;
+      label = `${m.id}. ${m.title}`;
+      content = isItem ? (
+        <>
+          <span className="card-id">Изъято · {m.id}</span>
+          <span className="card-title">{m.title}</span>
+          <span className={`item-photo item-photo-${m.id}`} aria-hidden />
+        </>
+      ) : (
+        <>
+          <span className="card-id">{m.id}</span>
+          <span className="card-title">{m.title}</span>
+          {m.kind === 'disc' && <span className="paper-disc-window" aria-hidden />}
+        </>
+      );
+    } else if (person) {
+      kind = 'person';
+      label = person.name;
+      content = (
+        <>
+          <span className="person-photo" aria-hidden />
+          <span className="person-name">{person.name}</span>
+          <span className="person-role">{person.role}</span>
+        </>
+      );
+    } else if (note) {
+      kind = note.kind;
+      size = note.size ?? NOTE_STYLE[note.kind].size;
+      width = note.width ?? NOTE_STYLE[note.kind].width;
+      if (editingNote === note.id) {
+        const id = note.id;
+        const step = (d: number) => () => updateState(styleNote(id, { size: (size ?? 16) + d }));
+        toolbar = (
+          // Кнопки не забирают фокус у поля ввода: правка продолжается.
+          <div
+            className="note-toolbar"
+            role="toolbar"
+            aria-label="Шрифт"
+            data-testid="note-toolbar"
+            style={{ scale: 1 / camera.zoom }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <button
+              type="button"
+              aria-label="Шрифт меньше"
+              data-testid="font-down"
+              onClick={step(-2)}
+            >
+              A−
+            </button>
+            <span className="note-toolbar-size" data-testid="font-size">
+              {size}
+            </span>
+            <button type="button" aria-label="Шрифт больше" data-testid="font-up" onClick={step(2)}>
+              A+
+            </button>
+          </div>
+        );
+      }
+      label = note.kind === 'label' ? `Ярлык: ${note.text}` : `Записка: ${note.text}`;
+      content =
+        editingNote === note.id ? (
+          <NoteEditor
+            note={note}
+            size={size}
+            onDone={(text) => {
+              updateState(editNote(note.id, text));
+              setEditingNote(null);
+            }}
+          />
+        ) : (
+          <span className="note-text" style={{ fontSize: size }}>
+            {note.text}
+          </span>
+        );
+    } else {
+      return null;
+    }
+    return (
+      <WallCard
+        key={item.id}
+        id={item.id}
+        place={item}
+        zoom={camera.zoom}
+        kind={kind}
+        label={label}
+        onActivate={activate}
+        onDrop={drop}
+        onLive={onLive}
+        pin={pin}
+        onDelete={note ? deleteNote : undefined}
+        editing={editingNote === item.id}
+        width={width}
+        onResize={note ? (id, w) => updateState(styleNote(id, { width: w })) : undefined}
+        toolbar={toolbar}
+      >
+        {content}
+      </WallCard>
+    );
   };
 
   return (
@@ -234,50 +450,10 @@ export function WallView() {
         camera={camera}
         onCameraChange={setCamera}
         className="wall-surface"
-        bounds={layout.bounds}
-        surface={layout.bounds}
+        bounds={WALL_BOUNDS}
+        surface={WALL_BOUNDS}
       >
-        {layout.columns.map((c) => (
-          <div
-            key={c.key}
-            className={`column-label${c.key.startsWith('a') ? ' column-label-arrival' : ''}`}
-            data-testid={`column-${c.key}`}
-            style={{ translate: `${c.x}px ${c.y}px` }}
-          >
-            {c.title}
-          </div>
-        ))}
-        {/* След кнопки там, откуда лист сняли в поле: видно, что его место — здесь. */}
-        {wall.items.map((i) => {
-          const slot = layout.slots.get(i.materialId);
-          if (!slot) return null;
-          const p = pinOf(slot);
-          return (
-            <span
-              key={`hole-${i.materialId}`}
-              className="pin-hole"
-              data-testid={`hole-${i.materialId}`}
-              style={{ translate: `${p.x}px ${p.y - PIN_Y / 2}px` }}
-            />
-          );
-        })}
-        {[...places].map(([id, place]) => {
-          const material = byId.get(id);
-          return material ? (
-            <WallCard
-              key={id}
-              material={material}
-              place={place}
-              onField={field.has(id)}
-              zoom={camera.zoom}
-              onOpen={openViewer}
-              onDrop={drop}
-              onLive={onLive}
-              onReturn={onReturn}
-              pin={pin}
-            />
-          ) : null;
-        })}
+        {wall.items.map(render)}
         <WallThreads
           at={at}
           threads={wall.threads}
@@ -296,7 +472,10 @@ export function WallView() {
             if (clickTimer.current) clearTimeout(clickTimer.current);
             clickTimer.current = null;
             setEditing(null);
-            removeWithUndo(id, e);
+            const thread: Thread | undefined = wall.threads.find((t) => t.id === id);
+            if (!thread) return;
+            updateState(removeThread(id));
+            showUndo('Нить удалена', e, () => updateState(restoreThread(thread)));
           }}
         />
         {editing && editingThread && (
@@ -324,17 +503,43 @@ export function WallView() {
           />
         )}
       </Canvas>
+      {/* Чистые карточки — стопкой у края доски: взять записку или ярлык. */}
+      <div className="wall-blanks">
+        <button
+          type="button"
+          className="wall-blank wall-blank-note"
+          data-testid="new-note"
+          onPointerDown={blankDown('note')}
+          onClick={(e) => {
+            // Мышь — через перетаскивание (щелчок без сдвига — там же); здесь — клавиатура.
+            if (e.detail === 0) newNote('note');
+          }}
+        >
+          Записка
+        </button>
+        <button
+          type="button"
+          className="wall-blank wall-blank-label"
+          data-testid="new-label"
+          onPointerDown={blankDown('label')}
+          onClick={(e) => {
+            if (e.detail === 0) newNote('label');
+          }}
+        >
+          Ярлык
+        </button>
+      </div>
       {undo && (
         <div
           className="undo-toast"
           data-testid="undo-toast"
           style={{ left: undo.at.x, top: undo.at.y }}
         >
-          Нить удалена
+          {undo.text}
           <button
             type="button"
             onClick={() => {
-              updateState(restoreThread(undo.thread));
+              undo.restore();
               setUndo(null);
             }}
           >

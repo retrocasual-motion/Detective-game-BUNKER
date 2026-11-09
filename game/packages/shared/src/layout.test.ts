@@ -1,15 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
-  CARD_H,
-  COL_W,
   defaultState,
-  isOverOwnColumn,
+  GRID_TOP,
+  inboxIds,
+  onWall,
   reconcile,
-  SHINGLE_STEP,
   upgradeState,
-  wallColumns,
-  wallLayout,
+  WALL_BOUNDS,
 } from './layout.ts';
+import { PERSONS } from './persons.ts';
 import type { Material, PlayerState } from './schemas.ts';
 
 const mat = (id: string, placement: Material['placement'] = 'desk'): Material => ({
@@ -27,11 +26,24 @@ const starting: Material[] = Array.from({ length: 51 }, (_, i) =>
 describe('defaultState', () => {
   const s = defaultState(starting);
 
-  it('вид — «Стол», поле пустое, нитей и поступлений нет', () => {
+  it('вид — «Стол»; на стене все 51 материал и все персонажи, записок и нитей нет', () => {
     expect(s.view).toBe('desk');
-    expect(s.wall.items).toEqual([]);
+    expect(s.wall.items).toHaveLength(51 + PERSONS.length);
+    expect(s.wall.notes).toEqual([]);
     expect(s.wall.threads).toEqual([]);
-    expect(s.wall.arrivals).toEqual([]);
+  });
+
+  it('персонажи — ряд сверху, материалы — ниже, сеткой по описи; ничего не накрыто', () => {
+    const at = new Map(s.wall.items.map((i) => [i.id, i]));
+    for (const p of PERSONS) expect(at.get(p.id)?.y).toBe(0);
+    expect(at.get('01')?.y).toBe(GRID_TOP);
+    expect((at.get('02')?.x ?? 0) > (at.get('01')?.x ?? 0)).toBe(true);
+    const keys = s.wall.items.map((i) => `${i.x},${i.y}`);
+    expect(new Set(keys).size).toBe(keys.length);
+    for (const i of s.wall.items) {
+      expect(i.x).toBeGreaterThan(WALL_BOUNDS.left);
+      expect(i.y + 220).toBeLessThan(WALL_BOUNDS.bottom);
+    }
   });
 
   it('одинаковое у всех', () => {
@@ -39,68 +51,19 @@ describe('defaultState', () => {
   });
 });
 
-describe('колонки «как пришло» (HANG-A)', () => {
-  const columns = wallColumns(starting, []);
-  const layout = wallLayout(columns);
-
-  it('все 51 стартовый материал висят ровно в одной колонке, по порядку описи', () => {
-    const ids = columns.flatMap((c) => c.ids);
-    expect(ids).toHaveLength(51);
-    expect(new Set(ids).size).toBe(51);
-    expect(ids).toEqual([...ids].sort());
-  });
-
-  it('подписи колонок — только номера описи', () => {
-    expect(columns[0]?.title).toBe('Опись № 1–5');
-    for (const c of columns) expect(c.title).toMatch(/^Опись № \d+–\d+$/);
-  });
-
-  it('лесенка: каждый следующий лист ниже на шаг и лежит поверх', () => {
-    const a = layout.slots.get('22');
-    const b = layout.slots.get('23');
-    expect(a && b && b.y - a.y).toBe(SHINGLE_STEP);
-    expect(a && b && b.z > a.z).toBe(true);
-    expect(a?.x).toBe(b?.x);
-  });
-
-  it('колонки не заходят друг на друга, поле — ниже колонок', () => {
-    const xs = layout.columns.filter((c) => c.y === 0).map((c) => c.x);
-    for (let i = 1; i < xs.length; i++) expect((xs[i] ?? 0) - (xs[i - 1] ?? 0)).toBe(COL_W);
-    for (const c of layout.columns) expect(c.y + c.h).toBeLessThanOrEqual(layout.bandBottom);
-    expect(layout.fieldTop).toBeGreaterThan(layout.bandBottom);
-    expect(layout.bounds.bottom).toBeGreaterThan(layout.fieldTop + CARD_H);
-  });
-
-  it('лист, отпущенный у своей колонки, возвращается; в поле — нет', () => {
-    const s = layout.slots.get('31');
-    expect(s && isOverOwnColumn(layout, '31', s.x + 10, s.y + 30)).toBe(true);
-    expect(isOverOwnColumn(layout, '31', 0, layout.fieldTop + 200)).toBe(false);
-  });
-});
-
-describe('поступления (IN-B)', () => {
+describe('«Входящие» на столе', () => {
   const withL = [...starting, mat('L101'), mat('L102')];
 
-  it('открытое по ходу дела вешается новой колонкой «Поступление № 1»', () => {
+  it('открытое по ходу дела само на стену не вешается — ждёт во «Входящих», свежее первым', () => {
     const s = defaultState(withL);
-    expect(s.wall.arrivals).toEqual([{ ids: ['L101', 'L102'] }]);
-    const cols = wallColumns(withL, s.wall.arrivals);
-    expect(cols.at(-1)).toMatchObject({ title: 'Поступление № 1', ids: ['L101', 'L102'] });
+    expect(s.wall.items.some((i) => i.id.startsWith('L'))).toBe(false);
+    expect(inboxIds(s, withL)).toEqual(['L102', 'L101']);
   });
 
-  it('следующее поступление — следующая колонка, прежние не трогаются', () => {
-    const s1 = defaultState(withL);
-    const s2 = reconcile(s1, [...withL, mat('L205')]);
-    expect(s2.wall.arrivals).toEqual([{ ids: ['L101', 'L102'] }, { ids: ['L205'] }]);
-  });
-
-  it('одиннадцатая колонка начинает новый ряд', () => {
-    const arrivals = ['L101', 'L102', 'L103'].map((id) => ({ ids: [id] }));
-    const mats = [...starting, ...['L101', 'L102', 'L103'].map((id) => mat(id))];
-    const layout = wallLayout(wallColumns(mats, arrivals));
-    const second = layout.columns[10];
-    expect(second?.x).toBe(0);
-    expect(second?.y).toBeGreaterThan(0);
+  it('повешенное на стену из «Входящих» уходит', () => {
+    const s = defaultState(withL);
+    s.wall.items.push({ id: 'L101', x: 5, y: 5, z: 999, rot: 0 });
+    expect(inboxIds(reconcile(s, withL), withL)).toEqual(['L102']);
   });
 });
 
@@ -110,20 +73,23 @@ describe('reconcile', () => {
     expect(reconcile(s, starting)).toEqual(s);
   });
 
-  it('убирает неизвестный материал, его нити и дубли', () => {
+  it('убирает неизвестное, дубли, записку без места и нити к пропавшему', () => {
     const s: PlayerState = defaultState(starting);
-    s.wall.items = [
-      { materialId: '99', x: 0, y: 0, z: 1, rot: 0 },
-      { materialId: '01', x: 5, y: 5, z: 2, rot: 0 },
-      { materialId: '01', x: 9, y: 9, z: 3, rot: 0 },
+    s.wall.items.push(
+      { id: '99', x: 0, y: 0, z: 1, rot: 0 },
+      { id: 'n:a', x: 9, y: 9, z: 2, rot: 0 },
+    );
+    s.wall.notes = [
+      { id: 'n:a', kind: 'note', text: 'кто?' },
+      { id: 'n:b', kind: 'label', text: 'без места' },
     ];
     s.wall.threads = [
       { id: 't1', from: '01', to: '99', label: '' },
-      { id: 't2', from: '01', to: '02', label: 'x' },
-      { id: 't3', from: '02', to: '02', label: '' },
+      { id: 't2', from: 'n:a', to: 'p:cole', label: 'x' },
     ];
     const got = reconcile(s, starting);
-    expect(got.wall.items.map((i) => [i.materialId, i.x])).toEqual([['01', 5]]);
+    expect(got.wall.items.some((i) => i.id === '99')).toBe(false);
+    expect(got.wall.notes.map((n) => n.id)).toEqual(['n:a']);
     expect(got.wall.threads.map((t) => t.id)).toEqual(['t2']);
   });
 });
@@ -134,8 +100,32 @@ describe('upgradeState', () => {
     expect(upgradeState(s, starting)).toEqual(s);
   });
 
-  it('стол сверху и доска с копиями (версия 3) — раскладка начинается заново', () => {
+  it('версия 4: снятое в поле и нити остаются, остальное — на начальных местах', () => {
+    const v4 = {
+      version: 4,
+      view: 'wall',
+      wall: {
+        camera: { x: 1, y: 2, zoom: 1 },
+        items: [{ materialId: '03', x: 2000, y: 1500, z: 5, rot: 1 }],
+        threads: [{ id: 't', from: '03', to: '47', label: 'ключ' }],
+        arrivals: [],
+      },
+    };
+    const got = upgradeState(v4, starting);
+    expect(got?.view).toBe('wall');
+    expect(got?.wall.items.find((i) => i.id === '03')).toMatchObject({ x: 2000, y: 1500 });
+    expect(got?.wall.items).toHaveLength(51 + PERSONS.length);
+    expect(got?.wall.threads).toHaveLength(1);
+  });
+
+  it('версии 1–3 и мусор → null', () => {
     expect(upgradeState({ version: 3, view: 'desk' }, starting)).toBeNull();
     expect(upgradeState('мусор', starting)).toBeNull();
+  });
+});
+
+describe('край доски', () => {
+  it('вещь не уходит за край', () => {
+    expect(onWall(-9999, 99999)).toEqual({ x: WALL_BOUNDS.left, y: WALL_BOUNDS.bottom - 80 });
   });
 });

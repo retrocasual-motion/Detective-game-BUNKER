@@ -1,6 +1,10 @@
+import { CARD_W } from '@bunker/shared';
 import { useMemo } from 'react';
+import { startGhostDrag } from '../canvas/ghostDrag.ts';
+import { screenToWorld } from '../canvas/math.ts';
 import { useGame } from '../store.ts';
-import type { Room } from './camera.ts';
+import { moveItem } from '../wall/wall-actions.ts';
+import { type Room, screenToBoard } from './camera.ts';
 import { deskObjects, screenRect } from './decor.ts';
 
 const noColor = () => '#000000';
@@ -11,12 +15,17 @@ const noColor = () => '#000000';
  * У устройств — бирка «Изъято» с номером описи. Остальное (лампа, телефон, коробка) — пока
  * только вид; звонки — этап 6.
  */
-export function DeskHotspots({ room }: { room: Room }) {
+export function DeskHotspots({ room, inbox }: { room: Room; inbox: string[] }) {
   const openViewer = useGame((g) => g.openViewer);
   const setComputerOpen = useGame((g) => g.setComputerOpen);
+  const updateState = useGame((g) => g.updateState);
   const spots = useMemo(
-    () => deskObjects(room, noColor).map((o) => ({ o, r: screenRect(o, room.poses.desk, room) })),
-    [room],
+    () =>
+      deskObjects(room, noColor, inbox).map((o) => ({
+        o,
+        r: screenRect(o, room.poses.desk, room),
+      })),
+    [room, inbox],
   );
   return (
     <div className="desk-hotspots">
@@ -26,18 +35,50 @@ export function DeskHotspots({ room }: { room: Room }) {
             key={o.key}
             type="button"
             className="desk-spot"
-            data-testid={o.hotspot.kind === 'computer' ? 'computer-monitor' : `device-${o.tag}`}
+            data-testid={o.hotspot.kind === 'computer' ? 'computer-monitor' : o.testId}
             aria-label={o.label}
             title={o.label}
             style={{ left: r.left, top: r.top, width: r.width, height: r.height }}
-            onClick={() => {
+            onPointerDown={(e) => {
               const h = o.hotspot;
+              // Письмо из «Входящих» можно утащить прямо на доску (правка автора 09.11).
+              if (h?.kind !== 'material' || !o.key.startsWith('inbox-')) return;
+              e.preventDefault();
+              const id = h.id;
+              startGhostDrag(e.nativeEvent, {
+                label: id,
+                className: 'drag-ghost-paper',
+                canDrop: (pt) => screenToBoard(pt, room.poses.desk, room) !== null,
+                onDrop: (pt) => {
+                  const b = screenToBoard(pt, room.poses.desk, room);
+                  const cam = useGame.getState().state?.wall.camera;
+                  if (!b || !cam) return;
+                  const w = screenToWorld(b, cam);
+                  updateState(moveItem(id, w.x - CARD_W / 2, w.y - 20));
+                },
+                onClick: () => openViewer(id),
+              });
+            }}
+            onClick={(e) => {
+              const h = o.hotspot;
+              // Письмо мышью открывает перетаскивание (щелчок без сдвига — там же); здесь —
+              // только клавиатура.
+              if (o.key.startsWith('inbox-') && e.detail > 0) return;
               if (h?.kind === 'computer') setComputerOpen(true);
               else if (h) openViewer(h.id);
             }}
           >
-            {o.tag && <span className="device-tag">Изъято · {o.tag}</span>}
+            {o.tag && <span className="device-tag">{o.tag}</span>}
           </button>
+        ) : o.tag ? (
+          <div
+            key={o.key}
+            className="desk-label"
+            data-testid={o.testId}
+            style={{ left: r.left, top: r.top, width: r.width, height: r.height }}
+          >
+            <span className="device-tag">{o.tag}</span>
+          </div>
         ) : null,
       )}
     </div>

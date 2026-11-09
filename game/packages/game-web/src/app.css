@@ -114,6 +114,10 @@ button {
 .desk-spot:hover {
   border-color: var(--color-accent);
 }
+.desk-label {
+  position: absolute;
+  pointer-events: none;
+}
 /* Бирка «Изъято» у устройства — бумажный ярлык под предметом. */
 .device-tag {
   position: absolute;
@@ -606,7 +610,6 @@ button {
 .viewer-tools {
   position: absolute;
   top: 0;
-  transition: top 0.15s ease-out;
   left: calc(100% + var(--space-2));
   display: flex;
   flex-direction: column;
@@ -664,31 +667,6 @@ button {
 .wall-card .paper {
   padding-top: calc(var(--pin-y) + var(--pin-size) / 2 + 2px);
 }
-/* Ярлык колонки «как пришло»: картонная полоска с номерами описи. */
-.column-label {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: var(--card-width);
-  padding: 4px var(--space-2);
-  background: var(--color-cardboard);
-  color: var(--color-card-text);
-  font: 15px var(--font-paper);
-  box-shadow: var(--shadow-paper);
-}
-.column-label-arrival {
-  background: var(--color-tag);
-}
-/* След кнопки, откуда лист сняли в поле. */
-.pin-hole {
-  position: absolute;
-  left: -3px;
-  top: -3px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-pin-hole);
-}
 .wall-pin {
   position: absolute;
   left: 50%;
@@ -708,7 +686,7 @@ button {
 .wall-pin:hover {
   scale: 1.35;
 }
-.wall-return {
+.wall-delete {
   position: absolute;
   top: -10px;
   right: -10px;
@@ -724,9 +702,209 @@ button {
   opacity: 0;
   transition: opacity 0.12s;
 }
-.wall-card:hover .wall-return,
-.wall-return:focus-visible {
+.wall-card:hover .wall-delete,
+.wall-delete:focus-visible {
   opacity: 1;
+}
+/* Карточка персонажа: место под фото (этап дизайна), имя крупно, роль из файла 06. */
+.paper-person {
+  height: 210px;
+  align-items: center;
+  text-align: center;
+  background: var(--color-photo-border);
+}
+.person-photo {
+  display: block;
+  flex: none;
+  width: 100%;
+  height: 112px;
+  margin-bottom: var(--space-2);
+  background:
+    radial-gradient(circle at 50% 38%, var(--color-person-shape) 0 17%, transparent 18%),
+    radial-gradient(ellipse at 50% 100%, var(--color-person-shape) 0 42%, transparent 43%),
+    var(--color-photo-image);
+}
+/* Персонаж поближе — в просмотрщике: фото крупно (этап дизайна), имя, роль. */
+.viewer-person {
+  text-align: center;
+}
+.viewer-person-photo {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background:
+    radial-gradient(circle at 50% 38%, var(--color-person-shape) 0 17%, transparent 18%),
+    radial-gradient(ellipse at 50% 100%, var(--color-person-shape) 0 42%, transparent 43%),
+    var(--color-photo-image);
+}
+.viewer-person-name {
+  margin: var(--space-3) 0 var(--space-1);
+  font: bold 30px var(--font-paper);
+}
+.viewer-person-role {
+  margin: 0;
+  color: var(--color-card-id);
+}
+.person-name {
+  font: bold 19px / 1.15 var(--font-paper);
+}
+.person-role {
+  margin-top: var(--space-1);
+  color: var(--color-card-id);
+  font-size: 11px;
+}
+/* Записка игрока: чистая карточка, рукописью — свой текст. Ширина и шрифт — свои (как в Miro):
+   высота растёт по тексту. */
+.wall-card-note,
+.wall-card-label {
+  height: auto;
+}
+.wall-card-note .paper,
+.wall-card-label .paper {
+  position: relative;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.paper-note {
+  min-height: 110px;
+  background: var(--color-note);
+}
+.paper-label {
+  min-height: 52px;
+  padding-top: calc(var(--pin-y) + var(--pin-size) / 2);
+  background: var(--color-cardboard);
+}
+/* Ручка ширины справа — видна при наведении. */
+.wall-resize {
+  position: absolute;
+  top: 50%;
+  right: -7px;
+  z-index: 2;
+  width: 12px;
+  height: 30px;
+  margin-top: -15px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  cursor: ew-resize;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.wall-card:hover .wall-resize {
+  opacity: 1;
+}
+/* Панель записки: размер шрифта. Не масштабируется вместе со стеной. */
+.note-toolbar {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-1);
+  transform-origin: bottom left;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+.note-toolbar button {
+  min-width: 30px;
+  padding: 2px var(--space-1);
+  background: var(--color-surface-raised);
+  border: none;
+  border-radius: var(--radius);
+}
+.note-toolbar-size {
+  min-width: 26px;
+  text-align: center;
+}
+/* Призрак вещи, которую тянут на доску (из лотка, чистая карточка). */
+.drag-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  margin: -16px 0 0 -50px;
+  padding: var(--space-2) var(--space-3);
+  min-width: 100px;
+  background: var(--color-paper-sheet);
+  color: var(--color-card-text);
+  font: 15px var(--font-paper);
+  box-shadow: var(--shadow-paper-lifted);
+  opacity: 0.85;
+  pointer-events: none;
+  rotate: -3deg;
+}
+.drag-ghost-note {
+  background: var(--color-note);
+}
+.drag-ghost-label {
+  background: var(--color-cardboard);
+}
+.drag-ghost.ghost-ok {
+  opacity: 1;
+  outline: 2px solid var(--color-accent);
+}
+.note-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 16px / 1.3 var(--font-hand);
+}
+.paper-label .note-text {
+  font: bold 20px / 1.1 var(--font-paper);
+  text-align: center;
+  width: 100%;
+}
+.note-input {
+  flex: 1;
+  width: 100%;
+  min-height: 2.6em;
+  /* Поле растёт по тексту, как сама записка. */
+  field-sizing: content;
+  padding: 2px;
+  resize: none;
+  border: 1px dashed var(--color-card-id);
+  background: transparent;
+  color: var(--color-card-text);
+  font: 16px / 1.3 var(--font-hand);
+}
+.paper-label .note-input {
+  font: bold 20px / 1.1 var(--font-paper);
+  text-align: center;
+}
+/* Чистые карточки у края доски (внизу справа): взять записку или ярлык. */
+.wall-blanks {
+  position: absolute;
+  right: var(--space-4);
+  bottom: var(--space-3);
+  z-index: 30;
+  display: flex;
+  gap: var(--space-2);
+}
+/* Со стола карточек не видно. */
+.face-wall:not(.face-active) .wall-blanks {
+  display: none;
+}
+.wall-blank {
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  color: var(--color-card-text);
+  font: 15px var(--font-paper);
+  box-shadow: var(--shadow-paper);
+  rotate: -2deg;
+}
+.wall-blank:hover {
+  box-shadow: var(--shadow-paper-lifted);
+  translate: 0 -2px;
+}
+.wall-blank-note {
+  background: var(--color-note);
+}
+.wall-blank-label {
+  background: var(--color-cardboard);
+  rotate: 1deg;
 }
 /* Карточка предмета со стола (ITEM-A): фото предмета и номер с бирки — ничего сверх бирки. */
 .paper-item {

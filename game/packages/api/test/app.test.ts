@@ -85,8 +85,10 @@ describe('API', () => {
   it('PUT → GET возвращает сохранённое', async () => {
     const s = defaultState(materials);
     s.view = 'wall';
-    s.wall.items.push({ materialId: '01', x: 777, y: -50, z: 100, rot: 3 });
-    s.wall.threads.push({ id: 't', from: '01', to: '47', label: 'ключ?' });
+    s.wall.items = s.wall.items.map((i) => (i.id === '01' ? { ...i, x: 777, y: -50 } : i));
+    s.wall.items.push({ id: 'n:q', x: 10, y: 10, z: 101, rot: 0 });
+    s.wall.notes.push({ id: 'n:q', kind: 'note', text: 'кто звонил?' });
+    s.wall.threads.push({ id: 't', from: 'n:q', to: 'p:cole', label: 'ключ?' });
     expect((await put(s)).status).toBe(204);
     expect(await (await app().request('/api/state')).json()).toEqual(s);
   });
@@ -99,25 +101,25 @@ describe('API', () => {
 
   it('PUT с неизвестным материалом → 400', async () => {
     const s = defaultState(materials);
-    s.wall.items.push({ materialId: 'L214', x: 0, y: 0, z: 1, rot: 0 });
+    s.wall.items.push({ id: 'L214', x: 0, y: 0, z: 1, rot: 0 });
     expect((await put(s)).status).toBe(400);
   });
 
-  it('PUT с нитью или поступлением на неизвестный материал → 400', async () => {
+  it('PUT с нитью на неизвестное или записка без текста в notes → 400', async () => {
     const a = defaultState(materials);
     a.wall.threads.push({ id: 't', from: '01', to: 'L214', label: '' });
     expect((await put(a)).status).toBe(400);
     const b = defaultState(materials);
-    b.wall.arrivals.push({ ids: ['L214'] });
+    b.wall.items.push({ id: 'n:x', x: 0, y: 0, z: 1, rot: 0 });
     expect((await put(b)).status).toBe(400);
   });
 
   it('GET выкидывает материал, которого больше нет в контенте', async () => {
     const s: PlayerState = defaultState(materials);
-    s.wall.items.push({ materialId: '99', x: 9000, y: 9000, z: 999, rot: 0 });
+    s.wall.items.push({ id: '99', x: 9000, y: 9000, z: 999, rot: 0 });
     await db.insert(playerState).values({ playerId: 'local', state: s });
     const got = (await (await app().request('/api/state')).json()) as PlayerState;
-    expect(got.wall.items.some((i) => i.materialId === '99')).toBe(false);
+    expect(got.wall.items.some((i) => i.id === '99')).toBe(false);
   });
 
   it('GET: сохранение стола сверху и доски с копиями (версия 3) — раскладка заново', async () => {
