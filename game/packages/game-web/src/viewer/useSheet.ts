@@ -197,8 +197,23 @@ export function useSheet(
       gy: Math.round(((ny + 1) / 2) * 100),
     });
   };
-  /** Мышь ушла — лист ложится ровно. */
+  /** Мышь ушла из окна — лист ложится ровно. */
   const onLeave = () => setTilt((t) => ({ ...t, x: 0, y: 0 }));
+
+  // Лист следит за мышью по всему окну, а не только над просмотрщиком: папка ходатайства и
+  // кнопки лежат поверх — над ними лист помнит, где мышь, и не ложится ровно (правка автора 09.11).
+  const hover = useRef(onHover);
+  hover.current = onHover;
+  useEffect(() => {
+    const move = (e: globalThis.PointerEvent) => hover.current(e.clientX, e.clientY, e.buttons);
+    const out = () => setTilt((t) => ({ ...t, x: 0, y: 0 }));
+    window.addEventListener('pointermove', move);
+    document.documentElement.addEventListener('mouseleave', out);
+    return () => {
+      window.removeEventListener('pointermove', move);
+      document.documentElement.removeEventListener('mouseleave', out);
+    };
+  }, []);
 
   /** Средняя кнопка — как было: без приближения. */
   const reset = () => {
@@ -214,8 +229,6 @@ export function useSheet(
     showX,
     paged: pageH !== null,
     tilt,
-    onHover,
-    onLeave,
     zoom,
     onWheel,
     closeup,

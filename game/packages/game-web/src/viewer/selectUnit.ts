@@ -27,6 +27,10 @@ export function unitRangeAt(paper: Element, x: number, y: number): Range | null 
   const el = caret.node instanceof Element ? caret.node : caret.node.parentElement;
   const block = el?.closest(BLOCK);
   if (!block || !paper.contains(block)) return null;
+  // Браузер даёт ближайший к точке текст, даже если щёлкнули по пустому полю под ним: строка
+  // отмечается, только когда щелчок пришёлся на сам блок (правка автора 09.11: щелчок по пустому
+  // низу листа выделял последнюю строку).
+  if (!near(block.getBoundingClientRect(), x, y)) return null;
 
   // Текстовые узлы блока, разбитые на строки переносами <br> и вложенными блоками. Строка
   // таблицы — целиком, со всеми ячейками.
@@ -58,6 +62,11 @@ export function unitRangeAt(paper: Element, x: number, y: number): Range | null 
   r.setStart(first, first.data.length - first.data.trimStart().length);
   r.setEnd(last, last.data.trimEnd().length);
   return r;
+}
+
+/** Точка внутри прямоугольника (с запасом в пару пикселей на межстрочье). */
+function near(b: DOMRect, x: number, y: number, pad = 3): boolean {
+  return x >= b.left - pad && x <= b.right + pad && y >= b.top - pad && y <= b.bottom + pad;
 }
 
 const SPACE = /\s/u;

@@ -1991,18 +1991,35 @@ button {
 .viewer-stack-prev {
   right: 100%;
 }
-/* Загнутый уголок внизу справа — тоже следующая страница. */
+/* Загнутый уголок внизу справа — тоже следующая страница. Зона щелчка (правка автора 09.11)
+   намного больше нарисованного уголка: весь угол листа (56 px внутрь) и торчащий под ним
+   край стопки (48 px наружу); сам уголок — ::after в углу листа. */
 .viewer-corner {
+  --in: 56px;
+  --out-x: 48px;
+  --out-y: 40px;
   position: absolute;
-  right: 0;
-  bottom: 0;
+  right: calc(-1 * var(--out-x));
+  bottom: calc(-1 * var(--out-y));
+  width: calc(var(--in) + var(--out-x));
+  height: calc(var(--in) + var(--out-y));
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  /* Поверх листа в той же плоскости — щелчок в углу достаётся уголку, не строке. */
+  transform: translateZ(1px);
+  backface-visibility: hidden;
+}
+.viewer-corner::after {
+  content: "";
+  position: absolute;
+  right: var(--out-x);
+  bottom: var(--out-y);
   width: 34px;
   height: 34px;
-  padding: 0;
   background: linear-gradient(315deg, var(--color-room-dark, #2a2a2a) 50%, #d9d4c6 50%);
-  border: 0;
   box-shadow: -2px -2px 4px rgb(0 0 0 / 18%);
-  cursor: pointer;
   transform-origin: 100% 100%;
   transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1);
   will-change: transform;
@@ -2010,14 +2027,18 @@ button {
 /* Уголок «назад» — внизу слева, загнут в другую сторону. */
 .viewer-corner-prev {
   right: auto;
-  left: 0;
+  left: calc(-1 * var(--out-x));
+}
+.viewer-corner-prev::after {
+  right: auto;
+  left: var(--out-x);
   transform-origin: 0 100%;
   background: linear-gradient(45deg, var(--color-room-dark, #2a2a2a) 50%, #d9d4c6 50%);
   box-shadow: 2px -2px 4px rgb(0 0 0 / 18%);
 }
 /* Уголок и торчащая стопка — одно целое: навёл на любое — уголок поднят, стопка раздвинута. */
-.viewer-flip:has(.viewer-stack-next:hover, .viewer-corner-next:hover) .viewer-corner-next,
-.viewer-flip:has(.viewer-stack-prev:hover, .viewer-corner-prev:hover) .viewer-corner-prev {
+.viewer-flip:has(.viewer-stack-next:hover, .viewer-corner-next:hover) .viewer-corner-next::after,
+.viewer-flip:has(.viewer-stack-prev:hover, .viewer-corner-prev:hover) .viewer-corner-prev::after {
   transform: scale(1.4);
 }
 .viewer-page-no {

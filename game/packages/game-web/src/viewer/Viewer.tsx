@@ -27,7 +27,8 @@ interface ViewerProps {
 
 /** Щелчок сразу после открытия — второй щелчок двойного клика, а не «закрыть». */
 const OPEN_GUARD_MS = 400;
-const INSIDE = '.viewer-paper, .viewer-tools, .to-petition, .viewer-closeup, .viewer-stack-hit';
+const INSIDE =
+  '.viewer-paper, .viewer-tools, .to-petition, .viewer-closeup, .viewer-stack-hit, .viewer-corner';
 
 /**
  * Просмотрщик материала (TECH_PLAN 4.3). Серый прототип: текст пакета дословно; строки внутри
@@ -211,8 +212,6 @@ export function Viewer({ materialId }: ViewerProps) {
         downOutside.current = false;
       }}
       onWheel={(e) => sheet.onWheel(e.clientX, e.clientY, e.deltaY)}
-      onPointerMove={(e) => sheet.onHover(e.clientX, e.clientY, e.buttons)}
-      onPointerLeave={sheet.onLeave}
     >
       <div className="viewer-stage">
         <div
@@ -297,6 +296,16 @@ export function Viewer({ materialId }: ViewerProps) {
                     {doc}
                   </div>
                 </div>
+                {sheet.pages > 1 && (
+                  <span className="viewer-page-no" data-testid="page-no">
+                    {sheet.page + 1} / {sheet.pages}
+                  </span>
+                )}
+              </article>
+            )}
+            {/* Уголки — вне листа: их зона щелчка выходит за край на торчащую стопку. */}
+            {!person && (
+              <>
                 {sheet.page > 0 && (
                   <button
                     type="button"
@@ -321,12 +330,7 @@ export function Viewer({ materialId }: ViewerProps) {
                     }}
                   />
                 )}
-                {sheet.pages > 1 && (
-                  <span className="viewer-page-no" data-testid="page-no">
-                    {sheet.page + 1} / {sheet.pages}
-                  </span>
-                )}
-              </article>
+              </>
             )}
           </div>
         </div>

@@ -106,6 +106,36 @@ test('длинный материал — страницами (PG-A): стре�
   await expect(no).toHaveText(`${total - 2} / ${total}`);
 });
 
+test('угол листа листает не только по нарисованному уголку: рядом с ним и по торчащей под ним стопке; пустой низ листа строку не отмечает', async ({
+  page,
+}) => {
+  await sheet(page, '07').click(STRIP);
+  const no = page.getByTestId('page-no');
+  const box = await page.getByTestId('viewer-paper').boundingBox();
+  if (!box) throw new Error('нет листа');
+  const right = box.x + box.width;
+  const bottom = box.y + box.height;
+  await page.waitForTimeout(450); // щелчок сразу после открытия — второй щелчок двойного
+  // Пустое поле внизу листа — не строка: ничего не отмечено, кнопки «в ходатайство» нет.
+  await page.mouse.click(box.x + box.width / 2 - 80, bottom - 8);
+  await expect(page.getByTestId('viewer')).toBeVisible();
+  expect(await page.evaluate(() => window.getSelection()?.toString() ?? '')).toBe('');
+  await expect(page.locator('.to-petition')).toHaveCount(0);
+  // Угол листа в 45 px от края — мимо нарисованного уголка (34 px), но вперёд.
+  await page.mouse.click(right - 45, bottom - 45);
+  await expect(no).toHaveText(/^2 \//);
+  // Торчащий под углом край стопки (ниже и правее листа) — тоже вперёд, не «закрыть».
+  await page.mouse.click(right + 12, bottom + 14);
+  await expect(no).toHaveText(/^3 \//);
+  await expect(page.getByTestId('viewer')).toBeVisible();
+  // Слева внизу — так же назад.
+  await page.mouse.click(box.x + 45, bottom - 45);
+  await expect(no).toHaveText(/^2 \//);
+  await page.mouse.click(box.x - 12, bottom + 14);
+  await expect(no).toHaveText(/^1 \//);
+  expect(await page.evaluate(() => window.getSelection()?.toString() ?? '')).toBe('');
+});
+
 test.describe('живой лист (движение не уменьшено)', () => {
   test.use({ reducedMotion: 'no-preference' });
 
@@ -120,6 +150,19 @@ test.describe('живой лист (движение не уменьшено)', 
     await expect
       .poll(async () => (await page.getByTestId('viewer-flip').getAttribute('style')) ?? '')
       .toMatch(/rotateY\(-[1-9]/);
+  });
+
+  test('над папкой ходатайства лист помнит, где мышь: наклон к ней, а не ровно', async ({
+    page,
+  }) => {
+    await sheet(page, '07').click(STRIP);
+    const tab = await page.getByTestId('petition-corner').boundingBox();
+    if (!tab) throw new Error('нет папки');
+    await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2, { steps: 6 });
+    // Папка внизу слева от листа — лист наклонён к ней (левый нижний край приподнят).
+    await expect
+      .poll(async () => (await page.getByTestId('viewer-flip').getAttribute('style')) ?? '')
+      .toMatch(/rotateX\([1-9][\d.]*deg\) rotateY\([1-9]/);
   });
 
   test('лист «живой», как карточка: край под мышью приподнимается; лист не переворачивается; тянуть мимо — ничего, щелчок мимо — закрыть', async ({
