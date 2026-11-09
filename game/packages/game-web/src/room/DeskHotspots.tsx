@@ -109,7 +109,8 @@ export function DeskHotspots({
               if (o.key.startsWith('inbox-') && e.detail > 0) return;
               if (h?.kind === 'computer') setComputerOpen(true);
               else if (h?.kind === 'trash') useGame.getState().setTrashOpen(true);
-              else if (h?.kind === 'container') useGame.getState().setInspecting(h.id);
+              else if (h?.kind === 'container')
+                useGame.getState().hold({ type: 'container', id: h.id });
               else if (h) openViewer(h.id);
             }}
           >

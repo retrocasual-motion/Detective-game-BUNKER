@@ -1,5 +1,6 @@
 import {
   type ContainerId,
+  DEVICE_IDS,
   fitCamera,
   type Material,
   openAll,
@@ -25,6 +26,9 @@ export const shownCamera = (s: PlayerState) =>
 /** Сколько можно «Вернуть» выброшенное письмо, мс. */
 const UNDO_MS = 6000;
 
+/** Что в руках: конверт или коробка архива — или изъятое устройство (по номеру материала). */
+export type Held = { type: 'container'; id: ContainerId } | { type: 'device'; id: string };
+
 export type SaveStatus = 'saved' | 'saving' | 'error';
 
 interface GameStore {
@@ -48,9 +52,14 @@ interface GameStore {
   /** Окно корзины у стола открыто (TR-A). */
   trashOpen: boolean;
   setTrashOpen(open: boolean): void;
-  /** Конверт или коробка в руках (A-260): крупно, повертеть, «Вскрыть». */
-  inspecting: ContainerId | null;
-  setInspecting(id: ContainerId | null): void;
+  /**
+   * Вещь в руках (этап 4a): конверт, коробка или устройство — крупно, вертеть мышью, колесо —
+   * ближе к точке под курсором, щелчок по самой вещи — вскрыть или включить.
+   */
+  held: Held | null;
+  hold(h: Held | null): void;
+  /** Открыть материал листом (экран устройства в 4a). */
+  readMaterial(materialId: string): void;
   /** Только что выброшенное письмо — его можно «Вернуть» несколько секунд. */
   binned: Binned | null;
   /** Письмо-ответ — в корзину (со стены или из «Входящих»); остальное не выбрасывается. */
@@ -93,7 +102,7 @@ export const useGame = create<GameStore>((set, get) => {
     arrival: null,
     computerOpen: false,
     trashOpen: false,
-    inspecting: null,
+    held: null,
     find: null,
     searchOpen: false,
     binned: null,
@@ -111,8 +120,12 @@ export const useGame = create<GameStore>((set, get) => {
       get().updateState((s) => openContainer(s, materials, id));
     },
 
-    setInspecting(id) {
-      set({ inspecting: id });
+    hold(h) {
+      set({ held: h });
+    },
+
+    readMaterial(materialId) {
+      set({ viewerId: materialId, find: null });
     },
 
     setTrashOpen(open) {
@@ -162,6 +175,11 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     openViewer(materialId, find) {
+      // Устройство берут в руки (этап 4a); из поиска — сразу текст.
+      if (!find && DEVICE_IDS.has(materialId)) {
+        set({ held: { type: 'device', id: materialId } });
+        return;
+      }
       set({ viewerId: materialId, find: find ?? null });
     },
 

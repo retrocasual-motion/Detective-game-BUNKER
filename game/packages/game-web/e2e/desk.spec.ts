@@ -15,12 +15,23 @@ test('на столе — изъятые устройства с бирками 
   expect((tray?.x ?? 0) + (tray?.width ?? 0) / 2).toBeGreaterThan(683);
 });
 
-test('щелчок по устройству — «взять в руки»: открывается его материал (OPEN-A)', async ({
+test('щелчок по устройству — вещь в руках (этап 4a): вертеть мышью, щелчок по экрану — материал, Esc — положить', async ({
   page,
 }) => {
   await page.getByTestId('device-50').click();
+  const held = page.getByTestId('held');
+  await expect(held).toHaveAttribute('aria-label', /Радиопост/);
+  // Протянуть — вещь вращается и остаётся в руках (это не щелчок мимо).
+  await page.mouse.move(683, 300);
+  await page.mouse.down();
+  await page.mouse.move(800, 340, { steps: 8 });
+  await page.mouse.up();
+  await expect(held).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(held).toBeHidden();
+  await page.getByTestId('device-50').click();
+  await page.getByTestId('device-use').click();
   const viewer = page.getByTestId('viewer');
-  await expect(viewer).toBeVisible();
   await expect(viewer).toContainText('Радиопост');
   await page.keyboard.press('Escape');
   await expect(viewer).toBeHidden();
