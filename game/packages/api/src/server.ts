@@ -32,6 +32,7 @@ const app = createApp({
   isReady: () => ready,
   webDist: env.webDist,
   engine,
+  mailDelayMs: env.mailDelayMs,
 });
 serve({ fetch: app.fetch, port: env.apiPort }, (info) => {
   console.log(

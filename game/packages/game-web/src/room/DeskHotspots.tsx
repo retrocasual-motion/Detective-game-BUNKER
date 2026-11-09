@@ -2,6 +2,9 @@ import { CARD_W } from '@bunker/shared';
 import { useMemo } from 'react';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
+import { wholeCard } from '../petition/drafts.ts';
+import { petitionFieldAt } from '../petition/fieldAt.ts';
+import { usePetition } from '../petition/petition-store.ts';
 import { useGame } from '../store.ts';
 import { moveItem } from '../wall/wall-actions.ts';
 import { type Room, screenToBoard } from './camera.ts';
@@ -48,8 +51,24 @@ export function DeskHotspots({ room, inbox }: { room: Room; inbox: string[] }) {
               startGhostDrag(e.nativeEvent, {
                 label: id,
                 className: 'drag-ghost-paper',
-                canDrop: (pt) => screenToBoard(pt, room.poses.desk, room) !== null,
+                canDrop: (pt) => {
+                  const f = petitionFieldAt(pt.x, pt.y);
+                  usePetition
+                    .getState()
+                    .setDrag(useGame.getState().petitionOpen, f === 'to' ? null : f);
+                  if (f) return f !== 'to';
+                  return screenToBoard(pt, room.poses.desk, room) !== null;
+                },
+                onEnd: () => usePetition.getState().setDrag(false, null),
                 onDrop: (pt) => {
+                  // В поле открытой папки — карточка «письмо целиком» (K-A); письмо остаётся в лотке.
+                  const f = petitionFieldAt(pt.x, pt.y);
+                  const m = useGame.getState().materials.find((mm) => mm.id === id);
+                  if (f && m) {
+                    usePetition.getState().setActiveField(f);
+                    usePetition.getState().addCard(wholeCard(m));
+                    return;
+                  }
                   const b = screenToBoard(pt, room.poses.desk, room);
                   const cam = useGame.getState().state?.wall.camera;
                   if (!b || !cam) return;

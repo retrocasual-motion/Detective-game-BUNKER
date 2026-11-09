@@ -6,7 +6,8 @@ export const ZOOM_MAX = 3;
 /**
  * Каким предметом материал лежит на столе (TECH_PLAN 4.2, UX-A1): форма по типу, не по значимости.
  * sheet — лист на бланке; stapled — скреплённые листы; half — половина листа; photos — отпечатки;
- * pack — пачка сканов; notebook — тетрадь; disc — диск в конверте; bag — пакет вещдоков.
+ * pack — пачка сканов; notebook — тетрадь; disc — диск в конверте; bag — пакет вещдоков;
+ * letter — ответ на ходатайство (письмо в конверте, этап 3).
  */
 export const MaterialKindSchema = z.enum([
   'sheet',
@@ -17,12 +18,16 @@ export const MaterialKindSchema = z.enum([
   'notebook',
   'disc',
   'bag',
+  'letter',
 ]);
 export type MaterialKind = z.infer<typeof MaterialKindSchema>;
 
 export const MaterialSchema = z.object({
-  /** 01…51 — стартовые; L101…L999 — закрытые (открываются действиями игрока). */
-  id: z.string().regex(/^(\d{2}|L\d{3})$/),
+  /**
+   * 01…51 — стартовые; L101…L999 — закрытые (открываются действиями игрока); M001… — ответы
+   * на ходатайства (письма, этап 3).
+   */
+  id: z.string().regex(/^(\d{2}|L\d{3}|M\d{3})$/),
   title: z.string().min(1),
   placement: z.enum(['desk', 'evidence']),
   kind: MaterialKindSchema,
@@ -72,6 +77,29 @@ export const NoteSchema = z.object({
 });
 export type Note = z.infer<typeof NoteSchema>;
 
+/**
+ * Карточка ходатайства (K-A): выделенная строка материала или материал целиком (тогда
+ * цитата — его название). У карточки нет типов, меток и подсветки (P-1).
+ */
+export const CardSchema = z.object({
+  file: z.string().regex(/^(\d{2}|L\d{3}|M\d{3})$/),
+  quote: z.string().min(1).max(2000),
+});
+export type Card = z.infer<typeof CardSchema>;
+
+/** Черновик ходатайства (4.11): Кому, Прошу, На основании. Номер дела ставится сам. */
+export const DraftSchema = z.object({
+  id: z.string().min(1).max(64),
+  to: z.string().max(200).nullable(),
+  ask: CardSchema.nullable(),
+  basis: CardSchema.nullable(),
+});
+export type Draft = z.infer<typeof DraftSchema>;
+export type DraftField = 'to' | 'ask' | 'basis';
+
+/** Сколько черновиков сразу (уголков папки рядом). */
+export const MAX_DRAFTS = 4;
+
 /** Виды: стол (от первого лица) и стена (рабочая поверхность) — решение автора 08.11. */
 export const ViewSchema = z.enum(['desk', 'wall']);
 export type View = z.infer<typeof ViewSchema>;
@@ -87,5 +115,7 @@ export const PlayerStateSchema = z.object({
     threads: z.array(ThreadSchema),
     notes: z.array(NoteSchema),
   }),
+  /** Черновики ходатайств (этап 3); в старом сохранении их нет — пусто. */
+  drafts: z.array(DraftSchema).max(MAX_DRAFTS).default([]),
 });
 export type PlayerState = z.infer<typeof PlayerStateSchema>;

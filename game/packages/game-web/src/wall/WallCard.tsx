@@ -29,8 +29,8 @@ interface WallCardProps {
   children: ReactNode;
   /** Щелчок без перетаскивания: открыть материал или править записку. */
   onActivate?(id: string): void;
-  onDrop(id: string, x: number, y: number): void;
-  onLive(id: string, dx: number, dy: number): void;
+  onDrop(id: string, x: number, y: number, at: { x: number; y: number }): void;
+  onLive(id: string, dx: number, dy: number, at?: { x: number; y: number }): void;
   pin: PinHandlers;
   /** Только у записок: ✕ — снять со стены (с «Вернуть»). */
   onDelete?(id: string): void;
@@ -42,6 +42,8 @@ interface WallCardProps {
   onResize?(id: string, width: number): void;
   /** Панель над вещью (размер шрифта у записки). */
   toolbar?: ReactNode;
+  /** Вещь тянут над папкой ходатайства — вместо неё над папкой идёт её призрак. */
+  hidden?: boolean;
 }
 
 /**
@@ -65,14 +67,15 @@ export const WallCard = memo(function WallCard({
   width,
   onResize,
   toolbar,
+  hidden,
 }: WallCardProps) {
   const [liveW, setLiveW] = useState<number | null>(null);
   const resize = useRef<{ x: number; w: number } | null>(null);
   const w = liveW ?? width;
   const drag = useDraggable({
     zoom,
-    onDrop: (dx, dy) => onDrop(id, place.x + dx, place.y + dy),
-    onMove: (dx, dy) => onLive(id, dx, dy),
+    onDrop: (dx, dy, at) => onDrop(id, place.x + dx, place.y + dy, at),
+    onMove: (dx, dy, at) => onLive(id, dx, dy, at),
   });
   const x = place.x + (drag.offset?.x ?? 0);
   const y = place.y + (drag.offset?.y ?? 0);
@@ -80,7 +83,7 @@ export const WallCard = memo(function WallCard({
 
   return (
     <div
-      className={`wall-card wall-card-${kind}${drag.offset ? ' wall-card-dragging' : ''}`}
+      className={`wall-card wall-card-${kind}${drag.offset ? ' wall-card-dragging' : ''}${hidden ? ' wall-card-over-folder' : ''}`}
       data-testid={`wall-${id}`}
       data-wall-item={id}
       style={{

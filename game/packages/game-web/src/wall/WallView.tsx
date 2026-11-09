@@ -17,9 +17,13 @@ import {
   useRef,
   useState,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { Canvas } from '../canvas/Canvas.tsx';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
+import { wholeCard } from '../petition/drafts.ts';
+import { overFolder, petitionFieldAt } from '../petition/fieldAt.ts';
+import { usePetition } from '../petition/petition-store.ts';
 import { useGame } from '../store.ts';
 import { isItemCard, type PinHandlers, WallCard } from './WallCard.tsx';
 import { type At, pinOf, WallThreads } from './WallThreads.tsx';
@@ -199,14 +203,40 @@ export function WallView() {
   );
 
   const drop = useCallback(
-    (id: string, x: number, y: number) => {
+    (id: string, x: number, y: number, at: { x: number; y: number }) => {
       setLive(null);
+      setGhost(null);
+      usePetition.getState().setDrag(false, null);
+      // Лист отпустили на поле открытой папки — карточка «материал целиком» (K-A), лист
+      // остаётся на стене, где висел.
+      const f = petitionFieldAt(at.x, at.y);
+      const m = useGame.getState().materials.find((mm) => mm.id === id);
+      if (f && f !== 'to' && m) {
+        usePetition.getState().setActiveField(f);
+        usePetition.getState().addCard(wholeCard(m));
+        return;
+      }
       updateState(moveItem(id, x, y));
     },
     [updateState],
   );
+  // Лист тянут над открытой папкой ходатайства: над ней идёт его призрак (поверх папки), поле
+  // под курсором подсвечено (правка автора 09.11).
+  const [ghost, setGhost] = useState<{ id: string; x: number; y: number } | null>(null);
   const onLive = useCallback(
-    (id: string, dx: number, dy: number) => setLive(dx === 0 && dy === 0 ? null : { id, dx, dy }),
+    (id: string, dx: number, dy: number, at?: { x: number; y: number }) => {
+      setLive(dx === 0 && dy === 0 ? null : { id, dx, dy });
+      const pet = usePetition.getState();
+      const material = !id.includes(':');
+      if (!at || !useGame.getState().petitionOpen || !material || (dx === 0 && dy === 0)) {
+        pet.setDrag(false, null);
+        setGhost(null);
+        return;
+      }
+      const f = petitionFieldAt(at.x, at.y);
+      pet.setDrag(true, f === 'to' ? null : f);
+      setGhost(overFolder(at.x, at.y) ? { id, x: at.x, y: at.y } : null);
+    },
     [],
   );
   const activate = useCallback(
@@ -434,6 +464,7 @@ export function WallView() {
         onLive={onLive}
         pin={pin}
         onDelete={note ? deleteNote : undefined}
+        hidden={ghost?.id === item.id}
         editing={editingNote === item.id}
         width={width}
         onResize={note ? (id, w) => updateState(styleNote(id, { width: w })) : undefined}
@@ -529,6 +560,17 @@ export function WallView() {
           Ярлык
         </button>
       </div>
+      {ghost &&
+        createPortal(
+          <div
+            className={`drag-ghost drag-ghost-paper${usePetition.getState().dropTarget ? ' ghost-ok' : ''}`}
+            data-testid="drag-ghost"
+            style={{ translate: `${ghost.x}px ${ghost.y}px` }}
+          >
+            {byId.get(ghost.id)?.id} · {byId.get(ghost.id)?.title}
+          </div>,
+          document.body,
+        )}
       {undo && (
         <div
           className="undo-toast"

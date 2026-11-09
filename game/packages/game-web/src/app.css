@@ -208,7 +208,8 @@ button {
   border-radius: var(--radius);
 }
 
-/* Папка ходатайства (PET-A): уголок внизу слева; открытая — слева на треть экрана, без затемнения. */
+/* Папка ходатайства (PET-A; этап 3): уголки внизу слева — по черновику; открытая — слева на
+   треть экрана, без затемнения. Внутри — бланк: поля — строки (UX-K1, K2). */
 .petition {
   position: absolute;
   left: var(--space-4);
@@ -218,36 +219,98 @@ button {
   height: var(--folder-height);
   display: flex;
   flex-direction: column;
-  translate: 0 calc(100% - var(--corner-height) + 8px);
-  transition: translate 0.25s var(--ease-camera);
+  /* Закрытая — видны язычки и полоска папок под ними. */
+  translate: 0 calc(100% - var(--corner-height) - var(--folder-peek));
+  transition: translate 0.3s var(--ease-camera);
   pointer-events: none;
-}
-.petition:not(.petition-open):hover {
-  translate: 0 calc(100% - var(--corner-height) - 4px);
+  --folder-peek: 8px;
+  --folder-lift: 10px;
 }
 .petition-open {
   translate: 0 0;
 }
-.petition-tab {
-  align-self: flex-start;
-  font-size: 16px;
-  width: var(--corner-width);
-  height: var(--corner-height);
-  flex: none;
+/* Стопка папок (правка автора 09.11): черновики лежат лесенкой — каждый следующий выше и
+   правее, порядок постоянный (щелчок по язычку не переставляет папки). Бланк спереди
+   показывает выбранный черновик; его язычок отмечен. Наведение приподнимает папку. */
+.petition-stack {
+  position: relative;
+  flex: 1;
+  margin-top: var(--corner-height);
+}
+.folder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-folder-2);
+  border-radius: 0 var(--radius) 0 0;
+  box-shadow: var(--shadow);
+  translate: calc(var(--depth) * 12px) calc(var(--depth) * -12px + var(--lift, 0px));
+  transition: translate 0.2s ease-out;
+}
+.folder-front {
   background: var(--color-folder);
+}
+/* Приподнять папку под курсором. Открытый бланк не прыгает — поднимаются только задние. */
+.petition:not(.petition-open) .folder:has(> .folder-tab:not(.folder-tab-new):hover),
+.petition-open .folder-back:has(> .folder-tab:not(.folder-tab-new):hover) {
+  --lift: calc(var(--folder-lift) * -1);
+  --tail: var(--folder-lift);
+}
+.folder-tab {
+  position: absolute;
+  top: calc(var(--corner-height) * -1);
+  width: 150px;
+  height: var(--corner-height);
+  padding: 0 var(--space-2);
+  background: var(--color-folder-2);
   color: var(--color-card-text);
   border: none;
   border-radius: var(--radius) var(--radius) 0 0;
-  box-shadow: var(--shadow);
+  box-shadow: 0 -2px 4px rgb(0 0 0 / 25%);
+  font-size: 14px;
+  white-space: nowrap;
   pointer-events: auto;
+}
+/* У приподнятой папки — невидимый «хвост» язычка вниз на высоту подъёма: язычок не уходит
+   из-под курсора, и папка не дрожит вверх-вниз. У опущенной хвоста нет: иначе он сам ловил бы
+   курсор под язычком. */
+.folder-tab::after {
+  content: "";
+  position: absolute;
+  inset: 100% 0 calc(var(--tail, 0px) * -1);
+}
+.folder-front > .folder-tab {
+  background: var(--color-folder);
+}
+/* Язычок черновика, открытого в бланке. */
+.folder-tab-active {
+  font-weight: bold;
+  box-shadow:
+    inset 0 3px 0 var(--color-stamp),
+    0 -2px 4px rgb(0 0 0 / 25%);
+}
+.folder-tab-new {
+  width: 44px;
+  font-size: 20px;
+  background: transparent;
+  border: 2px dashed var(--color-folder);
+  color: var(--color-folder);
+  box-shadow: none;
+}
+.folder-tab-new:hover {
+  background: var(--color-folder-2);
+  color: var(--color-card-text);
 }
 .petition-folder {
   position: relative;
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-3);
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  overflow-y: auto;
   background: var(--color-folder);
   color: var(--color-card-text);
   border-radius: 0 var(--radius) 0 0;
@@ -263,25 +326,243 @@ button {
   top: var(--space-2);
   right: var(--space-2);
 }
-.petition-field {
+/* Шапка бланка: что это и номер дела (ставится сам). */
+.petition-head {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  margin: 0;
-  padding: 0;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0 var(--space-4) var(--space-2) 0;
+  padding-bottom: var(--space-1);
+  border-bottom: 2px solid var(--color-folder-slot);
+  font-family: var(--font-paper);
+}
+.petition-head-title {
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.petition-head-draft {
+  margin-left: var(--space-2);
+  color: var(--color-folder-slot);
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.petition-head-case {
+  color: var(--color-folder-slot);
+}
+/* Поле — строка бланка: подпись слева, на линии — адрес или карточка. */
+.petition-field {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+}
+.petition-line {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-1);
+  background: transparent;
   border: none;
+  border-bottom: 1px solid var(--color-folder-slot);
+  text-align: left;
+  font-family: var(--font-paper);
+}
+.petition-field-active .petition-line {
+  background: var(--color-folder-active);
+  outline: 2px dashed var(--color-folder-slot);
+  outline-offset: -2px;
+}
+/* Лист тянут над папкой: поля карточек ждут его, поле под курсором — подсвечено. */
+.petition-field-droppable .petition-line {
+  outline: 2px dashed var(--color-folder-slot);
+  outline-offset: -2px;
+}
+.petition-field-target .petition-line {
+  background: var(--color-folder-target);
+  outline: 3px solid var(--color-stamp);
+  outline-offset: -3px;
+}
+.petition-field-missing .petition-line {
+  outline: 2px solid var(--color-danger);
+  outline-offset: -2px;
 }
 .petition-field-name {
-  padding: 0;
+  flex: none;
+  min-width: 120px;
   font-weight: bold;
 }
-.petition-slot {
-  min-height: 56px;
-  padding: var(--space-2);
-  border: 2px dashed var(--color-folder-slot);
-  border-radius: var(--radius);
+.petition-blank {
   color: var(--color-folder-slot);
+  font: 12px var(--font-ui);
+}
+.petition-address {
+  font-size: 16px;
+}
+.petition-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-paper-sheet);
+  box-shadow: var(--shadow-paper);
+  rotate: -0.5deg;
+}
+.petition-card-file {
+  color: var(--color-card-id);
+  font: 11px var(--font-ui);
+}
+.petition-card-quote {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.petition-clear {
+  position: absolute;
+  top: 6px;
+  right: 2px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  border: none;
+  border-radius: 50%;
   font-size: 12px;
+}
+.address-book {
+  margin: 0;
+  padding: var(--space-1);
+  max-height: 180px;
+  overflow-y: auto;
+  list-style: none;
+  background: var(--color-paper-sheet);
+  box-shadow: var(--shadow-paper);
+}
+.address-book button {
+  width: 100%;
+  padding: 3px var(--space-2);
+  background: transparent;
+  border: none;
+  text-align: left;
+  font: 14px var(--font-paper);
+}
+.address-book button:hover {
+  background: var(--color-folder-active);
+}
+/* Общий отказ адресата пришёл сразу (PRE-B): письма не будет, попытка засчитана. */
+.petition-refusal {
+  position: relative;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-paper-sheet);
+  border-left: 4px solid var(--color-stamp);
+  box-shadow: var(--shadow-paper);
+  font-family: var(--font-paper);
+}
+.petition-refusal p {
+  margin: 0;
+}
+.petition-refusal-mark {
+  float: right;
+  margin: 0 0 var(--space-1) var(--space-2);
+  padding: 0 var(--space-2);
+  border: 2px solid var(--color-stamp);
+  color: var(--color-stamp);
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  rotate: -6deg;
+}
+.petition-refusal .petition-refusal-note {
+  margin-top: var(--space-1);
+  color: var(--color-folder-slot);
+  font: 12px var(--font-ui);
+}
+.petition-error {
+  margin: 0;
+  padding: var(--space-2);
+  background: var(--color-error-bg);
+  color: var(--color-card-text);
+  border-left: 4px solid var(--color-danger);
+}
+.petition-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+}
+.petition-send {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-card-text);
+  color: var(--color-folder);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 16px;
+}
+.petition-send:disabled {
+  opacity: 0.5;
+}
+.petition-discard {
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: 1px solid var(--color-folder-slot);
+  border-radius: var(--radius);
+}
+/* Штамп «Отправлено» поверх бланка. */
+.petition-stamp {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  translate: -50% -50%;
+  rotate: -12deg;
+  padding: var(--space-2) var(--space-4);
+  border: 4px solid var(--color-stamp);
+  color: var(--color-stamp);
+  font: bold 30px var(--font-paper);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.petition-sent-note {
+  position: absolute;
+  left: var(--space-4);
+  bottom: calc(var(--corner-height) + var(--space-3));
+  z-index: 51;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 420px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-tag);
+  color: var(--color-card-text);
+  font-family: var(--font-paper);
+  box-shadow: var(--shadow-paper-lifted);
+}
+.petition-sent-note button {
+  padding: 2px var(--space-2);
+  border: 1px solid var(--color-card-text);
+  background: transparent;
+  border-radius: var(--radius);
+}
+/* Кнопка «В ходатайство» у конца выделенной строки (K-A). */
+.to-petition {
+  position: fixed;
+  z-index: 60;
+  translate: -50% 0;
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-folder);
+  color: var(--color-card-text);
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-paper-lifted);
+  font-size: 14px;
+}
+/* Письмо-ответ на стене и в просмотрщике: лист с синей полоской конверта. */
+.paper-letter {
+  background: var(--color-paper-sheet);
+  border-top: 6px solid var(--color-letter-stripe);
 }
 .placeholder {
   color: var(--color-text-muted);
@@ -596,6 +877,11 @@ button {
   width: min(var(--viewer-paper-width), 100% - 2 * (var(--viewer-tools-width) + var(--space-2)));
   max-height: 100%;
 }
+/* Выделение в листе — как маркером: это выбор строки для ходатайства (правка автора 09.11). */
+.viewer-paper ::selection {
+  background: var(--color-marker);
+  color: var(--color-card-text);
+}
 .viewer-paper {
   width: 100%;
   min-height: 0;
@@ -663,6 +949,10 @@ button {
 }
 .wall-card-dragging {
   transition: none;
+}
+/* Над папкой ходатайства вместо листа идёт его призрак (поверх папки). */
+.wall-card-over-folder {
+  opacity: 0.25;
 }
 .wall-card .paper {
   padding-top: calc(var(--pin-y) + var(--pin-size) / 2 + 2px);

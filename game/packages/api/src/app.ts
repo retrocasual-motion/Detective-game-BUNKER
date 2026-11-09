@@ -3,24 +3,28 @@ import {
   act,
   type Content,
   emptyProgress,
+  GENERAL_REFUSAL_IDS,
   type Progress,
   parseActionLine,
+  petitionFormError,
 } from '@bunker/engine';
 import {
+  type Card,
   defaultState,
   type Material,
   PERSONS,
+  CardSchema as PlayerCardSchema,
   type PlayerState,
   PlayerStateSchema,
   reconcile,
   upgradeState,
 } from '@bunker/shared';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { eq, sql } from 'drizzle-orm';
+import { asc, eq, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
-import { type Db, playerProgress, playerState } from './db/client.ts';
+import { type Db, playerLetters, playerProgress, playerState } from './db/client.ts';
 
 /** На этапе 1 игрок один; вход и аккаунты — этап 6. */
 const PLAYER_ID = 'local';
@@ -40,7 +44,27 @@ export interface AppDeps {
   engine?: { content: Content; locked: Material[] };
   /** Часы (для лимитов попыток); в тестах — свои. */
   now?: () => number;
+  /** Через сколько ответ на ходатайство ложится во «Входящие», мс (T-11-A; DELAY-A). */
+  mailDelayMs?: number;
 }
+
+/** Письмо-ответ, каким оно хранится. */
+interface Letter {
+  n: number;
+  title: string;
+  body: string;
+  released: string[];
+  deliverAt: Date;
+}
+
+const letterId = (n: number) => `M${String(n).padStart(3, '0')}`;
+
+/** Ходатайство из папки (этап 3): Кому, Прошу, На основании. */
+const PetitionSchema = z.object({
+  to: z.string().min(1).max(200),
+  ask: PlayerCardSchema,
+  basis: PlayerCardSchema,
+});
 
 /**
  * Действие игрока, которое может что-то открыть (TECH_PLAN 6.1). ЗВОНОК — не здесь: телефонные
@@ -59,6 +83,11 @@ const ActionSchema = z.object({
 
 /** Состояние ссылается только на материалы, которые у игрока есть (P-10). */
 function invalidReference(s: PlayerState, materials: Material[]): string | null {
+  const own = new Set(materials.map((m) => m.id));
+  const card = s.drafts
+    .flatMap((d) => [d.ask, d.basis])
+    .find((c) => c !== null && !own.has(c.file));
+  if (card) return `нет материала ${card.file}`;
   const allIds = new Set([
     ...materials.map((m) => m.id),
     ...PERSONS.map((p) => p.id),
@@ -77,6 +106,7 @@ export function createApp({
   webDist,
   engine,
   now = () => Date.now(),
+  mailDelayMs = 12_000,
 }: AppDeps): Hono {
   const app = new Hono();
 
@@ -108,22 +138,60 @@ export function createApp({
       });
   }
 
-  /** Материалы игрока: стартовые + открытые им закрытые (только они уходят в браузер). */
-  const playerMaterials = (progress: Progress): Material[] => [
-    ...materials,
-    ...progress.released.flatMap((id) => lockedById.get(id) ?? []),
-  ];
+  async function loadLetters(): Promise<Letter[]> {
+    return db
+      .select()
+      .from(playerLetters)
+      .where(eq(playerLetters.playerId, PLAYER_ID))
+      .orderBy(asc(playerLetters.n));
+  }
+
+  /**
+   * Материалы игрока: стартовые, открытые им закрытые и доставленные письма-ответы с
+   * вложениями (только они уходят в браузер, P-10). Вложения письма, которое ещё в пути, не
+   * видны до его доставки. Порядок — по времени поступления: у письма вложения идут перед
+   * ним (во «Входящих» письмо стоит впереди своих вложений).
+   */
+  const playerMaterials = (progress: Progress, letters: Letter[]): Material[] => {
+    const t = now();
+    const byLetter = new Set(letters.flatMap((l) => l.released));
+    const loose = progress.released.filter((id) => !byLetter.has(id));
+    const delivered = letters.filter((l) => l.deliverAt.getTime() <= t);
+    return [
+      ...materials,
+      ...loose.flatMap((id) => lockedById.get(id) ?? []),
+      ...delivered.flatMap((l): Material[] => [
+        ...l.released.flatMap((id) => lockedById.get(id) ?? []),
+        {
+          id: letterId(l.n),
+          title: l.title,
+          placement: 'desk',
+          kind: 'letter',
+          body: l.body,
+          sourceFile: 'letter',
+        },
+      ]),
+    ];
+  };
+  const mine = async () => playerMaterials(await loadProgress(), await loadLetters());
 
   // Только чтение: «видено» отмечает сам движок на следующем действии (ответ уже доставил
   // открытое) — запись отсюда шла бы мимо очереди действий и могла затереть открытое.
-  app.get('/api/materials', async (c) => c.json(playerMaterials(await loadProgress())));
+  app.get('/api/materials', async (c) => c.json(await mine()));
+
+  /** Письма в пути: через сколько мс каждое ляжет во «Входящие» — клиент заглянет тогда. */
+  app.get('/api/mail/pending', async (c) => {
+    const t = now();
+    const inMs = (await loadLetters()).map((l) => l.deliverAt.getTime() - t).filter((ms) => ms > 0);
+    return c.json({ inMs });
+  });
 
   app.get('/api/state', async (c) => {
     const [row] = await db.select().from(playerState).where(eq(playerState.playerId, PLAYER_ID));
-    const mine = playerMaterials(await loadProgress());
+    const mine_ = await mine();
     // Старое сохранение поднимается до текущей версии, нечитаемое — заменяется начальным.
-    const saved = row ? upgradeState(row.state, mine) : null;
-    const state = reconcile(saved ?? defaultState(mine), mine);
+    const saved = row ? upgradeState(row.state, mine_) : null;
+    const state = reconcile(saved ?? defaultState(mine_), mine_);
     return c.json(state);
   });
 
@@ -154,7 +222,9 @@ export function createApp({
     const parsed = ActionSchema.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'неверное действие' }, 400);
     // «Решить дело» до конца (ФИНАЛ, СТОП) — этап 5: пока в production закрывать дело нельзя.
-    if (production && (parsed.data.action === 'ФИНАЛ' || parsed.data.action === 'СТОП')) {
+    // Ходатайство игрок отправляет папкой (/api/petition): ответ — письмом через задержку.
+    const a = parsed.data.action;
+    if (production && (a === 'ФИНАЛ' || a === 'СТОП' || a === 'ХОДАТАЙСТВО')) {
       return c.json({ error: 'неверное действие' }, 400);
     }
     return c.json(await runAction(parsed.data));
@@ -173,11 +243,84 @@ export function createApp({
     return c.json(await runAction(ok.data));
   });
 
+  /**
+   * Отправить ходатайство из папки (4.11; FORM-B, MAIL-B). Ошибка оформления — сразу ответом
+   * (422), письмо не уходит и попытка не тратится; лимит отказов — тоже ответом. Общий отказ
+   * адресата (PRE-B) — `{refused}` сразу, без письма, попытка засчитана. Иначе движок решает,
+   * а ответ ложится письмом во «Входящие» через `mailDelayMs`.
+   */
+  app.post('/api/petition', bodyLimit({ maxSize: 64 * 1024 }), async (c) => {
+    if (!engine) return c.notFound();
+    const parsed = PetitionSchema.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: 'Ходатайство не оформлено.' }, 400);
+    const { to, ask, basis } = parsed.data;
+    const run = queue.then(async () => {
+      const before = await loadProgress();
+      const letters = await loadLetters();
+      const own = new Set(playerMaterials(before, letters).map((m) => m.id));
+      if (!own.has(ask.file) || !own.has(basis.file)) {
+        return { form: 'Карточка не из материалов дела.' };
+      }
+      // Письма-ответы движок ведёт как один файл «почта» (из него тоже берут карточки).
+      const toEngine = (cd: Card) => ({
+        file: cd.file.startsWith('M') ? 'почта' : cd.file,
+        quote: cd.quote,
+      });
+      const cards: [Card, Card] = [toEngine(ask), toEngine(basis)];
+      const formError = petitionFormError(engine.content, before, to, cards);
+      if (formError) return { form: formError };
+      const t = now();
+      const { progress, outcome } = act(
+        engine.content,
+        before,
+        { action: 'ХОДАТАЙСТВО', target: to, cards },
+        t,
+      );
+      if (outcome.result === 'лимит') return { form: outcome.reply };
+      await saveProgress(progress);
+      // Общий отказ адресата (PRE-B): ответ сразу в папке, письма нет, попытка засчитана.
+      if (GENERAL_REFUSAL_IDS.has(outcome.rule)) return { refused: outcome.reply };
+      const n = (letters.at(-1)?.n ?? 0) + 1;
+      const titled = (id: string) => `${id} — ${lockedById.get(id)?.title ?? ''}`;
+      const body = [
+        `# Ответ на ходатайство № ${n}`,
+        '',
+        `**От:** ${to}`,
+        '**Кому:** вам',
+        '',
+        outcome.reply,
+        '',
+        ...(outcome.released.length
+          ? [`**Вложения:** ${outcome.released.map(titled).join('; ')}`, '']
+          : []),
+        '---',
+        '',
+        `Ваше ходатайство № ${n}`,
+        `Прошу: ${ask.file} — «${ask.quote}»`,
+        `На основании: ${basis.file} — «${basis.quote}»`,
+      ].join('\n');
+      await db.insert(playerLetters).values({
+        playerId: PLAYER_ID,
+        n,
+        title: `Ответ на ходатайство № ${n}`,
+        body,
+        released: outcome.released,
+        sentAt: new Date(t),
+        deliverAt: new Date(t + mailDelayMs),
+      });
+      return { n, delayMs: mailDelayMs };
+    });
+    queue = run.catch(() => undefined);
+    const r = await run;
+    if ('form' in r) return c.json({ error: r.form }, 422);
+    return c.json(r);
+  });
+
   app.put('/api/state', bodyLimit({ maxSize: 1024 * 1024 }), async (c) => {
     const body = await c.req.json().catch(() => null);
     const parsed = PlayerStateSchema.safeParse(body);
     if (!parsed.success) return c.json({ error: 'неверное состояние' }, 400);
-    const bad = invalidReference(parsed.data, playerMaterials(await loadProgress()));
+    const bad = invalidReference(parsed.data, await mine());
     if (bad) return c.json({ error: bad }, 400);
     const seqHeader = Number(c.req.header('x-state-seq'));
     const seq = Number.isSafeInteger(seqHeader) && seqHeader > 0 ? seqHeader : Date.now() * 1000;
@@ -196,6 +339,7 @@ export function createApp({
     if (production) return c.notFound();
     await db.delete(playerState).where(eq(playerState.playerId, PLAYER_ID));
     await db.delete(playerProgress).where(eq(playerProgress.playerId, PLAYER_ID));
+    await db.delete(playerLetters).where(eq(playerLetters.playerId, PLAYER_ID));
     return c.body(null, 204);
   });
 

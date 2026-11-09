@@ -48,8 +48,8 @@ export interface Bounds {
   bottom: number;
 }
 
-/** Закрытый материал, открытый игроком по ходу дела (L…), а не стартовый (01…51). */
-export const isReleased = (m: Pick<Material, 'id'>) => m.id.startsWith('L');
+/** Пришло по ходу дела (закрытый материал L… или письмо-ответ M…), а не стартовое (01…51). */
+export const isReleased = (m: Pick<Material, 'id'>) => /^[LM]/.test(m.id);
 
 /** Псевдослучайное число 0…1 по номеру и «оси» — без состояния, всегда одинаковое. */
 function noise(k: number, axis: number): number {
@@ -101,6 +101,7 @@ export function defaultState(materials: Material[]): PlayerState {
       version: STATE_VERSION,
       view: 'desk',
       wall: { camera: DEFAULT_WALL_CAMERA, items: [], threads: [], notes: [] },
+      drafts: [],
     },
     materials,
   );
@@ -195,5 +196,15 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
     (t) => seen.has(t.from) && seen.has(t.to) && t.from !== t.to,
   );
 
-  return { ...state, wall: { ...state.wall, items, threads, notes: kept } };
+  // Карточка черновика ссылается только на то, что у игрока есть.
+  const ids = new Set(materials.map((m) => m.id));
+  const card = <T extends { file: string } | null>(c: T): T | null =>
+    c && !ids.has(c.file) ? null : c;
+  const drafts = (state.drafts ?? []).map((d) => ({
+    ...d,
+    ask: card(d.ask),
+    basis: card(d.basis),
+  }));
+
+  return { ...state, wall: { ...state.wall, items, threads, notes: kept }, drafts };
 }
