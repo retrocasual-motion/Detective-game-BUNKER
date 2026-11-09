@@ -5,7 +5,7 @@ import { screenToWorld } from '../canvas/math.ts';
 import { wholeCard } from '../petition/drafts.ts';
 import { petitionFieldAt } from '../petition/fieldAt.ts';
 import { usePetition } from '../petition/petition-store.ts';
-import { useGame } from '../store.ts';
+import { shownCamera, useGame } from '../store.ts';
 import { isLetter, moveItem } from '../wall/wall-actions.ts';
 import { type Room, screenToBoard } from './camera.ts';
 import { deskObjects, screenRect } from './decor.ts';
@@ -93,7 +93,8 @@ export function DeskHotspots({
                     return;
                   }
                   const b = screenToBoard(pt, room.poses.desk, room);
-                  const cam = useGame.getState().state?.wall.camera;
+                  const st = useGame.getState().state;
+                  const cam = st ? shownCamera(st) : null;
                   if (!b || !cam) return;
                   const w = screenToWorld(b, cam);
                   updateState(moveItem(id, w.x - CARD_W / 2, w.y - 20));
@@ -108,7 +109,7 @@ export function DeskHotspots({
               if (o.key.startsWith('inbox-') && e.detail > 0) return;
               if (h?.kind === 'computer') setComputerOpen(true);
               else if (h?.kind === 'trash') useGame.getState().setTrashOpen(true);
-              else if (h?.kind === 'container') useGame.getState().openContainer(h.id);
+              else if (h?.kind === 'container') useGame.getState().setInspecting(h.id);
               else if (h) openViewer(h.id);
             }}
           >

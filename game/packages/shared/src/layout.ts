@@ -15,6 +15,7 @@ import {
   PlayerStateSchema,
   STATE_VERSION,
   type WallItem,
+  ZOOM_MIN,
 } from './schemas.ts';
 
 /**
@@ -283,7 +284,7 @@ function freeBlock(items: WallItem[], w: number, h: number): { x: number; y: num
 
 /**
  * Вскрыть конверт архива (A-260): содержимое — на стену группой под ярлыком с названием
- * конверта, на свободное место; камера стены — к группе (со стола видно, как она легла).
+ * конверта, на свободное место (со стола доска видна целиком — fitCamera).
  * Уже вскрытый — без изменений.
  */
 export function openContainer(
@@ -320,19 +321,12 @@ export function openContainer(
       rot: hangTilt(m),
     })),
   ];
-  const zoom = DEFAULT_WALL_CAMERA.zoom;
-  const camera: Camera = {
-    x: DEFAULT_WALL_CAMERA.x - at.x * zoom,
-    y: Math.min(DEFAULT_WALL_CAMERA.y, DEFAULT_WALL_CAMERA.y - (at.y - 2 * GRID_DY) * zoom),
-    zoom,
-  };
   const keepNotes = state.wall.notes.filter((n) => n.id !== labelId);
   return {
     ...state,
     opened,
     wall: {
       ...state.wall,
-      camera,
       items: [...state.wall.items.filter((i) => i.id !== labelId), ...placed],
       notes: [...keepNotes, label],
     },
@@ -342,4 +336,55 @@ export function openContainer(
 /** Вскрыть всё сразу (служебная кнопка «Подготовка», автотесты): стартовая сетка, как до конвертов. */
 export function openAll(state: PlayerState, materials: Material[]): PlayerState {
   return reconcile({ ...state, opened: CONTAINERS.map((c) => c.id) }, materials);
+}
+
+/**
+ * Камера «вся стена» (правка автора 09.11): со стола доска видна целиком — всё, что на ней
+ * висит, вписано в экран с полями; крупнее обычного масштаба не становится. Тем же видом
+ * стена встречает, когда к ней подходят.
+ */
+export function fitCamera(
+  wall: Pick<PlayerState['wall'], 'items' | 'notes'>,
+  vp: { width: number; height: number },
+): Camera {
+  if (!wall.items.length) return DEFAULT_WALL_CAMERA;
+  const width = new Map(
+    wall.notes.map((n) => [n.id, n.width ?? NOTE_STYLE[n.kind].width] as const),
+  );
+  let left = Number.POSITIVE_INFINITY;
+  let top = Number.POSITIVE_INFINITY;
+  let right = Number.NEGATIVE_INFINITY;
+  let bottom = Number.NEGATIVE_INFINITY;
+  for (const i of wall.items) {
+    left = Math.min(left, i.x);
+    top = Math.min(top, i.y);
+    right = Math.max(right, i.x + (width.get(i.id) ?? CARD_W));
+    bottom = Math.max(bottom, i.y + CARD_H);
+  }
+  const pad = { x: DEFAULT_WALL_CAMERA.x, y: DEFAULT_WALL_CAMERA.y };
+  const zoom = Math.max(
+    ZOOM_MIN,
+    Math.min(
+      DEFAULT_WALL_CAMERA.zoom,
+      (vp.width - 2 * pad.x) / (right - left),
+      (vp.height - 2 * pad.y) / (bottom - top),
+    ),
+  );
+  const round = (n: number) => Math.round(n * 1000) / 1000;
+  // От левого и верхнего поля, как обычный вид; за край пробки камера не заглядывает.
+  return {
+    x: Math.round(Math.min(pad.x - left * zoom, -WALL_BOUNDS.left * zoom)),
+    y: Math.round(Math.min(pad.y - top * zoom, -WALL_BOUNDS.top * zoom)),
+    zoom: round(zoom),
+  };
+}
+
+/** Камера стены обычного масштаба, подведённая к точке стены (левый верхний угол с полями). */
+export function focusCamera(x: number, y: number): Camera {
+  const { zoom } = DEFAULT_WALL_CAMERA;
+  return {
+    x: Math.round(Math.min(DEFAULT_WALL_CAMERA.x - x * zoom, -WALL_BOUNDS.left * zoom)),
+    y: Math.round(Math.min(DEFAULT_WALL_CAMERA.y - y * zoom, -WALL_BOUNDS.top * zoom)),
+    zoom,
+  };
 }

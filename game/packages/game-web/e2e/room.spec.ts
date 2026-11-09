@@ -111,14 +111,14 @@ test('двойной щелчок по стрелке не возвращает 
   await expect(scene(page)).toHaveAttribute('data-view', 'wall');
 });
 
-test('ушёл со стены к столу — масштаб стены снова обычный (вся доска видна)', async ({ page }) => {
-  await toWall(page);
+test('со стола доска видна целиком: приближение у стены на неё не влияет', async ({ page }) => {
   const world = page.locator('.wall .canvas-world');
-  const before = await world.getAttribute('style');
+  const desk = await world.getAttribute('style');
+  await toWall(page);
   await page.mouse.move(683, 400);
   await page.mouse.wheel(0, -1200);
-  await expect.poll(() => world.getAttribute('style')).not.toBe(before);
+  await expect.poll(() => world.getAttribute('style')).not.toBe(desk);
   await page.keyboard.press('ArrowDown');
   await expect(scene(page)).toHaveAttribute('data-view', 'desk');
-  await expect.poll(() => world.getAttribute('style')).toBe(before);
+  await expect.poll(() => world.getAttribute('style')).toBe(desk);
 });

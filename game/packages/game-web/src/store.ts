@@ -1,6 +1,6 @@
 import {
   type ContainerId,
-  DEFAULT_WALL_CAMERA,
+  fitCamera,
   type Material,
   openAll,
   openContainer,
@@ -15,6 +15,12 @@ import { create } from 'zustand';
 import { getMaterials, getPendingMail, getState, putState } from './api.ts';
 import { createSaver } from './save.ts';
 import { type Binned, binLetter, moveItem, takeLetter, unbinLetter } from './wall/wall-actions.ts';
+
+const screen = () => ({ width: window.innerWidth, height: window.innerHeight });
+
+/** Камера, с которой доска видна сейчас: со стола — вся целиком, у стены — своя. */
+export const shownCamera = (s: PlayerState) =>
+  s.view === 'desk' ? fitCamera(s.wall, screen()) : s.wall.camera;
 
 /** Сколько можно «Вернуть» выброшенное письмо, мс. */
 const UNDO_MS = 6000;
@@ -42,6 +48,9 @@ interface GameStore {
   /** Окно корзины у стола открыто (TR-A). */
   trashOpen: boolean;
   setTrashOpen(open: boolean): void;
+  /** Конверт или коробка в руках (A-260): крупно, повертеть, «Вскрыть». */
+  inspecting: ContainerId | null;
+  setInspecting(id: ContainerId | null): void;
   /** Только что выброшенное письмо — его можно «Вернуть» несколько секунд. */
   binned: Binned | null;
   /** Письмо-ответ — в корзину (со стены или из «Входящих»); остальное не выбрасывается. */
@@ -84,6 +93,7 @@ export const useGame = create<GameStore>((set, get) => {
     arrival: null,
     computerOpen: false,
     trashOpen: false,
+    inspecting: null,
     find: null,
     searchOpen: false,
     binned: null,
@@ -99,6 +109,10 @@ export const useGame = create<GameStore>((set, get) => {
     openContainer(id) {
       const { materials } = get();
       get().updateState((s) => openContainer(s, materials, id));
+    },
+
+    setInspecting(id) {
+      set({ inspecting: id });
     },
 
     setTrashOpen(open) {
@@ -124,7 +138,7 @@ export const useGame = create<GameStore>((set, get) => {
     pinToWall(materialId) {
       get().updateState((s) => {
         if (s.wall.items.some((i) => i.id === materialId)) return s;
-        const c = s.wall.camera;
+        const c = shownCamera(s);
         const cx = (window.innerWidth / 2 - c.x) / c.zoom;
         const cy = (window.innerHeight / 2 - c.y) / c.zoom;
         // Несколько подряд — не стопкой: каждый следующий чуть ниже и правее.
@@ -197,13 +211,9 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     setView(view) {
-      // Ушли со стены — её масштаб возвращается к обычному: со стола видна вся доска,
-      // а не карточка, которую разглядывали вблизи (правка автора 09.11).
-      get().updateState((s) =>
-        s.view === 'wall' && view !== 'wall'
-          ? { ...s, view, wall: { ...s.wall, camera: DEFAULT_WALL_CAMERA } }
-          : { ...s, view },
-      );
+      // Камеру стены вид не трогает: со стола доска и так видна целиком (shownCamera), у
+      // стены — масштаб, на котором игрок её оставил.
+      get().updateState((s) => (s.view === view ? s : { ...s, view }));
     },
 
     updateState(fn) {

@@ -1,5 +1,6 @@
 import {
   type Camera,
+  fitCamera,
   NOTE_STYLE,
   type Note,
   PERSONS,
@@ -24,6 +25,7 @@ import { screenToWorld } from '../canvas/math.ts';
 import { wholeCard } from '../petition/drafts.ts';
 import { overFolder, petitionFieldAt } from '../petition/fieldAt.ts';
 import { usePetition } from '../petition/petition-store.ts';
+import { useViewport } from '../room/useViewport.ts';
 import { useGame } from '../store.ts';
 import { isItemCard, type PinHandlers, WallCard } from './WallCard.tsx';
 import { type At, pinOf, WallThreads } from './WallThreads.tsx';
@@ -125,6 +127,9 @@ function NoteEditor({
  */
 export function WallView() {
   const wall = useGame((g) => g.state?.wall);
+  // Со стола доска видна целиком (правка автора 09.11); у стены — камера игрока.
+  const atDesk = useGame((g) => g.state?.view === 'desk');
+  const vp = useViewport();
   const materials = useGame((g) => g.materials);
   const updateState = useGame((g) => g.updateState);
   const throwAway = useGame((g) => g.throwAway);
@@ -313,7 +318,7 @@ export function WallView() {
     [updateState],
   );
 
-  const camera = wall?.camera;
+  const camera = wall ? (atDesk ? fitCamera(wall, vp) : wall.camera) : undefined;
   if (!wall || !camera) return null;
 
   const byId = new Map(materials.map((m) => [m.id, m]));

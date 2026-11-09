@@ -4,6 +4,7 @@ import {
   arrangeWall,
   containerLabelId,
   defaultState,
+  fitCamera,
   GRID_TOP,
   inboxIds,
   onWall,
@@ -236,5 +237,23 @@ describe('конверты архива (A-260)', () => {
     const { opened: _, ...legacy } = s;
     expect(sealedIds({ opened: undefined }).size).toBe(0);
     expect(reconcile(legacy, starting).wall.items.some((i) => i.id === '15')).toBe(true);
+  });
+});
+
+describe('стена целиком со стола (fitCamera)', () => {
+  const vp = { width: 1366, height: 768 };
+
+  it('мало вещей — обычный масштаб; много — мельче, но всё в экране и не за краем пробки', () => {
+    const s = defaultState(starting);
+    expect(fitCamera(s.wall, vp).zoom).toBe(0.55);
+    const all = openAll(s, starting);
+    const cam = fitCamera(all.wall, vp);
+    expect(cam.zoom).toBeLessThan(0.55);
+    for (const i of all.wall.items) {
+      expect(i.x * cam.zoom + cam.x).toBeGreaterThanOrEqual(0);
+      expect((i.y + 220) * cam.zoom + cam.y).toBeLessThanOrEqual(vp.height);
+      expect((i.x + 160) * cam.zoom + cam.x).toBeLessThanOrEqual(vp.width);
+    }
+    expect(cam.x).toBeLessThanOrEqual(300 * cam.zoom);
   });
 });
