@@ -53,9 +53,13 @@ export function DeskHotspots({ room, inbox }: { room: Room; inbox: string[] }) {
                 className: 'drag-ghost-paper',
                 canDrop: (pt) => {
                   const f = petitionFieldAt(pt.x, pt.y);
+                  usePetition
+                    .getState()
+                    .setDrag(useGame.getState().petitionOpen, f === 'to' ? null : f);
                   if (f) return f !== 'to';
                   return screenToBoard(pt, room.poses.desk, room) !== null;
                 },
+                onEnd: () => usePetition.getState().setDrag(false, null),
                 onDrop: (pt) => {
                   // В поле открытой папки — карточка «письмо целиком» (K-A); письмо остаётся в лотке.
                   const f = petitionFieldAt(pt.x, pt.y);

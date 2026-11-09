@@ -98,7 +98,7 @@ export type Draft = z.infer<typeof DraftSchema>;
 export type DraftField = 'to' | 'ask' | 'basis';
 
 /** Сколько черновиков сразу (уголков папки рядом). */
-export const MAX_DRAFTS = 3;
+export const MAX_DRAFTS = 4;
 
 /** Виды: стол (от первого лица) и стена (рабочая поверхность) — решение автора 08.11. */
 export const ViewSchema = z.enum(['desk', 'wall']);

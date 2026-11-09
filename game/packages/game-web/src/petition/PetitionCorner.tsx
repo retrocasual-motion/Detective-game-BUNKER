@@ -4,6 +4,11 @@ import { useGame } from '../store.ts';
 import { addressBook } from './drafts.ts';
 import { usePetition } from './petition-store.ts';
 
+/** Шаг язычков папок в стопке, px. */
+const TAB_STEP = 122;
+/** Ширина язычка папки, px (совпадает с .folder-tab в app.css). */
+const TAB_W = 150;
+
 const LABEL: Record<DraftField, string> = {
   to: 'Кому',
   ask: 'Прошу',
@@ -29,12 +34,14 @@ function CardView({ card }: { card: Card }) {
 function Field({ draft, f }: { draft: Draft; f: DraftField }) {
   const active = usePetition((p) => p.field === f);
   const missing = usePetition((p) => p.missing.includes(f));
+  const target = usePetition((p) => p.dropTarget === f && f !== 'to');
+  const droppable = usePetition((p) => p.dragging && f !== 'to');
   const setActiveField = usePetition((p) => p.setActiveField);
   const clear = usePetition((p) => p.clear);
   const value = draft[f];
   return (
     <div
-      className={`petition-field${active ? ' petition-field-active' : ''}${missing ? ' petition-field-missing' : ''}`}
+      className={`petition-field${active ? ' petition-field-active' : ''}${missing ? ' petition-field-missing' : ''}${droppable ? ' petition-field-droppable' : ''}${target ? ' petition-field-target' : ''}`}
       data-petition-field={f}
       data-testid={`petition-field-${f}`}
     >
@@ -108,93 +115,116 @@ export function PetitionCorner() {
   const { toggle, close, create, send, deleteDraft, restoreDraft } = usePetition.getState();
   const draft = drafts.find((d) => d.id === activeId) ?? null;
 
-  const tabs = drafts.length ? drafts : [null];
+  // Стопка папок (правка автора 09.11): черновики лежат лесенкой за передней папкой, у каждой
+  // свой язычок; наведение приподнимает папку, щелчок — достаёт её вперёд.
+  const slots = drafts.length ? drafts : [null];
+  const frontIndex = Math.max(
+    0,
+    slots.findIndex((d) => d?.id === activeId),
+  );
+  const tab = (d: (typeof slots)[number], i: number) => (
+    <button
+      type="button"
+      className={`folder-tab${i === frontIndex ? ' folder-tab-front' : ''}`}
+      data-testid={i === 0 ? 'petition-corner' : `petition-corner-${i + 1}`}
+      aria-expanded={open && i === frontIndex}
+      style={{ left: i * TAB_STEP }}
+      onClick={() => toggle(d?.id)}
+    >
+      {i === 0 ? 'Ходатайство' : `Черновик ${i + 1}`}
+    </button>
+  );
+  const backs = slots
+    .map((d, i) => ({ d, i }))
+    .filter(({ i }) => i !== frontIndex)
+    .map(({ d, i }, k) => ({ d, i, depth: k + 1 }));
   return (
     <>
       <div className={`petition${open ? ' petition-open' : ''}`}>
-        <div className="petition-tabs">
-          {tabs.map((d, i) => (
-            <button
+        <div className="petition-stack">
+          {backs.map(({ d, i, depth }) => (
+            <div
               key={d?.id ?? 'new'}
-              type="button"
-              className={`petition-tab${i > 0 ? ' petition-tab-small' : ''}${open && d?.id === activeId ? ' petition-tab-active' : ''}`}
-              data-testid={i === 0 ? 'petition-corner' : `petition-corner-${i + 1}`}
-              aria-expanded={open && d?.id === activeId}
-              onClick={() => toggle(d?.id)}
+              className="folder folder-back"
+              style={{ ['--depth' as string]: depth, zIndex: 10 - depth }}
             >
-              {i === 0 ? 'Ходатайство' : `Черновик ${i + 1}`}
-            </button>
+              {tab(d, i)}
+            </div>
           ))}
-          {open && drafts.length > 0 && drafts.length < MAX_DRAFTS && (
+          {drafts.length > 0 && drafts.length < MAX_DRAFTS && (
             <button
               type="button"
-              className="petition-tab petition-tab-small petition-tab-new"
+              className="folder-tab folder-tab-new"
               data-testid="petition-new"
               aria-label="Новое ходатайство"
-              title="Новое ходатайство (черновик рядом)"
+              title="Новое ходатайство (ещё одна папка в стопке)"
+              style={{ left: (drafts.length - 1) * TAB_STEP + TAB_W + 6 }}
               onClick={create}
             >
               +
             </button>
           )}
-        </div>
-        <section
-          className="petition-folder"
-          data-testid="petition-folder"
-          aria-label="Папка ходатайства"
-          inert={!open}
-        >
-          <button
-            type="button"
-            className="tool tool-close petition-close"
-            aria-label="Закрыть"
-            title="Закрыть папку (черновик сохранится)"
-            onClick={close}
-          >
-            ✕
-          </button>
-          <header className="petition-head">
-            <span className="petition-head-title">Ходатайство</span>
-            <span className="petition-head-case">дело № 09-1128</span>
-          </header>
-          {draft && (
-            <>
-              {(['to', 'ask', 'basis'] as const).map((f) => (
-                <Field key={f} draft={draft} f={f} />
-              ))}
-              {field === 'to' && <AddressBook />}
-              {error && (
-                <p className="petition-error" data-testid="petition-error" role="alert">
-                  {error}
-                </p>
+          <div className="folder folder-front" style={{ ['--depth' as string]: 0, zIndex: 20 }}>
+            {tab(slots[frontIndex] ?? null, frontIndex)}
+            <section
+              className="petition-folder"
+              data-testid="petition-folder"
+              aria-label="Папка ходатайства"
+              inert={!open}
+            >
+              <button
+                type="button"
+                className="tool tool-close petition-close"
+                aria-label="Закрыть"
+                title="Закрыть папку (черновик сохранится)"
+                onClick={close}
+              >
+                ✕
+              </button>
+              <header className="petition-head">
+                <span className="petition-head-title">Ходатайство</span>
+                <span className="petition-head-case">дело № 09-1128</span>
+              </header>
+              {draft && (
+                <>
+                  {(['to', 'ask', 'basis'] as const).map((f) => (
+                    <Field key={f} draft={draft} f={f} />
+                  ))}
+                  {field === 'to' && <AddressBook />}
+                  {error && (
+                    <p className="petition-error" data-testid="petition-error" role="alert">
+                      {error}
+                    </p>
+                  )}
+                  <div className="petition-actions">
+                    <button
+                      type="button"
+                      className="petition-send"
+                      data-testid="petition-send"
+                      disabled={sending || stamp !== null}
+                      onClick={() => void send()}
+                    >
+                      Отправить
+                    </button>
+                    <button
+                      type="button"
+                      className="petition-discard"
+                      data-testid="petition-discard"
+                      onClick={deleteDraft}
+                    >
+                      Выбросить черновик
+                    </button>
+                  </div>
+                </>
               )}
-              <div className="petition-actions">
-                <button
-                  type="button"
-                  className="petition-send"
-                  data-testid="petition-send"
-                  disabled={sending || stamp !== null}
-                  onClick={() => void send()}
-                >
-                  Отправить
-                </button>
-                <button
-                  type="button"
-                  className="petition-discard"
-                  data-testid="petition-discard"
-                  onClick={deleteDraft}
-                >
-                  Выбросить черновик
-                </button>
-              </div>
-            </>
-          )}
-          {stamp !== null && (
-            <div className="petition-stamp" data-testid="petition-stamp" aria-live="polite">
-              Отправлено · № {stamp}
-            </div>
-          )}
-        </section>
+              {stamp !== null && (
+                <div className="petition-stamp" data-testid="petition-stamp" aria-live="polite">
+                  Отправлено · № {stamp}
+                </div>
+              )}
+            </section>
+          </div>
+        </div>
       </div>
       {discarded && (
         <div className="petition-sent-note" data-testid="petition-discarded" role="status">

@@ -8,3 +8,7 @@ export function petitionFieldAt(x: number, y: number): DraftField | null {
   }
   return null;
 }
+
+/** Точка экрана над открытой папкой ходатайства. */
+export const overFolder = (x: number, y: number): boolean =>
+  document.elementsFromPoint(x, y).some((el) => el.closest('.petition-open .petition-folder'));

@@ -32,6 +32,11 @@ interface PetitionStore {
   sending: boolean;
   /** Записка после отправки: ответ придёт во «Входящие». */
   sentNote: boolean;
+  /** Над папкой тянут лист или письмо — поля «Прошу» и «На основании» ждут его. */
+  dragging: boolean;
+  /** Поле под курсором — подсвечено: сюда ляжет карточка. */
+  dropTarget: DraftField | null;
+  setDrag(dragging: boolean, target: DraftField | null): void;
   /** Выброшенный черновик — его можно «Вернуть» несколько секунд (UN-1). */
   discarded: Draft | null;
   restoreDraft(): void;
@@ -70,6 +75,13 @@ export const usePetition = create<PetitionStore>((set, get) => {
     sending: false,
     sentNote: false,
     discarded: null,
+    dragging: false,
+    dropTarget: null,
+
+    setDrag(dragging, target) {
+      if (get().dragging !== dragging || get().dropTarget !== target)
+        set({ dragging, dropTarget: target });
+    },
 
     open(id) {
       const s = game().state;

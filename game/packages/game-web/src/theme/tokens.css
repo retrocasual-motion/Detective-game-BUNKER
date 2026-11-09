@@ -74,6 +74,9 @@
   --color-folder-2: #b9a87c;
   --color-folder-active: rgb(255 255 255 / 30%);
   --color-stamp: #a52a2a;
+  --color-folder-target: #efe0a8;
+  /* Маркер выделения в листе. */
+  --color-marker: #f3e26b;
   --color-error-bg: #f1d6cf;
   --color-letter-stripe: #4a6a8a;
 

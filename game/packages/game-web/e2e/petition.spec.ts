@@ -140,28 +140,46 @@ test('лист со стены можно бросить в поле — кар�
   await page.mouse.move(p.x, p.y);
   await page.mouse.down();
   await page.mouse.move(field.x + 100, field.y + 20, { steps: 10 });
+  // Над папкой — призрак листа поверх неё, поле под курсором подсвечено.
+  await expect(page.getByTestId('drag-ghost')).toBeVisible();
+  await expect(page.getByTestId('petition-field-basis')).toHaveClass(/petition-field-target/);
+  await expect(page.getByTestId('petition-field-ask')).toHaveClass(/petition-field-droppable/);
   await page.mouse.up();
+  await expect(page.getByTestId('drag-ghost')).toHaveCount(0);
   await expect(page.getByTestId('petition-field-basis')).toContainText('39');
   expect(await sheet(page, '39').boundingBox()).toEqual(before);
 });
 
-test('черновики: закрытая папка хранит черновик, «+» — второй уголок; выбросить и вернуть', async ({
+test('черновики — стопкой папок: «+» — новая, язычки видны и закрытыми; выбросить и вернуть', async ({
   page,
 }) => {
+  const pick = async () => {
+    await page.getByTestId('petition-field-to').locator('.petition-line').click();
+    await page
+      .getByTestId('address-book')
+      .getByRole('button', { name: 'zapros@okrug-bureau.org' })
+      .click();
+  };
   await page.getByTestId('petition-corner').click();
-  await page.getByTestId('petition-field-to').locator('.petition-line').click();
-  const saved = savedPut(page);
-  await page
-    .getByTestId('address-book')
-    .getByRole('button', { name: 'zapros@okrug-bureau.org' })
-    .click();
-  await saved;
+  await pick();
   await page.getByTestId('petition-new').click();
   await expect(page.getByTestId('petition-corner-2')).toHaveText('Черновик 2');
   await expect(page.getByTestId('petition-field-to')).not.toContainText('@');
+  const saved = savedPut(page);
+  await pick();
+  await saved;
+  // Переключение — язычком: первая папка снова впереди.
   await page.getByTestId('petition-corner').click();
+  await expect(page.getByTestId('petition-corner')).toHaveAttribute('aria-expanded', 'true');
   await expect(page.getByTestId('petition-field-to')).toContainText('zapros@okrug-bureau.org');
+  await folder(page).getByRole('button', { name: 'Закрыть' }).click();
+  // Закрытая — стопкой внизу слева: оба язычка на экране, задняя папка выше передней.
+  const a = await page.getByTestId('petition-corner').boundingBox();
+  const b = await page.getByTestId('petition-corner-2').boundingBox();
+  await expect(page.getByTestId('petition-corner-2')).toBeInViewport();
+  expect((b?.y ?? 0) < (a?.y ?? 0)).toBe(true);
   await page.reload();
+  await expect(page.getByTestId('petition-corner-2')).toBeVisible();
   await page.getByTestId('petition-corner').click();
   await expect(page.getByTestId('petition-field-to')).toContainText('zapros@okrug-bureau.org');
   await page.getByTestId('petition-discard').click();

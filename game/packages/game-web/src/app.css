@@ -223,47 +223,72 @@ button {
   transition: translate 0.25s var(--ease-camera);
   pointer-events: none;
 }
-.petition:not(.petition-open):hover {
+.petition:not(.petition-open):has(.folder-tab:hover) {
   translate: 0 calc(100% - var(--corner-height) - 4px);
 }
 .petition-open {
   translate: 0 0;
 }
-.petition-tabs {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--space-1);
-  flex: none;
+/* Стопка папок (правка автора 09.11): передняя — открытая или последняя; черновики лежат за
+   ней лесенкой (выше и правее), у каждой свой язычок; наведение приподнимает папку. */
+.petition-stack {
+  position: relative;
+  flex: 1;
+  margin-top: var(--corner-height);
 }
-.petition-tab {
-  width: var(--corner-width);
+.folder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  translate: calc(var(--depth) * 12px) calc(var(--depth) * -12px + var(--lift, 0px));
+  transition: translate 0.22s var(--ease-camera);
+}
+.folder:has(> .folder-tab:hover) {
+  --lift: -8px;
+}
+.folder-back {
+  background: var(--color-folder-2);
+  border-radius: 0 var(--radius) 0 0;
+  box-shadow: var(--shadow);
+}
+.folder-tab {
+  position: absolute;
+  top: calc(var(--corner-height) * -1);
+  width: 150px;
   height: var(--corner-height);
-  flex: none;
-  font-size: 16px;
-  background: var(--color-folder);
+  padding: 0 var(--space-2);
+  background: var(--color-folder-2);
   color: var(--color-card-text);
   border: none;
   border-radius: var(--radius) var(--radius) 0 0;
-  box-shadow: var(--shadow);
+  box-shadow: 0 -2px 4px rgb(0 0 0 / 25%);
+  font-size: 14px;
+  white-space: nowrap;
   pointer-events: auto;
 }
-.petition-tab-small {
-  width: 110px;
-  height: calc(var(--corner-height) - 8px);
-  font-size: 13px;
-  background: var(--color-folder-2);
+.folder-tab-front {
+  background: var(--color-folder);
+  font-size: 16px;
+  font-weight: bold;
 }
-.petition-tab-new {
+.folder-tab-new {
+  z-index: 1;
   width: 44px;
   font-size: 20px;
+  background: transparent;
+  border: 2px dashed var(--color-folder-2);
+  color: var(--color-folder);
+  box-shadow: none;
 }
-.petition-tab-active {
-  background: var(--color-folder);
-  font-weight: bold;
+.folder-tab-new:hover {
+  background: var(--color-folder-2);
+  color: var(--color-card-text);
 }
 .petition-folder {
   position: relative;
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -325,6 +350,16 @@ button {
   background: var(--color-folder-active);
   outline: 2px dashed var(--color-folder-slot);
   outline-offset: -2px;
+}
+/* Лист тянут над папкой: поля карточек ждут его, поле под курсором — подсвечено. */
+.petition-field-droppable .petition-line {
+  outline: 2px dashed var(--color-folder-slot);
+  outline-offset: -2px;
+}
+.petition-field-target .petition-line {
+  background: var(--color-folder-target);
+  outline: 3px solid var(--color-stamp);
+  outline-offset: -3px;
 }
 .petition-field-missing .petition-line {
   outline: 2px solid var(--color-danger);
@@ -790,6 +825,11 @@ button {
   width: min(var(--viewer-paper-width), 100% - 2 * (var(--viewer-tools-width) + var(--space-2)));
   max-height: 100%;
 }
+/* Выделение в листе — как маркером: это выбор строки для ходатайства (правка автора 09.11). */
+.viewer-paper ::selection {
+  background: var(--color-marker);
+  color: var(--color-card-text);
+}
 .viewer-paper {
   width: 100%;
   min-height: 0;
@@ -857,6 +897,10 @@ button {
 }
 .wall-card-dragging {
   transition: none;
+}
+/* Над папкой ходатайства вместо листа идёт его призрак (поверх папки). */
+.wall-card-over-folder {
+  opacity: 0.25;
 }
 .wall-card .paper {
   padding-top: calc(var(--pin-y) + var(--pin-size) / 2 + 2px);

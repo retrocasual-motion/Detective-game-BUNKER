@@ -11,6 +11,8 @@ export interface GhostDragOptions {
   onDrop(pt: { x: number; y: number }): void;
   /** Нажали и отпустили без перетаскивания. */
   onClick(): void;
+  /** Жест кончился (отпустили где угодно). */
+  onEnd?(): void;
 }
 
 /**
@@ -46,6 +48,7 @@ export function startGhostDrag(
     window.removeEventListener('pointerup', up, true);
     window.removeEventListener('pointercancel', cancel, true);
     const pt = { x: ev.clientX, y: ev.clientY };
+    o.onEnd?.();
     if (!ghost) {
       if (commit) o.onClick();
       return;

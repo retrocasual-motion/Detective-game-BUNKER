@@ -12,10 +12,10 @@ import {
 } from './drafts.ts';
 
 describe('черновики ходатайств', () => {
-  it('не больше трёх; пустые убираются при закрытии', () => {
+  it('не больше четырёх; пустые убираются при закрытии', () => {
     let s = defaultState([]);
-    for (const id of ['a', 'b', 'c', 'd']) s = addDraft(id)(s);
-    expect(s.drafts.map((d) => d.id)).toEqual(['a', 'b', 'c']);
+    for (const id of ['a', 'b', 'c', 'd', 'e']) s = addDraft(id)(s);
+    expect(s.drafts.map((d) => d.id)).toEqual(['a', 'b', 'c', 'd']);
     s = setField('b', 'to', 'zapros@okrug-bureau.org')(s);
     expect(dropEmptyDrafts(s).drafts.map((d) => d.id)).toEqual(['b']);
   });

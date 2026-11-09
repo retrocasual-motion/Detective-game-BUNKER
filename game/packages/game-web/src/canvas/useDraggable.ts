@@ -30,7 +30,7 @@ interface DragOptions {
   onDrop(dx: number, dy: number, at: { x: number; y: number }): void;
   onGrab?(): void;
   /** Каждое движение — для тех, кто должен следовать за объектом (нити доски). */
-  onMove?(dx: number, dy: number): void;
+  onMove?(dx: number, dy: number, at?: { x: number; y: number }): void;
 }
 
 /**
@@ -94,7 +94,7 @@ export function useDraggable({ zoom, onDrop, onGrab, onMove }: DragOptions): Dra
         if (idle.current) clearTimeout(idle.current);
         idle.current = setTimeout(stopTilt, TILT_IDLE_MS);
         setOffset({ x: dx / zoom, y: dy / zoom });
-        onMove?.(dx / zoom, dy / zoom);
+        onMove?.(dx / zoom, dy / zoom, { x: e.clientX, y: e.clientY });
       },
       onPointerUp(e) {
         e.stopPropagation();
