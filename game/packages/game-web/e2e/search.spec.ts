@@ -13,6 +13,17 @@ test('поиск по делу (RD-C): слово — строки из мате
   await expect(page.getByTestId('viewer')).toBeVisible();
   // Найденное подсвечено в листе.
   expect(await page.evaluate(() => CSS.highlights.get('case-find')?.size ?? 0)).toBeGreaterThan(0);
+  // Лист открыт на странице с найденным (этап 4b): подсветка — внутри видимой части листа.
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const r = [...(CSS.highlights.get('case-find') ?? [])][0] as Range | undefined;
+        const box = document.querySelector('.viewer-pages')?.getBoundingClientRect();
+        const b = r?.getBoundingClientRect();
+        return !!b && !!box && b.left >= box.left && b.right <= box.right;
+      }),
+    )
+    .toBe(true);
   // Лист закрыли — панель с результатами на месте; Esc ещё раз закрывает поиск.
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('viewer')).toBeHidden();

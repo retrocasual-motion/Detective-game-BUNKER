@@ -36,9 +36,25 @@ export interface ActionResult {
   /** Вид итога — только в разработке (служебная строка). */
   result?: string;
   reply: string;
+  /** Пустой ответ (общее правило, отказ) — игра говорит своё (этап 4b). */
+  quiet?: boolean;
   /** Материалы, которые действие открыло. */
   released: Material[];
 }
+
+/** Действие игрока над материалом (этап 4b): осмотр — перевернуть, увеличить, листать. */
+export const postAction = async (
+  action: 'ОСМОТР',
+  target: string,
+  value: string,
+): Promise<ActionResult> => {
+  const res = await fetch('/api/action', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ action, target, value }),
+  });
+  return (await check(res)).json();
+};
 
 /** Служебная строка действий — только в разработке (E2-CHECK-A). */
 export const postActionLine = async (line: string): Promise<ActionResult> => {

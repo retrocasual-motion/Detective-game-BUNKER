@@ -1,5 +1,6 @@
 import type { ContainerId, View } from '@bunker/shared';
 import { type ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { reducedMotion } from '../motion.ts';
 import {
   boardOps,
   easeCamera,
@@ -22,9 +23,6 @@ interface Phase {
   to: View;
   moving: boolean;
 }
-
-const reducedMotion = () =>
-  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 interface RoomSceneProps {
   view: View;

@@ -890,9 +890,11 @@ button {
   color: var(--color-card-text);
 }
 .viewer-paper {
+  position: relative;
   width: 100%;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
+  backface-visibility: hidden;
   padding: var(--space-4);
   background: var(--color-paper);
   color: var(--color-paper-text);
@@ -903,7 +905,7 @@ button {
 .viewer-tools {
   position: absolute;
   top: 0;
-  left: calc(100% + var(--space-2));
+  left: calc(100% + var(--space-2) + 30px);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1508,16 +1510,14 @@ button {
   color: var(--color-accent);
 }
 
-/* Без анимаций по желанию системы (и в автотестах). */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    /* biome-ignore lint/complexity/noImportantStyles: системное «без анимаций» сильнее любых переходов */
-    transition-duration: 0s !important;
-    /* biome-ignore lint/complexity/noImportantStyles: то же */
-    transition-delay: 0s !important;
-  }
+/* «Уменьшить движение» — своя настройка игры (RM-A), не системная; в автотестах — тоже она. */
+:root[data-motion="reduce"] *,
+:root[data-motion="reduce"] *::before,
+:root[data-motion="reduce"] *::after {
+  /* biome-ignore lint/complexity/noImportantStyles: «уменьшить движение» сильнее любых переходов */
+  transition-duration: 0s !important;
+  /* biome-ignore lint/complexity/noImportantStyles: то же */
+  transition-delay: 0s !important;
 }
 
 /* ── Корзина у стола (TR-A, 09.11): выброшенные письма-ответы скомканы. ── */
@@ -1908,4 +1908,161 @@ button {
 }
 .held-spot:focus-visible {
   outline: 2px solid var(--color-accent);
+}
+
+/* ── Лист в руках (этап 4b): приближение к курсору, переворот за поле, страницы. ── */
+.viewer-zoom {
+  transform-origin: 0 0;
+  transition: transform 0.12s ease-out;
+  /* Перспектива — у самой обёртки листа: обёртка трансформируется и иначе «сплющивает» 3D
+     (лист поворачивался без перспективы — влево и вправо выглядели одинаково). */
+  perspective: 2200px;
+  transform-style: preserve-3d;
+}
+.viewer-flip {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.25s ease-out;
+}
+.viewer-flow {
+  cursor: text;
+}
+.viewer-pages {
+  overflow: hidden;
+}
+/* Стопка листов (правка автора 09.11): края следующих страниц торчат справа и снизу, прочитанных —
+   слева. Щелчок по торчащей стопке — перелистнуть; навёл — стопка чуть раздвигается. */
+.viewer-stack {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.viewer-stack-sheet {
+  position: absolute;
+  inset: 0;
+  background: var(--color-paper-edge, #dcd7ca);
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 14%),
+    0 2px 4px rgb(0 0 0 / 30%);
+  backface-visibility: hidden;
+  /* Каждый следующий лист — глубже: у стопки видна толщина, когда её наклоняют. */
+  transform: translate3d(calc(var(--k) * 9px), calc(var(--k) * 7px), calc(var(--k) * -4px));
+  transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1);
+  will-change: transform;
+}
+.viewer-stack-read {
+  transform: translate3d(calc(var(--k) * -9px), calc(var(--k) * 7px), calc(var(--k) * -4px));
+}
+.viewer-flip:has(.viewer-stack-next:hover, .viewer-corner-next:hover)
+  .viewer-stack-sheet:not(.viewer-stack-read) {
+  transform: translate3d(calc(var(--k) * 14px), calc(var(--k) * 8px), calc(var(--k) * -4px));
+}
+.viewer-flip:has(.viewer-stack-prev:hover, .viewer-corner-prev:hover) .viewer-stack-read {
+  transform: translate3d(calc(var(--k) * -14px), calc(var(--k) * 8px), calc(var(--k) * -4px));
+}
+/* Блик лампы на бумаге — там, где мышь (лист «живой», как карточка). */
+.viewer-flip .viewer-paper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--gx, 50%) var(--gy, 30%),
+    rgb(255 255 255 / 22%),
+    transparent 55%
+  );
+  pointer-events: none;
+}
+/* Зона щелчка по торчащей стопке — шире самих краёв. */
+.viewer-stack-hit {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  backface-visibility: hidden;
+}
+.viewer-stack-next {
+  left: 100%;
+}
+.viewer-stack-prev {
+  right: 100%;
+}
+/* Загнутый уголок внизу справа — тоже следующая страница. Зона щелчка (правка автора 09.11)
+   намного больше нарисованного уголка: весь угол листа (56 px внутрь) и торчащий под ним
+   край стопки (48 px наружу); сам уголок — ::after в углу листа. */
+.viewer-corner {
+  --in: 56px;
+  --out-x: 48px;
+  --out-y: 40px;
+  position: absolute;
+  right: calc(-1 * var(--out-x));
+  bottom: calc(-1 * var(--out-y));
+  width: calc(var(--in) + var(--out-x));
+  height: calc(var(--in) + var(--out-y));
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  /* Поверх листа в той же плоскости — щелчок в углу достаётся уголку, не строке. */
+  transform: translateZ(1px);
+  backface-visibility: hidden;
+}
+.viewer-corner::after {
+  content: "";
+  position: absolute;
+  right: var(--out-x);
+  bottom: var(--out-y);
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(315deg, var(--color-room-dark, #2a2a2a) 50%, #d9d4c6 50%);
+  box-shadow: -2px -2px 4px rgb(0 0 0 / 18%);
+  transform-origin: 100% 100%;
+  transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1);
+  will-change: transform;
+}
+/* Уголок «назад» — внизу слева, загнут в другую сторону. */
+.viewer-corner-prev {
+  right: auto;
+  left: calc(-1 * var(--out-x));
+}
+.viewer-corner-prev::after {
+  right: auto;
+  left: var(--out-x);
+  transform-origin: 0 100%;
+  background: linear-gradient(45deg, var(--color-room-dark, #2a2a2a) 50%, #d9d4c6 50%);
+  box-shadow: 2px -2px 4px rgb(0 0 0 / 18%);
+}
+/* Уголок и торчащая стопка — одно целое: навёл на любое — уголок поднят, стопка раздвинута. */
+.viewer-flip:has(.viewer-stack-next:hover, .viewer-corner-next:hover) .viewer-corner-next::after,
+.viewer-flip:has(.viewer-stack-prev:hover, .viewer-corner-prev:hover) .viewer-corner-prev::after {
+  transform: scale(1.4);
+}
+.viewer-page-no {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  translate: -50% 0;
+  font-size: 12px;
+  opacity: 0.5;
+}
+/* Крупный план (M0: деталь словами, пока нет изображений). */
+.viewer-closeup {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-4);
+  translate: -50% 0;
+  z-index: 2;
+  max-width: min(560px, 90vw);
+  max-height: 40vh;
+  overflow: auto;
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-paper-text);
+  background: var(--color-note);
+  box-shadow: var(--shadow-paper-lifted);
+  font: 15px / 1.45 var(--font-paper);
+  white-space: pre-line;
 }

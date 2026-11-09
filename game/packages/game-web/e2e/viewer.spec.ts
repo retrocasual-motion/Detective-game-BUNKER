@@ -78,16 +78,144 @@ test('Enter на листе в фокусе открывает материал'
   await expect(page.getByTestId('viewer')).toBeVisible();
 });
 
-test('длинный материал прокручивается до конца', async ({ page }) => {
+test('длинный материал — страницами (PG-A): стрелка у края и ←/→ листают до конца', async ({
+  page,
+}) => {
   await sheet(page, '07').click(STRIP);
   const paper = page.getByTestId('viewer-paper');
   await expect(paper).toContainText('План объекта');
-  const scrollable = await paper.evaluate((el) => el.scrollHeight > el.clientHeight);
-  expect(scrollable).toBe(true);
-  await paper.evaluate((el) => {
-    el.scrollTop = el.scrollHeight;
-  });
+  const no = page.getByTestId('page-no');
+  await expect(no).toHaveText(/^1 \/ \d+$/);
+  const total = Number((await no.textContent())?.split('/')[1]);
+  expect(total).toBeGreaterThan(1);
+  await expect(page.getByTestId('page-prev')).toHaveCount(0);
+  await page.getByTestId('page-next').click();
+  await expect(no).toHaveText(`2 / ${total}`);
+  for (let k = 2; k < total; k++) await page.keyboard.press('ArrowRight');
+  await expect(no).toHaveText(`${total} / ${total}`);
+  await expect(page.getByTestId('page-next')).toHaveCount(0);
   await expect(paper.getByText('служебная лестница и общая лестница')).toBeInViewport();
+  await page.keyboard.press('ArrowLeft');
+  await expect(no).toHaveText(`${total - 1} / ${total}`);
+  // Уголки: внизу слева — назад, внизу справа — вперёд; торчащая слева стопка — назад.
+  await page.getByTestId('page-corner-prev').click();
+  await expect(no).toHaveText(`${total - 2} / ${total}`);
+  await page.getByTestId('page-corner').click();
+  await expect(no).toHaveText(`${total - 1} / ${total}`);
+  await page.getByTestId('page-prev').click();
+  await expect(no).toHaveText(`${total - 2} / ${total}`);
+});
+
+test('угол листа листает не только по нарисованному уголку: рядом с ним и по торчащей под ним стопке; пустой низ листа строку не отмечает', async ({
+  page,
+}) => {
+  await sheet(page, '07').click(STRIP);
+  const no = page.getByTestId('page-no');
+  const box = await page.getByTestId('viewer-paper').boundingBox();
+  if (!box) throw new Error('нет листа');
+  const right = box.x + box.width;
+  const bottom = box.y + box.height;
+  await page.waitForTimeout(450); // щелчок сразу после открытия — второй щелчок двойного
+  // Пустое поле внизу листа — не строка: ничего не отмечено, кнопки «в ходатайство» нет.
+  await page.mouse.click(box.x + box.width / 2 - 80, bottom - 8);
+  await expect(page.getByTestId('viewer')).toBeVisible();
+  expect(await page.evaluate(() => window.getSelection()?.toString() ?? '')).toBe('');
+  await expect(page.locator('.to-petition')).toHaveCount(0);
+  // Угол листа в 45 px от края — мимо нарисованного уголка (34 px), но вперёд.
+  await page.mouse.click(right - 45, bottom - 45);
+  await expect(no).toHaveText(/^2 \//);
+  // Торчащий под углом край стопки (ниже и правее листа) — тоже вперёд, не «закрыть».
+  await page.mouse.click(right + 12, bottom + 14);
+  await expect(no).toHaveText(/^3 \//);
+  await expect(page.getByTestId('viewer')).toBeVisible();
+  // Слева внизу — так же назад.
+  await page.mouse.click(box.x + 45, bottom - 45);
+  await expect(no).toHaveText(/^2 \//);
+  await page.mouse.click(box.x - 12, bottom + 14);
+  await expect(no).toHaveText(/^1 \//);
+  expect(await page.evaluate(() => window.getSelection()?.toString() ?? '')).toBe('');
+});
+
+test.describe('живой лист (движение не уменьшено)', () => {
+  test.use({ reducedMotion: 'no-preference' });
+
+  test('системное «уменьшить движение» (Windows) игру не выключает — лист живой (RM-A)', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await sheet(page, '07').click(STRIP);
+    const box = await page.getByTestId('viewer-paper').boundingBox();
+    if (!box) throw new Error('нет листа');
+    await page.mouse.move(box.x + box.width - 20, box.y + 20, { steps: 4 });
+    await expect
+      .poll(async () => (await page.getByTestId('viewer-flip').getAttribute('style')) ?? '')
+      .toMatch(/rotateY\(-[1-9]/);
+  });
+
+  test('над папкой ходатайства лист помнит, где мышь: наклон к ней, а не ровно', async ({
+    page,
+  }) => {
+    await sheet(page, '07').click(STRIP);
+    const tab = await page.getByTestId('petition-corner').boundingBox();
+    if (!tab) throw new Error('нет папки');
+    await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2, { steps: 6 });
+    // Папка внизу слева от листа — лист наклонён к ней (левый нижний край приподнят).
+    await expect
+      .poll(async () => (await page.getByTestId('viewer-flip').getAttribute('style')) ?? '')
+      .toMatch(/rotateX\([1-9][\d.]*deg\) rotateY\([1-9]/);
+  });
+
+  test('лист «живой», как карточка: край под мышью приподнимается; лист не переворачивается; тянуть мимо — ничего, щелчок мимо — закрыть', async ({
+    page,
+  }) => {
+    await sheet(page, '07').click(STRIP);
+    const flip = page.getByTestId('viewer-flip');
+    const box = await page.getByTestId('viewer-paper').boundingBox();
+    if (!box) throw new Error('нет листа');
+    // Мышь у правого верхнего угла листа — лист чуть наклоняется (до нескольких градусов).
+    await page.mouse.move(box.x + box.width - 20, box.y + 20, { steps: 4 });
+    const angles = async (): Promise<[number, number]> => {
+      const style = (await flip.getAttribute('style')) ?? '';
+      const [, rx, ry] = style.match(/rotateX\(([-\d.]+)deg\) rotateY\(([-\d.]+)deg\)/) ?? [];
+      return [Number(rx), Number(ry)];
+    };
+    // Правый верхний угол под мышью приподнимается к игроку (не уезжает из-под неё).
+    await expect.poll(async () => (await angles())[1]).toBeLessThan(-1);
+    expect((await angles())[0]).toBeLessThan(0);
+    const [rx, ry] = await angles();
+    expect(Math.abs(rx)).toBeLessThanOrEqual(6);
+    expect(Math.abs(ry)).toBeLessThanOrEqual(6);
+    // Тянуть мимо листа — лист не вертится и не закрывается.
+    await page.mouse.move(120, 300);
+    await page.mouse.down();
+    await page.mouse.move(470, 360, { steps: 12 });
+    await page.mouse.up();
+    await expect(page.getByTestId('viewer')).toBeVisible();
+    await expect(page.getByTestId('viewer-back')).toHaveCount(0);
+    // Щелчок сразу после открытия — второй щелчок двойного, не «закрыть» (OPEN_GUARD_MS).
+    await page.waitForTimeout(450);
+    await page.mouse.click(120, 300);
+    await expect(page.getByTestId('viewer')).toBeHidden();
+  });
+});
+
+test('колесо — ближе к точке под курсором: она остаётся под курсором; глубоко — крупный план от дела', async ({
+  page,
+}) => {
+  await sheet(page, '43').click(STRIP);
+  const paper = page.getByTestId('viewer-paper');
+  const word = paper.getByText(/Э. Пирс|Пирс/).first();
+  const before = await word.boundingBox();
+  if (!before) throw new Error('нет слова');
+  const at = { x: before.x + before.width / 2, y: before.y + before.height / 2 };
+  await page.mouse.move(at.x, at.y);
+  for (let i = 0; i < 6; i++) await page.mouse.wheel(0, -120);
+  await expect
+    .poll(async () => (await word.boundingBox())?.width ?? 0)
+    .toBeGreaterThan(before.width * 2);
+  const after = await word.boundingBox();
+  expect(Math.abs((after?.x ?? 0) + (after?.width ?? 0) / 2 - at.x)).toBeLessThan(12);
+  await expect(page.getByTestId('viewer-closeup')).toBeVisible();
 });
 
 test('при открытом просмотрщике колесо не масштабирует стену', async ({ page }) => {
@@ -178,7 +306,8 @@ test('крестик неподвижен у верхнего правого у�
   const close = page.getByTestId('viewer').getByRole('button', { name: 'Закрыть' });
   const top = await close.boundingBox();
   expect(Math.abs((top?.y ?? 0) - paper.y)).toBeLessThan(12);
-  expect((top?.x ?? 0) - (paper.x + paper.width)).toBeLessThan(24);
+  // Правее торчащей стопки страниц (этап 4b).
+  expect((top?.x ?? 0) - (paper.x + paper.width)).toBeLessThan(56);
   await page.mouse.move(paper.x + paper.width / 2, paper.y + paper.height - 40, { steps: 4 });
   await page.waitForTimeout(250);
   expect(await close.boundingBox()).toEqual(top);

@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 import { type Group, type Object3D, PerspectiveCamera, Quaternion, Vector3 } from 'three';
+import { reducedMotion } from '../motion.ts';
 import { clampPitch, orient } from './orient.ts';
 import { zoomStep } from './zoom.ts';
 
@@ -43,9 +44,6 @@ const ROT_PER_PX = 0.009;
 /** Наклон вверх-вниз слабее поворота влево-вправо. */
 const PITCH_SOFT = 0.75;
 const ZOOM_STEP = 1.2;
-
-const reduced = () =>
-  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const Y = new Vector3(0, 1, 0);
 
@@ -164,7 +162,7 @@ function Rig({
       yaw.current = Math.round(yaw.current / (2 * Math.PI)) * 2 * Math.PI;
       camTarget.current.set(0, 0, CAM_Z);
     }
-    const k = reduced() ? 1 : 1 - Math.exp(-dt * 12);
+    const k = reducedMotion() ? 1 : 1 - Math.exp(-dt * 12);
     const target =
       mode === 'flip'
         ? new Quaternion().setFromAxisAngle(Y, yaw.current)
