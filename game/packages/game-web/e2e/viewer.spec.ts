@@ -97,55 +97,50 @@ test('длинный материал — страницами (PG-A): стре�
   await expect(paper.getByText('служебная лестница и общая лестница')).toBeInViewport();
   await page.keyboard.press('ArrowLeft');
   await expect(no).toHaveText(`${total - 1} / ${total}`);
-});
-
-test('лист переворачивают, потянув за поле; на обороте — ответ дела или «Оборот чистый.»; средняя кнопка — лицом', async ({
-  page,
-}) => {
-  await sheet(page, '03').click(STRIP);
-  const flip = page.getByTestId('viewer-flip');
-  await expect(flip).toHaveAttribute('data-side', 'front');
-  const box = await page.getByTestId('viewer-paper').boundingBox();
-  if (!box) throw new Error('нет листа');
-  // Поле листа (не текст) — тянуть вбок.
-  await page.mouse.move(box.x + 8, box.y + box.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(box.x + 8 + 340, box.y + box.height / 2, { steps: 10 });
-  await page.mouse.up();
-  await expect(flip).toHaveAttribute('data-side', 'back');
-  await expect(page.getByTestId('viewer-back')).toHaveText('Оборот чистый.');
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2, { button: 'middle' });
-  await expect(flip).toHaveAttribute('data-side', 'front');
-  await expect(page.getByTestId('viewer')).toBeVisible();
-});
-
-test('лист вертят и мимо него: зажал и тянешь — поворот, лист открыт; щелчок мимо — закрыть; уголок — следующая страница', async ({
-  page,
-}) => {
-  await sheet(page, '07').click(STRIP);
-  const flip = page.getByTestId('viewer-flip');
-  // Мимо листа, слева: зажать и тянуть вправо и чуть вниз.
-  await page.mouse.move(120, 300);
-  await page.mouse.down();
-  await page.mouse.move(470, 360, { steps: 12 });
-  await page.mouse.up();
-  await expect(flip).toHaveAttribute('data-side', 'back');
-  await expect(page.getByTestId('viewer')).toBeVisible();
-  await page.mouse.click(683, 384, { button: 'middle' });
-  await expect(flip).toHaveAttribute('data-side', 'front');
-  await expect(page.getByTestId('page-no')).toHaveText(/^1 \//);
-  await page.getByTestId('page-corner').click();
-  await expect(page.getByTestId('page-no')).toHaveText(/^2 \//);
-  // Назад — уголок внизу слева (правка автора 09.11) и торчащая слева стопка.
+  // Уголки: внизу слева — назад, внизу справа — вперёд; торчащая слева стопка — назад.
   await page.getByTestId('page-corner-prev').click();
-  await expect(page.getByTestId('page-no')).toHaveText(/^1 \//);
+  await expect(no).toHaveText(`${total - 2} / ${total}`);
   await page.getByTestId('page-corner').click();
+  await expect(no).toHaveText(`${total - 1} / ${total}`);
   await page.getByTestId('page-prev').click();
-  await expect(page.getByTestId('page-no')).toHaveText(/^1 \//);
-  // Щелчок сразу после открытия — второй щелчок двойного, не «закрыть» (OPEN_GUARD_MS).
-  await page.waitForTimeout(450);
-  await page.mouse.click(120, 300);
-  await expect(page.getByTestId('viewer')).toBeHidden();
+  await expect(no).toHaveText(`${total - 2} / ${total}`);
+});
+
+test.describe('живой лист (движение не уменьшено)', () => {
+  test.use({ reducedMotion: 'no-preference' });
+
+  test('лист «живой», как карточка: край под мышью приподнимается; лист не переворачивается; тянуть мимо — ничего, щелчок мимо — закрыть', async ({
+    page,
+  }) => {
+    await sheet(page, '07').click(STRIP);
+    const flip = page.getByTestId('viewer-flip');
+    const box = await page.getByTestId('viewer-paper').boundingBox();
+    if (!box) throw new Error('нет листа');
+    // Мышь у правого верхнего угла листа — лист чуть наклоняется (до нескольких градусов).
+    await page.mouse.move(box.x + box.width - 20, box.y + 20, { steps: 4 });
+    const angles = async (): Promise<[number, number]> => {
+      const style = (await flip.getAttribute('style')) ?? '';
+      const [, rx, ry] = style.match(/rotateX\(([-\d.]+)deg\) rotateY\(([-\d.]+)deg\)/) ?? [];
+      return [Number(rx), Number(ry)];
+    };
+    // Правый верхний угол под мышью приподнимается к игроку (не уезжает из-под неё).
+    await expect.poll(async () => (await angles())[1]).toBeLessThan(-1);
+    expect((await angles())[0]).toBeLessThan(0);
+    const [rx, ry] = await angles();
+    expect(Math.abs(rx)).toBeLessThanOrEqual(4);
+    expect(Math.abs(ry)).toBeLessThanOrEqual(4);
+    // Тянуть мимо листа — лист не вертится и не закрывается.
+    await page.mouse.move(120, 300);
+    await page.mouse.down();
+    await page.mouse.move(470, 360, { steps: 12 });
+    await page.mouse.up();
+    await expect(page.getByTestId('viewer')).toBeVisible();
+    await expect(page.getByTestId('viewer-back')).toHaveCount(0);
+    // Щелчок сразу после открытия — второй щелчок двойного, не «закрыть» (OPEN_GUARD_MS).
+    await page.waitForTimeout(450);
+    await page.mouse.click(120, 300);
+    await expect(page.getByTestId('viewer')).toBeHidden();
+  });
 });
 
 test('колесо — ближе к точке под курсором: она остаётся под курсором; глубоко — крупный план от дела', async ({

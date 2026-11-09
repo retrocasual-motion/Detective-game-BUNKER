@@ -1,24 +1,15 @@
-import {
-  type PointerEvent as ReactPointerEvent,
-  type RefObject,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
 import { useGame } from '../store.ts';
 
 /**
  * Лист в руках (этап 4b, решения автора 09.11) — без меню, всё руками:
- * - длинный документ — страницами, как бумага (PG-A): навёл на край листа — стрелка, щелчок —
- *   страница (и ←/→);
- * - перевернуть — тянуть за поле или край листа (ROT-A); по тексту тянут — выделение (SEL-C);
- *   лист только переворачивается и ложится ровно, лицом или оборотом (SHEET-FLAT);
- * - колесо — ближе к точке под курсором; средняя кнопка — как было.
- * Оборот и крупный план спрашивают движок (ОСМОТР | лист | перевернуть / увеличить): на обороте —
- * его ответ (пустой — «Оборот чистый.»), открытое — во «Входящие».
+ * - длинный документ — страницами, как бумага (PG-A): за листом стопка, щелчок по ней или по
+ *   загнутому уголку — страница (и ←/→);
+ * - документ не переворачивается и не вертится (FL-A): он «живой», как игровая карточка — чуть
+ *   наклоняется к курсору, по бумаге скользит блик;
+ * - колесо — ближе к точке под курсором (глубоко — крупный план от движка); средняя кнопка — как
+ *   было.
  */
 
 /** Зазор между страницами в потоке колонок, px. */
@@ -27,9 +18,8 @@ const GAP = 64;
 export const CLOSEUP_AT = 2.4;
 const ZOOM_MAX = 4;
 const ZOOM_STEP = 1.2;
-const CLICK_PX = 4;
-/** Наклон листа вверх-вниз, пока его держат, градусы. */
-const TILT_MAX = 25;
+/** Наклон «живого» листа к курсору, градусы по каждой оси. */
+const TILT = 3.5;
 
 export interface Zoom {
   s: number;
@@ -130,19 +120,20 @@ export function useSheet(
     return () => box.removeEventListener('scroll', onScroll);
   }, [refs, step]);
 
-  // ── Переворот ──
-  // Пока держат — свободно, как фото: влево-вправо и наклон (без крена); отпустили — ровно.
-  const [angle, setAngle] = useState(0);
-  const [tilt, setTilt] = useState(0);
-  const [flipping, setFlipping] = useState(false);
-  const side: 'front' | 'back' = Math.round(angle / 180) % 2 !== 0 ? 'back' : 'front';
-  const moved = useRef(0);
-  const [back, setBack] = useState<string | null>(null);
-  // Ответ движка на действие — один раз на лист; дальше — тот же (оборот не пропадает).
+  // ── Живой лист (решение автора 09.11, FL-A + наклон «как карточка») ──
+  // Документы не переворачиваются и не вертятся: водишь мышью над листом — он чуть наклоняется
+  // к курсору и по бумаге скользит блик, как у игровой карточки. Пока зажата кнопка (выделение),
+  // при приближении и при «уменьшить движение» — лист ровный.
+  const [tilt, setTilt] = useState({ x: 0, y: 0, gx: 50, gy: 30 });
+  const pressed = useRef(false);
+
+  const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Ответ движка на действие — один раз на лист; дальше — тот же.
   const answers = useRef(new Map<string, Promise<string>>());
 
   const ask = useCallback(
-    (value: 'перевернуть' | 'увеличить'): Promise<string> => {
+    (value: 'увеличить'): Promise<string> => {
       if (!materialId) return Promise.resolve('');
       let got = answers.current.get(value);
       if (!got) {
@@ -158,50 +149,6 @@ export function useSheet(
     },
     [materialId],
   );
-
-  useEffect(() => {
-    if (side !== 'back' || back !== null) return;
-    if (!materialId) {
-      setBack('');
-      return;
-    }
-    void ask('перевернуть').then(setBack);
-  }, [side, back, ask, materialId]);
-
-  /**
-   * Зажать и тянуть — вертеть лист (с поля, с края или мимо листа — правка автора 09.11); по
-   * тексту — это выделение, не трогаем. Отпустили — лист ложится ровно, лицом или оборотом.
-   */
-  const onFlipDown = (e: ReactPointerEvent<HTMLElement>) => {
-    if (e.button !== 0) return;
-    const t = e.target as Element;
-    if (t.closest('.viewer-flow, button')) return;
-    const x0 = e.clientX;
-    const y0 = e.clientY;
-    const a0 = angle;
-    moved.current = 0;
-    const move = (ev: PointerEvent) => {
-      const dx = ev.clientX - x0;
-      const dy = ev.clientY - y0;
-      moved.current = Math.hypot(dx, dy);
-      if (moved.current < CLICK_PX) return;
-      setFlipping(true);
-      setAngle(a0 + dx * 0.45);
-      setTilt(Math.max(-TILT_MAX, Math.min(TILT_MAX, -dy * 0.25)));
-    };
-    const up = () => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-      setFlipping(false);
-      // Лист ложится ровно: лицом или оборотом, как ближе.
-      setAngle((a) => Math.round(a / 180) * 180);
-      setTilt(0);
-    };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-  };
-  /** Щелчок после протяжки — не щелчок (стрелка страницы не срабатывает). */
-  const wasDrag = () => moved.current >= CLICK_PX;
 
   // ── Приближение ──
   const [zoom, setZoom] = useState<Zoom>({ s: 1, tx: 0, ty: 0 });
@@ -232,10 +179,32 @@ export function useSheet(
     void ask('увеличить').then((t) => setCloseup(t || null));
   }, [near, ask]);
 
-  /** Средняя кнопка — как было: лицом, без приближения. */
+  /** Мышь над листом: край под курсором чуть приподнимается к игроку (до TILT°), блик — там, где курсор; уголок под мышью не уезжает. */
+  const onHover = (clientX: number, clientY: number, buttons: number) => {
+    pressed.current = buttons !== 0;
+    const el = refs.zoom.current;
+    if (!el || pressed.current) return;
+    if (zoom.s !== 1 || reduced()) {
+      setTilt((t) => (t.x || t.y ? { ...t, x: 0, y: 0 } : t));
+      return;
+    }
+    const r = el.getBoundingClientRect();
+    const nx = Math.max(-1, Math.min(1, ((clientX - r.left) / r.width) * 2 - 1));
+    const ny = Math.max(-1, Math.min(1, ((clientY - r.top) / r.height) * 2 - 1));
+    setTilt({
+      x: ny * TILT,
+      y: -nx * TILT,
+      gx: Math.round(((nx + 1) / 2) * 100),
+      gy: Math.round(((ny + 1) / 2) * 100),
+    });
+  };
+  /** Мышь ушла — лист ложится ровно. */
+  const onLeave = () => setTilt((t) => ({ ...t, x: 0, y: 0 }));
+
+  /** Средняя кнопка — как было: без приближения. */
   const reset = () => {
     setZoom({ s: 1, tx: 0, ty: 0 });
-    setAngle((a) => Math.round(a / 360) * 360);
+    onLeave();
   };
 
   return {
@@ -245,13 +214,9 @@ export function useSheet(
     snapToShown,
     showX,
     paged: pageH !== null,
-    angle,
     tilt,
-    side,
-    flipping,
-    back,
-    onFlipDown,
-    wasDrag,
+    onHover,
+    onLeave,
     zoom,
     onWheel,
     closeup,

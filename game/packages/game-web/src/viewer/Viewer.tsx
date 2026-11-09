@@ -200,23 +200,19 @@ export function Viewer({ materialId }: ViewerProps) {
           return;
         }
         downOutside.current = e.button === 0 && isOutside(e);
-        if (downOutside.current) sheet.onFlipDown(e);
       }}
       onMouseDown={(e) => {
         if (e.button === 1) e.preventDefault();
       }}
       onPointerUp={(e) => {
         // Выделение текста, начатое на листе и законченное снаружи, — не «закрыть».
-        if (
-          downOutside.current &&
-          isOutside(e) &&
-          !sheet.wasDrag() &&
-          Date.now() - openedAt.current > OPEN_GUARD_MS
-        )
+        if (downOutside.current && isOutside(e) && Date.now() - openedAt.current > OPEN_GUARD_MS)
           close();
         downOutside.current = false;
       }}
       onWheel={(e) => sheet.onWheel(e.clientX, e.clientY, e.deltaY)}
+      onPointerMove={(e) => sheet.onHover(e.clientX, e.clientY, e.buttons)}
+      onPointerLeave={sheet.onLeave}
     >
       <div className="viewer-stage">
         <div
@@ -227,17 +223,14 @@ export function Viewer({ materialId }: ViewerProps) {
           }}
         >
           <div
-            className={`viewer-flip${sheet.flipping ? ' viewer-flipping' : ''}`}
+            className="viewer-flip"
             data-testid="viewer-flip"
-            data-side={sheet.side}
             style={
               {
-                transform: `rotateX(${sheet.tilt}deg) rotateY(${sheet.angle}deg)`,
-                // Отвёрнутый от лампы лист темнеет — видно, что он в пространстве.
-                '--shade': (
-                  0.42 * (1 - Math.abs(Math.cos((sheet.angle * Math.PI) / 180))) +
-                  0.3 * Math.abs(Math.sin((sheet.tilt * Math.PI) / 180))
-                ).toFixed(3),
+                transform: `rotateX(${sheet.tilt.x}deg) rotateY(${sheet.tilt.y}deg)`,
+                // Блик там, где мышь; наклон к курсору — лист «живой», как карточка.
+                '--gx': `${sheet.tilt.gx}%`,
+                '--gy': `${sheet.tilt.gy}%`,
               } as CSSProperties
             }
           >
@@ -283,11 +276,7 @@ export function Viewer({ materialId }: ViewerProps) {
               />
             )}
             {person ? (
-              <article
-                className="viewer-paper viewer-person"
-                data-testid="viewer-paper"
-                onPointerDown={sheet.onFlipDown}
-              >
+              <article className="viewer-paper viewer-person" data-testid="viewer-paper">
                 <div className="viewer-person-photo" aria-hidden />
                 <h1 className="viewer-person-name">{person.name}</h1>
                 <p className="viewer-person-role">{person.role}</p>
@@ -299,7 +288,6 @@ export function Viewer({ materialId }: ViewerProps) {
                 data-testid="viewer-paper"
                 onPointerDown={(e) => {
                   downAt.current = { x: e.clientX, y: e.clientY };
-                  sheet.onFlipDown(e);
                 }}
                 onPointerUp={onPaperUp}
                 onClick={onPaperClick}
@@ -340,14 +328,6 @@ export function Viewer({ materialId }: ViewerProps) {
                 )}
               </article>
             )}
-            <article
-              className="viewer-paper viewer-back"
-              data-testid="viewer-back"
-              aria-hidden={sheet.side !== 'back'}
-              onPointerDown={sheet.onFlipDown}
-            >
-              <p>{sheet.back === null ? '' : sheet.back || 'Оборот чистый.'}</p>
-            </article>
           </div>
         </div>
         <div className="viewer-tools" data-testid="viewer-tools">

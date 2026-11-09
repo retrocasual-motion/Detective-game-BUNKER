@@ -895,7 +895,6 @@ button {
   min-height: 0;
   overflow: hidden;
   backface-visibility: hidden;
-  cursor: grab;
   padding: var(--space-4);
   background: var(--color-paper);
   color: var(--color-paper-text);
@@ -1925,30 +1924,13 @@ button {
 .viewer-flip {
   position: relative;
   transform-style: preserve-3d;
-  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-.viewer-flipping {
-  transition: none;
-}
-.viewer-flipping .viewer-paper {
-  user-select: none;
+  transition: transform 0.25s ease-out;
 }
 .viewer-flow {
   cursor: text;
 }
 .viewer-pages {
   overflow: hidden;
-}
-/* Оборот листа — та же бумага, повёрнутая; на нём — ответ движка или «Оборот чистый.» */
-.viewer-back {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: rotateY(180deg);
-  font-style: italic;
-  text-align: center;
 }
 /* Стопка листов (правка автора 09.11): края следующих страниц торчат справа и снизу, прочитанных —
    слева. Щелчок по торчащей стопке — перелистнуть; навёл — стопка чуть раздвигается. */
@@ -1981,12 +1963,16 @@ button {
 .viewer-flip:has(.viewer-stack-prev:hover, .viewer-corner-prev:hover) .viewer-stack-read {
   transform: translate3d(calc(var(--k) * -14px), calc(var(--k) * 8px), calc(var(--k) * -4px));
 }
-/* Свет на листе: отвёрнутый от лампы — темнее (--shade ставит поворот). */
+/* Блик лампы на бумаге — там, где мышь (лист «живой», как карточка). */
 .viewer-flip .viewer-paper::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgb(0 0 0 / var(--shade, 0));
+  background: radial-gradient(
+    circle at var(--gx, 50%) var(--gy, 30%),
+    rgb(255 255 255 / 16%),
+    transparent 55%
+  );
   pointer-events: none;
 }
 /* Зона щелчка по торчащей стопке — шире самих краёв. */
