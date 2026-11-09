@@ -9,12 +9,13 @@ import {
   useSyncExternalStore,
 } from 'react';
 import { type Group, type Object3D, PerspectiveCamera, Quaternion, Vector3 } from 'three';
+import { clampPitch, orient } from './orient.ts';
 import { zoomStep } from './zoom.ts';
 
 /**
  * Вещь в руках (этап 4a, решения автора 09.11): без меню и кнопок — всё руками.
  * Зажать и тянуть — вращать; колесо — ближе к той точке, что под курсором (не общий зум);
- * двойной щелчок — как было; щелчок по самой вещи (печать, экран) — вскрыть или включить;
+ * средняя кнопка мыши — как было; щелчок по самой вещи (печать, экран) — вскрыть или включить;
  * щелчок мимо, ✕ или Esc — положить. Лист и конверт только переворачиваются (лицо/оборот) и
  * ложатся ровно — читать всегда удобно; предметы вертятся свободно.
  */
@@ -39,13 +40,14 @@ const CLICK_PX = 5;
 const CAM_Z = 6;
 const MIN_Z = 1.2;
 const ROT_PER_PX = 0.009;
+/** Наклон вверх-вниз слабее поворота влево-вправо. */
+const PITCH_SOFT = 0.75;
 const ZOOM_STEP = 1.2;
 
 const reduced = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const Y = new Vector3(0, 1, 0);
-const X = new Vector3(1, 0, 0);
 
 // ── Вещь в руках одна: её жест, «уйти» и активные части — на уровне модуля. ──
 
@@ -119,7 +121,8 @@ function Rig({
   const group = useRef<Group>(null);
   const { camera, size } = useThree();
   const camTarget = useRef(new Vector3(0, 0, CAM_Z));
-  const q = useRef(new Quaternion());
+  // Свободный поворот: два угла без крена (orient.ts).
+  const pitch = useRef(0);
   const yaw = useRef(0);
   const side = useRef(false);
   const tmp = useRef(new PerspectiveCamera());
@@ -142,9 +145,9 @@ function Rig({
     if (g.dx || g.dy) {
       if (mode === 'flip') yaw.current += g.dx * ROT_PER_PX;
       else {
-        q.current
-          .premultiply(new Quaternion().setFromAxisAngle(Y, g.dx * ROT_PER_PX))
-          .premultiply(new Quaternion().setFromAxisAngle(X, g.dy * ROT_PER_PX));
+        yaw.current += g.dx * ROT_PER_PX;
+        // Наклон к игроку — мягче поворота: вещь не уходит в неудобный ракурс (правка автора 09.11).
+        pitch.current = clampPitch(pitch.current + g.dy * ROT_PER_PX * PITCH_SOFT);
       }
       g.dx = 0;
       g.dy = 0;
@@ -157,12 +160,15 @@ function Rig({
     for (const w of g.wheel.splice(0)) zoomAt(w.x, w.y, w.deltaY);
     if (g.reset) {
       g.reset = false;
-      q.current.identity();
+      pitch.current = 0;
       yaw.current = Math.round(yaw.current / (2 * Math.PI)) * 2 * Math.PI;
       camTarget.current.set(0, 0, CAM_Z);
     }
     const k = reduced() ? 1 : 1 - Math.exp(-dt * 12);
-    const target = mode === 'flip' ? new Quaternion().setFromAxisAngle(Y, yaw.current) : q.current;
+    const target =
+      mode === 'flip'
+        ? new Quaternion().setFromAxisAngle(Y, yaw.current)
+        : orient(yaw.current, pitch.current);
     group.current?.quaternion.slerp(target, k);
     camera.position.lerp(camTarget.current, k);
     camera.updateMatrixWorld();
@@ -243,6 +249,12 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
 
   // Протяжку ведём по окну: кнопка может уйти за край вещи и даже экрана.
   const onPointerDown = (e: ReactPointerEvent) => {
+    // Средняя кнопка — вернуть как было (правка автора 09.11: двойной щелчок мимо вещи клал её).
+    if (e.button === 1) {
+      e.preventDefault();
+      gesture.current.reset = true;
+      return;
+    }
     if (e.button !== 0) return;
     const g = gesture.current;
     g.moved = 0;
@@ -280,8 +292,9 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
           deltaY: e.deltaY,
         });
       }}
-      onDoubleClick={() => {
-        gesture.current.reset = true;
+      // Колесо-кнопка в браузере включает автопрокрутку — здесь она не нужна.
+      onMouseDown={(e) => {
+        if (e.button === 1) e.preventDefault();
       }}
     >
       <Canvas

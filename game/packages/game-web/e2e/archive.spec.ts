@@ -52,6 +52,10 @@ test('щелчок по конверту — он в руках: протяну�
   // Немного протянуть и отпустить — лист ложится обратно оборотом, не боком.
   await drag(page, 60);
   await expect(held).toHaveAttribute('data-side', 'back');
+  // Средняя кнопка — как было (лицом), вещь остаётся в руках.
+  await page.mouse.click(683, 384, { button: 'middle' });
+  await expect(held).toHaveAttribute('data-side', 'front');
+  await expect(held).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(held).toBeHidden();
   await expect(page.getByTestId('container-protocols')).toBeVisible();
