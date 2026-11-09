@@ -250,13 +250,35 @@ test('черновики — стопкой папок: «+» — новая, я
 
 /** Точка экрана посреди слова `word` в листе (по первой строке, где оно есть). */
 async function wordPoint(page: Page, word: string, at = 0.5) {
+  // Длинный лист — страницами (этап 4b): долистать стрелкой до страницы со словом.
+  const where = () =>
+    page.getByTestId('viewer-paper').evaluate((el, w) => {
+      const flow = el.querySelector('.viewer-flow') as HTMLElement;
+      const box = el.querySelector('.viewer-pages') as HTMLElement;
+      const walker = document.createTreeWalker(flow, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        const i = n.textContent?.indexOf(w) ?? -1;
+        if (i < 0) continue;
+        const r = document.createRange();
+        r.setStart(n, i);
+        r.setEnd(n, i + w.length);
+        const b = r.getBoundingClientRect();
+        const pr = box.getBoundingClientRect();
+        return b.left < pr.left ? -1 : b.right > pr.right ? 1 : 0;
+      }
+      throw new Error(`нет слова: ${w}`);
+    }, word);
+  for (let k = 0; k < 20; k++) {
+    const d = await where();
+    if (d === 0) break;
+    await page.keyboard.press(d > 0 ? 'ArrowRight' : 'ArrowLeft');
+  }
   return page.getByTestId('viewer-paper').evaluate(
     (el, [w, k]) => {
       const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
       for (let n = walker.nextNode(); n; n = walker.nextNode()) {
         const i = n.textContent?.indexOf(w as string) ?? -1;
         if (i < 0) continue;
-        n.parentElement?.scrollIntoView({ block: 'center' });
         const r = document.createRange();
         r.setStart(n, i);
         r.setEnd(n, i + (w as string).length);

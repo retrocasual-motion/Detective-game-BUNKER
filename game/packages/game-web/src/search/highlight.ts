@@ -4,9 +4,9 @@ const NAME = 'case-find';
 
 /**
  * Лист открыт из поиска: все совпадения в нём подсвечены (CSS Custom Highlight — разметку
- * листа не трогаем), к k-му совпадению лист прокручен. Возвращает, сколько найдено.
+ * листа не трогаем). Возвращает k-е совпадение (или первое) — лист откроется на его странице.
  */
-export function highlightFind(paper: Element, query: string, k: number): number {
+export function highlightFind(paper: Element, query: string, k: number): Range | null {
   const q = norm(query.trim().replace(/\s+/g, ' '));
   const ranges: Range[] = [];
   if (q) {
@@ -21,13 +21,12 @@ export function highlightFind(paper: Element, query: string, k: number): number 
       }
     }
   }
-  const target = ranges[k] ?? ranges[0];
-  target?.startContainer.parentElement?.scrollIntoView({ block: 'center' });
+  const target = ranges[k] ?? ranges[0] ?? null;
   if ('highlights' in CSS && typeof Highlight !== 'undefined') {
     if (ranges.length) CSS.highlights.set(NAME, new Highlight(...ranges));
     else CSS.highlights.delete(NAME);
   }
-  return ranges.length;
+  return target;
 }
 
 export function clearFind() {

@@ -207,11 +207,21 @@ export function createApp({
       const before = await loadProgress();
       const { progress, outcome } = act(engine.content, before, input, now());
       await saveProgress(progress);
+      // Повтор осмотра (этап 4b): игрок снова переворачивает тот же лист — на обороте то же,
+      // а не служебное «уже выдано ранее».
+      const again =
+        outcome.result === 'повтор'
+          ? engine.content.rules.rules.find((r) => r.id === outcome.rule)?.ok
+          : undefined;
       return {
         // Вид итога («нет правила», «нет доступа»…) говорит об устройстве правил — только в
         // разработке (служебная строка); игроку хватает ответа и открытого.
         ...(production ? {} : { result: outcome.result }),
-        reply: outcome.reply,
+        reply: again ?? outcome.reply,
+        // Пустой ответ (общее правило, отказ, нет правила): игра говорит своё («Оборот чистый.»),
+        // а не текст бумажного прототипа со списком действий.
+        quiet:
+          !['успех', 'ответ', 'повтор'].includes(outcome.result) || /-other$/.test(outcome.rule),
         released: outcome.released.flatMap((id) => lockedById.get(id) ?? []),
       };
     });

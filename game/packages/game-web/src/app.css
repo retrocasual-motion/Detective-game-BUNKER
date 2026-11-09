@@ -890,9 +890,12 @@ button {
   color: var(--color-card-text);
 }
 .viewer-paper {
+  position: relative;
   width: 100%;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
+  backface-visibility: hidden;
+  cursor: grab;
   padding: var(--space-4);
   background: var(--color-paper);
   color: var(--color-paper-text);
@@ -1908,4 +1911,91 @@ button {
 }
 .held-spot:focus-visible {
   outline: 2px solid var(--color-accent);
+}
+
+/* ── Лист в руках (этап 4b): приближение к курсору, переворот за поле, страницы. ── */
+.viewer-stage {
+  perspective: 1800px;
+}
+.viewer-zoom {
+  transform-origin: 0 0;
+  transition: transform 0.12s ease-out;
+}
+.viewer-flip {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.35s ease;
+}
+.viewer-flipping {
+  transition: none;
+}
+.viewer-flipping .viewer-paper {
+  user-select: none;
+}
+.viewer-flow {
+  cursor: text;
+}
+.viewer-pages {
+  overflow: hidden;
+}
+/* Оборот листа — та же бумага, повёрнутая; на нём — ответ движка или «Оборот чистый.» */
+.viewer-back {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotateY(180deg);
+  font-style: italic;
+  text-align: center;
+}
+/* Край листа: навёл — стрелка страницы; щелчок — страница; протянул — переворот. */
+.viewer-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--space-4);
+  padding: 0;
+  color: var(--color-paper-text);
+  font-size: 28px;
+  background: none;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.viewer-edge:hover,
+.viewer-edge:focus-visible {
+  opacity: 0.65;
+}
+.viewer-edge-prev {
+  left: 0;
+}
+.viewer-edge-next {
+  right: 0;
+}
+.viewer-page-no {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  translate: -50% 0;
+  font-size: 12px;
+  opacity: 0.5;
+}
+/* Крупный план (M0: деталь словами, пока нет изображений). */
+.viewer-closeup {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-4);
+  translate: -50% 0;
+  z-index: 2;
+  max-width: min(560px, 90vw);
+  max-height: 40vh;
+  overflow: auto;
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-paper-text);
+  background: var(--color-note);
+  box-shadow: var(--shadow-paper-lifted);
+  font: 15px / 1.45 var(--font-paper);
+  white-space: pre-line;
 }

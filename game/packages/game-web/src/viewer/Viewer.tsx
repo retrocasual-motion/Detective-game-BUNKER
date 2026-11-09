@@ -11,6 +11,7 @@ import { useGame } from '../store.ts';
 import { isLetter, takeOutOfBin } from '../wall/wall-actions.ts';
 import { sameRange, snapToWords, unitRangeAt } from './selectUnit.ts';
 import { unwrapLines } from './text.ts';
+import { useSheet } from './useSheet.ts';
 
 interface ViewerProps {
   materialId: string;
@@ -18,7 +19,7 @@ interface ViewerProps {
 
 /** Щелчок сразу после открытия — второй щелчок двойного клика, а не «закрыть». */
 const OPEN_GUARD_MS = 400;
-const INSIDE = '.viewer-paper, .viewer-tools, .to-petition';
+const INSIDE = '.viewer-paper, .viewer-tools, .to-petition, .viewer-closeup';
 
 /**
  * Просмотрщик материала (TECH_PLAN 4.3). Серый прототип: текст пакета дословно; строки внутри
@@ -47,13 +48,24 @@ export function Viewer({ materialId }: ViewerProps) {
   const inTrash = useGame((g) => g.state?.trash.includes(materialId) ?? false);
   const [noRoom, setNoRoom] = useState(false);
 
-  // Открыт из поиска (RD-C): найденное подсвечено, лист прокручен к нему.
+  // Лист в руках (этап 4b): страницы, переворот, приближение — useSheet.
+  const zoomRef = useRef<HTMLDivElement>(null);
+  const pagesRef = useRef<HTMLDivElement>(null);
+  const flowRef = useRef<HTMLDivElement>(null);
+  const refs = useMemo(() => ({ zoom: zoomRef, pages: pagesRef, flow: flowRef }), []);
+  const sheet = useSheet(material ? material.id : null, refs);
+  const { showX } = sheet;
+
+  // Открыт из поиска (RD-C): найденное подсвечено, лист — на странице с ним.
   const find = useGame((g) => g.find);
   useEffect(() => {
     const paper = document.querySelector('[data-testid="viewer-paper"]');
-    if (find && paper) highlightFind(paper, find.q, find.k);
+    if (find && paper) {
+      const r = highlightFind(paper, find.q, find.k);
+      if (r) requestAnimationFrame(() => showX(r.getBoundingClientRect().left + 1));
+    }
     return clearFind;
-  }, [find]);
+  }, [find, showX]);
 
   // Время чтения (RD-A) — только в разработке.
   useEffect(() => (import.meta.env.DEV ? trackReading(materialId) : undefined), [materialId]);
@@ -150,13 +162,16 @@ export function Viewer({ materialId }: ViewerProps) {
     [material],
   );
 
+  const { goTo, page } = sheet;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') close();
+      else if (e.key === 'ArrowRight' || e.key === 'PageDown') goTo(page + 1);
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') goTo(page - 1);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [close]);
+  }, [close, goTo, page]);
 
   if (!material && !person) return null;
 
@@ -167,8 +182,19 @@ export function Viewer({ materialId }: ViewerProps) {
     <div
       className={`viewer${folderOpen ? ' viewer-with-folder' : ''}`}
       data-testid="viewer"
+      role="dialog"
+      aria-label={material?.title ?? person?.name}
       onPointerDown={(e) => {
-        downOutside.current = isOutside(e);
+        // Средняя кнопка — как было: лицом, без приближения (как у вещей в руках).
+        if (e.button === 1) {
+          e.preventDefault();
+          sheet.reset();
+          return;
+        }
+        downOutside.current = e.button === 0 && isOutside(e);
+      }}
+      onMouseDown={(e) => {
+        if (e.button === 1) e.preventDefault();
       }}
       onPointerUp={(e) => {
         // Выделение текста, начатое на листе и законченное снаружи, — не «закрыть».
@@ -176,28 +202,94 @@ export function Viewer({ materialId }: ViewerProps) {
           close();
         downOutside.current = false;
       }}
+      onWheel={(e) => sheet.onWheel(e.clientX, e.clientY, e.deltaY)}
     >
       <div className="viewer-stage">
-        {person ? (
-          <article className="viewer-paper viewer-person" data-testid="viewer-paper">
-            <div className="viewer-person-photo" aria-hidden />
-            <h1 className="viewer-person-name">{person.name}</h1>
-            <p className="viewer-person-role">{person.role}</p>
-          </article>
-        ) : (
-          // biome-ignore lint/a11y/useKeyWithClickEvents: щелчок отмечает строку мышью (SEL-C); с клавиатуры — обычное выделение Shift+стрелки
-          <article
-            className="viewer-paper"
-            data-testid="viewer-paper"
-            onPointerDown={(e) => {
-              downAt.current = { x: e.clientX, y: e.clientY };
-            }}
-            onPointerUp={onPaperUp}
-            onClick={onPaperClick}
+        <div
+          ref={zoomRef}
+          className="viewer-zoom"
+          style={{
+            transform: `translate(${sheet.zoom.tx}px, ${sheet.zoom.ty}px) scale(${sheet.zoom.s})`,
+          }}
+        >
+          <div
+            className={`viewer-flip${sheet.flipping ? ' viewer-flipping' : ''}`}
+            data-testid="viewer-flip"
+            data-side={sheet.side}
+            style={{ transform: `rotateY(${sheet.angle}deg)` }}
           >
-            {doc}
-          </article>
-        )}
+            {person ? (
+              <article
+                className="viewer-paper viewer-person"
+                data-testid="viewer-paper"
+                onPointerDown={sheet.onFlipDown}
+              >
+                <div className="viewer-person-photo" aria-hidden />
+                <h1 className="viewer-person-name">{person.name}</h1>
+                <p className="viewer-person-role">{person.role}</p>
+              </article>
+            ) : (
+              // biome-ignore lint/a11y/useKeyWithClickEvents: щелчок отмечает строку мышью (SEL-C); с клавиатуры — обычное выделение Shift+стрелки
+              <article
+                className="viewer-paper"
+                data-testid="viewer-paper"
+                onPointerDown={(e) => {
+                  downAt.current = { x: e.clientX, y: e.clientY };
+                  sheet.onFlipDown(e);
+                }}
+                onPointerUp={onPaperUp}
+                onClick={onPaperClick}
+              >
+                <div ref={pagesRef} className="viewer-pages">
+                  <div ref={flowRef} className="viewer-flow">
+                    {doc}
+                  </div>
+                </div>
+                {sheet.pages > 1 && sheet.page > 0 && (
+                  <button
+                    type="button"
+                    className="viewer-edge viewer-edge-prev"
+                    data-testid="page-prev"
+                    aria-label="Предыдущая страница"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!sheet.wasDrag()) sheet.goTo(sheet.page - 1);
+                    }}
+                  >
+                    ‹
+                  </button>
+                )}
+                {sheet.pages > 1 && sheet.page < sheet.pages - 1 && (
+                  <button
+                    type="button"
+                    className="viewer-edge viewer-edge-next"
+                    data-testid="page-next"
+                    aria-label="Следующая страница"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!sheet.wasDrag()) sheet.goTo(sheet.page + 1);
+                    }}
+                  >
+                    ›
+                  </button>
+                )}
+                {sheet.pages > 1 && (
+                  <span className="viewer-page-no" data-testid="page-no">
+                    {sheet.page + 1} / {sheet.pages}
+                  </span>
+                )}
+              </article>
+            )}
+            <article
+              className="viewer-paper viewer-back"
+              data-testid="viewer-back"
+              aria-hidden={sheet.side !== 'back'}
+              onPointerDown={sheet.onFlipDown}
+            >
+              <p>{sheet.back === null ? '' : sheet.back || 'Оборот чистый.'}</p>
+            </article>
+          </div>
+        </div>
         <div className="viewer-tools" data-testid="viewer-tools">
           <button
             type="button"
@@ -275,6 +367,11 @@ export function Viewer({ materialId }: ViewerProps) {
           )}
         </div>
       </div>
+      {sheet.closeup && (
+        <aside className="viewer-closeup" data-testid="viewer-closeup">
+          {sheet.closeup}
+        </aside>
+      )}
       {sel && material && (
         <button
           type="button"

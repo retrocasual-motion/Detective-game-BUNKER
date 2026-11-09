@@ -78,16 +78,64 @@ test('Enter на листе в фокусе открывает материал'
   await expect(page.getByTestId('viewer')).toBeVisible();
 });
 
-test('длинный материал прокручивается до конца', async ({ page }) => {
+test('длинный материал — страницами (PG-A): стрелка у края и ←/→ листают до конца', async ({
+  page,
+}) => {
   await sheet(page, '07').click(STRIP);
   const paper = page.getByTestId('viewer-paper');
   await expect(paper).toContainText('План объекта');
-  const scrollable = await paper.evaluate((el) => el.scrollHeight > el.clientHeight);
-  expect(scrollable).toBe(true);
-  await paper.evaluate((el) => {
-    el.scrollTop = el.scrollHeight;
-  });
+  const no = page.getByTestId('page-no');
+  await expect(no).toHaveText(/^1 \/ \d+$/);
+  const total = Number((await no.textContent())?.split('/')[1]);
+  expect(total).toBeGreaterThan(1);
+  await expect(page.getByTestId('page-prev')).toHaveCount(0);
+  await page.getByTestId('page-next').click();
+  await expect(no).toHaveText(`2 / ${total}`);
+  for (let k = 2; k < total; k++) await page.keyboard.press('ArrowRight');
+  await expect(no).toHaveText(`${total} / ${total}`);
+  await expect(page.getByTestId('page-next')).toHaveCount(0);
   await expect(paper.getByText('служебная лестница и общая лестница')).toBeInViewport();
+  await page.keyboard.press('ArrowLeft');
+  await expect(no).toHaveText(`${total - 1} / ${total}`);
+});
+
+test('лист переворачивают, потянув за поле; на обороте — ответ дела или «Оборот чистый.»; средняя кнопка — лицом', async ({
+  page,
+}) => {
+  await sheet(page, '03').click(STRIP);
+  const flip = page.getByTestId('viewer-flip');
+  await expect(flip).toHaveAttribute('data-side', 'front');
+  const box = await page.getByTestId('viewer-paper').boundingBox();
+  if (!box) throw new Error('нет листа');
+  // Поле листа (не текст) — тянуть вбок.
+  await page.mouse.move(box.x + 8, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 8 + 340, box.y + box.height / 2, { steps: 10 });
+  await page.mouse.up();
+  await expect(flip).toHaveAttribute('data-side', 'back');
+  await expect(page.getByTestId('viewer-back')).toHaveText('Оборот чистый.');
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2, { button: 'middle' });
+  await expect(flip).toHaveAttribute('data-side', 'front');
+  await expect(page.getByTestId('viewer')).toBeVisible();
+});
+
+test('колесо — ближе к точке под курсором: она остаётся под курсором; глубоко — крупный план от дела', async ({
+  page,
+}) => {
+  await sheet(page, '43').click(STRIP);
+  const paper = page.getByTestId('viewer-paper');
+  const word = paper.getByText(/Э. Пирс|Пирс/).first();
+  const before = await word.boundingBox();
+  if (!before) throw new Error('нет слова');
+  const at = { x: before.x + before.width / 2, y: before.y + before.height / 2 };
+  await page.mouse.move(at.x, at.y);
+  for (let i = 0; i < 6; i++) await page.mouse.wheel(0, -120);
+  await expect
+    .poll(async () => (await word.boundingBox())?.width ?? 0)
+    .toBeGreaterThan(before.width * 2);
+  const after = await word.boundingBox();
+  expect(Math.abs((after?.x ?? 0) + (after?.width ?? 0) / 2 - at.x)).toBeLessThan(12);
+  await expect(page.getByTestId('viewer-closeup')).toBeVisible();
 });
 
 test('при открытом просмотрщике колесо не масштабирует стену', async ({ page }) => {
