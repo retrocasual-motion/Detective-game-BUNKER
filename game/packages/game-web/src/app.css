@@ -1625,3 +1625,126 @@ button {
   color: var(--color-text-muted);
   font-size: 0.8rem;
 }
+
+/* Время чтения (RD-A, только разработка). */
+.dev-reading {
+  max-height: 40vh;
+  overflow: auto;
+  margin-top: var(--space-2);
+}
+.dev-reading-tools {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.dev-reading table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.dev-reading th,
+.dev-reading td {
+  padding: 2px var(--space-1);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ── Поиск по делу (RD-C, 09.11): ярлык справа сверху, панель — у правого края. ── */
+.search-tab {
+  position: absolute;
+  top: 0;
+  right: var(--space-4);
+  z-index: 30;
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-nav-bg);
+  color: var(--color-text);
+  border: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+.search-tab:hover {
+  opacity: 1;
+}
+.search-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 39;
+  display: flex;
+  flex-direction: column;
+  width: min(420px, 100vw);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-border);
+  box-shadow: var(--shadow);
+}
+.search-head {
+  display: flex;
+  gap: var(--space-2);
+}
+.search-head input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 1rem;
+}
+.search-count {
+  margin: var(--space-2) 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+.search-results {
+  flex: 1;
+  overflow: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.search-results > li {
+  margin-bottom: var(--space-3);
+}
+.search-material {
+  margin-bottom: var(--space-1);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.search-id {
+  color: var(--color-accent);
+}
+.search-hit,
+.search-more {
+  display: block;
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  background: none;
+  color: var(--color-text);
+  border: none;
+  border-radius: var(--radius);
+  text-align: left;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  cursor: pointer;
+}
+.search-hit:hover,
+.search-more:hover {
+  background: var(--color-surface-raised);
+}
+.search-more {
+  color: var(--color-text-muted);
+}
+.search-hit mark {
+  background: var(--color-find, #e8c95a);
+  color: #1d1d1d;
+  border-radius: 2px;
+}
+/* Найденное в открытом листе. */
+::highlight(case-find) {
+  background-color: var(--color-find, #e8c95a);
+  color: #1d1d1d;
+}
