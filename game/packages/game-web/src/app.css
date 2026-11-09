@@ -1915,7 +1915,8 @@ button {
 
 /* ── Лист в руках (этап 4b): приближение к курсору, переворот за поле, страницы. ── */
 .viewer-stage {
-  perspective: 1800px;
+  /* Слабая перспектива: лист поворачивается, а не превращается в трапецию. */
+  perspective: 2200px;
 }
 .viewer-zoom {
   transform-origin: 0 0;
@@ -1960,20 +1961,32 @@ button {
 .viewer-stack-sheet {
   position: absolute;
   inset: 0;
-  background: var(--color-paper);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 35%);
+  background: var(--color-paper-edge, #dcd7ca);
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 14%),
+    0 2px 4px rgb(0 0 0 / 30%);
   backface-visibility: hidden;
-  transform: translate3d(calc(var(--k) * 6px), calc(var(--k) * 5px), calc(var(--k) * -1px));
+  /* Каждый следующий лист — глубже: у стопки видна толщина, когда её наклоняют. */
+  transform: translate3d(calc(var(--k) * 9px), calc(var(--k) * 7px), calc(var(--k) * -4px));
   transition: transform 0.15s ease-out;
 }
 .viewer-stack-read {
-  transform: translate3d(calc(var(--k) * -6px), calc(var(--k) * 5px), calc(var(--k) * -1px));
+  transform: translate3d(calc(var(--k) * -9px), calc(var(--k) * 7px), calc(var(--k) * -4px));
 }
-.viewer-flip:has(.viewer-stack-next:hover) .viewer-stack-sheet:not(.viewer-stack-read) {
-  transform: translate3d(calc(var(--k) * 10px), calc(var(--k) * 6px), calc(var(--k) * -1px));
+.viewer-flip:has(.viewer-stack-next:hover, .viewer-corner-next:hover)
+  .viewer-stack-sheet:not(.viewer-stack-read) {
+  transform: translate3d(calc(var(--k) * 14px), calc(var(--k) * 8px), calc(var(--k) * -4px));
 }
-.viewer-flip:has(.viewer-stack-prev:hover) .viewer-stack-read {
-  transform: translate3d(calc(var(--k) * -10px), calc(var(--k) * 6px), calc(var(--k) * -1px));
+.viewer-flip:has(.viewer-stack-prev:hover, .viewer-corner-prev:hover) .viewer-stack-read {
+  transform: translate3d(calc(var(--k) * -14px), calc(var(--k) * 8px), calc(var(--k) * -4px));
+}
+/* Свет на листе: отвёрнутый от лампы — темнее (--shade ставит поворот). */
+.viewer-flip .viewer-paper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / var(--shade, 0));
+  pointer-events: none;
 }
 /* Зона щелчка по торчащей стопке — шире самих краёв. */
 .viewer-stack-hit {
@@ -2010,8 +2023,15 @@ button {
     height 0.15s;
 }
 .viewer-corner:hover {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
+}
+/* Уголок «назад» — внизу слева, загнут в другую сторону. */
+.viewer-corner-prev {
+  right: auto;
+  left: 0;
+  background: linear-gradient(45deg, var(--color-room-dark, #2a2a2a) 50%, #d9d4c6 50%);
+  box-shadow: 2px -2px 4px rgb(0 0 0 / 18%);
 }
 .viewer-page-no {
   position: absolute;

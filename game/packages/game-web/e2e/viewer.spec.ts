@@ -136,6 +136,10 @@ test('лист вертят и мимо него: зажал и тянешь —
   await expect(page.getByTestId('page-no')).toHaveText(/^1 \//);
   await page.getByTestId('page-corner').click();
   await expect(page.getByTestId('page-no')).toHaveText(/^2 \//);
+  // Назад — уголок внизу слева (правка автора 09.11) и торчащая слева стопка.
+  await page.getByTestId('page-corner-prev').click();
+  await expect(page.getByTestId('page-no')).toHaveText(/^1 \//);
+  await page.getByTestId('page-corner').click();
   await page.getByTestId('page-prev').click();
   await expect(page.getByTestId('page-no')).toHaveText(/^1 \//);
   // Щелчок сразу после открытия — второй щелчок двойного, не «закрыть» (OPEN_GUARD_MS).

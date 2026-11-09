@@ -29,7 +29,7 @@ const ZOOM_MAX = 4;
 const ZOOM_STEP = 1.2;
 const CLICK_PX = 4;
 /** Наклон листа вверх-вниз, пока его держат, градусы. */
-const TILT_MAX = 45;
+const TILT_MAX = 25;
 
 export interface Zoom {
   s: number;
@@ -186,8 +186,8 @@ export function useSheet(
       moved.current = Math.hypot(dx, dy);
       if (moved.current < CLICK_PX) return;
       setFlipping(true);
-      setAngle(a0 + dx * 0.5);
-      setTilt(Math.max(-TILT_MAX, Math.min(TILT_MAX, -dy * 0.35)));
+      setAngle(a0 - dx * 0.45);
+      setTilt(Math.max(-TILT_MAX, Math.min(TILT_MAX, -dy * 0.25)));
     };
     const up = () => {
       window.removeEventListener('pointermove', move);

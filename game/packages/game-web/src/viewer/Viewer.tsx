@@ -230,7 +230,16 @@ export function Viewer({ materialId }: ViewerProps) {
             className={`viewer-flip${sheet.flipping ? ' viewer-flipping' : ''}`}
             data-testid="viewer-flip"
             data-side={sheet.side}
-            style={{ transform: `rotateX(${sheet.tilt}deg) rotateY(${sheet.angle}deg)` }}
+            style={
+              {
+                transform: `rotateX(${sheet.tilt}deg) rotateY(${sheet.angle}deg)`,
+                // Отвёрнутый от лампы лист темнеет — видно, что он в пространстве.
+                '--shade': (
+                  0.42 * (1 - Math.abs(Math.cos((sheet.angle * Math.PI) / 180))) +
+                  0.3 * Math.abs(Math.sin((sheet.tilt * Math.PI) / 180))
+                ).toFixed(3),
+              } as CSSProperties
+            }
           >
             {sheet.pages > 1 && (
               <div className="viewer-stack" aria-hidden>
@@ -300,6 +309,18 @@ export function Viewer({ materialId }: ViewerProps) {
                     {doc}
                   </div>
                 </div>
+                {sheet.page > 0 && (
+                  <button
+                    type="button"
+                    className="viewer-corner viewer-corner-prev"
+                    data-testid="page-corner-prev"
+                    aria-label="Предыдущая страница"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      sheet.goTo(sheet.page - 1);
+                    }}
+                  />
+                )}
                 {sheet.page < sheet.pages - 1 && (
                   <button
                     type="button"
