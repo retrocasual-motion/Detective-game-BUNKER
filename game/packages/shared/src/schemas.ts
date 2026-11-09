@@ -38,18 +38,20 @@ export const CameraSchema = z.object({
 });
 export type Camera = z.infer<typeof CameraSchema>;
 
-/** Материал, снятый игроком из колонки «как пришло» в поле стены (WALL-C). */
+/**
+ * Что висит на стене: материал дела (01…51, L…), карточка персонажа («p:…») или записка
+ * игрока («n:…»). Место, наклон на одной кнопке, порядок наложения.
+ */
 export const WallItemSchema = z.object({
-  materialId: z.string(),
+  id: z.string().min(1).max(80),
   x: z.number(),
   y: z.number(),
   z: z.number().int(),
-  /** Наклон листа на одной кнопке, градусы (декоративно). */
   rot: z.number().min(-180).max(180),
 });
 export type WallItem = z.infer<typeof WallItemSchema>;
 
-/** Нить между двумя материалами на стене; игра её не читает и не проверяет (T-5-A). */
+/** Нить между двумя вещами на стене; игра её не читает и не проверяет (T-5-A). */
 export const ThreadSchema = z.object({
   id: z.string().min(1).max(64),
   from: z.string(),
@@ -58,15 +60,19 @@ export const ThreadSchema = z.object({
 });
 export type Thread = z.infer<typeof ThreadSchema>;
 
-/** Партия поступления: материалы, открытые одним действием, — одна колонка на стене (IN-B). */
-export const ArrivalSchema = z.object({ ids: z.array(z.string()).min(1) });
-export type Arrival = z.infer<typeof ArrivalSchema>;
+/** Записка игрока (карточка) или ярлык (полоска — заголовок своей группы); игра их не читает. */
+export const NoteSchema = z.object({
+  id: z.string().regex(/^n:[\w-]{1,64}$/),
+  kind: z.enum(['note', 'label']),
+  text: z.string().max(500),
+});
+export type Note = z.infer<typeof NoteSchema>;
 
 /** Виды: стол (от первого лица) и стена (рабочая поверхность) — решение автора 08.11. */
 export const ViewSchema = z.enum(['desk', 'wall']);
 export type View = z.infer<typeof ViewSchema>;
 
-export const STATE_VERSION = 4;
+export const STATE_VERSION = 5;
 
 export const PlayerStateSchema = z.object({
   version: z.literal(STATE_VERSION),
@@ -75,7 +81,7 @@ export const PlayerStateSchema = z.object({
     camera: CameraSchema,
     items: z.array(WallItemSchema),
     threads: z.array(ThreadSchema),
-    arrivals: z.array(ArrivalSchema),
+    notes: z.array(NoteSchema),
   }),
 });
 export type PlayerState = z.infer<typeof PlayerStateSchema>;

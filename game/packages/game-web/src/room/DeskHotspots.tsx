@@ -11,12 +11,16 @@ const noColor = () => '#000000';
  * У устройств — бирка «Изъято» с номером описи. Остальное (лампа, телефон, коробка) — пока
  * только вид; звонки — этап 6.
  */
-export function DeskHotspots({ room }: { room: Room }) {
+export function DeskHotspots({ room, inbox }: { room: Room; inbox: string[] }) {
   const openViewer = useGame((g) => g.openViewer);
   const setComputerOpen = useGame((g) => g.setComputerOpen);
   const spots = useMemo(
-    () => deskObjects(room, noColor).map((o) => ({ o, r: screenRect(o, room.poses.desk, room) })),
-    [room],
+    () =>
+      deskObjects(room, noColor, inbox).map((o) => ({
+        o,
+        r: screenRect(o, room.poses.desk, room),
+      })),
+    [room, inbox],
   );
   return (
     <div className="desk-hotspots">
@@ -26,7 +30,7 @@ export function DeskHotspots({ room }: { room: Room }) {
             key={o.key}
             type="button"
             className="desk-spot"
-            data-testid={o.hotspot.kind === 'computer' ? 'computer-monitor' : `device-${o.tag}`}
+            data-testid={o.hotspot.kind === 'computer' ? 'computer-monitor' : o.testId}
             aria-label={o.label}
             title={o.label}
             style={{ left: r.left, top: r.top, width: r.width, height: r.height }}
@@ -36,8 +40,17 @@ export function DeskHotspots({ room }: { room: Room }) {
               else if (h) openViewer(h.id);
             }}
           >
-            {o.tag && <span className="device-tag">Изъято · {o.tag}</span>}
+            {o.tag && <span className="device-tag">{o.tag}</span>}
           </button>
+        ) : o.tag ? (
+          <div
+            key={o.key}
+            className="desk-label"
+            data-testid={o.testId}
+            style={{ left: r.left, top: r.top, width: r.width, height: r.height }}
+          >
+            <span className="device-tag">{o.tag}</span>
+          </div>
         ) : null,
       )}
     </div>

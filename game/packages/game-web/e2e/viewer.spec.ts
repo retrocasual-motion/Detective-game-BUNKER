@@ -169,20 +169,17 @@ test('абзац не рвётся переносами из файла: стр�
   expect(await head.locator('br').count()).toBeGreaterThan(0);
 });
 
-test('инструменты листа идут за курсором по высоте и стоят, когда к ним ведут мышь (UX-D1)', async ({
+test('крестик неподвижен у верхнего правого угла листа, куда бы ни ушла мышь (правка автора 09.11)', async ({
   page,
 }) => {
   await sheet(page, '07').click(STRIP);
   const paper = await page.getByTestId('viewer-paper').boundingBox();
   if (!paper) throw new Error('нет листа');
-  const y = paper.y + paper.height - 60;
-  await page.mouse.move(paper.x + paper.width / 2, y, { steps: 4 });
+  const close = page.getByTestId('viewer').getByRole('button', { name: 'Закрыть' });
+  const top = await close.boundingBox();
+  expect(Math.abs((top?.y ?? 0) - paper.y)).toBeLessThan(12);
+  expect((top?.x ?? 0) - (paper.x + paper.width)).toBeLessThan(24);
+  await page.mouse.move(paper.x + paper.width / 2, paper.y + paper.height - 40, { steps: 4 });
   await page.waitForTimeout(250);
-  const tools = page.getByTestId('viewer-tools');
-  const near = await tools.boundingBox();
-  expect(Math.abs((near?.y ?? 0) + (near?.height ?? 0) / 2 - y)).toBeLessThan(60);
-  // Ведём мышь вправо к кнопке — колонка не уезжает.
-  await page.mouse.move(paper.x + paper.width + 20, y, { steps: 6 });
-  await page.waitForTimeout(250);
-  expect(await tools.boundingBox()).toEqual(near);
+  expect(await close.boundingBox()).toEqual(top);
 });

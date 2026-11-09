@@ -9,6 +9,7 @@ import {
 import {
   defaultState,
   type Material,
+  PERSONS,
   type PlayerState,
   PlayerStateSchema,
   reconcile,
@@ -58,12 +59,12 @@ const ActionSchema = z.object({
 
 /** Состояние ссылается только на материалы, которые у игрока есть (P-10). */
 function invalidReference(s: PlayerState, materials: Material[]): string | null {
-  const allIds = new Set(materials.map((m) => m.id));
-  const refs = [
-    ...s.wall.items.map((i) => i.materialId),
-    ...s.wall.threads.flatMap((t) => [t.from, t.to]),
-    ...s.wall.arrivals.flatMap((a) => a.ids),
-  ];
+  const allIds = new Set([
+    ...materials.map((m) => m.id),
+    ...PERSONS.map((p) => p.id),
+    ...s.wall.notes.map((n) => n.id),
+  ]);
+  const refs = [...s.wall.items.map((i) => i.id), ...s.wall.threads.flatMap((t) => [t.from, t.to])];
   const bad = refs.find((id) => !allIds.has(id));
   return bad ? `нет материала ${bad}` : null;
 }

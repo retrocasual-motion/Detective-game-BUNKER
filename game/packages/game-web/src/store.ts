@@ -2,6 +2,7 @@ import { type Material, type PlayerState, reconcile, type View } from '@bunker/s
 import { create } from 'zustand';
 import { getMaterials, getState, putState } from './api.ts';
 import { createSaver } from './save.ts';
+import { moveItem } from './wall/wall-actions.ts';
 
 export type SaveStatus = 'saved' | 'saving' | 'error';
 
@@ -21,7 +22,9 @@ interface GameStore {
   /** Компьютер следователя открыт крупно (щелчок по монитору на столе). */
   computerOpen: boolean;
   setComputerOpen(open: boolean): void;
-  /** Движок открыл материалы: в дело и новой колонкой на стену (IN-B). */
+  /** Повесить лист из «Входящих» на стену — в середину видимой части стены. */
+  pinToWall(materialId: string): void;
+  /** Движок открыл материалы: в дело и во «Входящие» на столе (правка автора 09.11). */
   addReleased(released: Material[]): void;
   load(): Promise<void>;
   setPetitionOpen(open: boolean): void;
@@ -54,6 +57,18 @@ export const useGame = create<GameStore>((set, get) => {
 
     setComputerOpen(open) {
       set({ computerOpen: open });
+    },
+
+    pinToWall(materialId) {
+      get().updateState((s) => {
+        if (s.wall.items.some((i) => i.id === materialId)) return s;
+        const c = s.wall.camera;
+        const cx = (window.innerWidth / 2 - c.x) / c.zoom;
+        const cy = (window.innerHeight / 2 - c.y) / c.zoom;
+        // Несколько подряд — не стопкой: каждый следующий чуть ниже и правее.
+        const k = s.wall.items.filter((i) => i.id.startsWith('L')).length % 6;
+        return moveItem(materialId, cx - 80 + k * 30, cy - 110 + k * 30)(s);
+      });
     },
 
     addReleased(released) {

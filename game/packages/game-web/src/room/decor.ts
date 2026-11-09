@@ -28,8 +28,65 @@ export interface DeskObject {
   label: string;
   boxes: Box[];
   hotspot?: Hotspot;
-  /** Бирка «Изъято» у устройства. */
+  /** Бумажный ярлык под предметом: «Изъято · 47», «Входящие». */
   tag?: string;
+  /** Для автотестов. */
+  testId?: string;
+}
+
+/** Сколько писем лотка видно стоящими (остальные — за ними). */
+export const INBOX_SHOWN = 6;
+
+/**
+ * Лоток «Входящие» (правка автора 09.11): письма стоят вертикально, свежее — впереди; у
+ * задних видна верхняя полоска. Щелчок по письму — прочитать (и «На стену»).
+ */
+function inboxObjects(r: Room, col: Col, inbox: string[]): DeskObject[] {
+  const { p, deskY } = r;
+  const at = (x: number, z: number, w: number, d: number, h: number, color: string, lift = 0) => ({
+    min: [(x - w / 2) * p, deskY - (lift + h) * p, (z - d / 2) * p] as Vec3,
+    max: [(x + w / 2) * p, deskY - lift * p, (z + d / 2) * p] as Vec3,
+    color,
+  });
+  const X = -0.3;
+  const Z = 0.2;
+  const tray = col('--color-tray');
+  const shown = inbox.slice(0, INBOX_SHOWN);
+  // Задние — первыми (художник и порядок щелчков: переднее письмо — поверх).
+  const letters: DeskObject[] = shown
+    .map((id, k) => ({
+      key: `inbox-${id}`,
+      label: `Входящие: ${id}`,
+      boxes: [
+        at(
+          X,
+          Z + 0.035 - k * 0.022,
+          0.2,
+          0.004,
+          0.15 + k * 0.016,
+          col('--color-paper-sheet'),
+          0.012,
+        ),
+      ],
+      hotspot: { kind: 'material' as const, id },
+      testId: `inbox-${id}`,
+    }))
+    .reverse();
+  return [
+    {
+      key: 'inbox-back',
+      label: 'Входящие',
+      boxes: [at(X, Z, 0.26, 0.16, 0.012, tray), at(X, Z - 0.075, 0.26, 0.01, 0.07, tray, 0.012)],
+      tag: inbox.length ? `Входящие · ${inbox.length}` : 'Входящие',
+      testId: 'inbox-tray',
+    },
+    ...letters,
+    {
+      key: 'inbox-front',
+      label: 'Входящие',
+      boxes: [at(X, Z + 0.075, 0.26, 0.01, 0.045, tray, 0.012)],
+    },
+  ];
 }
 
 const rect = (c: Vec3, u: Vec3, v: Vec3): Vec3[] => [
@@ -84,7 +141,7 @@ export function roomPolys(r: Room, col: Col): Poly[] {
  * Предметы на столе. Положение — в долях p: x от центра доски, z от стены, h — высота.
  * Устройства — из описи (24, 47–50); пакеты 40–46 лежат в коробке.
  */
-export function deskObjects(r: Room, col: Col): DeskObject[] {
+export function deskObjects(r: Room, col: Col, inbox: string[] = []): DeskObject[] {
   const { p, deskY } = r;
   const box = (
     x: number,
@@ -104,6 +161,7 @@ export function deskObjects(r: Room, col: Col): DeskObject[] {
   const monitor = box(-0.66, 0.2, 0.32, 0.24, 0.25, col('--color-monitor'), 0.04);
   monitor.screen = col('--color-screen');
   return [
+    ...inboxObjects(r, col, inbox),
     {
       key: 'lamp',
       label: 'Лампа',
@@ -118,7 +176,8 @@ export function deskObjects(r: Room, col: Col): DeskObject[] {
       label: 'Радиопост: стойка и запись регистратора',
       boxes: [box(0.12, 0.12, 0.26, 0.16, 0.1, device)],
       hotspot: { kind: 'material', id: '50' },
-      tag: '50',
+      tag: 'Изъято · 50',
+      testId: 'device-50',
     },
     {
       key: 'bags',
@@ -139,28 +198,32 @@ export function deskObjects(r: Room, col: Col): DeskObject[] {
       label: 'Ноутбук руководителя',
       boxes: [box(-0.1, 0.44, 0.28, 0.2, 0.022, device)],
       hotspot: { kind: 'material', id: '47' },
-      tag: '47',
+      tag: 'Изъято · 47',
+      testId: 'device-47',
     },
     {
       key: 'pen',
       label: 'Ручка-диктофон',
       boxes: [box(0.17, 0.36, 0.14, 0.016, 0.016, edge)],
       hotspot: { kind: 'material', id: '49' },
-      tag: '49',
+      tag: 'Изъято · 49',
+      testId: 'device-49',
     },
     {
       key: 'card',
       label: 'Карта памяти камеры инженера',
       boxes: [box(0.12, 0.52, 0.035, 0.045, 0.005, edge)],
       hotspot: { kind: 'material', id: '24' },
-      tag: '24',
+      tag: 'Изъято · 24',
+      testId: 'device-24',
     },
     {
       key: 'mobile',
       label: 'Телефон (владелец не установлен)',
       boxes: [box(0.3, 0.5, 0.07, 0.13, 0.012, col('--color-screen'))],
       hotspot: { kind: 'material', id: '48' },
-      tag: '48',
+      tag: 'Изъято · 48',
+      testId: 'device-48',
     },
     {
       key: 'keyboard',
@@ -363,11 +426,16 @@ export function drawRoom(canvas: HTMLCanvasElement, pose: Pose, r: Room): void {
 }
 
 /** Передний холст: предметы на столе поверх доски (монитор и лампа заходят на неё). */
-export function drawObjects(canvas: HTMLCanvasElement, pose: Pose, r: Room): void {
+export function drawObjects(
+  canvas: HTMLCanvasElement,
+  pose: Pose,
+  r: Room,
+  inbox: string[] = [],
+): void {
   const ctx = prepare(canvas, r);
   if (!ctx) return;
   const col = colors(canvas);
-  for (const o of sortObjects(deskObjects(r, col), pose.eye)) {
+  for (const o of sortObjects(deskObjects(r, col, inbox), pose.eye)) {
     const boxes = [...o.boxes].sort(
       (a, b) => dist(center(b), pose.eye) - dist(center(a), pose.eye),
     );

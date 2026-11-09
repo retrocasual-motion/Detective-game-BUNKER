@@ -1,5 +1,5 @@
 import type { AccessRules } from '@bunker/engine';
-import { defaultState, type Material, type PlayerState } from '@bunker/shared';
+import { defaultState, inboxIds, type Material, type PlayerState } from '@bunker/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
 import { createApp } from '../src/app.ts';
 import { connectDb, type Db, migrateDb, playerProgress, playerState } from '../src/db/client.ts';
@@ -90,10 +90,11 @@ describe('движок правил на сервере', () => {
     expect(await ids()).toEqual(['01', '02', 'L101']);
   });
 
-  it('открытый материал вешается на стену новой колонкой-поступлением (IN-B)', async () => {
+  it('открытый материал ждёт во «Входящих» на столе — на стену сам не вешается', async () => {
     await post('/api/action', { action: 'ПАРОЛЬ', target: 'сейф', value: 'верно' });
     const state = (await (await app().request('/api/state')).json()) as PlayerState;
-    expect(state.wall.arrivals).toEqual([{ ids: ['L101'] }]);
+    expect(state.wall.items.some((i) => i.id === 'L101')).toBe(false);
+    expect(inboxIds(state, [...materials, mat('L101')])).toEqual(['L101']);
   });
 
   it('неверный ввод — ответ правила; три неверных — лимит', async () => {
@@ -107,7 +108,7 @@ describe('движок правил на сервере', () => {
 
   it('клиент не может повесить на стену неоткрытый материал (P-10)', async () => {
     const s = defaultState(materials);
-    s.wall.items.push({ materialId: 'L101', x: 0, y: 0, z: 99, rot: 0 });
+    s.wall.items.push({ id: 'L101', x: 0, y: 0, z: 99, rot: 0 });
     const res = await app().request('/api/state', {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },

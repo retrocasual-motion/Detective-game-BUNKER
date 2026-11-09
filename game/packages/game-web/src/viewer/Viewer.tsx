@@ -1,3 +1,4 @@
+import { inboxIds } from '@bunker/shared';
 import { type PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
@@ -14,30 +15,12 @@ const OPEN_GUARD_MS = 400;
 const INSIDE = '.viewer-paper, .viewer-tools';
 
 /**
- * Инструменты листа идут за курсором по высоте, пока курсор над листом (UX-D1, MS-1): дочитал
- * низ — кнопка рядом. Когда курсор уходит с листа к кнопкам, они стоят на месте (GAG: точные
- * цели неподвижны, пока к ним ведут курсор).
- */
-function useToolsTop() {
-  const [top, setTop] = useState(0);
-  const onPaperMove = (e: PointerEvent<HTMLElement>) => {
-    const stage = e.currentTarget.closest('.viewer-stage');
-    const tools = stage?.querySelector('.viewer-tools');
-    if (!stage || !tools) return;
-    const s = stage.getBoundingClientRect();
-    const h = tools.getBoundingClientRect().height;
-    const want = e.clientY - s.top - h / 2;
-    setTop(Math.round(Math.min(Math.max(0, want), Math.max(0, s.height - h))));
-  };
-  return { top, onPaperMove };
-}
-
-/**
  * Просмотрщик материала (TECH_PLAN 4.3). Серый прототип: текст пакета дословно; строки внутри
  * абзаца склеены (unwrapLines, UX-C1), остальные переносы — как в файле (remark-breaks).
  * HTML из текста не исполняется.
- * Закрыть: щелчок мимо листа, крестик у края листа или Esc. Кнопки — у края листа на высоте
- * курсора (UX-D1), чтобы мышь ездила как можно меньше. App монтирует его заново для каждого материала (key).
+ * Закрыть: щелчок мимо листа, крестик у верхнего правого угла листа (неподвижно —
+ * правка автора 09.11: движущийся крестик отвлекал от чтения) или Esc. Лист из «Входящих» —
+ * кнопка «На стену» под крестиком. App монтирует его заново для каждого материала (key).
  */
 export function Viewer({ materialId }: ViewerProps) {
   const material = useGame((g) => g.materials.find((m) => m.id === materialId));
@@ -45,7 +28,11 @@ export function Viewer({ materialId }: ViewerProps) {
   const folderOpen = useGame((g) => g.petitionOpen);
   const openedAt = useRef(Date.now());
   const downOutside = useRef(false);
-  const tools = useToolsTop();
+  const inInbox = useGame((g) =>
+    g.state ? inboxIds(g.state, g.materials).includes(materialId) : false,
+  );
+  const pinToWall = useGame((g) => g.pinToWall);
+  const [pinned, setPinned] = useState(false);
   // Разбор Markdown — один раз на материал, а не на каждое движение мыши (инструменты двигаются).
   const doc = useMemo(
     () => (
@@ -84,14 +71,10 @@ export function Viewer({ materialId }: ViewerProps) {
       }}
     >
       <div className="viewer-stage">
-        <article
-          className="viewer-paper"
-          data-testid="viewer-paper"
-          onPointerMove={tools.onPaperMove}
-        >
+        <article className="viewer-paper" data-testid="viewer-paper">
           {doc}
         </article>
-        <div className="viewer-tools" data-testid="viewer-tools" style={{ top: tools.top }}>
+        <div className="viewer-tools" data-testid="viewer-tools">
           <button
             type="button"
             className="tool tool-close"
@@ -101,6 +84,20 @@ export function Viewer({ materialId }: ViewerProps) {
           >
             ✕
           </button>
+          {(inInbox || pinned) && (
+            <button
+              type="button"
+              className="tool"
+              data-testid="viewer-to-wall"
+              disabled={pinned}
+              onClick={() => {
+                pinToWall(materialId);
+                setPinned(true);
+              }}
+            >
+              {pinned ? 'На стене' : 'На стену'}
+            </button>
+          )}
         </div>
       </div>
     </div>
