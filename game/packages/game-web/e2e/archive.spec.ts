@@ -20,8 +20,8 @@ test('старт: на стене персонажи и 01–07; на столе
   await expect(sheet(page, '15')).toHaveCount(0);
   for (const [id, label] of [
     ['protocols', 'Протоколы опроса'],
-    ['scene', 'Место происшествия и улики'],
-    ['bunker', 'Бункер и программа'],
+    ['scene', 'Осмотр места происшествия и изъятое'],
+    ['bunker', 'Документация объекта и программы'],
     ['personal', 'Личные вещи'],
   ] as const)
     await expect(page.getByTestId(`container-${id}`)).toHaveText(label);
@@ -66,7 +66,7 @@ test('«Вскрыть» — документы карточками, «всё �
   await expect(page.getByTestId('container-protocols')).toHaveCount(0);
 });
 
-test('«Место происшествия и улики» приносит на стол устройства; коробка вскрывается', async ({
+test('«Осмотр места происшествия и изъятое» приносит на стол устройства; коробка вскрывается', async ({
   page,
 }) => {
   await openEnvelope(page, 'scene');
@@ -82,7 +82,9 @@ test('«Место происшествия и улики» приносит н�
 test('поиск не видит невскрытого; после вскрытия — находит', async ({ page }) => {
   await page.getByTestId('search-tab').click();
   await page.getByTestId('search-input').fill('DO NOT DUPLICATE');
-  await expect(page.getByTestId('search-count')).toHaveText('Ничего не найдено.');
+  await expect(page.getByTestId('search-count')).toHaveText(
+    'В открытых материалах ничего не найдено.',
+  );
   await page.getByTestId('search-panel').getByRole('button', { name: 'Закрыть поиск' }).click();
   await openEnvelope(page, 'scene');
   await page.getByTestId('search-tab').click();

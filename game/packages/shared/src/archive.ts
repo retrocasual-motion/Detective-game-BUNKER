@@ -27,13 +27,13 @@ export const CONTAINERS: readonly Container[] = [
   { id: 'protocols', label: 'Протоколы опроса', files: range(30, 36) },
   {
     id: 'scene',
-    label: 'Место происшествия и улики',
+    label: 'Осмотр места происшествия и изъятое',
     files: ['22', '23', '25', '26', '27', '51', '18', '19', '20', '21'],
     devices: ['24', '47', '48', '49', '50'],
   },
   {
     id: 'bunker',
-    label: 'Бункер и программа',
+    label: 'Документация объекта и программы',
     files: [...range(8, 14), '28', '29', '37', '38', '39'],
   },
   { id: 'personal', label: 'Личные вещи', files: range(40, 46) },

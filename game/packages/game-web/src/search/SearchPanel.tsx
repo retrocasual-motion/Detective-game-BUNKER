@@ -89,7 +89,7 @@ export function SearchPanel() {
           ? 'Ищет во всех материалах дела, которые у вас есть.'
           : total
             ? `${total} — в ${found.length} ${plural(found.length)}`
-            : 'Ничего не найдено.'}
+            : 'В открытых материалах ничего не найдено.'}
       </p>
       <ol className="search-results">
         {found.map((f) => (

@@ -25,7 +25,9 @@ test('Ctrl+F открывает поиск; ничего не найдено —
   await page.keyboard.press('Control+f');
   await expect(page.getByTestId('search-input')).toBeFocused();
   await page.getByTestId('search-input').fill('квазизвездолёт');
-  await expect(page.getByTestId('search-count')).toHaveText('Ничего не найдено.');
+  await expect(page.getByTestId('search-count')).toHaveText(
+    'В открытых материалах ничего не найдено.',
+  );
 });
 
 test('время чтения (RD-A): открытый лист попадает в служебную таблицу', async ({ page }) => {
