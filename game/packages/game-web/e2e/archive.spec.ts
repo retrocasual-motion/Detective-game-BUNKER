@@ -12,6 +12,14 @@ async function openEnvelope(page: Page, id: string) {
   await expect(page.getByTestId('envelope-view')).toBeHidden();
 }
 
+/** Протянуть мышью по вещи в руках (вращать). */
+async function drag(page: Page, dx: number, dy = 0) {
+  await page.mouse.move(683, 384);
+  await page.mouse.down();
+  await page.mouse.move(683 + dx, 384 + dy, { steps: 10 });
+  await page.mouse.up();
+}
+
 test('старт: на стене персонажи и 01–07; на столе конверты, коробка, газета; устройств нет', async ({
   page,
 }) => {
@@ -29,18 +37,27 @@ test('старт: на стене персонажи и 01–07; на столе
   await expect(page.getByTestId('newspaper')).toBeVisible();
 });
 
-test('щелчок по конверту — он в руках (повернуть, оборот — опись); «Положить обратно» ничего не вскрывает', async ({
+test('щелчок по конверту — он в руках: протянуть — перевернуть; печать видна только спереди; Esc — положить, ничего не вскрыто', async ({
   page,
 }) => {
   await page.getByTestId('container-protocols').click();
-  const env = page.getByTestId('envelope-3d');
-  await expect(env).toHaveAttribute('data-side', 'front');
-  await expect(env).toContainText('Протоколы опроса');
-  await page.getByRole('button', { name: 'Перевернуть' }).click();
-  await expect(env).toHaveAttribute('data-side', 'back');
-  await expect(page.getByTestId('envelope-list')).toContainText('Протокол опроса · Д. Миллер');
-  await page.getByTestId('envelope-back').click();
-  await expect(page.getByTestId('envelope-view')).toBeHidden();
+  const held = page.getByTestId('held');
+  await expect(held).toHaveAttribute('aria-label', 'Конверт «Протоколы опроса»');
+  await expect(held).toHaveAttribute('data-side', 'front');
+  await expect(page.getByTestId('envelope-open')).toBeVisible();
+  await drag(page, 260);
+  await expect(held).toHaveAttribute('data-side', 'back');
+  // Печать — на лице: с оборота её не нажать.
+  await expect(page.getByTestId('envelope-open')).toBeHidden();
+  // Немного протянуть и отпустить — лист ложится обратно оборотом, не боком.
+  await drag(page, 60);
+  await expect(held).toHaveAttribute('data-side', 'back');
+  // Средняя кнопка — как было (лицом), вещь остаётся в руках.
+  await page.mouse.click(683, 384, { button: 'middle' });
+  await expect(held).toHaveAttribute('data-side', 'front');
+  await expect(held).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(held).toBeHidden();
   await expect(page.getByTestId('container-protocols')).toBeVisible();
   await toWall(page);
   await expect(sheet(page, '30')).toHaveCount(0);

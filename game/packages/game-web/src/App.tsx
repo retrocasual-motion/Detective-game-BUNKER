@@ -2,9 +2,9 @@ import { type ContainerId, inboxIds, openedOf } from '@bunker/shared';
 import { useEffect, useMemo } from 'react';
 import { ComputerScreen } from './computer/ComputerScreen.tsx';
 import { ArrivalNote } from './desk/ArrivalNote.tsx';
-import { EnvelopeView } from './desk/EnvelopeView.tsx';
 import { ThrowToast, TrashView } from './desk/TrashBin.tsx';
 import { DevActionLine } from './dev/DevActionLine.tsx';
+import { HeldView } from './hold/HeldView.tsx';
 import { PetitionCorner } from './petition/PetitionCorner.tsx';
 import { RoomScene } from './room/RoomScene.tsx';
 import { KEY_DIR, NAV } from './room/views.ts';
@@ -83,7 +83,7 @@ export function App() {
       <ArrivalNote />
       <ComputerScreen />
       <TrashView />
-      <EnvelopeView />
+      <HeldView />
       <SearchPanel />
       <ThrowToast />
       {viewerId && <Viewer key={viewerId} materialId={viewerId} />}

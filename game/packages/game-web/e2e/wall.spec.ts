@@ -76,7 +76,10 @@ test('предметы со стола висят карточками с ном
   for (const id of ['24', '40', '47', '50']) {
     await expect(sheet(page, id)).toContainText(`Изъято · ${id}`);
   }
+  // Устройство — в руках (этап 4a); щелчок по экрану — включить (пока — лист материала).
   await sheet(page, '47').click(STRIP);
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Ноутбук/);
+  await page.getByTestId('device-use').click();
   await expect(page.getByTestId('viewer')).toContainText('Ноутбук');
 });
 

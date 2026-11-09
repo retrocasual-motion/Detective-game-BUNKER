@@ -41,6 +41,9 @@ export const CONTAINERS: readonly Container[] = [
 
 export const CONTAINER_IDS = CONTAINERS.map((c) => c.id) as [ContainerId, ...ContainerId[]];
 
+/** Изъятые устройства (24, 47–50): берут в руки, а не читают листом. */
+export const DEVICE_IDS: ReadonlySet<string> = new Set(CONTAINERS.flatMap((c) => c.devices ?? []));
+
 /** Газета на столе — бумажный номер (E44, A-260): видна, но на стене со старта не висит. */
 export const NEWSPAPER_ID = '15';
 /** Сайт газеты — только архив номеров, закладка браузера на компьютере следователя (E44, A-262). */
