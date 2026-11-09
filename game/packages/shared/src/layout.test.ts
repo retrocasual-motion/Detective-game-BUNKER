@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  arrangeWall,
   defaultState,
   GRID_TOP,
   inboxIds,
@@ -127,5 +128,37 @@ describe('upgradeState', () => {
 describe('край доски', () => {
   it('вещь не уходит за край', () => {
     expect(onWall(-9999, 99999)).toEqual({ x: WALL_BOUNDS.left, y: WALL_BOUNDS.bottom - 80 });
+  });
+});
+
+describe('разложить по порядку (служебная кнопка)', () => {
+  it('стартовые — на начальные места, письма и записки — рядами ниже; нити остаются', () => {
+    const mats = [...starting, mat('L214'), mat('M001')];
+    const base = defaultState(mats);
+    const moved: PlayerState = {
+      ...base,
+      wall: {
+        ...base.wall,
+        camera: { x: 999, y: 999, zoom: 1.5 },
+        items: [
+          ...base.wall.items.map((i) => ({ ...i, x: i.x + 777, y: -i.y, rot: 40 })),
+          { id: 'M001', x: 5, y: 5, z: 90, rot: 0 },
+          { id: 'L214', x: 6, y: 6, z: 91, rot: 0 },
+          { id: 'n1', x: 7, y: 7, z: 92, rot: 0 },
+        ],
+        notes: [{ id: 'n1', text: 'версия', style: 'note', width: 200 } as never],
+        threads: [{ id: 't1', from: '01', to: 'L214' } as never],
+      },
+    };
+    const s = arrangeWall(moved, mats);
+    const at = (id: string) => s.wall.items.find((i) => i.id === id);
+    for (const i of base.wall.items) expect(at(i.id)).toMatchObject({ x: i.x, y: i.y, rot: i.rot });
+    const below = Math.max(...base.wall.items.map((i) => i.y));
+    expect(at('L214')?.y).toBeGreaterThan(below);
+    expect(at('L214')?.x).toBeLessThan(at('M001')?.x ?? 0);
+    expect(at('M001')?.x).toBeLessThan(at('n1')?.x ?? 0);
+    expect(s.wall.threads).toEqual(moved.wall.threads);
+    expect(s.wall.notes).toEqual(moved.wall.notes);
+    expect(s.wall.camera).toEqual(base.wall.camera);
   });
 });

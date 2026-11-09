@@ -1455,6 +1455,15 @@ button {
     13px ui-monospace,
     monospace;
 }
+.dev-line-tools {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+.dev-line-tools button {
+  padding: 2px var(--space-2);
+  font-size: 12px;
+}
 .dev-line-log {
   max-height: 220px;
   margin: var(--space-2) 0 0;

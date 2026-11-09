@@ -101,3 +101,40 @@ test('до открытия закрытого материала его тек�
   expect(materials.some((m) => m.id.startsWith('L'))).toBe(false);
   await expect(page.locator('body')).not.toContainText('Запросы документов');
 });
+
+test('служебные кнопки: «Подготовка» открывает нужное для ходатайств, «Разложить» — стену по порядку', async ({
+  page,
+}) => {
+  await page.getByTestId('dev-line-tab').click();
+  await page.getByTestId('dev-prepare').click();
+  await expect(page.getByTestId('dev-line-log').locator('li').first()).toContainText('ПОДГОТОВКА');
+  for (const id of [
+    'L101',
+    'L130',
+    'L249',
+    'L272',
+    'L163',
+    'L945',
+    'L975',
+    'L957',
+    'L981',
+    'L956',
+    'L563',
+  ])
+    await expect(page.getByTestId('dev-line-log')).toContainText(id);
+  await close(page);
+
+  await toWall(page);
+  const sheet = page.getByTestId('wall-07');
+  const before = await sheet.boundingBox();
+  if (!before) throw new Error('нет листа 07');
+  await page.mouse.move(before.x + 25, before.y + 24);
+  await page.mouse.down();
+  await page.mouse.move(before.x + 260, before.y + 180, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(async () => (await sheet.boundingBox())?.x).not.toBe(before.x);
+  await page.getByTestId('dev-line-tab').click();
+  await page.getByTestId('dev-arrange').click();
+  await expect.poll(async () => (await sheet.boundingBox())?.x).toBeCloseTo(before.x, 0);
+  expect((await sheet.boundingBox())?.y).toBeCloseTo(before.y, 0);
+});
