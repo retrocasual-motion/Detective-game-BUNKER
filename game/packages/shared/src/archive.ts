@@ -43,8 +43,8 @@ export const CONTAINER_IDS = CONTAINERS.map((c) => c.id) as [ContainerId, ...Con
 
 /** Газета на столе — бумажный номер (E44, A-260): видна, но на стене со старта не висит. */
 export const NEWSPAPER_ID = '15';
-/** Сайт газеты — закладки браузера на компьютере следователя (E44). */
-export const BOOKMARK_IDS = ['16', '17'] as const;
+/** Сайт газеты — только архив номеров, закладка браузера на компьютере следователя (E44, A-262). */
+export const BOOKMARK_IDS = ['17'] as const;
 /** Есть у игрока со старта, но не на стене: газета на столе и закладки браузера. */
 export const OFF_WALL_IDS = new Set<string>([NEWSPAPER_ID, ...BOOKMARK_IDS]);
 

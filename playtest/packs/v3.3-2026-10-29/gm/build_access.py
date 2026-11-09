@@ -178,7 +178,7 @@ site("url-fieldworks", r"fieldworks-radio\.com", ["L177"], "Открыт сай�
 site("url-mailbridge", r"mailbridge\.net", ["L249"], "Открыт сайт mailbridge.net.")
 site("url-sentinel", r"sentinel-labs\.net", ["L272"], "Открыт сайт sentinel-labs.net.")
 site("url-signal", r"the-signal-news\.com", ["L296"], "Открыт сайт the-signal-news.com.")
-site("url-newspaper", r"silverridge-chronicle\.com", [], "Сайт газеты: объявления и архив номеров — в закладках браузера (файлы 16, 17); сегодняшний номер — на столе (файл 15). Выпуск архива открывается по дате.")
+site("url-newspaper", r"silverridge-chronicle\.com", [], "Сайт газеты: архив номеров — в закладках браузера (файл 17); сегодняшний номер — на столе (файл 15). Выпуск архива открывается по дате.")
 site("url-pinecell", r"pinecell-mobile\.com", [], "Pinecell Mobile: тарифы, покрытие. Запросы органов — lawful@pinecell-mobile.com.")
 site("url-northcare", r"northcare-nutrition\.com", [], "NorthCare Nutrition: продукты для питания в особых условиях. Справки по партиям — горячая линия на упаковке.")
 site("url-colton", r"coltonsupply\.com", [], "Colton Supply: изготовление крепежа и металлоизделий по чертежам заказчика. Статус заказа — по телефону поставщика.")
