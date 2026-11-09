@@ -19,7 +19,7 @@ export const CLOSEUP_AT = 2.4;
 const ZOOM_MAX = 4;
 const ZOOM_STEP = 1.2;
 /** Наклон «живого» листа к курсору, градусы по каждой оси. */
-const TILT = 3.5;
+const TILT = 6;
 
 export interface Zoom {
   s: number;

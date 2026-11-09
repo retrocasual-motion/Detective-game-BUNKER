@@ -127,8 +127,8 @@ test.describe('живой лист (движение не уменьшено)', 
     await expect.poll(async () => (await angles())[1]).toBeLessThan(-1);
     expect((await angles())[0]).toBeLessThan(0);
     const [rx, ry] = await angles();
-    expect(Math.abs(rx)).toBeLessThanOrEqual(4);
-    expect(Math.abs(ry)).toBeLessThanOrEqual(4);
+    expect(Math.abs(rx)).toBeLessThanOrEqual(6);
+    expect(Math.abs(ry)).toBeLessThanOrEqual(6);
     // Тянуть мимо листа — лист не вертится и не закрывается.
     await page.mouse.move(120, 300);
     await page.mouse.down();
