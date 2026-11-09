@@ -1,5 +1,6 @@
 import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
+import { reducedMotion } from '../motion.ts';
 import { useGame } from '../store.ts';
 
 /**
@@ -127,8 +128,6 @@ export function useSheet(
   const [tilt, setTilt] = useState({ x: 0, y: 0, gx: 50, gy: 30 });
   const pressed = useRef(false);
 
-  const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
   // Ответ движка на действие — один раз на лист; дальше — тот же.
   const answers = useRef(new Map<string, Promise<string>>());
 
@@ -184,7 +183,7 @@ export function useSheet(
     pressed.current = buttons !== 0;
     const el = refs.zoom.current;
     if (!el || pressed.current) return;
-    if (zoom.s !== 1 || reduced()) {
+    if (zoom.s !== 1 || reducedMotion()) {
       setTilt((t) => (t.x || t.y ? { ...t, x: 0, y: 0 } : t));
       return;
     }

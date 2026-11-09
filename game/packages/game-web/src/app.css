@@ -1510,16 +1510,14 @@ button {
   color: var(--color-accent);
 }
 
-/* Без анимаций по желанию системы (и в автотестах). */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    /* biome-ignore lint/complexity/noImportantStyles: системное «без анимаций» сильнее любых переходов */
-    transition-duration: 0s !important;
-    /* biome-ignore lint/complexity/noImportantStyles: то же */
-    transition-delay: 0s !important;
-  }
+/* «Уменьшить движение» — своя настройка игры (RM-A), не системная; в автотестах — тоже она. */
+:root[data-motion="reduce"] *,
+:root[data-motion="reduce"] *::before,
+:root[data-motion="reduce"] *::after {
+  /* biome-ignore lint/complexity/noImportantStyles: «уменьшить движение» сильнее любых переходов */
+  transition-duration: 0s !important;
+  /* biome-ignore lint/complexity/noImportantStyles: то же */
+  transition-delay: 0s !important;
 }
 
 /* ── Корзина у стола (TR-A, 09.11): выброшенные письма-ответы скомканы. ── */

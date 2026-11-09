@@ -109,6 +109,19 @@ test('длинный материал — страницами (PG-A): стре�
 test.describe('живой лист (движение не уменьшено)', () => {
   test.use({ reducedMotion: 'no-preference' });
 
+  test('системное «уменьшить движение» (Windows) игру не выключает — лист живой (RM-A)', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await sheet(page, '07').click(STRIP);
+    const box = await page.getByTestId('viewer-paper').boundingBox();
+    if (!box) throw new Error('нет листа');
+    await page.mouse.move(box.x + box.width - 20, box.y + 20, { steps: 4 });
+    await expect
+      .poll(async () => (await page.getByTestId('viewer-flip').getAttribute('style')) ?? '')
+      .toMatch(/rotateY\(-[1-9]/);
+  });
+
   test('лист «живой», как карточка: край под мышью приподнимается; лист не переворачивается; тянуть мимо — ничего, щелчок мимо — закрыть', async ({
     page,
   }) => {

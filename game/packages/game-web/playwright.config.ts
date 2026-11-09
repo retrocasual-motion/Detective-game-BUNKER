@@ -10,7 +10,8 @@ export default defineConfig({
   workers: 1,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
-  // Без анимаций (prefers-reduced-motion): переходы мгновенные; анимацию проверяет отдельный тест.
+  // Без анимаций: фикстура включает игровую настройку «уменьшить движение» (RM-A), когда
+  // reducedMotion = 'reduce'; анимацию проверяют тесты с 'no-preference'.
   use: {
     baseURL: `http://localhost:${E2E.WEB_PORT}`,
     viewport,

@@ -7,7 +7,12 @@ import { test as base, expect, type Page } from '@playwright/test';
  */
 export const test = base.extend<{ sealed: boolean }>({
   sealed: [false, { option: true }],
-  page: async ({ page, request, sealed }, use) => {
+  page: async ({ page, request, sealed, reducedMotion }, use) => {
+    // Игра не слушает системное «уменьшить движение» (RM-A) — включаем её собственную
+    // настройку, когда тест просит без анимаций (по умолчанию в конфиге).
+    if (reducedMotion === 'reduce') {
+      await page.addInitScript(() => localStorage.setItem('bunker.reduceMotion', '1'));
+    }
     // Сервер слушает сразу, а база готова чуть позже — ждём готовности.
     await expect
       .poll(async () => (await request.get('/api/health')).status(), { timeout: 60_000 })
