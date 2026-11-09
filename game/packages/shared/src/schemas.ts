@@ -117,5 +117,13 @@ export const PlayerStateSchema = z.object({
   }),
   /** Черновики ходатайств (этап 3); в старом сохранении их нет — пусто. */
   drafts: z.array(DraftSchema).max(MAX_DRAFTS).default([]),
+  /**
+   * Корзина у стола (TR-A, решение автора 09.11): выброшенные письма-ответы. Письмо остаётся в
+   * деле (карточки из него работают), но не стоит во «Входящих» и не висит на стене.
+   */
+  trash: z
+    .array(z.string().regex(/^M\d{3}$/))
+    .max(999)
+    .default([]),
 });
 export type PlayerState = z.infer<typeof PlayerStateSchema>;

@@ -88,9 +88,9 @@ export function startSlot(id: string, materials: Material[]): { x: number; y: nu
 
 /** «Входящие» на столе: открытое по ходу дела, но ещё не повешенное; свежее — первым. */
 export function inboxIds(state: PlayerState, materials: Material[]): string[] {
-  const onWallIds = new Set(state.wall.items.map((i) => i.id));
+  const hidden = new Set([...state.wall.items.map((i) => i.id), ...(state.trash ?? [])]);
   return materials
-    .filter((m) => isReleased(m) && !onWallIds.has(m.id))
+    .filter((m) => isReleased(m) && !hidden.has(m.id))
     .map((m) => m.id)
     .reverse();
 }
@@ -102,6 +102,7 @@ export function defaultState(materials: Material[]): PlayerState {
       view: 'desk',
       wall: { camera: DEFAULT_WALL_CAMERA, items: [], threads: [], notes: [] },
       drafts: [],
+      trash: [],
     },
     materials,
   );
@@ -207,9 +208,12 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
     ...notes.map((n) => n.id),
   ]);
 
+  // Корзина — только свои письма-ответы, без повторов; выброшенное на стене не висит.
+  const trash = [...new Set(state.trash ?? [])].filter((id) => /^M/.test(id) && known.has(id));
+  const binned = new Set(trash);
   const seen = new Set<string>();
   const items: WallItem[] = state.wall.items.filter((i) => {
-    if (!known.has(i.id) || seen.has(i.id)) return false;
+    if (!known.has(i.id) || seen.has(i.id) || binned.has(i.id)) return false;
     seen.add(i.id);
     return true;
   });
@@ -239,5 +243,5 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
     basis: card(d.basis),
   }));
 
-  return { ...state, wall: { ...state.wall, items, threads, notes: kept }, drafts };
+  return { ...state, wall: { ...state.wall, items, threads, notes: kept }, drafts, trash };
 }

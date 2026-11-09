@@ -6,7 +6,7 @@ import { wholeCard } from '../petition/drafts.ts';
 import { petitionFieldAt } from '../petition/fieldAt.ts';
 import { usePetition } from '../petition/petition-store.ts';
 import { useGame } from '../store.ts';
-import { moveItem } from '../wall/wall-actions.ts';
+import { isLetter, moveItem } from '../wall/wall-actions.ts';
 import { type Room, screenToBoard } from './camera.ts';
 import { deskObjects, screenRect } from './decor.ts';
 
@@ -18,18 +18,34 @@ const noColor = () => '#000000';
  * У устройств — бирка «Изъято» с номером описи. Остальное (лампа, телефон, коробка) — пока
  * только вид; звонки — этап 6.
  */
-export function DeskHotspots({ room, inbox }: { room: Room; inbox: string[] }) {
+export function DeskHotspots({
+  room,
+  inbox,
+  trash,
+}: {
+  room: Room;
+  inbox: string[];
+  trash: number;
+}) {
   const openViewer = useGame((g) => g.openViewer);
   const setComputerOpen = useGame((g) => g.setComputerOpen);
   const updateState = useGame((g) => g.updateState);
   const spots = useMemo(
     () =>
-      deskObjects(room, noColor, inbox).map((o) => ({
+      deskObjects(room, noColor, inbox, trash).map((o) => ({
         o,
         r: screenRect(o, room.poses.desk, room),
       })),
-    [room, inbox],
+    [room, inbox, trash],
   );
+  // Письмо-ответ из лотка можно бросить прямо в корзину (TR-A).
+  const bin = spots.find((s) => s.o.key === 'trash')?.r;
+  const overBin = (pt: { x: number; y: number }) =>
+    !!bin &&
+    pt.x >= bin.left &&
+    pt.x <= bin.left + bin.width &&
+    pt.y >= bin.top &&
+    pt.y <= bin.top + bin.height;
   return (
     <div className="desk-hotspots">
       {spots.map(({ o, r }) =>
@@ -57,6 +73,7 @@ export function DeskHotspots({ room, inbox }: { room: Room; inbox: string[] }) {
                     .getState()
                     .setDrag(useGame.getState().petitionOpen, f === 'to' ? null : f);
                   if (f) return f !== 'to';
+                  if (overBin(pt)) return isLetter(id);
                   return screenToBoard(pt, room.poses.desk, room) !== null;
                 },
                 onEnd: () => usePetition.getState().setDrag(false, null),
@@ -67,6 +84,10 @@ export function DeskHotspots({ room, inbox }: { room: Room; inbox: string[] }) {
                   if (f && m) {
                     usePetition.getState().setActiveField(f);
                     usePetition.getState().addCard(wholeCard(m));
+                    return;
+                  }
+                  if (overBin(pt)) {
+                    if (isLetter(id)) useGame.getState().throwAway(id);
                     return;
                   }
                   const b = screenToBoard(pt, room.poses.desk, room);
@@ -84,6 +105,7 @@ export function DeskHotspots({ room, inbox }: { room: Room; inbox: string[] }) {
               // только клавиатура.
               if (o.key.startsWith('inbox-') && e.detail > 0) return;
               if (h?.kind === 'computer') setComputerOpen(true);
+              else if (h?.kind === 'trash') useGame.getState().setTrashOpen(true);
               else if (h) openViewer(h.id);
             }}
           >

@@ -2,6 +2,7 @@ import { inboxIds } from '@bunker/shared';
 import { useEffect, useMemo } from 'react';
 import { ComputerScreen } from './computer/ComputerScreen.tsx';
 import { ArrivalNote } from './desk/ArrivalNote.tsx';
+import { ThrowToast, TrashView } from './desk/TrashBin.tsx';
 import { DevActionLine } from './dev/DevActionLine.tsx';
 import { PetitionCorner } from './petition/PetitionCorner.tsx';
 import { RoomScene } from './room/RoomScene.tsx';
@@ -45,6 +46,7 @@ export function App() {
   // Строкой: новый массив на каждое изменение стора перерисовывал бы комнату без нужды.
   const inboxKey = useGame((g) => (g.state ? inboxIds(g.state, g.materials).join(',') : ''));
   const inbox = useMemo(() => (inboxKey ? inboxKey.split(',') : []), [inboxKey]);
+  const trash = useGame((g) => g.state?.trash.length ?? 0);
 
   if (!view) {
     return (
@@ -62,6 +64,7 @@ export function App() {
         hideNav={viewerId !== null || computerOpen}
         wall={wall}
         inbox={inbox}
+        trash={trash}
       />
       {saveStatus === 'error' && (
         <div className="save-error" data-testid="save-error">
@@ -70,6 +73,8 @@ export function App() {
       )}
       <ArrivalNote />
       <ComputerScreen />
+      <TrashView />
+      <ThrowToast />
       {viewerId && <Viewer key={viewerId} materialId={viewerId} />}
       <PetitionCorner />
       {import.meta.env.DEV && <DevActionLine />}

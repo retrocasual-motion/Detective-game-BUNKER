@@ -8,7 +8,10 @@ import {
 import { create } from 'zustand';
 import { getMaterials, getPendingMail, getState, putState } from './api.ts';
 import { createSaver } from './save.ts';
-import { moveItem } from './wall/wall-actions.ts';
+import { type Binned, binLetter, moveItem, takeLetter, unbinLetter } from './wall/wall-actions.ts';
+
+/** Сколько можно «Вернуть» выброшенное письмо, мс. */
+const UNDO_MS = 6000;
 
 export type SaveStatus = 'saved' | 'saving' | 'error';
 
@@ -28,6 +31,14 @@ interface GameStore {
   /** Компьютер следователя открыт крупно (щелчок по монитору на столе). */
   computerOpen: boolean;
   setComputerOpen(open: boolean): void;
+  /** Окно корзины у стола открыто (TR-A). */
+  trashOpen: boolean;
+  setTrashOpen(open: boolean): void;
+  /** Только что выброшенное письмо — его можно «Вернуть» несколько секунд. */
+  binned: Binned | null;
+  /** Письмо-ответ — в корзину (со стены или из «Входящих»); остальное не выбрасывается. */
+  throwAway(id: string): void;
+  undoThrow(): void;
   /** Повесить лист из «Входящих» на стену — в середину видимой части стены. */
   pinToWall(materialId: string): void;
   /** Движок открыл материалы: в дело и во «Входящие» на столе (правка автора 09.11). */
@@ -58,6 +69,8 @@ export const useGame = create<GameStore>((set, get) => {
     loadFailed: false,
     arrival: null,
     computerOpen: false,
+    trashOpen: false,
+    binned: null,
 
     dismissArrival() {
       set({ arrival: null });
@@ -65,6 +78,26 @@ export const useGame = create<GameStore>((set, get) => {
 
     setComputerOpen(open) {
       set({ computerOpen: open });
+    },
+
+    setTrashOpen(open) {
+      set({ trashOpen: open });
+    },
+
+    throwAway(id) {
+      const s = get().state;
+      if (!s || s.trash.includes(id)) return;
+      const taken = takeLetter(id, s);
+      get().updateState(binLetter(id));
+      if (!get().state?.trash.includes(id)) return;
+      set({ binned: taken });
+      setTimeout(() => set((g) => (g.binned === taken ? { binned: null } : g)), UNDO_MS);
+    },
+
+    undoThrow() {
+      const b = get().binned;
+      if (b) get().updateState(unbinLetter(b));
+      set({ binned: null });
     },
 
     pinToWall(materialId) {

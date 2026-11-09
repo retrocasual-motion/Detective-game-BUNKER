@@ -140,3 +140,56 @@ export const restoreThread =
     s.wall.threads.some((t) => t.id === thread.id)
       ? s
       : withWall(s, { threads: [...s.wall.threads, thread] });
+
+/** Что выбрасывается в корзину (TR-A, решение автора 09.11): только письма-ответы. */
+export const isLetter = (id: string) => /^M\d{3}$/.test(id);
+
+/** Письмо, выброшенное в корзину: где висело и какие нити шли к нему — чтобы «Вернуть». */
+export interface Binned {
+  id: string;
+  item: PlayerState['wall']['items'][number] | null;
+  threads: Thread[];
+}
+
+export const takeLetter = (id: string, s: PlayerState): Binned => ({
+  id,
+  item: s.wall.items.find((i) => i.id === id) ?? null,
+  threads: s.wall.threads.filter((t) => t.from === id || t.to === id),
+});
+
+/** В корзину: со стены (вместе с нитями) и из «Входящих»; в деле письмо остаётся. */
+export const binLetter =
+  (id: string): Update =>
+  (s) =>
+    !isLetter(id) || s.trash.includes(id)
+      ? s
+      : {
+          ...withWall(s, {
+            items: s.wall.items.filter((i) => i.id !== id),
+            threads: s.wall.threads.filter((t) => t.from !== id && t.to !== id),
+          }),
+          trash: [...s.trash, id],
+        };
+
+/** «Вернуть» сразу после броска: на прежнее место на стене (с нитями) или во «Входящие». */
+export const unbinLetter =
+  (b: Binned): Update =>
+  (s) => {
+    if (!s.trash.includes(b.id)) return s;
+    const out = { ...s, trash: s.trash.filter((id) => id !== b.id) };
+    if (!b.item || s.wall.items.some((i) => i.id === b.id)) return out;
+    const present = new Set([...s.wall.items.map((i) => i.id), b.id]);
+    return withWall(out, {
+      items: [...s.wall.items, b.item],
+      threads: [
+        ...s.wall.threads,
+        ...b.threads.filter((t) => present.has(t.from) && present.has(t.to)),
+      ],
+    });
+  };
+
+/** Достать из корзины позже — во «Входящие» на столе (TR-A). */
+export const takeOutOfBin =
+  (id: string): Update =>
+  (s) =>
+    s.trash.includes(id) ? { ...s, trash: s.trash.filter((x) => x !== id) } : s;

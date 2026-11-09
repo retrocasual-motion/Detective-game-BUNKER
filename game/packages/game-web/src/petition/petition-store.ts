@@ -8,6 +8,7 @@ import {
   emailIn,
   missingFields,
   removeDraft,
+  repeatDraft,
   setField,
   swapCards,
 } from './drafts.ts';
@@ -47,6 +48,12 @@ interface PetitionStore {
   open(id?: string): void;
   /** Новый черновик (не больше трёх). */
   create(): void;
+  /**
+   * «Повторить ходатайство» из письма-ответа (RP-A): черновик с тем же адресом и карточками,
+   * папка открыта, активно «Прошу» — следующая строка заменит карточку. false — все черновики
+   * заняты.
+   */
+  repeat(p: { to: string; ask: Card; basis: Card }): boolean;
   close(): void;
   toggle(id?: string): void;
   setActiveField(f: DraftField): void;
@@ -112,6 +119,16 @@ export const usePetition = create<PetitionStore>((set, get) => {
       game().updateState(addDraft(id));
       set({ activeId: id, field: 'to', error: null, refusal: null, missing: [], stamp: null });
       game().setPetitionOpen(true);
+    },
+
+    repeat(p) {
+      const s = game().state;
+      const r = s ? repeatDraft(s, newId(), p) : null;
+      if (!r) return false;
+      game().updateState(() => r.state);
+      set({ activeId: r.id, field: 'ask', error: null, refusal: null, missing: [], stamp: null });
+      game().setPetitionOpen(true);
+      return true;
     },
 
     close() {
