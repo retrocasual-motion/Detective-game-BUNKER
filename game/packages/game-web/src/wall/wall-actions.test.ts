@@ -9,6 +9,7 @@ import {
   removeThread,
   restoreNote,
   restoreThread,
+  styleNote,
   takeNote,
 } from './wall-actions.ts';
 
@@ -48,6 +49,14 @@ describe('записки и ярлыки', () => {
     const back = restoreNote(taken)(gone);
     expect(back.wall.notes).toEqual(s.wall.notes);
     expect(back.wall.threads).toEqual(s.wall.threads);
+  });
+
+  it('размер шрифта и ширина меняются в пределах', () => {
+    let s = addNote('note', 0, 0, 'n:s')(base());
+    s = styleNote('n:s', { size: 22, width: 300 })(s);
+    expect(s.wall.notes[0]).toMatchObject({ size: 22, width: 300 });
+    s = styleNote('n:s', { size: 999, width: 1 })(s);
+    expect(s.wall.notes[0]).toMatchObject({ size: 64, width: 80 });
   });
 
   it('ярлык висит ровно', () => {

@@ -3,13 +3,15 @@ import type { MouseEvent } from 'react';
 import { CARD_W, PIN_Y } from '../canvas/geometry.ts';
 
 type Pt = { x: number; y: number };
+/** Где висит вещь; w — ширина (у записок своя). */
+export type At = Pt & { w?: number };
 
-/** Кнопка листа — вверху посередине: от неё идёт нить. */
-export const pinOf = (p: Pt): Pt => ({ x: p.x + CARD_W / 2, y: p.y + PIN_Y });
+/** Кнопка вещи — вверху посередине: от неё идёт нить. */
+export const pinOf = (p: At): Pt => ({ x: p.x + (p.w ?? CARD_W) / 2, y: p.y + PIN_Y });
 
 interface WallThreadsProps {
   /** Где сейчас висит каждый материал (с учётом перетаскивания). */
-  at: Map<string, Pt>;
+  at: Map<string, At>;
   threads: Thread[];
   /** Нить, которую сейчас тянут от кнопки: до курсора. */
   pulling: { from: Pt; to: Pt } | null;

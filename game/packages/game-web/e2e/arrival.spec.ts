@@ -43,6 +43,34 @@ test('открытое ложится во «Входящие» на столе:
   await expect(page.getByTestId('wall-L101')).toBeInViewport();
 });
 
+test('письмо из «Входящих» можно мышкой перетащить прямо на доску за столом', async ({ page }) => {
+  await run(page, 'АДРЕС | браузер | vaultline-program.com');
+  await close(page);
+  const letter = await page.getByTestId('inbox-L101').boundingBox();
+  if (!letter) throw new Error('нет письма');
+  await page.mouse.move(letter.x + letter.width / 2, letter.y + 8);
+  await page.mouse.down();
+  await page.mouse.move(683, 200, { steps: 8 });
+  await expect(page.getByTestId('drag-ghost')).toHaveClass(/ghost-ok/);
+  await page.mouse.up();
+  await expect(page.getByTestId('viewer')).toBeHidden();
+  await expect(page.getByTestId('inbox-L101')).toHaveCount(0);
+  await toWall(page);
+  await expect(page.getByTestId('wall-L101')).toBeInViewport();
+});
+
+test('письмо, отпущенное мимо доски, остаётся в лотке', async ({ page }) => {
+  await run(page, 'АДРЕС | браузер | vaultline-program.com');
+  await close(page);
+  const letter = await page.getByTestId('inbox-L101').boundingBox();
+  if (!letter) throw new Error('нет письма');
+  await page.mouse.move(letter.x + letter.width / 2, letter.y + 8);
+  await page.mouse.down();
+  await page.mouse.move(683, 720, { steps: 8 });
+  await page.mouse.up();
+  await expect(page.getByTestId('inbox-L101')).toBeVisible();
+});
+
 test('лист со стены «На стену» не предлагает', async ({ page }) => {
   await toWall(page);
   await page.getByTestId('wall-01').click({ position: { x: 25, y: 24 } });

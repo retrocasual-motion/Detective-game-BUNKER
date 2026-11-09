@@ -236,3 +236,57 @@ test('листы висят по типу: фото, диск, пакет вещ
   await expect(sheet(page, '41').locator('[data-kind]')).toHaveAttribute('data-kind', 'item');
   await expect(sheet(page, 'p:sato').locator('[data-kind]')).toHaveAttribute('data-kind', 'person');
 });
+
+test('чистую карточку можно перетащить на доску — записка появляется там, где отпустили', async ({
+  page,
+}) => {
+  const blank = await page.getByTestId('new-note').boundingBox();
+  if (!blank) throw new Error('нет карточки');
+  await page.mouse.move(blank.x + 20, blank.y + 10);
+  await page.mouse.down();
+  await page.mouse.move(700, 500, { steps: 6 });
+  await expect(page.getByTestId('drag-ghost')).toBeVisible();
+  await page.mouse.move(900, 450, { steps: 6 });
+  await page.mouse.up();
+  await expect(page.getByTestId('drag-ghost')).toHaveCount(0);
+  await page.keyboard.type('Алиби Сато');
+  await page.mouse.click(1300, 120);
+  const note = page.locator('.wall-card-note');
+  await expect(note).toContainText('Алиби Сато');
+  const box = await note.boundingBox();
+  // Кнопка записки — под курсором, где отпустили.
+  expect(Math.abs((box?.x ?? 0) + (box?.width ?? 0) / 2 - 900)).toBeLessThan(30);
+  expect(Math.abs((box?.y ?? 0) - 450)).toBeLessThan(30);
+});
+
+test('у записки — размер шрифта (A−, A+) и ширина ручкой справа; сохраняется', async ({ page }) => {
+  await page.getByTestId('new-note').click();
+  await page.keyboard.type('Крупно');
+  await expect(page.getByTestId('font-size')).toHaveText('16');
+  await page.getByTestId('font-up').click();
+  await page.getByTestId('font-up').click();
+  await expect(page.getByTestId('font-size')).toHaveText('20');
+  // Правка не прервалась: текст можно дописать.
+  await page.keyboard.type('!');
+  await page.mouse.click(1300, 120);
+  const note = page.locator('.wall-card-note');
+  await expect(note.locator('.note-text')).toHaveCSS('font-size', '20px');
+  await expect(note).toContainText('Крупно!');
+
+  const before = await note.boundingBox();
+  await note.hover();
+  const handle = await note.locator('.wall-resize').boundingBox();
+  if (!before || !handle) throw new Error('нет ручки');
+  const saved = savedPut(page);
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(handle.x + 100, handle.y + handle.height / 2, { steps: 6 });
+  await page.mouse.up();
+  const after = await note.boundingBox();
+  expect((after?.width ?? 0) - before.width).toBeGreaterThan(80);
+  await saved;
+  await page.reload();
+  await expect(page.locator('.wall-card-note .note-text')).toHaveCSS('font-size', '20px');
+  const reloaded = await page.locator('.wall-card-note').boundingBox();
+  expect(Math.abs((reloaded?.width ?? 0) - (after?.width ?? 0))).toBeLessThan(3);
+});

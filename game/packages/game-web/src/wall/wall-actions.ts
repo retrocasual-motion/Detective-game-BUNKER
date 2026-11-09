@@ -1,4 +1,11 @@
-import { hangTilt, type Note, onWall, type PlayerState, type Thread } from '@bunker/shared';
+import {
+  hangTilt,
+  NOTE_STYLE,
+  type Note,
+  onWall,
+  type PlayerState,
+  type Thread,
+} from '@bunker/shared';
 import { newId } from '../canvas/geometry.ts';
 
 type Update = (s: PlayerState) => PlayerState;
@@ -44,6 +51,26 @@ export const editNote =
   (id: string, text: string): Update =>
   (s) =>
     withWall(s, { notes: s.wall.notes.map((n) => (n.id === id ? { ...n, text } : n)) });
+
+/** Размер шрифта и ширина записки или ярлыка — в пределах NOTE_STYLE. */
+export const styleNote =
+  (id: string, style: { size?: number; width?: number }): Update =>
+  (s) =>
+    withWall(s, {
+      notes: s.wall.notes.map((n) => {
+        if (n.id !== id) return n;
+        const next = { ...n };
+        if (style.size !== undefined)
+          next.size = Math.round(
+            Math.min(NOTE_STYLE.maxSize, Math.max(NOTE_STYLE.minSize, style.size)),
+          );
+        if (style.width !== undefined)
+          next.width = Math.round(
+            Math.min(NOTE_STYLE.maxWidth, Math.max(NOTE_STYLE.minWidth, style.width)),
+          );
+        return next;
+      }),
+    });
 
 export interface TakenNote {
   note: Note;

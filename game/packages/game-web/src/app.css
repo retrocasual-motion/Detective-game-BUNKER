@@ -732,20 +732,100 @@ button {
   color: var(--color-card-id);
   font-size: 11px;
 }
-/* Записка игрока: чистая карточка, рукописью — свой текст. */
+/* Записка игрока: чистая карточка, рукописью — свой текст. Ширина и шрифт — свои (как в Miro):
+   высота растёт по тексту. */
+.wall-card-note,
+.wall-card-label {
+  height: auto;
+}
+.wall-card-note .paper,
+.wall-card-label .paper {
+  position: relative;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
 .paper-note {
-  height: 150px;
+  min-height: 110px;
   background: var(--color-note);
 }
 .paper-label {
-  width: 230px;
-  height: 52px;
+  min-height: 52px;
   padding-top: calc(var(--pin-y) + var(--pin-size) / 2);
   background: var(--color-cardboard);
 }
-.wall-card-label {
-  width: 230px;
-  height: 52px;
+/* Ручка ширины справа — видна при наведении. */
+.wall-resize {
+  position: absolute;
+  top: 50%;
+  right: -7px;
+  z-index: 2;
+  width: 12px;
+  height: 30px;
+  margin-top: -15px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  cursor: ew-resize;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.wall-card:hover .wall-resize {
+  opacity: 1;
+}
+/* Панель записки: размер шрифта. Не масштабируется вместе со стеной. */
+.note-toolbar {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-1);
+  transform-origin: bottom left;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+.note-toolbar button {
+  min-width: 30px;
+  padding: 2px var(--space-1);
+  background: var(--color-surface-raised);
+  border: none;
+  border-radius: var(--radius);
+}
+.note-toolbar-size {
+  min-width: 26px;
+  text-align: center;
+}
+/* Призрак вещи, которую тянут на доску (из лотка, чистая карточка). */
+.drag-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  margin: -16px 0 0 -50px;
+  padding: var(--space-2) var(--space-3);
+  min-width: 100px;
+  background: var(--color-paper-sheet);
+  color: var(--color-card-text);
+  font: 15px var(--font-paper);
+  box-shadow: var(--shadow-paper-lifted);
+  opacity: 0.85;
+  pointer-events: none;
+  rotate: -3deg;
+}
+.drag-ghost-note {
+  background: var(--color-note);
+}
+.drag-ghost-label {
+  background: var(--color-cardboard);
+}
+.drag-ghost.ghost-ok {
+  opacity: 1;
+  outline: 2px solid var(--color-accent);
 }
 .note-text {
   white-space: pre-wrap;
@@ -760,7 +840,9 @@ button {
 .note-input {
   flex: 1;
   width: 100%;
-  min-height: 0;
+  min-height: 2.6em;
+  /* Поле растёт по тексту, как сама записка. */
+  field-sizing: content;
   padding: 2px;
   resize: none;
   border: 1px dashed var(--color-card-id);

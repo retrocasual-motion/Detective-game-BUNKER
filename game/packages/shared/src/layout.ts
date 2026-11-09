@@ -26,6 +26,16 @@ export const GRID_COLS = 10;
 /** Начальная сетка материалов — ниже ряда персонажей. */
 export const GRID_TOP = 320;
 
+/** Размер шрифта и ширина записки и ярлыка по умолчанию; пределы правки (как в Miro). */
+export const NOTE_STYLE = {
+  note: { size: 16, width: 170 },
+  label: { size: 22, width: 240 },
+  minSize: 10,
+  maxSize: 64,
+  minWidth: 80,
+  maxWidth: 900,
+} as const;
+
 /** Край пробковой доски: камера и вещи за него не уходят. */
 export const WALL_BOUNDS = { left: -300, top: -300, right: 3700, bottom: 2700 } as const;
 

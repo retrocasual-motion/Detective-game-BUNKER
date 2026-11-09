@@ -65,6 +65,10 @@ export const NoteSchema = z.object({
   id: z.string().regex(/^n:[\w-]{1,64}$/),
   kind: z.enum(['note', 'label']),
   text: z.string().max(500),
+  /** Размер шрифта, px (по умолчанию — NOTE_STYLE). */
+  size: z.number().int().min(10).max(64).optional(),
+  /** Ширина, мировые px (по умолчанию — NOTE_STYLE). */
+  width: z.number().min(80).max(900).optional(),
 });
 export type Note = z.infer<typeof NoteSchema>;
 

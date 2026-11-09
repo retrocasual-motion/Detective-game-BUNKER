@@ -1,5 +1,6 @@
 import {
   type Camera,
+  NOTE_STYLE,
   type Note,
   PERSONS,
   type Thread,
@@ -17,10 +18,11 @@ import {
   useState,
 } from 'react';
 import { Canvas } from '../canvas/Canvas.tsx';
+import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
 import { useGame } from '../store.ts';
 import { isItemCard, type PinHandlers, WallCard } from './WallCard.tsx';
-import { pinOf, WallThreads } from './WallThreads.tsx';
+import { type At, pinOf, WallThreads } from './WallThreads.tsx';
 import {
   addNote,
   addThread,
@@ -31,6 +33,7 @@ import {
   removeThread,
   restoreNote,
   restoreThread,
+  styleNote,
   type TakenNote,
   takeNote,
 } from './wall-actions.ts';
@@ -78,10 +81,19 @@ function toWorld(
 const personById = new Map(PERSONS.map((p) => [p.id, p]));
 
 /** Поле ввода записки или ярлыка: сохраняет при уходе фокуса; Esc — тоже; у ярлыка — Enter. */
-function NoteEditor({ note, onDone }: { note: Note; onDone(text: string): void }) {
+function NoteEditor({
+  note,
+  size,
+  onDone,
+}: {
+  note: Note;
+  size: number;
+  onDone(text: string): void;
+}) {
   return (
     <textarea
       className="note-input"
+      style={{ fontSize: size }}
       data-testid={`note-input-${note.id}`}
       aria-label={note.kind === 'label' ? 'Ярлык' : 'Записка'}
       defaultValue={note.text}
@@ -275,19 +287,47 @@ export function WallView() {
   const byId = new Map(materials.map((m) => [m.id, m]));
   const notes = new Map(wall.notes.map((n) => [n.id, n]));
   // Нити идут за вещью сразу, пока её тянут.
-  const at = new Map<string, Pt>();
-  for (const i of wall.items)
-    at.set(i.id, live?.id === i.id ? { x: i.x + live.dx, y: i.y + live.dy } : i);
+  const at = new Map<string, At>();
+  for (const i of wall.items) {
+    const n = notes.get(i.id);
+    const w = n ? (n.width ?? NOTE_STYLE[n.kind].width) : undefined;
+    at.set(i.id, live?.id === i.id ? { x: i.x + live.dx, y: i.y + live.dy, w } : { ...i, w });
+  }
   const pullFrom = pull ? at.get(pull.from) : undefined;
   const editingThread = editing ? wall.threads.find((t) => t.id === editing.id) : undefined;
 
+  /** Новая записка или ярлык: кнопка вещи — под точкой (x, y) стены; сразу правится. */
+  const newNoteAt = (kind: Note['kind'], x: number, y: number) => {
+    const id = `n:${crypto.randomUUID()}`;
+    updateState(addNote(kind, x - NOTE_STYLE[kind].width / 2, y - 12, id));
+    setEditingNote(id);
+  };
   const newNote = (kind: Note['kind']) => {
     const r = el.current?.getBoundingClientRect();
     const c = screenToWorld({ x: (r?.width ?? 0) / 2, y: (r?.height ?? 0) / 2 }, camera);
     const jitter = (wall.notes.length % 5) * 24;
-    const id = `n:${crypto.randomUUID()}`;
-    updateState(addNote(kind, c.x - 80 + jitter, c.y - 100 + jitter, id));
-    setEditingNote(id);
+    newNoteAt(kind, c.x + jitter, c.y - 80 + jitter);
+  };
+  /** Карточку можно взять и отпустить на доске — как в Miro; щелчок — в середину видимой стены. */
+  const overWall = (pt: { x: number; y: number }) => {
+    const top = document.elementFromPoint(pt.x, pt.y);
+    return !!top?.closest('.wall .canvas');
+  };
+  const blankDown = (kind: Note['kind']) => (e: PointerEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    startGhostDrag(e.nativeEvent, {
+      label: kind === 'label' ? 'Ярлык' : 'Записка',
+      className: `drag-ghost-${kind}`,
+      canDrop: overWall,
+      onDrop: (pt) => {
+        const r = el.current?.querySelector('.canvas')?.getBoundingClientRect();
+        const cam = useGame.getState().state?.wall.camera;
+        if (!r || !cam) return;
+        const w = screenToWorld({ x: pt.x - r.left, y: pt.y - r.top }, cam);
+        newNoteAt(kind, w.x, w.y);
+      },
+      onClick: () => newNote(kind),
+    });
   };
 
   const render = (item: WallItem) => {
@@ -297,6 +337,9 @@ export function WallView() {
     let kind: string;
     let label: string;
     let content: ReactNode;
+    let size: number | undefined;
+    let width: number | undefined;
+    let toolbar: ReactNode = null;
     if (m) {
       const isItem = isItemCard(m);
       kind = isItem ? 'item' : m.kind;
@@ -326,18 +369,54 @@ export function WallView() {
       );
     } else if (note) {
       kind = note.kind;
+      size = note.size ?? NOTE_STYLE[note.kind].size;
+      width = note.width ?? NOTE_STYLE[note.kind].width;
+      if (editingNote === note.id) {
+        const id = note.id;
+        const step = (d: number) => () => updateState(styleNote(id, { size: (size ?? 16) + d }));
+        toolbar = (
+          // Кнопки не забирают фокус у поля ввода: правка продолжается.
+          <div
+            className="note-toolbar"
+            role="toolbar"
+            aria-label="Шрифт"
+            data-testid="note-toolbar"
+            style={{ scale: 1 / camera.zoom }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <button
+              type="button"
+              aria-label="Шрифт меньше"
+              data-testid="font-down"
+              onClick={step(-2)}
+            >
+              A−
+            </button>
+            <span className="note-toolbar-size" data-testid="font-size">
+              {size}
+            </span>
+            <button type="button" aria-label="Шрифт больше" data-testid="font-up" onClick={step(2)}>
+              A+
+            </button>
+          </div>
+        );
+      }
       label = note.kind === 'label' ? `Ярлык: ${note.text}` : `Записка: ${note.text}`;
       content =
         editingNote === note.id ? (
           <NoteEditor
             note={note}
+            size={size}
             onDone={(text) => {
               updateState(editNote(note.id, text));
               setEditingNote(null);
             }}
           />
         ) : (
-          <span className="note-text">{note.text}</span>
+          <span className="note-text" style={{ fontSize: size }}>
+            {note.text}
+          </span>
         );
     } else {
       return null;
@@ -356,6 +435,9 @@ export function WallView() {
         pin={pin}
         onDelete={note ? deleteNote : undefined}
         editing={editingNote === item.id}
+        width={width}
+        onResize={note ? (id, w) => updateState(styleNote(id, { width: w })) : undefined}
+        toolbar={toolbar}
       >
         {content}
       </WallCard>
@@ -427,7 +509,11 @@ export function WallView() {
           type="button"
           className="wall-blank wall-blank-note"
           data-testid="new-note"
-          onClick={() => newNote('note')}
+          onPointerDown={blankDown('note')}
+          onClick={(e) => {
+            // Мышь — через перетаскивание (щелчок без сдвига — там же); здесь — клавиатура.
+            if (e.detail === 0) newNote('note');
+          }}
         >
           Записка
         </button>
@@ -435,7 +521,10 @@ export function WallView() {
           type="button"
           className="wall-blank wall-blank-label"
           data-testid="new-label"
-          onClick={() => newNote('label')}
+          onPointerDown={blankDown('label')}
+          onClick={(e) => {
+            if (e.detail === 0) newNote('label');
+          }}
         >
           Ярлык
         </button>

@@ -41,3 +41,32 @@ describe('камера комнаты', () => {
     expect(lerpPose(r.poses.desk, r.poses.wall, 1)).toEqual(r.poses.wall);
   });
 });
+
+describe('со стола — на доску', () => {
+  it('точка доски, видимая со стола, возвращается в ту же точку доски', async () => {
+    const { screenToBoard } = await import('./camera.ts');
+    const vp = { width: 1366, height: 768 };
+    const r = roomFor(vp);
+    for (const [bx, by] of [
+      [100, 80],
+      [683, 384],
+      [1300, 700],
+    ] as const) {
+      const world: Vec3 = [
+        (bx - vp.width / 2) * BOARD_SCALE,
+        (by - vp.height / 2) * BOARD_SCALE,
+        0,
+      ];
+      const s = toScreen(toCamera(world, r.poses.desk, r.p), r.p, vp);
+      const back = screenToBoard(s, r.poses.desk, r);
+      expect(back?.x).toBeCloseTo(bx, 3);
+      expect(back?.y).toBeCloseTo(by, 3);
+    }
+  });
+
+  it('мимо доски (стол внизу экрана) — null', async () => {
+    const { screenToBoard } = await import('./camera.ts');
+    const r = roomFor({ width: 1366, height: 768 });
+    expect(screenToBoard({ x: 683, y: 740 }, r.poses.desk, r)).toBeNull();
+  });
+});
