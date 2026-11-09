@@ -186,7 +186,7 @@ export function useSheet(
       moved.current = Math.hypot(dx, dy);
       if (moved.current < CLICK_PX) return;
       setFlipping(true);
-      setAngle(a0 - dx * 0.45);
+      setAngle(a0 + dx * 0.45);
       setTilt(Math.max(-TILT_MAX, Math.min(TILT_MAX, -dy * 0.25)));
     };
     const up = () => {

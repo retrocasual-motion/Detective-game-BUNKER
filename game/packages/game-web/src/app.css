@@ -1914,13 +1914,13 @@ button {
 }
 
 /* ── Лист в руках (этап 4b): приближение к курсору, переворот за поле, страницы. ── */
-.viewer-stage {
-  /* Слабая перспектива: лист поворачивается, а не превращается в трапецию. */
-  perspective: 2200px;
-}
 .viewer-zoom {
   transform-origin: 0 0;
   transition: transform 0.12s ease-out;
+  /* Перспектива — у самой обёртки листа: обёртка трансформируется и иначе «сплющивает» 3D
+     (лист поворачивался без перспективы — влево и вправо выглядели одинаково). */
+  perspective: 2200px;
+  transform-style: preserve-3d;
 }
 .viewer-flip {
   position: relative;
@@ -1968,7 +1968,8 @@ button {
   backface-visibility: hidden;
   /* Каждый следующий лист — глубже: у стопки видна толщина, когда её наклоняют. */
   transform: translate3d(calc(var(--k) * 9px), calc(var(--k) * 7px), calc(var(--k) * -4px));
-  transition: transform 0.15s ease-out;
+  transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1);
+  will-change: transform;
 }
 .viewer-stack-read {
   transform: translate3d(calc(var(--k) * -9px), calc(var(--k) * 7px), calc(var(--k) * -4px));
@@ -2018,18 +2019,20 @@ button {
   border: 0;
   box-shadow: -2px -2px 4px rgb(0 0 0 / 18%);
   cursor: pointer;
-  transition:
-    width 0.15s,
-    height 0.15s;
+  transform-origin: 100% 100%;
+  transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1);
+  will-change: transform;
 }
-.viewer-corner:hover {
-  width: 48px;
-  height: 48px;
+/* Уголок и торчащая стопка — одно целое: навёл на любое — уголок поднят, стопка раздвинута. */
+.viewer-flip:has(.viewer-stack-next:hover, .viewer-corner-next:hover) .viewer-corner-next,
+.viewer-flip:has(.viewer-stack-prev:hover, .viewer-corner-prev:hover) .viewer-corner-prev {
+  transform: scale(1.4);
 }
 /* Уголок «назад» — внизу слева, загнут в другую сторону. */
 .viewer-corner-prev {
   right: auto;
   left: 0;
+  transform-origin: 0 100%;
   background: linear-gradient(45deg, var(--color-room-dark, #2a2a2a) 50%, #d9d4c6 50%);
   box-shadow: 2px -2px 4px rgb(0 0 0 / 18%);
 }
