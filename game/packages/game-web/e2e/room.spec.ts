@@ -104,6 +104,38 @@ test.describe('с анимацией', () => {
       height: 768,
     });
   });
+
+  test('приближение стены не прыгает при переходе: доска плавно перетекает от «целиком» к своему кадру', async ({
+    page,
+  }) => {
+    const world = page.locator('.wall .canvas-world');
+    const zoomOf = (style: string | null) => Number(/scale\(([\d.]+)\)/.exec(style ?? '')?.[1]);
+    const fit = zoomOf(await world.getAttribute('style'));
+    await toWall(page);
+    await page.mouse.move(683, 400);
+    await page.mouse.wheel(0, -1200);
+    await expect
+      .poll(async () => zoomOf(await world.getAttribute('style')))
+      .toBeGreaterThan(fit * 1.5);
+    const mine = zoomOf(await world.getAttribute('style'));
+    await page.keyboard.press('ArrowDown');
+    await expect(scene(page)).toHaveAttribute('data-moving', 'false');
+    // Обратно к стене: масштаб по кадрам — промежуточные значения, не скачок fit → свой.
+    const seen = await page.evaluate(async () => {
+      const el = document.querySelector<HTMLElement>('.wall .canvas-world');
+      const out: number[] = [];
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+      const until = performance.now() + 700;
+      while (performance.now() < until) {
+        await new Promise(requestAnimationFrame);
+        out.push(Number(/scale\(([\d.]+)\)/.exec(el?.style.transform ?? '')?.[1]));
+      }
+      return out;
+    });
+    const between = seen.filter((z) => z > fit * 1.05 && z < mine * 0.95);
+    expect(between.length).toBeGreaterThan(3);
+    expect(seen.at(-1)).toBeCloseTo(mine, 3);
+  });
 });
 
 test('двойной щелчок по стрелке не возвращает обратно (UN-2)', async ({ page }) => {
