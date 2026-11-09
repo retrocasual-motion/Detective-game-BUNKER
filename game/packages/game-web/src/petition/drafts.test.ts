@@ -63,6 +63,7 @@ describe('карточки и адреса', () => {
     const book = addressBook([
       { body: '**От:** Бюро <zapros@okrug-bureau.org>' },
       { body: 'пишите на Zapros@okrug-bureau.org. или info@vaultline-program.com' },
+      { body: '«Ваш ящик — имя@mailbridge.net.»' },
     ]);
     expect(book).toEqual(['info@vaultline-program.com', 'zapros@okrug-bureau.org']);
     expect(emailIn('адрес: documents@vaultline-program.com.')).toBe(

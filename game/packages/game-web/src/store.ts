@@ -1,4 +1,10 @@
-import { type Material, type PlayerState, reconcile, type View } from '@bunker/shared';
+import {
+  DEFAULT_WALL_CAMERA,
+  type Material,
+  type PlayerState,
+  reconcile,
+  type View,
+} from '@bunker/shared';
 import { create } from 'zustand';
 import { getMaterials, getPendingMail, getState, putState } from './api.ts';
 import { createSaver } from './save.ts';
@@ -127,7 +133,13 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     setView(view) {
-      get().updateState((s) => ({ ...s, view }));
+      // Ушли со стены — её масштаб возвращается к обычному: со стола видна вся доска,
+      // а не карточка, которую разглядывали вблизи (правка автора 09.11).
+      get().updateState((s) =>
+        s.view === 'wall' && view !== 'wall'
+          ? { ...s, view, wall: { ...s.wall, camera: DEFAULT_WALL_CAMERA } }
+          : { ...s, view },
+      );
     },
 
     updateState(fn) {

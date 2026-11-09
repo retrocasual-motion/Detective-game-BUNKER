@@ -110,3 +110,15 @@ test('двойной щелчок по стрелке не возвращает 
   await page.getByTestId('nav-up').dblclick();
   await expect(scene(page)).toHaveAttribute('data-view', 'wall');
 });
+
+test('ушёл со стены к столу — масштаб стены снова обычный (вся доска видна)', async ({ page }) => {
+  await toWall(page);
+  const world = page.locator('.wall .canvas-world');
+  const before = await world.getAttribute('style');
+  await page.mouse.move(683, 400);
+  await page.mouse.wheel(0, -1200);
+  await expect.poll(() => world.getAttribute('style')).not.toBe(before);
+  await page.keyboard.press('ArrowDown');
+  await expect(scene(page)).toHaveAttribute('data-view', 'desk');
+  await expect.poll(() => world.getAttribute('style')).toBe(before);
+});
