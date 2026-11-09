@@ -108,6 +108,7 @@ export function PetitionCorner() {
   const activeId = usePetition((p) => p.activeId);
   const field = usePetition((p) => p.field);
   const error = usePetition((p) => p.error);
+  const refusal = usePetition((p) => p.refusal);
   const stamp = usePetition((p) => p.stamp);
   const sending = usePetition((p) => p.sending);
   const sentNote = usePetition((p) => p.sentNote);
@@ -115,57 +116,60 @@ export function PetitionCorner() {
   const { toggle, close, create, send, deleteDraft, restoreDraft } = usePetition.getState();
   const draft = drafts.find((d) => d.id === activeId) ?? null;
 
-  // Стопка папок (правка автора 09.11): черновики лежат лесенкой за передней папкой, у каждой
-  // свой язычок; наведение приподнимает папку, щелчок — достаёт её вперёд.
+  // Стопка папок (правка автора 09.11): черновики лежат лесенкой в постоянном порядке — первый
+  // спереди, каждый следующий выше и правее. Щелчок по язычку показывает черновик в бланке
+  // спереди, папки не переставляются (правка автора 09.11, вечер); язычок выбранного отмечен.
   const slots = drafts.length ? drafts : [null];
-  const frontIndex = Math.max(
-    0,
-    slots.findIndex((d) => d?.id === activeId),
-  );
-  const tab = (d: (typeof slots)[number], i: number) => (
+  const last = slots.length - 1;
+  const canAdd = drafts.length > 0 && drafts.length < MAX_DRAFTS;
+  const tab = (d: (typeof slots)[number], i: number) => {
+    const active = open && (d?.id ?? null) === (draft?.id ?? null);
+    return (
+      <button
+        type="button"
+        className={`folder-tab${active ? ' folder-tab-active' : ''}`}
+        data-testid={i === 0 ? 'petition-corner' : `petition-corner-${i + 1}`}
+        aria-expanded={active}
+        style={{ left: i * TAB_STEP }}
+        onClick={() => toggle(d?.id)}
+      >
+        {i === 0 ? 'Ходатайство' : `Черновик ${i + 1}`}
+      </button>
+    );
+  };
+  const plus = canAdd && (
     <button
       type="button"
-      className={`folder-tab${i === frontIndex ? ' folder-tab-front' : ''}`}
-      data-testid={i === 0 ? 'petition-corner' : `petition-corner-${i + 1}`}
-      aria-expanded={open && i === frontIndex}
-      style={{ left: i * TAB_STEP }}
-      onClick={() => toggle(d?.id)}
+      className="folder-tab folder-tab-new"
+      data-testid="petition-new"
+      aria-label="Новое ходатайство"
+      title="Новое ходатайство (ещё одна папка в стопке)"
+      style={{ left: last * TAB_STEP + TAB_W + 6 }}
+      onClick={create}
     >
-      {i === 0 ? 'Ходатайство' : `Черновик ${i + 1}`}
+      +
     </button>
   );
-  const backs = slots
-    .map((d, i) => ({ d, i }))
-    .filter(({ i }) => i !== frontIndex)
-    .map(({ d, i }, k) => ({ d, i, depth: k + 1 }));
   return (
     <>
       <div className={`petition${open ? ' petition-open' : ''}`}>
         <div className="petition-stack">
-          {backs.map(({ d, i, depth }) => (
-            <div
-              key={d?.id ?? 'new'}
-              className="folder folder-back"
-              style={{ ['--depth' as string]: depth, zIndex: 10 - depth }}
-            >
-              {tab(d, i)}
-            </div>
-          ))}
-          {drafts.length > 0 && drafts.length < MAX_DRAFTS && (
-            <button
-              type="button"
-              className="folder-tab folder-tab-new"
-              data-testid="petition-new"
-              aria-label="Новое ходатайство"
-              title="Новое ходатайство (ещё одна папка в стопке)"
-              style={{ left: (drafts.length - 1) * TAB_STEP + TAB_W + 6 }}
-              onClick={create}
-            >
-              +
-            </button>
-          )}
+          {slots.slice(1).map((d, k) => {
+            const i = k + 1;
+            return (
+              <div
+                key={d?.id ?? i}
+                className="folder folder-back"
+                style={{ ['--depth' as string]: i, zIndex: 20 - i }}
+              >
+                {tab(d, i)}
+                {i === last && plus}
+              </div>
+            );
+          })}
           <div className="folder folder-front" style={{ ['--depth' as string]: 0, zIndex: 20 }}>
-            {tab(slots[frontIndex] ?? null, frontIndex)}
+            {tab(slots[0] ?? null, 0)}
+            {last === 0 && plus}
             <section
               className="petition-folder"
               data-testid="petition-folder"
@@ -182,7 +186,14 @@ export function PetitionCorner() {
                 ✕
               </button>
               <header className="petition-head">
-                <span className="petition-head-title">Ходатайство</span>
+                <span className="petition-head-title">
+                  Ходатайство
+                  {drafts.length > 1 && draft && (
+                    <span className="petition-head-draft" data-testid="petition-head-draft">
+                      {drafts.indexOf(draft) + 1} из {drafts.length}
+                    </span>
+                  )}
+                </span>
                 <span className="petition-head-case">дело № 09-1128</span>
               </header>
               {draft && (
@@ -195,6 +206,15 @@ export function PetitionCorner() {
                     <p className="petition-error" data-testid="petition-error" role="alert">
                       {error}
                     </p>
+                  )}
+                  {refusal && (
+                    <div className="petition-refusal" data-testid="petition-refusal" role="alert">
+                      <span className="petition-refusal-mark">Отказ</span>
+                      <p>{refusal}</p>
+                      <p className="petition-refusal-note">
+                        Ответ пришёл сразу, письма не будет. Попытка засчитана.
+                      </p>
+                    </div>
                   )}
                   <div className="petition-actions">
                     <button

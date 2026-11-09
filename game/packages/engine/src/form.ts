@@ -17,6 +17,19 @@ export const FORM_RULE_IDS: ReadonlySet<string> = new Set([
 ]);
 
 /**
+ * Общие отказы адресатов (карточки не подошли ни к одному правилу по существу): ответ виден
+ * сразу в папке, без письма, но попытка засчитана (PRE-B, решение автора 09.11). Частные
+ * адреса и Pinecell по-прежнему отвечают письмом.
+ */
+export const GENERAL_REFUSAL_IDS: ReadonlySet<string> = new Set([
+  'pet-bureau-fail',
+  'pet-vl-fail',
+  'pet-hx-fail',
+  'pet-mailbridge-fail',
+  'pet-bank-fail',
+]);
+
+/**
  * Ошибка оформления ходатайства (текст для папки) или null — можно отправлять. Только
  * чтение: прогресс не меняется. Лимит попыток проверяет `act` (итог «лимит»).
  */

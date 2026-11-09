@@ -3,6 +3,7 @@ import {
   act,
   type Content,
   emptyProgress,
+  GENERAL_REFUSAL_IDS,
   type Progress,
   parseActionLine,
   petitionFormError,
@@ -244,8 +245,9 @@ export function createApp({
 
   /**
    * Отправить ходатайство из папки (4.11; FORM-B, MAIL-B). Ошибка оформления — сразу ответом
-   * (422), письмо не уходит и попытка не тратится; лимит отказов — тоже ответом. Иначе
-   * движок решает, а ответ ложится письмом во «Входящие» через `mailDelayMs`.
+   * (422), письмо не уходит и попытка не тратится; лимит отказов — тоже ответом. Общий отказ
+   * адресата (PRE-B) — `{refused}` сразу, без письма, попытка засчитана. Иначе движок решает,
+   * а ответ ложится письмом во «Входящие» через `mailDelayMs`.
    */
   app.post('/api/petition', bodyLimit({ maxSize: 64 * 1024 }), async (c) => {
     if (!engine) return c.notFound();
@@ -276,6 +278,8 @@ export function createApp({
       );
       if (outcome.result === 'лимит') return { form: outcome.reply };
       await saveProgress(progress);
+      // Общий отказ адресата (PRE-B): ответ сразу в папке, письма нет, попытка засчитана.
+      if (GENERAL_REFUSAL_IDS.has(outcome.rule)) return { refused: outcome.reply };
       const n = (letters.at(-1)?.n ?? 0) + 1;
       const titled = (id: string) => `${id} — ${lockedById.get(id)?.title ?? ''}`;
       const body = [
@@ -308,7 +312,8 @@ export function createApp({
     });
     queue = run.catch(() => undefined);
     const r = await run;
-    return 'form' in r ? c.json({ error: r.form }, 422) : c.json(r);
+    if ('form' in r) return c.json({ error: r.form }, 422);
+    return c.json(r);
   });
 
   app.put('/api/state', bodyLimit({ maxSize: 1024 * 1024 }), async (c) => {

@@ -1,11 +1,12 @@
 import { inboxIds, PERSONS } from '@bunker/shared';
-import { type PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { type MouseEvent, type PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { emailIn, quoteCard, wholeCard } from '../petition/drafts.ts';
 import { usePetition } from '../petition/petition-store.ts';
 import { useGame } from '../store.ts';
+import { sameRange, snapToWords, unitRangeAt } from './selectUnit.ts';
 import { unwrapLines } from './text.ts';
 
 interface ViewerProps {
@@ -42,6 +43,10 @@ export function Viewer({ materialId }: ViewerProps) {
   const toAddress = usePetition((p) => p.field === 'to');
   const folderShown = useGame((g) => g.petitionOpen);
 
+  // Выделение «для ходатайства» (SEL-C): щелчок отмечает строку целиком, протягивание — слова.
+  const downAt = useRef<{ x: number; y: number } | null>(null);
+  const marked = useRef<Range | null>(null);
+
   useEffect(() => {
     const onChange = () => {
       const s = window.getSelection();
@@ -51,15 +56,57 @@ export function Viewer({ materialId }: ViewerProps) {
     return () => document.removeEventListener('selectionchange', onChange);
   }, []);
 
-  const onPaperUp = (e: PointerEvent<HTMLElement>) => {
+  /** Кнопка «В ходатайство» — у конца выделения, но всегда на экране. */
+  const showButton = (paper: Element) => {
     const s = window.getSelection();
     const text = s?.toString() ?? '';
-    if (!s || s.isCollapsed || !text.trim() || !e.currentTarget.contains(s.anchorNode)) return;
+    if (!s || s.isCollapsed || !text.trim() || !paper.contains(s.anchorNode)) return;
     const r = s.getRangeAt(s.rangeCount - 1).getBoundingClientRect();
-    // Кнопка — у конца выделения, но всегда на экране.
     const x = Math.min(Math.max(r.right, 80), window.innerWidth - 80);
     const y = Math.min(Math.max(r.bottom, 0), window.innerHeight - 48);
     setSel({ text, x, y });
+  };
+
+  const select = (r: Range) => {
+    const s = window.getSelection();
+    s?.removeAllRanges();
+    s?.addRange(r);
+  };
+
+  /** Протянули мышью — края выделения до целых слов. */
+  const onPaperUp = (e: PointerEvent<HTMLElement>) => {
+    const d = downAt.current;
+    downAt.current = null;
+    if (d && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 4) return;
+    const s = window.getSelection();
+    if (!s || s.isCollapsed || !e.currentTarget.contains(s.anchorNode)) return;
+    const r = s.getRangeAt(0).cloneRange();
+    snapToWords(r);
+    select(r);
+    marked.current = null;
+    showButton(e.currentTarget);
+  };
+
+  /** Щелчок — строка целиком; щелчок по отмеченной строке снимает отметку. Двойной — слово. */
+  const onPaperClick = (e: MouseEvent<HTMLElement>) => {
+    const paper = e.currentTarget;
+    if (e.detail > 1) {
+      showButton(paper);
+      return;
+    }
+    const s = window.getSelection();
+    // Щелчок в конце протягивания — уже разобран в onPaperUp.
+    if (s && !s.isCollapsed && !marked.current) return;
+    const r = unitRangeAt(paper, e.clientX, e.clientY);
+    if (!r || sameRange(marked.current, r)) {
+      s?.removeAllRanges();
+      marked.current = null;
+      setSel(null);
+      return;
+    }
+    select(r);
+    marked.current = r;
+    showButton(paper);
   };
 
   const toPetition = () => {
@@ -119,7 +166,16 @@ export function Viewer({ materialId }: ViewerProps) {
             <p className="viewer-person-role">{person.role}</p>
           </article>
         ) : (
-          <article className="viewer-paper" data-testid="viewer-paper" onPointerUp={onPaperUp}>
+          // biome-ignore lint/a11y/useKeyWithClickEvents: щелчок отмечает строку мышью (SEL-C); с клавиатуры — обычное выделение Shift+стрелки
+          <article
+            className="viewer-paper"
+            data-testid="viewer-paper"
+            onPointerDown={(e) => {
+              downAt.current = { x: e.clientX, y: e.clientY };
+            }}
+            onPointerUp={onPaperUp}
+            onClick={onPaperClick}
+          >
             {doc}
           </article>
         )}

@@ -99,6 +99,30 @@ test('ошибка оформления от адресата — в папке;
   await expect(page.getByTestId('petition-stamp')).toHaveCount(0);
 });
 
+test('общий отказ адресата (PRE-B) — сразу в папке, письма нет, черновик остаётся', async ({
+  page,
+}) => {
+  await page.route('**/api/petition', (r) =>
+    r.fulfill({ status: 200, body: JSON.stringify({ refused: 'Бюро: не исполнено.' }) }),
+  );
+  await toWall(page);
+  await page.getByTestId('petition-corner').click();
+  await page.getByTestId('petition-field-to').locator('.petition-line').click();
+  await page
+    .getByTestId('address-book')
+    .getByRole('button', { name: 'zapros@okrug-bureau.org' })
+    .click();
+  await cardFrom(page, '36', 'Протокол');
+  await sheet(page, '35').click(STRIP);
+  await page.getByTestId('viewer-whole-to-petition').click();
+  await page.keyboard.press('Escape');
+  await page.getByTestId('petition-send').click();
+  await expect(page.getByTestId('petition-refusal')).toContainText('Бюро: не исполнено.');
+  await expect(page.getByTestId('petition-refusal')).toContainText('Попытка засчитана');
+  await expect(page.getByTestId('petition-stamp')).toHaveCount(0);
+  await expect(page.getByTestId('petition-field-ask')).toContainText('36');
+});
+
 test('собрать из карточек, отправить — штамп; ответ приходит письмом во «Входящие» (MAIL-B)', async ({
   page,
 }) => {
@@ -168,10 +192,17 @@ test('черновики — стопкой папок: «+» — новая, я
   const saved = savedPut(page);
   await pick();
   await saved;
-  // Переключение — язычком: первая папка снова впереди.
+  // Переключение — язычком: черновик в бланке, но папки не переставляются (правка автора 09.11).
+  const at = async () =>
+    Promise.all(
+      ['petition-corner', 'petition-corner-2'].map((id) => page.getByTestId(id).boundingBox()),
+    );
+  const placed = await at();
   await page.getByTestId('petition-corner').click();
   await expect(page.getByTestId('petition-corner')).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByTestId('petition-corner-2')).toHaveAttribute('aria-expanded', 'false');
   await expect(page.getByTestId('petition-field-to')).toContainText('zapros@okrug-bureau.org');
+  expect(await at()).toEqual(placed);
   await folder(page).getByRole('button', { name: 'Закрыть' }).click();
   // Закрытая — стопкой внизу слева: оба язычка на экране, задняя папка выше передней.
   const a = await page.getByTestId('petition-corner').boundingBox();
@@ -186,6 +217,72 @@ test('черновики — стопкой папок: «+» — новая, я
   await expect(folder(page)).toBeHidden();
   await page.getByTestId('petition-discarded').getByRole('button', { name: 'Вернуть' }).click();
   await expect(page.getByTestId('petition-field-to')).toContainText('zapros@okrug-bureau.org');
+});
+
+/** Точка экрана посреди слова `word` в листе (по первой строке, где оно есть). */
+async function wordPoint(page: Page, word: string, at = 0.5) {
+  return page.getByTestId('viewer-paper').evaluate(
+    (el, [w, k]) => {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        const i = n.textContent?.indexOf(w as string) ?? -1;
+        if (i < 0) continue;
+        n.parentElement?.scrollIntoView({ block: 'center' });
+        const r = document.createRange();
+        r.setStart(n, i);
+        r.setEnd(n, i + (w as string).length);
+        const box = r.getBoundingClientRect();
+        return { x: box.left + box.width * (k as number), y: box.top + box.height / 2 };
+      }
+      throw new Error(`нет слова: ${w}`);
+    },
+    [word, at] as const,
+  );
+}
+
+test('выделение для ходатайства (SEL-C): щелчок — строка целиком, протяжка — целые слова', async ({
+  page,
+}) => {
+  await toWall(page);
+  await sheet(page, '25').click(STRIP);
+  const selected = () => page.evaluate(() => window.getSelection()?.toString().trim() ?? '');
+  // Щелчок посреди слова — вся строка, где оно стоит.
+  const p = await wordPoint(page, 'DUPLICATE');
+  await page.mouse.click(p.x, p.y);
+  const line = await selected();
+  expect(line).toContain('DO NOT DUPLICATE');
+  expect(line.length).toBeGreaterThan('DO NOT DUPLICATE'.length + 10);
+  await expect(page.getByTestId('to-petition')).toBeVisible();
+  // Повторный щелчок по отмеченной строке снимает отметку.
+  await page.mouse.click(p.x, p.y);
+  await expect.poll(selected).toBe('');
+  await expect(page.getByTestId('to-petition')).toHaveCount(0);
+  // Протянули от середины слова до середины другого — выделены оба слова целиком.
+  const a = await wordPoint(page, 'NOT DUPLICATE', 0.1);
+  const b = await wordPoint(page, 'NOT DUPLICATE', 0.7);
+  await page.mouse.move(a.x, a.y);
+  await page.mouse.down();
+  await page.mouse.move(b.x, b.y, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(selected).toMatch(/^NOT DUPLICATE\S*$/);
+  await page.getByTestId('to-petition').click();
+  await expect(page.getByTestId('petition-field-to')).toBeVisible();
+  await expect(page.getByTestId('petition-field-ask')).toContainText('NOT DUPLICATE');
+});
+
+test('закрытая папка не дрожит: приподнятый язычок не уходит из-под курсора', async ({ page }) => {
+  const corner = page.getByTestId('petition-corner');
+  const b = await corner.boundingBox();
+  if (!b) throw new Error('нет уголка');
+  // Самый низ видимого язычка у края экрана.
+  const pt = { x: b.x + 40, y: Math.min(b.y + b.height, 768) - 2 };
+  await page.mouse.move(pt.x, pt.y);
+  await expect.poll(async () => (await corner.boundingBox())?.y).toBeLessThan(b.y);
+  const under = await page.evaluate(
+    ({ x, y }) => document.elementFromPoint(x, y)?.getAttribute('data-testid'),
+    pt,
+  );
+  expect(under).toBe('petition-corner');
 });
 
 test('открытая папка не мешает: лист открывается правее, стрелки работают', async ({ page }) => {

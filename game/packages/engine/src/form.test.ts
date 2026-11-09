@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { FORM_RULE_IDS, petitionFormError } from './form.ts';
+import { FORM_RULE_IDS, GENERAL_REFUSAL_IDS, petitionFormError } from './form.ts';
 import { readPack } from './pack.ts';
 import { emptyProgress } from './types.ts';
 
@@ -16,6 +16,17 @@ describe('ошибки оформления ходатайства (FORM-B)', ()
       expect(r, id).toBeDefined();
       expect(r?.action, id).toBe('ХОДАТАЙСТВО');
       expect(r?.refusal, id).toBe(true);
+    }
+  });
+
+  it('5 общих отказов (PRE-B) есть в access.json: отказы без карточек', () => {
+    const byId = new Map(content.rules.rules.map((r) => [r.id, r]));
+    for (const id of GENERAL_REFUSAL_IDS) {
+      const r = byId.get(id);
+      expect(r, id).toBeDefined();
+      expect(r?.action, id).toBe('ХОДАТАЙСТВО');
+      expect(r?.refusal, id).toBe(true);
+      expect(r?.cards, id).toEqual([]);
     }
   });
 

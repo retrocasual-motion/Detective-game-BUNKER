@@ -46,6 +46,15 @@ const rules: AccessRules = {
       ok: 'Бюро: направляем приложение.',
       again: 'Уже направлено.',
     },
+    {
+      id: 'pet-bureau-fail',
+      action: 'ХОДАТАЙСТВО',
+      target: '^zapros@bureau.org$',
+      cards: [],
+      release: [],
+      ok: 'Бюро: не исполнено.',
+      refusal: true,
+    },
   ],
 };
 const engine = {
@@ -130,6 +139,19 @@ describe('ходатайство из папки (этап 3)', () => {
     expect(await db.select().from(playerLetters)).toEqual([]);
     const [row] = await db.select().from(playerProgress);
     expect(row).toBeUndefined();
+  });
+
+  it('общий отказ (PRE-B) — сразу в папку, письма нет, попытка засчитана', async () => {
+    const res = await post('/api/petition', {
+      to: 'zapros@bureau.org',
+      ask: { file: '02', quote: 'Материал 02' },
+      basis: { file: '02', quote: 'Материал 02' },
+    });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ refused: 'Бюро: не исполнено.' });
+    expect(await db.select().from(playerLetters)).toEqual([]);
+    const [row] = await db.select().from(playerProgress);
+    expect(JSON.stringify(row?.progress)).toContain('"n":1');
   });
 
   it('карточка, которой нет в файле, и адрес не из книги — ошибка оформления', async () => {

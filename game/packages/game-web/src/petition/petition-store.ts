@@ -25,6 +25,8 @@ interface PetitionStore {
   field: DraftField | null;
   /** Ошибка оформления (E-A, FORM-B) — под полями, письмо не ушло. */
   error: string | null;
+  /** Общий отказ адресата пришёл сразу (PRE-B): письма нет, попытка засчитана. */
+  refusal: string | null;
   /** Пустые поля при попытке отправить — подсвечены. */
   missing: DraftField[];
   /** Штамп «Отправлено № N» на бланке. */
@@ -70,6 +72,7 @@ export const usePetition = create<PetitionStore>((set, get) => {
     activeId: null,
     field: null,
     error: null,
+    refusal: null,
     missing: [],
     stamp: null,
     sending: false,
@@ -94,7 +97,7 @@ export const usePetition = create<PetitionStore>((set, get) => {
           game().updateState(addDraft(target));
         }
       }
-      set({ activeId: target, error: null, missing: [], stamp: null });
+      set({ activeId: target, error: null, refusal: null, missing: [], stamp: null });
       set({ field: firstEmpty() });
       game().setPetitionOpen(true);
     },
@@ -104,14 +107,14 @@ export const usePetition = create<PetitionStore>((set, get) => {
       if (!s || s.drafts.length >= MAX_DRAFTS) return;
       const id = newId();
       game().updateState(addDraft(id));
-      set({ activeId: id, field: 'to', error: null, missing: [], stamp: null });
+      set({ activeId: id, field: 'to', error: null, refusal: null, missing: [], stamp: null });
       game().setPetitionOpen(true);
     },
 
     close() {
       game().setPetitionOpen(false);
       game().updateState(dropEmptyDrafts);
-      set({ field: null, error: null, missing: [] });
+      set({ field: null, error: null, refusal: null, missing: [] });
     },
 
     toggle(id) {
@@ -182,13 +185,18 @@ export const usePetition = create<PetitionStore>((set, get) => {
         set({ missing, error: 'Заполните все поля: Кому, Прошу, На основании.' });
         return;
       }
-      set({ sending: true, error: null, missing: [] });
+      set({ sending: true, error: null, refusal: null, missing: [] });
       const r = await postPetition(d.to, d.ask, d.basis).catch(() => ({
         ok: false as const,
         error: 'Нет связи с сервером — ходатайство не ушло. Попробуйте ещё раз.',
       }));
       if (!r.ok) {
         set({ sending: false, error: r.error });
+        return;
+      }
+      if ('refused' in r) {
+        // Черновик остаётся: игрок исправит карточки и отправит снова.
+        set({ sending: false, refusal: r.refused });
         return;
       }
       set({ sending: false, stamp: r.n });
