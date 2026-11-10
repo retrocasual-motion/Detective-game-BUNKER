@@ -1,7 +1,8 @@
 # Источники project skills
 
 В этой папке лежат 15 skills, скопированных из upstream-репозиториев по одному
-(не целыми наборами), и 4 собственных skill проекта (раздел ниже). Три источника
+(не целыми наборами), 1 skill, переписанный по upstream (`art-bible`, для дизайна —
+`design/`), и 4 собственных skill проекта (раздел ниже). Четыре источника
 распространяются по лицензии MIT, anthropics/skills — по Apache 2.0; текст лицензии
 лежит в каждой папке skill (`LICENSE` или `LICENSE.txt`).
 
@@ -77,6 +78,22 @@ verse-craft. Тексты skills иногда ссылаются на них («
 | Skill | Изменения |
 |---|---|
 | webapp-testing | без изменений. Для разработки игры (`game/`), не для сюжета |
+
+## Donchitos/Claude-Code-Game-Studios
+
+Из набора взят только skill `art-bible`, и то не файлами: исходный skill завязан на
+фреймворк набора (хуки, конфиги, агенты, папки `design/gdd/`) и в этом репозитории не
+запустится. Его шаблон и «линза арт-директора» переписаны под архив дела.
+
+- Репозиторий: https://github.com/Donchitos/Claude-Code-Game-Studios
+- Коммит: `abc0de79d6ceb0b5d7aa693945849b3937afbe6a` (2026-11-10)
+- Лицензия: MIT, © 2026 Donchitos (`LICENSE` в папке skill)
+- Пути в upstream: `.claude/skills/art-bible/SKILL.md`, `.claude/docs/templates/art-bible.md`,
+  `.claude/skills/art-bible/references/lens-art-director.md`
+
+| Skill | Изменения |
+|---|---|
+| art-bible | переписан: порядок работы БУНКЕРА (варианты латинскими метками, запись пакетом, PR). Шаблон → `design/art-bible/TEMPLATE.md` (9 разделов → 15: убраны бой, HUD, LOD; добавлены столпы, два мира, носители и камеры, бумага, видео, звук, запреты), линза → `design/art-bible/CHECKS.md` (плюс проверки детективной игры) |
 
 ## Как обновить
 
