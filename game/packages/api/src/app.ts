@@ -3,6 +3,7 @@ import {
   act,
   type Content,
   emptyProgress,
+  fieldWait,
   GENERAL_REFUSAL_IDS,
   type Progress,
   parseActionLine,
@@ -106,6 +107,12 @@ function invalidReference(s: PlayerState, materials: Material[]): string | null 
   const bad = refs.find((id) => !allIds.has(id));
   return bad ? `нет материала ${bad}` : null;
 }
+
+/**
+ * Лимит попыток в игре (LK-A, решение автора 09.11): во всех полях ввода — 5 неверных, потом поле
+ * не принимает значение 2 минуты. Заменяет T-11-A пакета (3 → 10 мин; газета — 10 дат).
+ */
+const GAME_CONFIG = { pauseMs: 2 * 60 * 1000, limits: { ПАРОЛЬ: 5 } };
 
 export function createApp({
   db,
@@ -211,7 +218,8 @@ export function createApp({
     // одном процессе; несколько процессов сервера (этап 6) — транзакция с блокировкой строки.
     const run = queue.then(async () => {
       const before = await loadProgress();
-      const { progress, outcome } = act(engine.content, before, input, now());
+      const t = now();
+      const { progress, outcome } = act(engine.content, before, input, t, GAME_CONFIG);
       await saveProgress(progress);
       // Повтор осмотра (этап 4b): игрок снова переворачивает тот же лист — на обороте то же,
       // а не служебное «уже выдано ранее».
@@ -229,6 +237,12 @@ export function createApp({
         quiet:
           !['успех', 'ответ', 'повтор'].includes(outcome.result) || /-other$/.test(outcome.rule),
         released: outcome.released.flatMap((id) => lockedById.get(id) ?? []),
+        // Поле ввода не принимает значение ещё столько мс (LK-A): игра показывает отсчёт.
+        ...(input.action === 'ПАРОЛЬ'
+          ? {
+              wait: fieldWait(engine.content, progress, input.action, input.target, t, GAME_CONFIG),
+            }
+          : {}),
       };
     });
     queue = run.catch(() => undefined);

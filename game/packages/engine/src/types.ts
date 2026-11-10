@@ -135,6 +135,11 @@ export interface Outcome {
 export interface EngineConfig {
   /** Пауза поля после исчерпания попыток, мс (T-11-A: 10 минут). */
   pauseMs: number;
+  /**
+   * Лимит неверных попыток по действию — поверх правил пакета (игра, LK-A: ПАРОЛЬ — 5 во всех
+   * полях, и в архиве газеты). Нет — как в пакете.
+   */
+  limits?: Partial<Record<string, number>>;
 }
 
 export const DEFAULT_CONFIG: EngineConfig = { pauseMs: 10 * 60 * 1000 };

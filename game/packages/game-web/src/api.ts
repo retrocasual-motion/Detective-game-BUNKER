@@ -40,11 +40,13 @@ export interface ActionResult {
   quiet?: boolean;
   /** Материалы, которые действие открыло. */
   released: Material[];
+  /** Поле ввода не примет значение ещё столько мс (LK-A); 0 — принимает. */
+  wait?: number;
 }
 
 /** Действие игрока над материалом (этап 4b): осмотр — перевернуть, увеличить, листать. */
 export const postAction = async (
-  action: 'ОСМОТР',
+  action: 'ОСМОТР' | 'ПАРОЛЬ' | 'АДРЕС',
   target: string,
   value: string,
 ): Promise<ActionResult> => {

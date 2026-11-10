@@ -6,6 +6,7 @@ import { PlacedNote } from './desk/PlacedNote.tsx';
 import { ThrowToast, TrashView } from './desk/TrashBin.tsx';
 import { DevActionLine } from './dev/DevActionLine.tsx';
 import { HeldView } from './hold/HeldView.tsx';
+import { LaptopView } from './laptop/LaptopView.tsx';
 import { PetitionCorner } from './petition/PetitionCorner.tsx';
 import { RoomScene } from './room/RoomScene.tsx';
 import { KEY_DIR, NAV } from './room/views.ts';
@@ -84,6 +85,7 @@ export function App() {
       <ArrivalNote />
       <PlacedNote />
       <ComputerScreen />
+      <LaptopView />
       <TrashView />
       <HeldView />
       <SearchPanel />

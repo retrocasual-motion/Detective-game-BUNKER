@@ -3,6 +3,7 @@ export {
   act,
   availableTexts,
   type Content,
+  fieldWait,
   markSeen,
   normalizeCardFile,
   resolve,

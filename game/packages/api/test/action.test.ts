@@ -97,13 +97,17 @@ describe('движок правил на сервере', () => {
     expect(inboxIds(state, [...materials, mat('L101')])).toEqual(['L101']);
   });
 
-  it('неверный ввод — ответ правила; три неверных — лимит', async () => {
-    for (let i = 0; i < 3; i++) {
+  it('неверный ввод — ответ правила; пять неверных — лимит на 2 минуты (LK-A), отсчёт в ответе', async () => {
+    for (let i = 0; i < 5; i++) {
       const r = await post('/api/action', { action: 'ПАРОЛЬ', target: 'сейф', value: 'нет' });
-      expect(((await r.json()) as { result: string }).result).toBe('отказ');
+      const body = (await r.json()) as { result: string; wait: number };
+      expect(body.result).toBe('отказ');
+      expect(body.wait).toBe(i < 4 ? 0 : 2 * 60 * 1000);
     }
     const r = await post('/api/action', { action: 'ПАРОЛЬ', target: 'сейф', value: 'верно' });
-    expect(((await r.json()) as { result: string }).result).toBe('лимит');
+    const body = (await r.json()) as { result: string; wait: number };
+    expect(body.result).toBe('лимит');
+    expect(body.wait).toBeGreaterThan(0);
   });
 
   it('клиент не может повесить на стену неоткрытый материал (P-10)', async () => {

@@ -63,6 +63,11 @@ export default function HeldThing({ held }: { held: Held }) {
         tag={`Изъято · ${held.id}`}
         onUse={() =>
           afterLeaving(() => {
+            // Ноутбук — живым экраном (4c-1, SCR-C); прочие устройства — пока листом (4c-2…).
+            if (held.id === '47') {
+              useGame.getState().openLaptop();
+              return;
+            }
             close();
             useGame.getState().readMaterial(held.id);
           })

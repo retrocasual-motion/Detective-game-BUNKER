@@ -124,6 +124,8 @@ export function inboxIds(state: PlayerState, materials: Material[]): string[] {
     ...(state.trash ?? []),
     // Вынутая папка висит на стене папкой — её материал не во «Входящих» (DS-A).
     ...(state.taken ?? []).flatMap((t) => FOLDER_DOCS[t] ?? []),
+    // Файлы устройств — на устройстве (LW-A).
+    ...Object.values(DEVICE_MATERIALS).flat(),
   ]);
   return materials
     .filter((m) => isReleased(m) && !hidden.has(m.id))
@@ -308,6 +310,18 @@ export const folderItemId = (taken: string) => `F:${taken}`;
  * висит папкой (F:), поэтому сам материал во «Входящих» не стоит. Папки П-09 — пока выдержкой.
  */
 export const FOLDER_DOCS: Readonly<Record<string, string>> = { 'П-02/18': 'L991' };
+
+/**
+ * Что лежит внутри устройства (этап 4c, LW-A — автор 10.11): эти материалы — файлы на самом
+ * устройстве; во «Входящих» и на стене их нет, открывают их на устройстве. В деле они есть
+ * (поиск, карточки ходатайства).
+ */
+export const DEVICE_MATERIALS: Readonly<Record<string, readonly string[]>> = {
+  // L947 — крупный план картинки учётной записи на экране входа.
+  '47': ['L560', 'L561', 'L562', 'L563', 'L564', 'L565', 'L947'],
+};
+export const deviceOf = (materialId: string) =>
+  Object.keys(DEVICE_MATERIALS).find((d) => DEVICE_MATERIALS[d]?.includes(materialId)) ?? null;
 
 /** Ярлык группы конверта на стене. */
 export const containerLabelId = (id: ContainerId) => `n:archive-${id}`;

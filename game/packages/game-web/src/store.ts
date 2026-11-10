@@ -5,6 +5,7 @@ import {
   type Camera,
   type ContainerId,
   DEVICE_IDS,
+  deviceOf,
   FOLDER_DOCS,
   folderItemId,
   type Join,
@@ -25,6 +26,7 @@ import { useMemo } from 'react';
 import { create } from 'zustand';
 import { getMaterials, getPendingMail, getState, postAction, putState } from './api.ts';
 import { clampToBounds } from './canvas/math.ts';
+import { todayKey } from './clock.ts';
 import { createSaver } from './save.ts';
 import { type Binned, binLetter, moveItem, takeLetter, unbinLetter } from './wall/wall-actions.ts';
 
@@ -83,6 +85,17 @@ interface GameStore {
    * ближе к точке под курсором, щелчок по самой вещи — вскрыть или включить.
    */
   held: Held | null;
+  /**
+   * Ноутбук руководителя крупно, экраном к игроку (4c-1, SCR-C): живой экран. material — открыть
+   * файл из этого материала (поиск).
+   */
+  laptop: { material: string | null } | null;
+  openLaptop(material?: string | null): void;
+  /** Отойти от экрана: ноутбук снова вещь в руках (или положить, toHands = false). */
+  closeLaptop(toHands?: boolean): void;
+  /** Поле ввода не примет значение до этого момента, мс (LK-A): по полю — «ноутбук». */
+  fieldBlockedUntil: Record<string, number>;
+  blockField(field: string, ms: number): void;
   hold(h: Held | null): void;
   /** Открыть материал листом (экран устройства в 4a). */
   readMaterial(materialId: string): void;
@@ -190,6 +203,8 @@ export const useGame = create<GameStore>((set, get) => {
     computerOpen: false,
     trashOpen: false,
     held: null,
+    laptop: null,
+    fieldBlockedUntil: {},
     find: null,
     searchOpen: false,
     excerpt: null,
@@ -213,6 +228,18 @@ export const useGame = create<GameStore>((set, get) => {
       const before = onWallNow(get().state);
       get().updateState((s) => openContainer(s, materials, id));
       markNew(before);
+    },
+
+    openLaptop(material = null) {
+      set({ laptop: { material }, held: null, viewerId: null });
+    },
+
+    closeLaptop(toHands = true) {
+      set({ laptop: null, held: toHands ? { type: 'device', id: '47' } : null });
+    },
+
+    blockField(field, ms) {
+      set((g) => ({ fieldBlockedUntil: { ...g.fieldBlockedUntil, [field]: Date.now() + ms } }));
     },
 
     hold(h) {
@@ -321,6 +348,11 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     openViewer(materialId, find, excerpt) {
+      // Файл устройства открывают на самом устройстве (LW-A): ноутбук — экраном к игроку.
+      if (deviceOf(materialId) === '47') {
+        get().openLaptop(materialId);
+        return;
+      }
       // Устройство берут в руки (этап 4a); из поиска — сразу текст.
       if (!find && DEVICE_IDS.has(materialId)) {
         set({ held: { type: 'device', id: materialId } });
@@ -428,6 +460,8 @@ export const useGame = create<GameStore>((set, get) => {
         try {
           const [materials, state] = await Promise.all([getMaterials(), getState()]);
           set({ materials, state, loadFailed: false });
+          // Первый день дела — для часов устройств (CL-D).
+          if (state && !state.started) get().updateState((s) => ({ ...s, started: todayKey() }));
           // Только в разработке: «?opened=all» — все конверты вскрыты (автотесты и проверки).
           if (
             import.meta.env.DEV &&
