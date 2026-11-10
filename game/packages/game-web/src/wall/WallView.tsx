@@ -1,6 +1,6 @@
 import {
+  boardCamera,
   type Camera,
-  fitCamera,
   NOTE_STYLE,
   type Note,
   PERSONS,
@@ -27,6 +27,7 @@ import { overFolder, petitionFieldAt } from '../petition/fieldAt.ts';
 import { usePetition } from '../petition/petition-store.ts';
 import { useViewport } from '../room/useViewport.ts';
 import { useGame } from '../store.ts';
+import { useCameraTween } from './useCameraTween.ts';
 import { isItemCard, type PinHandlers, WallCard } from './WallCard.tsx';
 import { type At, pinOf, WallThreads } from './WallThreads.tsx';
 import {
@@ -125,6 +126,8 @@ function NoteEditor({
  * Нити — от кнопки к кнопке между любыми вещами; щелчок по нити — подпись, двойной —
  * удалить (с «Вернуть»). Внизу справа — чистые карточки: «Записка» и «Ярлык».
  */
+const NO_CAMERA: Camera = { x: 0, y: 0, zoom: 1 };
+
 export function WallView() {
   const wall = useGame((g) => g.state?.wall);
   // Со стола доска видна целиком (правка автора 09.11); у стены — камера игрока.
@@ -318,8 +321,13 @@ export function WallView() {
     [updateState],
   );
 
-  const camera = wall ? (atDesk ? fitCamera(wall, vp) : wall.camera) : undefined;
-  if (!wall || !camera) return null;
+  // Стол ↔ стена: камера доски перетекает за время полёта камеры комнаты, без скачка.
+  const camera = useCameraTween(
+    wall ? (atDesk ? boardCamera(vp) : wall.camera) : NO_CAMERA,
+    atDesk,
+    vp,
+  );
+  if (!wall) return null;
 
   const byId = new Map(materials.map((m) => [m.id, m]));
   const notes = new Map(wall.notes.map((n) => [n.id, n]));

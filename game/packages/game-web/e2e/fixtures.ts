@@ -46,6 +46,31 @@ export async function stripPoint(page: Page, id: string) {
   return { x: box.x + STRIP.position.x, y: box.y + STRIP.position.y };
 }
 
+/**
+ * Лист на стене закрыт открытой папкой ходатайства — подвинуть доску, как игрок: потянуть за
+ * пустую пробку, чтобы полоска листа оказалась правее папки. (Раньше тесты держались на
+ * побочном эффекте: Playwright прокручивал контейнер стены, пока доска была больше экрана.)
+ */
+export async function bringIntoView(page: Page, id: string) {
+  const pt = await stripPoint(page, id);
+  const covered = await page.evaluate(
+    ([x, y, wid]) => !document.elementFromPoint(x, y)?.closest(`[data-testid="wall-${wid}"]`),
+    [pt.x, pt.y, id] as const,
+  );
+  if (!covered) return;
+  const start = await page.evaluate(() => {
+    for (let y = 140; y < 700; y += 40)
+      for (let x = 1320; x > 700; x -= 40)
+        if (document.elementFromPoint(x, y)?.classList.contains('canvas')) return { x, y };
+    return null;
+  });
+  if (!start) throw new Error('нет пустой пробки, чтобы подвинуть доску');
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(start.x + 900 - pt.x, start.y + 320 - pt.y, { steps: 6 });
+  await page.mouse.up();
+}
+
 /** Сохранение ушло на сервер. */
 export const savedPut = (page: Page) =>
   page.waitForResponse((r) => r.url().endsWith('/api/state') && r.request().method() === 'PUT');

@@ -85,8 +85,8 @@ export function roomFor(vp: Viewport): Room {
   };
 }
 
-/** Длительность перехода стол ↔ стена, мс (MOVE-A: частый переход — коротко). */
-export const TRANSITION_MS = 450;
+/** Длительность перехода стол ↔ стена, мс (MOVE-A; плавнее — правка автора 10.11, было 450). */
+export const TRANSITION_MS = 600;
 
 /** Доска: центр в начале координат, уменьшена в s раз. */
 export const boardOps = (): Op[] => [['scale', BOARD_SCALE]];
@@ -109,9 +109,11 @@ export const lerpPose = (a: Pose, b: Pose, t: number): Pose => ({
   ry: a.ry + (b.ry - a.ry) * t,
 });
 
-/** Плавный разгон и торможение камеры. */
-export const easeCamera = (t: number): number =>
-  t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+/**
+ * Плавный разгон и торможение камеры — синусом (правка автора 10.11): пиковая скорость в
+ * полтора раза выше средней (у прежней кубической — втрое), движение мягче.
+ */
+export const easeCamera = (t: number): number => (1 - Math.cos(Math.PI * t)) / 2;
 
 export type Vec3 = [number, number, number];
 

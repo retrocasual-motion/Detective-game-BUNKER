@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, STRIP, savedPut, sheet, test, toWall } from './fixtures.ts';
+import { bringIntoView, expect, STRIP, savedPut, sheet, test, toWall } from './fixtures.ts';
 
 /** Выделить строку в открытом листе — как мышью. */
 async function selectText(page: Page, text: string) {
@@ -22,6 +22,7 @@ async function selectText(page: Page, text: string) {
 }
 
 async function cardFrom(page: Page, id: string, text: string) {
+  await bringIntoView(page, id);
   await sheet(page, id).click(STRIP);
   await selectText(page, text);
   await page.getByTestId('to-petition').click();

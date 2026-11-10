@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { sealedIds } from './archive.ts';
 import {
   arrangeWall,
+  BOARD_PAD,
+  boardCamera,
+  CARD_H,
+  CARD_W,
   containerLabelId,
   defaultState,
-  fitCamera,
   GRID_TOP,
   inboxIds,
   onWall,
@@ -148,7 +151,7 @@ describe('край доски', () => {
 });
 
 describe('разложить по порядку (служебная кнопка)', () => {
-  it('стартовые — на начальные места, письма и записки — рядами ниже; нити остаются', () => {
+  it('стартовые — на начальные места, письма и записки — рядами правее сетки (WB-C); нити остаются', () => {
     const mats = [...starting, mat('L214'), mat('M001')];
     const base = defaultState(mats);
     const moved: PlayerState = {
@@ -169,13 +172,14 @@ describe('разложить по порядку (служебная кнопк�
     const s = arrangeWall(moved, mats);
     const at = (id: string) => s.wall.items.find((i) => i.id === id);
     for (const i of base.wall.items) expect(at(i.id)).toMatchObject({ x: i.x, y: i.y, rot: i.rot });
-    const below = Math.max(...base.wall.items.map((i) => i.y));
-    expect(at('L214')?.y).toBeGreaterThan(below);
+    const right = Math.max(...base.wall.items.map((i) => i.x)) + CARD_W;
+    expect(at('L214')?.x).toBeGreaterThan(right);
+    expect(at('n1')?.x ?? 0).toBeLessThanOrEqual(WALL_BOUNDS.right - CARD_W);
     expect(at('L214')?.x).toBeLessThan(at('M001')?.x ?? 0);
     expect(at('M001')?.x).toBeLessThan(at('n1')?.x ?? 0);
     expect(s.wall.threads).toEqual(moved.wall.threads);
     expect(s.wall.notes).toEqual(moved.wall.notes);
-    expect(s.wall.camera).toEqual(base.wall.camera);
+    expect(s.wall.camera).toEqual(moved.wall.camera);
   });
 });
 
@@ -241,20 +245,68 @@ describe('конверты архива (A-260)', () => {
   });
 });
 
-describe('стена целиком со стола (fitCamera)', () => {
-  const vp = { width: 1366, height: 768 };
+describe('вся доска со стола и у стены (WB-C, ZM-B)', () => {
+  for (const vp of [
+    { width: 1366, height: 768 },
+    { width: 1920, height: 1080 },
+    { width: 1681, height: 761 },
+  ])
+    it(`пробка целиком и по центру — ${vp.width}×${vp.height}`, () => {
+      const cam = boardCamera(vp);
+      const left = WALL_BOUNDS.left * cam.zoom + cam.x;
+      const right = WALL_BOUNDS.right * cam.zoom + cam.x;
+      const top = WALL_BOUNDS.top * cam.zoom + cam.y;
+      const bottom = WALL_BOUNDS.bottom * cam.zoom + cam.y;
+      expect(left).toBeGreaterThanOrEqual(BOARD_PAD - 0.01);
+      expect(top).toBeGreaterThanOrEqual(BOARD_PAD - 0.01);
+      expect(vp.width - right).toBeCloseTo(left, 0);
+      expect(vp.height - bottom).toBeCloseTo(top, 0);
+      // По одной стороне — вплотную к полю: доска не мельче нужного.
+      expect(Math.min(left, top)).toBeCloseTo(BOARD_PAD, 0);
+      // Карточку видно: на 1366×768 — не меньше ~40 px в ширину (дальше — колесом).
+      expect(CARD_W * cam.zoom).toBeGreaterThan(40);
+    });
+});
 
-  it('мало вещей — обычный масштаб; много — мельче, но всё в экране и не за краем пробки', () => {
+describe('группы конвертов ложатся на доску при любом порядке вскрытия (WB-C)', () => {
+  const ids = ['protocols', 'scene', 'bunker', 'personal'] as const;
+  const perms = (a: readonly string[]): string[][] =>
+    a.length <= 1
+      ? [[...a]]
+      : a.flatMap((x, i) => perms([...a.slice(0, i), ...a.slice(i + 1)]).map((p) => [x, ...p]));
+  for (const order of perms(ids))
+    it(order.join(' → '), () => {
+      let s = defaultState(starting);
+      for (const id of order) s = openContainer(s, starting, id as (typeof ids)[number]);
+      const cards = s.wall.items.filter((i) => !i.id.startsWith('n:'));
+      for (const i of s.wall.items) {
+        expect(i.x).toBeGreaterThanOrEqual(WALL_BOUNDS.left);
+        expect(i.y).toBeGreaterThanOrEqual(WALL_BOUNDS.top);
+        expect(i.y + CARD_H).toBeLessThanOrEqual(WALL_BOUNDS.bottom);
+      }
+      for (const i of cards) expect(i.x + CARD_W).toBeLessThanOrEqual(WALL_BOUNDS.right);
+      // Карточки не накрывают друг друга.
+      for (const [k, a] of cards.entries())
+        for (const b of cards.slice(k + 1))
+          expect(
+            a.x < b.x + CARD_W && b.x < a.x + CARD_W && a.y < b.y + CARD_H && b.y < a.y + CARD_H,
+            `${a.id} и ${b.id}`,
+          ).toBe(false);
+    });
+});
+
+describe('старое сохранение на большой доске (WB-C)', () => {
+  it('висевшее за новым краем — у края, на пробке', () => {
     const s = defaultState(starting);
-    expect(fitCamera(s.wall, vp).zoom).toBe(0.55);
-    const all = openAll(s, starting);
-    const cam = fitCamera(all.wall, vp);
-    expect(cam.zoom).toBeLessThan(0.55);
-    for (const i of all.wall.items) {
-      expect(i.x * cam.zoom + cam.x).toBeGreaterThanOrEqual(0);
-      expect((i.y + 220) * cam.zoom + cam.y).toBeLessThanOrEqual(vp.height);
-      expect((i.x + 160) * cam.zoom + cam.x).toBeLessThanOrEqual(vp.width);
-    }
-    expect(cam.x).toBeLessThanOrEqual(300 * cam.zoom);
+    const far = {
+      ...s,
+      wall: {
+        ...s.wall,
+        items: s.wall.items.map((i, k) => (k === 0 ? { ...i, x: 9000, y: 9000 } : i)),
+      },
+    };
+    const first = reconcile(far, starting).wall.items[0];
+    expect(first?.x).toBeLessThanOrEqual(WALL_BOUNDS.right - 80);
+    expect(first?.y).toBeLessThanOrEqual(WALL_BOUNDS.bottom - 80);
   });
 });
