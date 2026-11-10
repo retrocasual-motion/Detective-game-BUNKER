@@ -952,3 +952,33 @@
 .lap-start .lap-start-foot button {
   color: #fff;
 }
+
+/* Экран приветствия: ключ уже введён — профиль и «Войти». */
+.lap-welcome {
+  justify-content: center;
+  padding-top: 0;
+}
+.lap-welcome-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.lap-welcome .lap-avatar {
+  display: block;
+  cursor: default;
+}
+.lap-enter {
+  min-width: 140px;
+  padding: 7px 22px;
+  border: 1px solid #8fb4ff;
+  border-radius: 4px;
+  background: linear-gradient(#3d79c9, #1f53a3);
+  color: #fff;
+  font:
+    700 15px Tahoma,
+    sans-serif;
+  cursor: pointer;
+}
+.lap-enter:hover {
+  background: linear-gradient(#4b88da, #2a62b6);
+}

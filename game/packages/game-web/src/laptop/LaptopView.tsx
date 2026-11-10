@@ -4,7 +4,7 @@ import { usePetition } from '../petition/petition-store.ts';
 import { useGame } from '../store.ts';
 import { Desktop } from './Desktop.tsx';
 import { buildLaptop } from './files.ts';
-import { LockScreen } from './LockScreen.tsx';
+import { LockScreen, Welcome } from './LockScreen.tsx';
 import './laptop.css';
 
 /** Экран ноутбука, логические px (WXGA, как у ноутбуков 2008 года); на окне — масштабом. */
@@ -22,7 +22,12 @@ export function LaptopView() {
   const laptop = useGame((g) => g.laptop);
   const materials = useGame((g) => g.materials);
   const lap = useMemo(() => buildLaptop(materials), [materials]);
-  const [session, setSession] = useState(true);
+  // Сеанс: после первого входа ключ не нужен — экран приветствия и «Войти» (правка автора 10.11).
+  const [session, setSession] = useState(false);
+  // Отошли от ноутбука — сеанс закрыт: в следующий раз снова приветствие и «Войти».
+  useEffect(() => {
+    if (!laptop) setSession(false);
+  }, [laptop]);
   const unlocked = !!lap && session;
   const [scale, setScale] = useState(1);
   const [sel, setSel] = useState<{ text: string; material: string; x: number; y: number } | null>(
@@ -122,6 +127,8 @@ export function LaptopView() {
         >
           {unlocked && lap ? (
             <Desktop lap={lap} material={laptop.material} onLogout={() => setSession(false)} />
+          ) : lap ? (
+            <Welcome onEnter={() => setSession(true)} />
           ) : (
             <LockScreen onUnlock={() => setSession(true)} />
           )}

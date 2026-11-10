@@ -107,6 +107,33 @@ function fromSaved(w: LapWindow, lap: Laptop): Placed | null {
 const ICON_W = 100;
 const ICON_H = 80;
 const ICONS_PER_COL = 8;
+const GRID_COLS = 12;
+const GRID_ROWS = 9;
+const cellAt = (c: number, r: number) => ({ x: 12 + c * ICON_W, y: 10 + r * ICON_H });
+
+/**
+ * Невидимая сетка рабочего стола (правка автора 10.11, как в настоящих системах): отпущенный
+ * значок встаёт в ближайшую клетку; занята — в ближайшую свободную.
+ */
+function snapToGrid(at: { x: number; y: number }, taken: { x: number; y: number }[]) {
+  const busy = new Set(
+    taken.map((p) => `${Math.round((p.x - 12) / ICON_W)}:${Math.round((p.y - 10) / ICON_H)}`),
+  );
+  const want = { c: (at.x - 12) / ICON_W, r: (at.y - 10) / ICON_H };
+  let best: { x: number; y: number } | null = null;
+  let bestD = Number.POSITIVE_INFINITY;
+  for (let c = 0; c < GRID_COLS; c++)
+    for (let r = 0; r < GRID_ROWS; r++) {
+      if (busy.has(`${c}:${r}`)) continue;
+      const d = (c - want.c) ** 2 + (r - want.r) ** 2;
+      if (d < bestD) {
+        bestD = d;
+        best = cellAt(c, r);
+      }
+    }
+  return best ?? cellAt(0, 0);
+}
+
 const gridAt = (k: number) => ({
   x: 12 + Math.floor(k / ICONS_PER_COL) * ICON_W,
   y: 10 + (k % ICONS_PER_COL) * ICON_H,
@@ -265,6 +292,14 @@ export function Desktop({
             onSelect={() => setSelIcon(i.key)}
             onOpen={i.act}
             onMove={(at) => setIconPos((m) => ({ ...m, [i.key]: at }))}
+            onDrop={() =>
+              setIconPos((m) => {
+                const taken = icons
+                  .map((o, j) => (o.key === i.key ? null : (m[o.key] ?? gridAt(j))))
+                  .filter((p): p is { x: number; y: number } => p !== null);
+                return { ...m, [i.key]: snapToGrid(m[i.key] ?? gridAt(k), taken) };
+              })
+            }
           />
         ))}
       </div>
@@ -422,6 +457,7 @@ function DesktopIcon({
   onSelect,
   onOpen,
   onMove,
+  onDrop,
 }: {
   name: string;
   type: string;
@@ -430,6 +466,7 @@ function DesktopIcon({
   onSelect: () => void;
   onOpen: () => void;
   onMove: (at: { x: number; y: number }) => void;
+  onDrop: () => void;
 }) {
   const drag = useRef<{
     sx: number;
@@ -471,6 +508,8 @@ function DesktopIcon({
         });
       }}
       onPointerUp={() => {
+        // Отпустили — значок встаёт в клетку невидимой сетки (как в системах тех лет).
+        if (drag.current?.moved) onDrop();
         drag.current = null;
       }}
       onDoubleClick={onOpen}

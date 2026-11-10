@@ -251,3 +251,33 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
       .catch(() => undefined);
   }
 }
+
+/**
+ * Экран приветствия (правка автора 10.11): ключ уже введён — при следующем открытии ноутбука
+ * картинка профиля, a.cole и «Войти», как в системах тех лет. Enter — то же.
+ */
+export function Welcome({ onEnter }: { onEnter: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') onEnter();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onEnter]);
+  return (
+    <div className="lap-lock lap-welcome" data-testid="laptop-welcome">
+      <div className="lap-welcome-card">
+        <span className="lap-avatar lap-avatar-big" aria-hidden>
+          <svg viewBox="0 0 100 100" aria-hidden>
+            <path d="M-10 38 H62 V112" fill="none" stroke="#d9e2ee" strokeWidth="9" />
+          </svg>
+        </span>
+        <div className="lap-user">a.cole</div>
+        <button type="button" className="lap-enter" data-testid="laptop-enter" onClick={onEnter}>
+          Войти
+        </button>
+      </div>
+      <div className="lap-lock-foot">VAULTLINE · рабочее место руководителя программы</div>
+    </div>
+  );
+}

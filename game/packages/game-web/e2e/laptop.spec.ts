@@ -99,8 +99,10 @@ test('верный ключ — рабочий стол из канона, ча�
   await expect(page.getByTestId('held')).toHaveCount(0);
   await expect(sheet(page, 'L563')).toHaveCount(0);
   await expect(page.getByTestId('inbox-L563')).toHaveCount(0);
-  // Снова к ноутбуку — сразу рабочий стол.
+  // Снова к ноутбуку — ключ уже введён: экран приветствия, «Войти» — рабочий стол.
   await laptopUp(page);
+  await expect(page.getByTestId('laptop-welcome')).toContainText('a.cole');
+  await page.getByTestId('laptop-enter').click();
   await expect(page.getByTestId('laptop-desktop')).toBeVisible();
 });
 
@@ -196,7 +198,29 @@ test('значки двигают; окна и места значков — н�
   await page.reload();
   await expect(page.getByTestId('room')).toBeVisible();
   await laptopUp(page);
+  await page.getByTestId('laptop-enter').click();
   await expect(page.getByTestId('lap-notepad')).toContainText('e.pierce.uk@mailbridge.net');
   const c = await page.getByTestId('lap-icon-Доклад_Р.txt').boundingBox();
   expect(Math.abs((c?.x ?? 0) - (b?.x ?? 0))).toBeLessThan(3);
+});
+
+test('значки — по невидимой сетке: отпустили на занятое место — встаёт в соседнюю клетку', async ({
+  page,
+}) => {
+  await laptopUp(page);
+  await unlock(page);
+  const moving = page.getByTestId('lap-icon-Доклад_Р.txt');
+  const target = await page.getByTestId('lap-icon-Отчёты').boundingBox();
+  const a = await moving.boundingBox();
+  if (!a || !target) throw new Error('нет значков');
+  await page.mouse.move(a.x + a.width / 2, a.y + 20);
+  await page.mouse.down();
+  await page.mouse.move(target.x + target.width / 2 + 7, target.y + 25, { steps: 10 });
+  await page.mouse.up();
+  const b = await moving.boundingBox();
+  if (!b) throw new Error('нет значка');
+  // Не на «Отчётах» и ровно в клетке: по горизонтали или вертикали — на шаг сетки.
+  const overlap = Math.abs(b.x - target.x) < 10 && Math.abs(b.y - target.y) < 10;
+  expect(overlap).toBe(false);
+  expect(Math.abs(b.x - target.x) < 2 || Math.abs(b.y - target.y) < 2).toBe(true);
 });
