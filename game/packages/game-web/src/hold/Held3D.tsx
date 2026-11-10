@@ -109,15 +109,28 @@ export function useSpot(ref: RefObject<Object3D | null>, spot: Omit<Spot, 'obj'>
   const { id, label, testId } = spot;
   const click = useRef(spot.onClick);
   click.current = spot.onClick;
+  // После каждой отрисовки: часть могла появиться позже (стопка переложенных листов) или пропасть.
   useEffect(() => {
-    if (!ref.current) return;
-    spots.set(id, { id, label, testId, obj: ref.current, onClick: () => click.current() });
+    const obj = ref.current;
+    const cur = spots.get(id);
+    if (!obj) {
+      if (cur) {
+        spots.delete(id);
+        changed();
+      }
+      return;
+    }
+    if (cur?.obj === obj && cur.label === label && cur.testId === testId) return;
+    spots.set(id, { id, label, testId, obj, onClick: () => click.current() });
     changed();
-    return () => {
+  });
+  useEffect(
+    () => () => {
       spots.delete(id);
       changed();
-    };
-  }, [ref, id, label, testId]);
+    },
+    [id],
+  );
 }
 
 function Rig({
@@ -233,12 +246,21 @@ export interface Held3DProps {
   mode: HoldMode;
   half: [number, number];
   label: string;
+  /** Подпись внизу (лист пачки «18 из 41»). */
+  caption?: string;
   onClose: () => void;
   children: ReactNode;
 }
 
 /** Сцена с вещью и жесты мыши; сама вещь — children (формы из shapes.tsx). */
-export default function Held3D({ mode, half, label, onClose: close, children }: Held3DProps) {
+export default function Held3D({
+  mode,
+  half,
+  label,
+  caption,
+  onClose: close,
+  children,
+}: Held3DProps) {
   const gesture = useRef<Gesture>({
     dx: 0,
     dy: 0,
@@ -390,6 +412,11 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
           onClick={onClickPart(s.onClick)}
         />
       ))}
+      {caption && (
+        <p className="held-caption" data-testid="held-caption">
+          {caption}
+        </p>
+      )}
       <button
         type="button"
         className="tool tool-close held-close"

@@ -17,7 +17,7 @@ import { usePetition } from '../petition/petition-store.ts';
 import { clearFind, highlightFind } from '../search/highlight.ts';
 import { useGame } from '../store.ts';
 import { isLetter, takeOutOfBin } from '../wall/wall-actions.ts';
-import { isBundleListing, rowTarget } from './bundles.ts';
+import { excerptBody, isBundleListing, rowTarget } from './bundles.ts';
 import { sameRange, snapToWords, unitRangeAt } from './selectUnit.ts';
 import { unwrapLines } from './text.ts';
 import { useSheet } from './useSheet.ts';
@@ -46,6 +46,8 @@ const textOf = (n: TextNode): string =>
  */
 export function Viewer({ materialId }: ViewerProps) {
   const material = useGame((g) => g.materials.find((m) => m.id === materialId));
+  // Папка, вытащенная из пачки, — только её листы из описи (до отдельного документа, DS-A).
+  const excerpt = useGame((g) => g.excerpt);
   // Карточка персонажа — посмотреть поближе (правка автора 09.11).
   const person = PERSONS.find((p) => p.id === materialId);
   const close = useGame((g) => g.closeViewer);
@@ -186,10 +188,16 @@ export function Viewer({ materialId }: ViewerProps) {
         : undefined;
     return (
       <Markdown remarkPlugins={[remarkGfm, remarkBreaks]} components={components}>
-        {material ? unwrapLines(material.body) : ''}
+        {material
+          ? unwrapLines(
+              excerpt
+                ? excerptBody(material.body, excerpt.title, excerpt.from, excerpt.to)
+                : material.body,
+            )
+          : ''}
       </Markdown>
     );
-  }, [material]);
+  }, [material, excerpt]);
 
   const { goTo, page } = sheet;
   useEffect(() => {
@@ -217,7 +225,7 @@ export function Viewer({ materialId }: ViewerProps) {
       className={`viewer${folderOpen ? ' viewer-with-folder' : ''}${searchOpen ? ' viewer-with-search' : ''}`}
       data-testid="viewer"
       role="dialog"
-      aria-label={material?.title ?? person?.name}
+      aria-label={excerpt?.title ?? material?.title ?? person?.name}
       onPointerDown={(e) => {
         // Правая кнопка — как было, без приближения; зажатое колесо — сдвинуть приближённый лист
         // (правка автора 10.11, как у вещей в руках).

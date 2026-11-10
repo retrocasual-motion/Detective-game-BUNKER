@@ -87,3 +87,76 @@ export function rowOfSheet(listingBody: string, n: number): string | null {
 /** Код дела на обложке папки, вытащенной из пачки (лист n): «A-24». */
 export const coverCode = (listingBody: string, n: number) =>
   /A-\d+/.exec(rowOfSheet(listingBody, n) ?? '')?.[0] ?? null;
+
+/**
+ * Выдержка из описи пачки — только листы from–to (папка, вытащенная из пачки): заголовок, шапка
+ * таблицы, строки этих листов и разделы «## Лист N …» с N в этих листах.
+ */
+export function excerptBody(body: string, title: string, from: number, to: number): string {
+  const lines = body.split('\n');
+  const out: string[] = [`# ${title}`, ''];
+  const head = lines.findIndex((l) => l.trimStart().startsWith('|'));
+  if (head >= 0) {
+    out.push(lines[head] ?? '', lines[head + 1] ?? '');
+    for (const line of lines.slice(head + 2)) {
+      const m = /^(\d+)(?:\s*[–-]\s*(\d+))?$/.exec(cells(line)[0] ?? '');
+      if (!m) continue;
+      const a = Number(m[1]);
+      const b = Number(m[2] ?? m[1]);
+      if (a <= to && b >= from) out.push(line);
+    }
+  }
+  let keep = false;
+  for (const line of lines) {
+    const h = /^##\s+Лист\s+(\d+)/.exec(line);
+    if (/^#{1,2}\s/.test(line)) keep = !!h && Number(h[1]) >= from && Number(h[1]) <= to;
+    if (keep) out.push(line);
+  }
+  return out.join('\n');
+}
+
+/** Лист пачки при листании в руках (LF-A): что на нём, лежит ли текстом вниз, обложка ли папки. */
+export interface Sheet {
+  text: string;
+  faceDown: boolean;
+  /** Код дела на обложке, если это обложка папки (слой картона). */
+  cover: string | null;
+}
+
+/**
+ * Листы пачки по описи (LF-A, решение автора 10.11) — без новых фактов: строка описи на каждый
+ * лист своего диапазона («1–17 — чистый бланк» — 17 одинаковых листов). П-01 описан сводкой по
+ * людям — 96 анкет «день, имя» (сверху день 12, внутри дня — по порядку сводки), свободная строка —
+ * где сводка её даёт.
+ */
+export function sheetPages(listingBody: string, b: Pick<Bundle, 'sheets' | 'layers'>): Sheet[] {
+  const lines = listingBody.split('\n');
+  const pages: Sheet[] = [];
+  const header = lines.find((l) => l.trimStart().startsWith('|')) ?? '';
+  if (/Имя/.test(header) && /Дни/.test(header)) {
+    const people = lines
+      .map(cells)
+      .filter((c) => c[0] && /^\S\.\s/.test(c[0]) && /\d/.test(c[1] ?? ''));
+    for (let day = 12; day >= 1; day--)
+      for (const c of people) {
+        const free = new RegExp(`д\\.\\s*${day}:\\s*«([^»]*)»`).exec(c[2] ?? '')?.[1];
+        pages.push({
+          text: `Ежедневная анкета самооценки VAULTLINE. День ${day}. ${c[0]}.${free ? ` Что хотите добавить: «${free}»` : ''}`,
+          faceDown: false,
+          cover: null,
+        });
+      }
+  } else
+    for (let n = 1; n <= b.sheets; n++) {
+      const row = rowOfSheet(listingBody, n);
+      const c = row ? cells(row).slice(1) : [];
+      const text = c.join(' · ');
+      pages.push({
+        text,
+        faceDown: /текстом вниз/.test(text),
+        cover: b.layers.includes(n) ? (/A-\d+/.exec(text)?.[0] ?? '') : null,
+      });
+    }
+  while (pages.length < b.sheets) pages.push({ text: '', faceDown: false, cover: null });
+  return pages.slice(0, b.sheets);
+}

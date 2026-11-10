@@ -89,12 +89,23 @@ interface GameStore {
   pinToWall(materialId: string): void;
   /** Движок открыл материалы: в дело и во «Входящие» на столе (правка автора 09.11). */
   addReleased(released: Material[]): void;
+  /**
+   * Найдено руками в предмете (AW-B, решение автора 10.11: вытащил, пролистал, перевернул) —
+   * сразу на стену, рядом с вещью-источником; не во «Входящие».
+   */
+  addFound(released: Material[], near?: string): void;
   /** Через ms заглянуть, не пришёл ли ответ на ходатайство (MAIL-B: письмо во «Входящие»). */
   checkMailIn(ms: number): void;
   load(): Promise<void>;
   setPetitionOpen(open: boolean): void;
   /** Открыть материал; из поиска — с найденным словом (k — какое совпадение показать). */
-  openViewer(materialId: string, find?: { q: string; k: number }): void;
+  openViewer(
+    materialId: string,
+    find?: { q: string; k: number },
+    excerpt?: { title: string; from: number; to: number },
+  ): void;
+  /** Лист открыт выдержкой: только листы from–to описи пачки (папка, вытащенная из пачки). */
+  excerpt: { title: string; from: number; to: number } | null;
   /** Лист открыт из поиска (RD-C): что подсветить. */
   find: { q: string; k: number } | null;
   /** Поиск по делу открыт (RD-C). */
@@ -137,6 +148,7 @@ export const useGame = create<GameStore>((set, get) => {
     held: null,
     find: null,
     searchOpen: false,
+    excerpt: null,
     foundId: null,
     wallFly: 0,
     binned: null,
@@ -194,6 +206,31 @@ export const useGame = create<GameStore>((set, get) => {
       });
     },
 
+    addFound(released, near = '29') {
+      const { materials, state } = get();
+      const known = new Set(materials.map((m) => m.id));
+      const fresh = released.filter((m) => !known.has(m.id));
+      const all = fresh.length ? [...materials, ...fresh] : materials;
+      if (fresh.length) set({ materials: all });
+      if (!state) return;
+      get().updateState((st) => {
+        let s = fresh.length ? reconcile(st, all) : st;
+        const anchor = s.wall.items.find((i) => i.id === near);
+        for (const m of released) {
+          if (s.wall.items.some((i) => i.id === m.id)) continue;
+          // Правее вещи-источника, рядами по три; нет её на стене — в середину видимой стены.
+          const k = s.wall.items.filter((i) => /^L/.test(i.id)).length;
+          const c = shownCamera(s);
+          const base = anchor ?? {
+            x: (window.innerWidth / 2 - c.x) / c.zoom - 200,
+            y: (window.innerHeight / 2 - c.y) / c.zoom - 110,
+          };
+          s = moveItem(m.id, base.x + 220 + (k % 3) * 200, base.y + Math.floor(k / 3) * 270 - 0)(s);
+        }
+        return s;
+      });
+    },
+
     addReleased(released) {
       const { materials, state } = get();
       const known = new Set(materials.map((m) => m.id));
@@ -208,17 +245,17 @@ export const useGame = create<GameStore>((set, get) => {
       set({ petitionOpen: open });
     },
 
-    openViewer(materialId, find) {
+    openViewer(materialId, find, excerpt) {
       // Устройство берут в руки (этап 4a); из поиска — сразу текст.
       if (!find && DEVICE_IDS.has(materialId)) {
         set({ held: { type: 'device', id: materialId } });
         return;
       }
-      set({ viewerId: materialId, find: find ?? null });
+      set({ viewerId: materialId, find: find ?? null, excerpt: excerpt ?? null });
     },
 
     closeViewer() {
-      set({ viewerId: null, find: null });
+      set({ viewerId: null, find: null, excerpt: null });
     },
 
     revealOnWall(id) {
