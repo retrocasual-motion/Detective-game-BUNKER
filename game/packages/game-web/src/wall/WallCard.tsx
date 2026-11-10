@@ -46,6 +46,12 @@ interface WallCardProps {
   toolbar?: ReactNode;
   /** Вещь тянут над папкой ходатайства — вместо неё над папкой идёт её призрак. */
   hidden?: boolean;
+  /** Выделена (MS-D): подсвечена; потянуть — едут все выделенные. */
+  selected?: boolean;
+  /** Тянут другую выделенную вещь — эта едет следом, мировые px. */
+  follow?: { x: number; y: number } | null;
+  /** Shift + щелчок — добавить к выделению или убрать. */
+  onSelect?(id: string): void;
 }
 
 /**
@@ -71,6 +77,9 @@ export const WallCard = memo(function WallCard({
   onResize,
   toolbar,
   hidden,
+  selected,
+  follow,
+  onSelect,
 }: WallCardProps) {
   const [liveW, setLiveW] = useState<number | null>(null);
   const resize = useRef<{ x: number; w: number } | null>(null);
@@ -80,19 +89,23 @@ export const WallCard = memo(function WallCard({
     onDrop: (dx, dy, at) => onDrop(id, place.x + dx, place.y + dy, at),
     onMove: (dx, dy, at) => onLive(id, dx, dy, at),
   });
-  const x = place.x + (drag.offset?.x ?? 0);
-  const y = place.y + (drag.offset?.y ?? 0);
+  const shift = drag.offset ?? follow ?? null;
+  const x = place.x + (shift?.x ?? 0);
+  const y = place.y + (shift?.y ?? 0);
   const paperClass = `card paper paper-${kind}${drag.offset ? ' card-dragging' : ''}`;
 
   return (
     <div
-      className={`wall-card wall-card-${kind}${drag.offset ? ' wall-card-dragging' : ''}${hidden ? ' wall-card-over-folder' : ''}`}
+      className={`wall-card wall-card-${kind}${shift ? ' wall-card-dragging' : ''}${hidden ? ' wall-card-over-folder' : ''}${selected ? ' wall-card-selected' : ''}`}
       data-testid={`wall-${id}`}
       data-wall-item={id}
+      data-selected={selected || undefined}
       style={{
+        // Рамка выделения — одной толщины на экране при любом приближении.
+        ...(selected ? { '--sel-w': `${2.5 / zoom}px` } : {}),
         translate: `${x}px ${y}px`,
         rotate: `${place.rot + drag.tilt}deg`,
-        zIndex: drag.offset ? 100000 : place.z,
+        zIndex: shift ? 100000 + place.z : place.z,
         ...(w ? { width: w } : {}),
       }}
     >
@@ -107,8 +120,10 @@ export const WallCard = memo(function WallCard({
           aria-label={label}
           className={paperClass}
           data-kind={kind}
-          onClick={() => {
-            if (!drag.wasDragged()) onActivate?.(id);
+          onClick={(e) => {
+            if (drag.wasDragged()) return;
+            if (e.shiftKey && onSelect) onSelect(id);
+            else onActivate?.(id);
           }}
           {...drag.handlers}
         >

@@ -1186,6 +1186,27 @@ button {
   display: flex;
   gap: var(--space-2);
 }
+/* Выделение на стене (MS-D): контур у выделенных, рамка правой кнопкой, подсказка. */
+.wall-card-selected > .card {
+  outline: var(--sel-w, 3px) solid var(--color-accent);
+  outline-offset: calc(var(--sel-w, 3px) * 1.2);
+}
+.wall-marquee {
+  position: absolute;
+  z-index: 25;
+  border: 1.5px dashed var(--color-accent);
+  background: rgb(201 162 39 / 12%);
+  pointer-events: none;
+}
+.wall-hint {
+  align-self: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius);
+  background: rgb(0 0 0 / 28%);
+  color: rgb(255 255 255 / 78%);
+  font-size: 12px;
+  pointer-events: none;
+}
 /* Со стола карточек не видно. */
 .face-wall:not(.face-active) .wall-blanks {
   display: none;

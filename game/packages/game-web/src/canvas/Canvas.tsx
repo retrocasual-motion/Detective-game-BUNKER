@@ -13,7 +13,22 @@ interface CanvasProps {
   surface?: Bounds;
   /** Клик по пустому месту (без перетаскивания). */
   onBackgroundClick?(): void;
+  /**
+   * Рамка выделения (MS-D): правая кнопка — или Shift + левая (тачпад) — по поверхности.
+   * Экранные координаты: начало и текущая точка; 'click' — отпустили, не сдвинув (правый
+   * щелчок или Shift+щелчок по месту). Есть обработчик — меню браузера по правой кнопке нет.
+   */
+  onMarquee?(m: Marquee, phase: 'move' | 'end' | 'click'): void;
   children: ReactNode;
+}
+
+export interface Marquee {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+  /** Начато с Shift или Ctrl — добавить к выделению, а не заменить. */
+  add: boolean;
 }
 
 const WHEEL_SPEED = 0.0015;
@@ -29,12 +44,14 @@ export function Canvas({
   className,
   testId,
   onBackgroundClick,
+  onMarquee,
   bounds,
   surface,
   children,
 }: CanvasProps) {
   const pan = useRef<{ startX: number; startY: number; cam: Camera; moved: boolean } | null>(null);
   const el = useRef<HTMLDivElement>(null);
+  const frame = useRef<(Marquee & { moved: boolean }) | null>(null);
 
   const change = (cam: Camera) => {
     const r = el.current?.getBoundingClientRect();
@@ -58,12 +75,32 @@ export function Canvas({
   }, []);
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (onMarquee && (e.button === 2 || (e.button === 0 && e.shiftKey))) {
+      e.currentTarget.setPointerCapture(e.pointerId);
+      frame.current = {
+        x0: e.clientX,
+        y0: e.clientY,
+        x1: e.clientX,
+        y1: e.clientY,
+        add: e.shiftKey || e.ctrlKey,
+        moved: false,
+      };
+      return;
+    }
     if (e.button !== 0) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     pan.current = { startX: e.clientX, startY: e.clientY, cam: camera, moved: false };
   };
 
   const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    const f = frame.current;
+    if (f) {
+      f.x1 = e.clientX;
+      f.y1 = e.clientY;
+      if (Math.abs(f.x1 - f.x0) + Math.abs(f.y1 - f.y0) > CLICK_SLOP) f.moved = true;
+      if (f.moved) onMarquee?.(f, 'move');
+      return;
+    }
     const p = pan.current;
     if (!p) return;
     const dx = e.clientX - p.startX;
@@ -73,6 +110,12 @@ export function Canvas({
   };
 
   const onPointerUp = () => {
+    const f = frame.current;
+    if (f) {
+      frame.current = null;
+      onMarquee?.(f, f.moved ? 'end' : 'click');
+      return;
+    }
     if (pan.current && !pan.current.moved) onBackgroundClick?.();
     pan.current = null;
   };
@@ -88,6 +131,7 @@ export function Canvas({
   };
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: поверхность — цель для мыши (пан, колесо, рамка правой кнопкой); с клавиатуры — этап дизайна
     <div
       ref={el}
       className={`canvas ${className ?? ''}`}
@@ -97,6 +141,7 @@ export function Canvas({
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
       onWheel={onWheel}
+      onContextMenu={onMarquee ? (e) => e.preventDefault() : undefined}
     >
       <div
         className="canvas-world"

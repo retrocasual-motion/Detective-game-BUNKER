@@ -19,7 +19,7 @@ import {
   useState,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { Canvas } from '../canvas/Canvas.tsx';
+import { Canvas, type Marquee } from '../canvas/Canvas.tsx';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
 import { wholeCard } from '../petition/drafts.ts';
@@ -37,6 +37,7 @@ import {
   isLetter,
   labelThread,
   moveItem,
+  moveItems,
   removeNote,
   removeThread,
   restoreNote,
@@ -67,6 +68,23 @@ function swallowNextClick() {
   const release = () => setTimeout(() => window.removeEventListener('click', swallow, true), 0);
   window.addEventListener('click', swallow, { capture: true, once: true });
   window.addEventListener('pointerup', release, { capture: true, once: true });
+}
+
+const NONE: ReadonlySet<string> = new Set();
+
+/** Вещи стены, которых касается рамка выделения (экранные координаты). */
+function itemsInFrame(root: HTMLElement | null, m: Marquee): Set<string> {
+  const l = Math.min(m.x0, m.x1);
+  const r = Math.max(m.x0, m.x1);
+  const t = Math.min(m.y0, m.y1);
+  const b = Math.max(m.y0, m.y1);
+  const hit = new Set<string>();
+  for (const el of root?.querySelectorAll<HTMLElement>('[data-wall-item]') ?? []) {
+    const box = (el.querySelector('.card') ?? el).getBoundingClientRect();
+    const id = el.dataset.wallItem;
+    if (id && box.left < r && box.right > l && box.top < b && box.bottom > t) hit.add(id);
+  }
+  return hit;
 }
 
 /** Вещь стены под точкой экрана — сквозь нити и подписи поверх листов. */
@@ -138,6 +156,11 @@ export function WallView() {
   const throwAway = useGame((g) => g.throwAway);
   const openViewer = useGame((g) => g.openViewer);
   const [live, setLive] = useState<{ id: string; dx: number; dy: number } | null>(null);
+  // Выделение (MS-D): правая кнопка — рамка и выбор, Shift — то же для тачпада. Не сохраняется.
+  const [selected, setSelected] = useState<ReadonlySet<string>>(NONE);
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
+  const [frame, setFrame] = useState<{ m: Marquee; hit: ReadonlySet<string> } | null>(null);
   const [pull, setPull] = useState<{ from: string; to: Pt | null; sticky?: boolean } | null>(null);
   const el = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState<{ id: string; at: Pt } | null>(null);
@@ -207,6 +230,43 @@ export function WallView() {
     };
   }, [sticky, updateState]);
 
+  // Ушли к столу — выделение снято; Esc у стены — тоже.
+  useEffect(() => {
+    if (atDesk) setSelected(NONE);
+  }, [atDesk]);
+  useEffect(() => {
+    if (!onWallView || selected.size === 0) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelected(NONE);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onWallView, selected]);
+
+  const toggleSelected = useCallback((id: string) => {
+    setSelected((cur) => {
+      const next = new Set(cur);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  }, []);
+  const onMarquee = (m: Marquee, phase: 'move' | 'end' | 'click') => {
+    if (phase === 'click') {
+      setFrame(null);
+      const id = wallItemAt(m.x0, m.y0);
+      if (id) toggleSelected(id);
+      else if (!m.add) setSelected(NONE);
+      return;
+    }
+    const inFrame = itemsInFrame(el.current, m);
+    const hit = m.add ? new Set([...selectedRef.current, ...inFrame]) : inFrame;
+    if (phase === 'move') setFrame({ m: { ...m }, hit });
+    else {
+      setFrame(null);
+      setSelected(hit);
+    }
+  };
+
   const setCamera = useCallback(
     (camera: Camera) => updateState((s) => ({ ...s, wall: { ...s.wall, camera } })),
     [updateState],
@@ -217,6 +277,13 @@ export function WallView() {
       setLive(null);
       setGhost(null);
       usePetition.getState().setDrag(false, null);
+      // Тянули выделенную — едут все выделенные (MS-D).
+      const group = selectedRef.current;
+      if (group.size > 1 && group.has(id)) {
+        const was = useGame.getState().state?.wall.items.find((i) => i.id === id);
+        if (was) updateState(moveItems([...group], x - was.x, y - was.y));
+        return;
+      }
       // Лист отпустили на поле открытой папки — карточка «материал целиком» (K-A), лист
       // остаётся на стене, где висел.
       const f = petitionFieldAt(at.x, at.y);
@@ -238,7 +305,8 @@ export function WallView() {
       setLive(dx === 0 && dy === 0 ? null : { id, dx, dy });
       const pet = usePetition.getState();
       const material = !id.includes(':');
-      if (!at || !useGame.getState().petitionOpen || !material || (dx === 0 && dy === 0)) {
+      const group = selectedRef.current.size > 1 && selectedRef.current.has(id);
+      if (!at || !useGame.getState().petitionOpen || !material || group || (dx === 0 && dy === 0)) {
         pet.setDrag(false, null);
         setGhost(null);
         return;
@@ -331,12 +399,15 @@ export function WallView() {
 
   const byId = new Map(materials.map((m) => [m.id, m]));
   const notes = new Map(wall.notes.map((n) => [n.id, n]));
-  // Нити идут за вещью сразу, пока её тянут.
+  // Нити идут за вещью сразу, пока её тянут; тянут выделенную — за всеми выделенными.
+  const shown = frame ? frame.hit : selected;
+  const groupDrag = !!live && selected.size > 1 && selected.has(live.id);
+  const moving = (id: string) => !!live && (live.id === id || (groupDrag && selected.has(id)));
   const at = new Map<string, At>();
   for (const i of wall.items) {
     const n = notes.get(i.id);
     const w = n ? (n.width ?? NOTE_STYLE[n.kind].width) : undefined;
-    at.set(i.id, live?.id === i.id ? { x: i.x + live.dx, y: i.y + live.dy, w } : { ...i, w });
+    at.set(i.id, live && moving(i.id) ? { x: i.x + live.dx, y: i.y + live.dy, w } : { ...i, w });
   }
   const pullFrom = pull ? at.get(pull.from) : undefined;
   const editingThread = editing ? wall.threads.find((t) => t.id === editing.id) : undefined;
@@ -481,6 +552,13 @@ export function WallView() {
         onDelete={note ? deleteNote : isLetter(item.id) ? throwAway : undefined}
         deleteLabel={note ? undefined : 'В корзину'}
         hidden={ghost?.id === item.id}
+        selected={shown.has(item.id)}
+        follow={
+          live && groupDrag && live.id !== item.id && selected.has(item.id)
+            ? { x: live.dx, y: live.dy }
+            : null
+        }
+        onSelect={toggleSelected}
         editing={editingNote === item.id}
         width={width}
         onResize={note ? (id, w) => updateState(styleNote(id, { width: w })) : undefined}
@@ -499,6 +577,8 @@ export function WallView() {
         className="wall-surface"
         bounds={WALL_BOUNDS}
         surface={WALL_BOUNDS}
+        onBackgroundClick={() => setSelected(NONE)}
+        onMarquee={onMarquee}
       >
         {wall.items.map(render)}
         <WallThreads
@@ -550,8 +630,27 @@ export function WallView() {
           />
         )}
       </Canvas>
+      {frame && (
+        <div
+          className="wall-marquee"
+          data-testid="wall-marquee"
+          style={(() => {
+            const r = el.current?.getBoundingClientRect();
+            const { x0, y0, x1, y1 } = frame.m;
+            return {
+              left: Math.min(x0, x1) - (r?.left ?? 0),
+              top: Math.min(y0, y1) - (r?.top ?? 0),
+              width: Math.abs(x1 - x0),
+              height: Math.abs(y1 - y0),
+            };
+          })()}
+        />
+      )}
       {/* Чистые карточки — стопкой у края доски: взять записку или ярлык. */}
       <div className="wall-blanks">
+        <span className="wall-hint" data-testid="wall-hint">
+          Правая кнопка — выделить несколько
+        </span>
         <button
           type="button"
           className="wall-blank wall-blank-note"

@@ -299,3 +299,114 @@ test('у записки — размер шрифта (A−, A+) и ширина
   const reloaded = await page.locator('.wall-card-note').boundingBox();
   expect(Math.abs((reloaded?.width ?? 0) - (after?.width ?? 0))).toBeLessThan(3);
 });
+
+// ── Выделить несколько и тащить вместе (MS-D, решение автора 10.11) ──
+
+const box = async (page: Page, id: string) => {
+  const b = await sheet(page, id).locator('.card').boundingBox();
+  if (!b) throw new Error(`нет ${id}`);
+  return b;
+};
+
+/** Рамка от левого верхнего угла a до правого нижнего угла b (с запасом в несколько px). */
+async function frame(page: Page, a: string, b: string, button: 'right' | 'left' = 'right') {
+  const p = await box(page, a);
+  const q = await box(page, b);
+  await page.mouse.move(p.x - 6, p.y - 6);
+  await page.mouse.down({ button });
+  await page.mouse.move(q.x + q.width + 4, q.y + q.height + 4, { steps: 6 });
+  await expect(page.getByTestId('wall-marquee')).toBeVisible();
+  await page.mouse.up({ button });
+  await expect(page.getByTestId('wall-marquee')).toHaveCount(0);
+}
+
+const selectedIds = (page: Page) =>
+  page
+    .locator('[data-wall-item][data-selected]')
+    .evaluateAll((els) => els.map((e) => e.getAttribute('data-wall-item')).sort());
+
+test('правая кнопка — рамка выделяет; потянуть одну выделенную — едут все, нити за ними; после перезагрузки там же', async ({
+  page,
+}) => {
+  await expect(page.getByTestId('wall-hint')).toContainText('Правая кнопка');
+  await thread(page, '01', '05');
+  await frame(page, '01', '03');
+  expect(await selectedIds(page)).toEqual(['01', '02', '03']);
+  // Меню браузера по правой кнопке на стене нет.
+  const prevented = await page.evaluate(() => {
+    const el = document.querySelector('.wall .canvas');
+    const ev = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
+    el?.dispatchEvent(ev);
+    return ev.defaultPrevented;
+  });
+  expect(prevented).toBe(true);
+
+  const before = await Promise.all(['01', '02', '03', '04'].map((id) => box(page, id)));
+  const line = page.getByTestId('thread-01-05');
+  const lineBefore = await line.getAttribute('x1');
+  const p = await stripPoint(page, '02');
+  const saved = savedPut(page);
+  await page.mouse.move(p.x, p.y);
+  await page.mouse.down();
+  await page.mouse.move(p.x + 60, p.y + 320, { steps: 8 });
+  await page.mouse.up();
+  await saved;
+  const after = await Promise.all(['01', '02', '03', '04'].map((id) => box(page, id)));
+  for (const k of [0, 1, 2]) {
+    expect(after[k]?.x).toBeCloseTo((before[k]?.x ?? 0) + 60, -1);
+    expect(after[k]?.y).toBeCloseTo((before[k]?.y ?? 0) + 320, -1);
+  }
+  // Невыделенная — на месте; нить ушла за выделенной 01.
+  expect(after[3]?.x).toBeCloseTo(before[3]?.x ?? 0, 0);
+  expect(await line.getAttribute('x1')).not.toBe(lineBefore);
+  // Выделение остаётся — можно тащить дальше; после перезагрузки вещи там же, выделения нет.
+  expect(await selectedIds(page)).toEqual(['01', '02', '03']);
+  await page.reload();
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'wall');
+  const reloaded = await box(page, '02');
+  expect(reloaded.x).toBeCloseTo(after[1]?.x ?? 0, -1);
+  expect(await selectedIds(page)).toEqual([]);
+});
+
+test('правый щелчок по вещи — добавить или убрать; Esc и щелчок по пустой пробке снимают выделение', async ({
+  page,
+}) => {
+  const a = await stripPoint(page, '01');
+  const b = await stripPoint(page, '04');
+  await page.mouse.click(a.x, a.y, { button: 'right' });
+  await page.mouse.click(b.x, b.y, { button: 'right' });
+  expect(await selectedIds(page)).toEqual(['01', '04']);
+  await page.mouse.click(a.x, a.y, { button: 'right' });
+  expect(await selectedIds(page)).toEqual(['04']);
+  // Правый щелчок не открывает лист.
+  await expect(page.getByTestId('viewer')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  expect(await selectedIds(page)).toEqual([]);
+  await page.mouse.click(b.x, b.y, { button: 'right' });
+  expect(await selectedIds(page)).toEqual(['04']);
+  // Пустая пробка — правее всего дела.
+  await page.mouse.click(1250, 600);
+  expect(await selectedIds(page)).toEqual([]);
+});
+
+test('тачпад: Shift + протяжка левой — та же рамка; Shift + щелчок по вещи — добавить, лист не открывается', async ({
+  page,
+}) => {
+  await page.keyboard.down('Shift');
+  await frame(page, '01', '02', 'left');
+  const c = await stripPoint(page, '05');
+  await page.mouse.click(c.x, c.y);
+  await page.keyboard.up('Shift');
+  expect(await selectedIds(page)).toEqual(['01', '02', '05']);
+  await expect(page.getByTestId('viewer')).toHaveCount(0);
+  // Протяжка без Shift по пустой пробке — двигает доску, как раньше (выделение не теряется).
+  await page.mouse.wheel(0, -600);
+  const world = page.locator('.wall .canvas-world');
+  const cam = await world.getAttribute('style');
+  await page.mouse.move(1250, 600);
+  await page.mouse.down();
+  await page.mouse.move(1150, 560, { steps: 4 });
+  await page.mouse.up();
+  await expect.poll(() => world.getAttribute('style')).not.toBe(cam);
+  expect(await selectedIds(page)).toEqual(['01', '02', '05']);
+});

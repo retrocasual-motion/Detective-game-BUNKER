@@ -6,6 +6,7 @@ import {
   binLetter,
   editNote,
   moveItem,
+  moveItems,
   removeNote,
   removeThread,
   restoreNote,
@@ -18,6 +19,31 @@ import {
 } from './wall-actions.ts';
 
 const base = (): PlayerState => defaultState([]);
+
+describe('выделенные вещи — вместе (MS-D)', () => {
+  it('сдвигаются на одно и то же, остальные на месте; группа поверх, порядок внутри прежний', () => {
+    let s = moveItem('01', 100, 100)(base());
+    s = moveItem('02', 300, 100)(s);
+    s = moveItem('03', 500, 500)(s);
+    const z01 = s.wall.items.find((i) => i.id === '01')?.z ?? 0;
+    const z02 = s.wall.items.find((i) => i.id === '02')?.z ?? 0;
+    s = moveItems(['02', '01'], 40, -20)(s);
+    const at = (id: string) => s.wall.items.find((i) => i.id === id);
+    expect([at('01')?.x, at('01')?.y]).toEqual([140, 80]);
+    expect([at('02')?.x, at('02')?.y]).toEqual([340, 80]);
+    expect([at('03')?.x, at('03')?.y]).toEqual([500, 500]);
+    expect(at('01')?.z).toBeGreaterThan(at('03')?.z ?? 0);
+    expect((at('02')?.z ?? 0) - (at('01')?.z ?? 0)).toBe(Math.sign(z02 - z01));
+  });
+
+  it('у края доски каждая вещь останавливается сама', () => {
+    let s = moveItem('01', 0, 0)(base());
+    s = moveItem('02', 400, 0)(s);
+    s = moveItems(['01', '02'], -99999, 0)(s);
+    expect(s.wall.items.find((i) => i.id === '01')?.x).toBe(WALL_BOUNDS.left);
+    expect(s.wall.items.find((i) => i.id === '02')?.x).toBe(WALL_BOUNDS.left);
+  });
+});
 
 describe('вещи на стене', () => {
   it('куда отпустили, там и висит; поверх остальных; повторный перенос двигает ту же запись', () => {
