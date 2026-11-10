@@ -32,6 +32,22 @@ export const moveItem =
     });
   };
 
+/**
+ * Выделенные вещи сдвинуть вместе (MS-D): каждая — на (dx, dy), край доски у каждой свой;
+ * группа — поверх остальных, порядок внутри группы прежний.
+ */
+export const moveItems =
+  (ids: readonly string[], dx: number, dy: number): Update =>
+  (s) => {
+    const pick = new Set(ids);
+    let z = topZ(s);
+    const moved = s.wall.items
+      .filter((i) => pick.has(i.id))
+      .sort((a, b) => a.z - b.z)
+      .map((i) => ({ ...i, ...onWall(i.x + dx, i.y + dy), z: ++z }));
+    return withWall(s, { items: [...s.wall.items.filter((i) => !pick.has(i.id)), ...moved] });
+  };
+
 /** Новая записка или ярлык — в точке стены, сразу поверх остальных. */
 export const addNote =
   (kind: Note['kind'], x: number, y: number, id = `n:${newId()}`): Update =>
