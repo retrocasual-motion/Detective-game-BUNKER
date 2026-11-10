@@ -4,7 +4,7 @@ import { expect, STRIP, sheet, test, toWall } from './fixtures.ts';
 /** Коробка с пачками в руках → пачка в руках. */
 async function stackInHands(page: Page, id: string) {
   await page.getByTestId('device-29').click();
-  await page.getByTestId(`stack-${id}`).click({ force: true });
+  await page.getByTestId(`stack-${id}`).dispatchEvent('click');
   await expect(page.getByTestId('stack-leaf')).toHaveCount(1);
 }
 
@@ -130,7 +130,7 @@ test('обложку папки щелчок листает (правка авт
   await expect(page.getByTestId('held-caption')).toContainText('лист 2 из 15');
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /^Пачка П-09/);
   await page.keyboard.press('Escape');
-  await page.getByTestId('stack-П-02').click({ force: true });
+  await page.getByTestId('stack-П-02').dispatchEvent('click');
   await edgeOn(page);
   await page.getByTestId('stack-layer-18').click({ force: true });
   await page.getByTestId('folder-open').click({ force: true });
@@ -189,7 +189,7 @@ test('П-09: пять папок — пять краёв картона, за к
   await expect(page.locator('[data-testid^="stack-layer-"]')).toHaveCount(4);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('stack-П-01')).toHaveCount(1);
-  await page.getByTestId('stack-П-01').click({ force: true });
+  await page.getByTestId('stack-П-01').dispatchEvent('click');
   await expect(page.getByTestId('stack-leaf')).toHaveCount(1);
   await expect(page.locator('[data-testid^="stack-layer-"]')).toHaveCount(0);
   // Отложили всё — на стене одна папка из П-09, описи нет, без повторов.

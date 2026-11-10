@@ -617,6 +617,7 @@ function EnvelopeFile({
       out.current = true;
       if (reducedMotion()) onPick();
     },
+    true,
   );
   useFrame((_, dt) => {
     const to = out.current ? LIFT_OUT : pick.hover && !empty ? LIFT_HOVER : 0;
@@ -673,7 +674,12 @@ function EnvelopeFile({
       {/* Конверт берут только за ярлык (правка автора 10.11): зона наведения — на месте ярлыка,
           неподвижная и с запасом на подъём, чтобы конверт не дрожал под мышью. */}
       <group position={[tabX, tabY, d / 2 + 0.01]} ref={pick.anchor}>
-        <mesh position={[0, LIFT_HOVER / 2, 0]} {...pick.handlers}>
+        {/* Запас на подъём — только у поднятого: в покое зона не наезжает на ярлык сзади. */}
+        <mesh
+          position={[0, pick.hover ? LIFT_HOVER / 2 : 0, 0]}
+          scale={[1, pick.hover ? 1 : TAB[1] / (TAB[1] + LIFT_HOVER), 1]}
+          {...pick.handlers}
+        >
           <planeGeometry args={[TAB[0], TAB[1] + LIFT_HOVER]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>

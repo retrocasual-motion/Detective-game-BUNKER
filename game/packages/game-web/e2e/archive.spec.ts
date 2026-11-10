@@ -77,6 +77,11 @@ test('«Вскрыть» — документы карточками, «всё �
   await expect(page.getByTestId('scene')).toHaveAttribute('data-moving', 'false');
   for (const id of ['30', '33', '36']) await expect(sheet(page, id)).toBeVisible();
   await expect(page.getByTestId('wall-n:archive-protocols')).toContainText('Протоколы опроса');
+  // Всё, что пришло из конверта, светится (правка автора 10.11) — пока не взялись за стену.
+  for (const id of ['30', '33', '36'])
+    await expect(sheet(page, id)).toHaveAttribute('data-found', 'true');
+  await page.mouse.click(40, 700);
+  await expect(sheet(page, '30')).not.toHaveAttribute('data-found', 'true');
   await page.reload();
   await expect(sheet(page, '30')).toBeAttached();
   await page.keyboard.press('ArrowDown');

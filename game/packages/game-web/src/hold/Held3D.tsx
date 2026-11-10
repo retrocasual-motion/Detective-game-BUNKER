@@ -98,6 +98,8 @@ interface Spot {
   onClick: () => void;
   /** Мышь над невидимой кнопкой: она лежит поверх части и забирает наведение у сцены. */
   onHover?: (on: boolean) => void;
+  /** Кнопка не ловит мышь (только клавиатура и тесты): наведение и щелчок — у самой части. */
+  passive?: boolean;
 }
 const spots = new Map<string, Spot>();
 let spotList: Spot[] = [];
@@ -108,7 +110,7 @@ const changed = () => {
 };
 
 export function useSpot(ref: RefObject<Object3D | null>, spot: Omit<Spot, 'obj'>) {
-  const { id, label, testId } = spot;
+  const { id, label, testId, passive } = spot;
   const click = useRef(spot.onClick);
   click.current = spot.onClick;
   const hover = useRef(spot.onHover);
@@ -124,7 +126,8 @@ export function useSpot(ref: RefObject<Object3D | null>, spot: Omit<Spot, 'obj'>
       }
       return;
     }
-    if (cur?.obj === obj && cur.label === label && cur.testId === testId) return;
+    if (cur?.obj === obj && cur.label === label && cur.testId === testId && cur.passive === passive)
+      return;
     spots.set(id, {
       id,
       label,
@@ -132,6 +135,7 @@ export function useSpot(ref: RefObject<Object3D | null>, spot: Omit<Spot, 'obj'>
       obj,
       onClick: () => click.current(),
       onHover: (on) => hover.current?.(on),
+      passive,
     });
     changed();
   });
@@ -417,7 +421,7 @@ export default function Held3D({
             else buttons.current.delete(s.id);
           }}
           type="button"
-          className="held-spot"
+          className={s.passive ? 'held-spot held-spot-passive' : 'held-spot'}
           data-testid={s.testId}
           aria-label={s.label}
           onClick={onClickPart(s.onClick)}

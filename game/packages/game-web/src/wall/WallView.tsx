@@ -175,6 +175,8 @@ export function WallView() {
     return () => clearTimeout(t);
   }, [arriving]);
   const waiting = useMemo(() => new Set(pending), [pending]);
+  const freshIds = useGame((g) => g.freshWall);
+  const fresh = useMemo(() => new Set(freshIds), [freshIds]);
   const [live, setLive] = useState<{ id: string; dx: number; dy: number } | null>(null);
   // Выделение (MS-D): правая кнопка — рамка и выбор, Shift — то же для тачпада. Не сохраняется.
   const [selected, setSelected] = useState<ReadonlySet<string>>(NONE);
@@ -260,11 +262,11 @@ export function WallView() {
   // Подсветка найденного держится, пока игрок не взялся за стену.
   useEffect(() => {
     const root = el.current;
-    if (!foundId || !root) return;
+    if ((!foundId && fresh.size === 0) || !root) return;
     const off = () => useGame.getState().clearFound();
     root.addEventListener('pointerdown', off, { capture: true });
     return () => root.removeEventListener('pointerdown', off, { capture: true });
-  }, [foundId]);
+  }, [foundId, fresh]);
   useEffect(() => {
     if (!onWallView || selected.size === 0) return;
     const onKey = (e: KeyboardEvent) => {
@@ -605,7 +607,7 @@ export function WallView() {
         deleteLabel={note ? undefined : 'В корзину'}
         hidden={ghost?.id === item.id}
         selected={shown.has(item.id)}
-        found={foundId === item.id}
+        found={foundId === item.id || fresh.has(item.id)}
         arriving={arriving.has(item.id)}
         follow={
           live && groupDrag && live.id !== item.id && selected.has(item.id)
