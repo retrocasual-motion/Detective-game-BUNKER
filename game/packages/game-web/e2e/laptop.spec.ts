@@ -219,8 +219,40 @@ test('значки — по невидимой сетке: отпустили н
   await page.mouse.up();
   const b = await moving.boundingBox();
   if (!b) throw new Error('нет значка');
-  // Не на «Отчётах» и ровно в клетке: по горизонтали или вертикали — на шаг сетки.
-  const overlap = Math.abs(b.x - target.x) < 10 && Math.abs(b.y - target.y) < 10;
-  expect(overlap).toBe(false);
-  expect(Math.abs(b.x - target.x) < 2 || Math.abs(b.y - target.y) < 2).toBe(true);
+  // Не на «Отчётах» и ровно в клетке сетки (12 × 9 по всему экрану).
+  const screen = await page.locator('.lap-screen').boundingBox();
+  if (!screen) throw new Error('нет экрана');
+  const k = screen.width / 1280;
+  const kx = (b.x - target.x) / (((1280 - 12) / 12) * k);
+  const ky = (b.y - target.y) / (((766 - 12) / 9) * k);
+  expect(Math.abs(kx) + Math.abs(ky)).toBeGreaterThan(0.9);
+  expect(Math.abs(kx - Math.round(kx))).toBeLessThan(0.05);
+  expect(Math.abs(ky - Math.round(ky))).toBeLessThan(0.05);
+});
+
+test('сетка равномерная: в правом нижнем углу значок стоит так же, как в левом верхнем', async ({
+  page,
+}) => {
+  await laptopUp(page);
+  await unlock(page);
+  const screen = await page.locator('.lap-screen').boundingBox();
+  const bar = await page.locator('.lap-taskbar').boundingBox();
+  const first = await page.getByTestId('lap-icon-Отчёты').boundingBox();
+  const icon = page.getByTestId('lap-icon-Распорядок.doc');
+  const a = await icon.boundingBox();
+  if (!screen || !bar || !first || !a) throw new Error('нет экрана');
+  await page.mouse.move(a.x + a.width / 2, a.y + 20);
+  await page.mouse.down();
+  await page.mouse.move(screen.x + screen.width - 5, bar.y - 5, { steps: 12 });
+  await page.mouse.up();
+  const b = await icon.boundingBox();
+  if (!b) throw new Error('нет значка');
+  const left = first.x - screen.x;
+  const right = screen.x + screen.width - (b.x + b.width);
+  expect(Math.abs(left - right)).toBeLessThan(2);
+  // По вертикали так же: поле под нижней строкой (до панели задач) = полю над верхней.
+  const k = screen.width / 1280;
+  const top = first.y - screen.y;
+  const bottom = bar.y - (b.y + 76 * k);
+  expect(Math.abs(top - bottom)).toBeLessThan(2);
 });

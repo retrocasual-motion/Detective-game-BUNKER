@@ -103,23 +103,39 @@ function fromSaved(w: LapWindow, lap: Laptop): Placed | null {
   return file ? { ...at, win: { id: w.id, kind: w.kind, file } } : null;
 }
 
-/** Сетка значков по умолчанию: столбцами сверху вниз, слева направо (px экрана ноутбука). */
-const ICON_W = 100;
-const ICON_H = 80;
-const ICONS_PER_COL = 8;
+/**
+ * Невидимая сетка рабочего стола (правки автора 10.11, как в настоящих системах): экран над
+ * панелью задач делится на 12 × 9 клеток ровно, с одинаковыми полями со всех сторон — значок
+ * встаёт по центру клетки, в любой угол одинаково. Отпустили — в ближайшую клетку; занята — в
+ * ближайшую свободную.
+ */
+const ICON_W = 92;
+const ICON_H = 76;
 const GRID_COLS = 12;
 const GRID_ROWS = 9;
-const cellAt = (c: number, r: number) => ({ x: 12 + c * ICON_W, y: 10 + r * ICON_H });
+const PAD = 6;
+const AREA_W = 1280;
+const AREA_H = 800 - 34;
+const CELL_W = (AREA_W - PAD * 2) / GRID_COLS;
+const CELL_H = (AREA_H - PAD * 2) / GRID_ROWS;
+const cellAt = (c: number, r: number) => ({
+  x: Math.round(PAD + c * CELL_W + (CELL_W - ICON_W) / 2),
+  y: Math.round(PAD + r * CELL_H + (CELL_H - ICON_H) / 2),
+});
+/** Клетка, ближайшая к месту значка (дробная — для поиска ближайшей свободной). */
+const cellOf = (p: { x: number; y: number }) => ({
+  c: (p.x - PAD - (CELL_W - ICON_W) / 2) / CELL_W,
+  r: (p.y - PAD - (CELL_H - ICON_H) / 2) / CELL_H,
+});
 
-/**
- * Невидимая сетка рабочего стола (правка автора 10.11, как в настоящих системах): отпущенный
- * значок встаёт в ближайшую клетку; занята — в ближайшую свободную.
- */
 function snapToGrid(at: { x: number; y: number }, taken: { x: number; y: number }[]) {
   const busy = new Set(
-    taken.map((p) => `${Math.round((p.x - 12) / ICON_W)}:${Math.round((p.y - 10) / ICON_H)}`),
+    taken.map((p) => {
+      const q = cellOf(p);
+      return `${Math.round(q.c)}:${Math.round(q.r)}`;
+    }),
   );
-  const want = { c: (at.x - 12) / ICON_W, r: (at.y - 10) / ICON_H };
+  const want = cellOf(at);
   let best: { x: number; y: number } | null = null;
   let bestD = Number.POSITIVE_INFINITY;
   for (let c = 0; c < GRID_COLS; c++)
@@ -134,10 +150,20 @@ function snapToGrid(at: { x: number; y: number }, taken: { x: number; y: number 
   return best ?? cellAt(0, 0);
 }
 
-const gridAt = (k: number) => ({
-  x: 12 + Math.floor(k / ICONS_PER_COL) * ICON_W,
-  y: 10 + (k % ICONS_PER_COL) * ICON_H,
-});
+/** По умолчанию — столбцами сверху вниз от левого верхнего угла. */
+const gridAt = (k: number) => cellAt(Math.floor(k / GRID_ROWS), k % GRID_ROWS);
+
+/** Сохранённые места — в клетки нынешней сетки (могли быть от прежней). */
+function settle(keys: string[], saved: Record<string, { x: number; y: number }>) {
+  const out: Record<string, { x: number; y: number }> = {};
+  const placed: { x: number; y: number }[] = [];
+  keys.forEach((key, k) => {
+    const p = snapToGrid(saved[key] ?? gridAt(k), placed);
+    if (saved[key]) out[key] = p;
+    placed.push(p);
+  });
+  return out;
+}
 
 export function Desktop({
   lap,
@@ -153,8 +179,11 @@ export function Desktop({
   const [wins, setWins] = useState<Placed[]>(() =>
     (saved?.windows ?? []).flatMap((w) => fromSaved(w, lap) ?? []),
   );
-  const [iconPos, setIconPos] = useState<Record<string, { x: number; y: number }>>(
-    () => saved?.icons ?? {},
+  const [iconPos, setIconPos] = useState<Record<string, { x: number; y: number }>>(() =>
+    settle(
+      [...lap.desktop.map((f) => f.path), 'Корзина', 'Браузер', 'Принтер'],
+      saved?.icons ?? {},
+    ),
   );
   const [selIcon, setSelIcon] = useState<string | null>(null);
   const [startOpen, setStartOpen] = useState(false);
@@ -503,8 +532,8 @@ function DesktopIcon({
         if (!d.moved && Math.hypot(dx, dy) < 5) return;
         d.moved = true;
         onMove({
-          x: Math.round(Math.min(1280 - ICON_W, Math.max(0, d.x + dx))),
-          y: Math.round(Math.min(800 - 34 - ICON_H, Math.max(0, d.y + dy))),
+          x: Math.round(Math.min(AREA_W - ICON_W, Math.max(0, d.x + dx))),
+          y: Math.round(Math.min(AREA_H - ICON_H, Math.max(0, d.y + dy))),
         });
       }}
       onPointerUp={() => {
