@@ -28,9 +28,9 @@ import {
 /** Размер листа на стене в мировых координатах (совпадает с --card-width/--card-height). */
 export const CARD_W = 160;
 export const CARD_H = 220;
-/** Шаг начальной сетки. */
-export const GRID_DX = 200;
-export const GRID_DY = 270;
+/** Шаг начальной сетки: между листами — место для нитей и подписей (правка автора 10.11). */
+export const GRID_DX = 220;
+export const GRID_DY = 300;
 export const GRID_COLS = 10;
 /** Начальная сетка материалов — ниже ряда персонажей. */
 export const GRID_TOP = 320;
@@ -47,11 +47,18 @@ export const NOTE_STYLE = {
 
 /**
  * Край пробковой доски: камера и вещи за него не уходят. WB-C (решение автора 10.11): доска
- * 16:9 и меньше прежней (была 4000×3000) — со стола и у стены видна целиком, одна и та же;
- * при подходе к стене (ZM-B) карточки различимы. Всё дело (61 вещь с ярлыками) помещается
- * при любом порядке вскрытия конвертов.
+ * 16:9 — со стола и у стены видна целиком, одна и та же. 4800×2700 (правка автора 10.11:
+ * 3600×2025 было тесно): всё дело (61 вещь с ярлыками) занимает не больше ~¾ ширины и
+ * ~⅘ высоты при любом порядке вскрытия — справа и снизу остаётся место для своих записок
+ * и нитей.
  */
-export const WALL_BOUNDS = { left: -200, top: -200, right: 3400, bottom: 1825 } as const;
+export const WALL_BOUNDS = { left: -300, top: -300, right: 4500, bottom: 2400 } as const;
+
+/** Группы конвертов раскладываются левее этой линии: правая часть доски — свободная пробка. */
+const PLACE_RIGHT = 3200;
+
+/** Зазор между группами конвертов (внутри группы — шаг сетки). */
+const GROUP_GAP = 90;
 
 /** Поле вокруг доски на экране, px: рама пробки видна целиком. */
 export const BOARD_PAD = 24;
@@ -295,7 +302,7 @@ function freeBlock(
   w: number,
   h: number,
 ): { x: number; y: number } | null {
-  const gap = 30;
+  const gap = GROUP_GAP;
   const busy = (x: number, y: number) =>
     items.some(
       (i) =>
@@ -305,12 +312,12 @@ function freeBlock(
         i.y + CARD_H + gap > y,
     );
   for (let y = GRID_TOP; y + h <= BOARD_INNER.bottom; y += 30)
-    for (let x = 0; x + w <= BOARD_INNER.right; x += 50) if (!busy(x, y)) return { x, y };
+    for (let x = 0; x + w <= PLACE_RIGHT; x += 50) if (!busy(x, y)) return { x, y };
   return null;
 }
 
 /** Где на доске можно вешать группы: с отступом от рамы. */
-const BOARD_INNER = { right: WALL_BOUNDS.right - 40, bottom: WALL_BOUNDS.bottom - 40 };
+const BOARD_INNER = { bottom: WALL_BOUNDS.bottom - 40 };
 
 /** Сколько колонок пробовать для группы: шире — короче; берётся та, что ляжет выше. */
 const GROUP_COL_CHOICES = [GRID_COLS, 8, GROUP_COLS, 4];

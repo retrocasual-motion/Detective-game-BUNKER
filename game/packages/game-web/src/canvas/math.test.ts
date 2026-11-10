@@ -20,9 +20,9 @@ describe('zoomAt', () => {
     expect(after.y).toBeCloseTo(before.y);
   });
 
-  it('масштаб не меньше 0.25 и не больше 3', () => {
+  it('масштаб не меньше 0.2 и не больше 3', () => {
     const cam = { x: 0, y: 0, zoom: 1 };
-    expect(zoomAt(cam, { x: 0, y: 0 }, 0.01).zoom).toBe(0.25);
+    expect(zoomAt(cam, { x: 0, y: 0 }, 0.01).zoom).toBe(0.2);
     expect(zoomAt(cam, { x: 0, y: 0 }, 100).zoom).toBe(3);
   });
 });

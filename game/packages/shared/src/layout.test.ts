@@ -263,8 +263,8 @@ describe('вся доска со стола и у стены (WB-C, ZM-B)', () =
       expect(vp.height - bottom).toBeCloseTo(top, 0);
       // По одной стороне — вплотную к полю: доска не мельче нужного.
       expect(Math.min(left, top)).toBeCloseTo(BOARD_PAD, 0);
-      // Карточку видно: на 1366×768 — не меньше ~55 px в ширину.
-      expect(CARD_W * cam.zoom).toBeGreaterThan(54);
+      // Карточку видно: на 1366×768 — не меньше ~40 px в ширину (дальше — колесом).
+      expect(CARD_W * cam.zoom).toBeGreaterThan(40);
     });
 });
 
@@ -302,7 +302,7 @@ describe('старое сохранение на большой доске (WB-C
       ...s,
       wall: {
         ...s.wall,
-        items: s.wall.items.map((i, k) => (k === 0 ? { ...i, x: 3650, y: 2650 } : i)),
+        items: s.wall.items.map((i, k) => (k === 0 ? { ...i, x: 9000, y: 9000 } : i)),
       },
     };
     const first = reconcile(far, starting).wall.items[0];

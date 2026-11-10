@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CONTAINER_IDS } from './archive.ts';
 
-export const ZOOM_MIN = 0.25;
+export const ZOOM_MIN = 0.2;
 export const ZOOM_MAX = 3;
 
 /**
