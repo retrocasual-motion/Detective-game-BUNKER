@@ -61,10 +61,15 @@ test('щелчок по стопке — опись пачки; строки 19�
   await page.waitForTimeout(800);
   await expect(page.getByTestId('viewer-closeup')).toHaveCount(0);
   await page.mouse.click(683, 400, { button: 'middle' });
-  // Строка 19–24 — на второй странице.
-  await page.keyboard.press('ArrowRight');
-  await expect(page.getByTestId('page-no')).toHaveText(/^2 \//);
-  await expect(row).toBeInViewport();
+  // Строка 19–24 — на этой или следующей странице (зависит от шрифтов): листать, пока не видна.
+  const shown = () =>
+    row.evaluate((tr) => {
+      const box = tr.closest('.viewer-pages')?.getBoundingClientRect();
+      const r = tr.getBoundingClientRect();
+      return !!box && r.left >= box.left - 1 && r.right <= box.right + 1;
+    });
+  for (let k = 0; k < 4 && !(await shown()); k++) await page.keyboard.press('ArrowRight');
+  expect(await shown()).toBe(true);
   const r = await row.boundingBox();
   if (!r) throw new Error('нет строки');
   await zoomInAt(page, r.x + r.width / 2, r.y + r.height / 2);
