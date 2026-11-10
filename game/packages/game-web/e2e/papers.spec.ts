@@ -113,20 +113,35 @@ test('папка из пачки (RD-A): за край — в руках A-24; �
   );
 });
 
-test('долистать до обложки (лист 18) — взять папку; открыть — только её листы', async ({
+test('обложку папки щелчок листает (правка автора 10.11); папку берут за край — открыть: только её листы', async ({
   page,
 }) => {
-  // Долго листать: в CI без видеокарты каждый кадр сцены медленный.
-  test.slow();
-  await stackInHands(page, 'П-02');
-  await leafTo(page, 18);
-  await expect(page.getByTestId('stack-leaf')).toHaveAttribute('aria-label', 'Взять папку');
+  await stackInHands(page, 'П-09');
+  // Сверху у П-09 — обложка: щелчок её перелистывает, папка остаётся в пачке.
+  await expect(page.getByTestId('stack-leaf')).toHaveAttribute('aria-label', 'Перелистнуть лист');
   await page.getByTestId('stack-leaf').click({ force: true });
+  await expect(page.getByTestId('held-caption')).toContainText('лист 2 из 15');
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /^Пачка П-09/);
+  await page.keyboard.press('Escape');
+  await page.getByTestId('stack-П-02').click({ force: true });
+  await edgeOn(page);
+  await page.getByTestId('stack-layer-18').click({ force: true });
   await page.getByTestId('folder-open').click({ force: true });
   const viewer = page.getByTestId('viewer');
   await expect(viewer).toHaveAttribute('aria-label', /^Папка A-24 \(пачка П-02, листы 18–20\)/);
   await expect(page.getByTestId('viewer-paper')).toContainText('Фотография');
   await expect(page.getByTestId('viewer-paper')).not.toContainText('Чистый бланк анкеты');
+});
+
+test('П-09 листается до конца: обложки — листы как все, папки остаются в пачке', async ({
+  page,
+}) => {
+  test.slow();
+  await stackInHands(page, 'П-09');
+  await leafTo(page, 15);
+  await page.getByTestId('stack-leaf').click({ force: true });
+  await expect(page.getByTestId('held-caption')).toContainText('все 15 л. пролистаны');
+  await expect(page.locator('[data-testid^="wall-F:"]')).toHaveCount(0);
 });
 
 test('за край тянут мышью: коротко — картон вернулся, дальше половины — вытащен', async ({
@@ -151,20 +166,25 @@ test('за край тянут мышью: коротко — картон ве�
   await expect(page.getByTestId('folder-open')).toHaveCount(1);
 });
 
-test('П-09: сверху — обложка (взять папку), по краям — ещё четыре; у пачки без картона тянуть нечего', async ({
+test('П-09: пять папок — пять краёв картона, за край — одна папка, на стене одна; у пачки без картона тянуть нечего', async ({
   page,
 }) => {
   await stackInHands(page, 'П-09');
-  await expect(page.getByTestId('stack-leaf')).toHaveAttribute('aria-label', 'Взять папку');
-  await expect(page.locator('[data-testid^="stack-layer-"]')).toHaveCount(4);
+  await expect(page.locator('[data-testid^="stack-layer-"]')).toHaveCount(5);
   await edgeOn(page);
   await page.getByTestId('stack-layer-4').click({ force: true });
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /^Папка A-\d+$/);
   // Esc — к пачке, ещё раз — к коробке.
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('stack-leaf')).toHaveCount(1);
+  // Папки в пачке больше нет: 12 листов, краёв — четыре.
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /12 л\.$/);
+  await expect(page.locator('[data-testid^="stack-layer-"]')).toHaveCount(4);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('stack-П-01')).toHaveCount(1);
+  // На стене — одна папка из П-09 и одна опись, без повторов.
+  await expect(page.locator('[data-testid^="wall-F:П-09/"]')).toHaveCount(1);
+  await expect(page.locator('[data-testid^="wall-L98"]')).toHaveCount(0);
   await page.getByTestId('stack-П-01').click({ force: true });
   await expect(page.getByTestId('stack-leaf')).toHaveCount(1);
   await expect(page.locator('[data-testid^="stack-layer-"]')).toHaveCount(0);
@@ -173,8 +193,8 @@ test('П-09: сверху — обложка (взять папку), по кр�
 test('П-05: долистать до листов текстом вниз — щелчок переворачивает: справки L957, на стене', async ({
   page,
 }) => {
-  // Долго листать: в CI без видеокарты каждый кадр сцены медленный.
-  test.slow();
+  // 43 перелистывания: в CI без видеокарты каждый кадр сцены медленный.
+  test.setTimeout(300_000);
   await stackInHands(page, 'П-05');
   await leafTo(page, 19);
   await expect(page.getByTestId('stack-leaf')).toHaveAttribute('aria-label', 'Перевернуть листы');
@@ -196,10 +216,19 @@ test.describe('листание с анимацией', () => {
   test('частые щелчки — в очередь: каждый лист доигрывает, потом следующий', async ({ page }) => {
     await stackInHands(page, 'П-03');
     const leaf = page.getByTestId('stack-leaf');
-    for (let k = 0; k < 4; k++) await leaf.click({ force: true });
+    // Четыре быстрых щелчка через 30 мс — отдельными событиями, как рукой (не ждать кадра сцены
+    // между ними: в CI без видеокарты кадр медленный).
+    await leaf.evaluate(async (el) => {
+      for (let k = 0; k < 4; k++) {
+        (el as HTMLElement).click();
+        await new Promise((r) => setTimeout(r, 30));
+      }
+    });
     // Сразу после щелчков — ещё не все четыре: листы идут по одному.
-    await expect(page.getByTestId('held-caption')).not.toContainText('лист 5 из');
-    await expect(page.getByTestId('held-caption')).toContainText('лист 5 из 31', { timeout: 8000 });
+    expect(await page.getByTestId('held-caption').textContent()).not.toContain('лист 5 из');
+    await expect(page.getByTestId('held-caption')).toContainText('лист 5 из 31', {
+      timeout: 30_000,
+    });
   });
 });
 
