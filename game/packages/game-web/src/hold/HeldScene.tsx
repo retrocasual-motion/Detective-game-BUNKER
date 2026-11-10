@@ -8,9 +8,9 @@ import {
 import { useMemo, useState } from 'react';
 import { postAction } from '../api.ts';
 import { type Held, useGame } from '../store.ts';
-import { type Bundle, listingOf, PAPERS_ID, parseBundles } from '../viewer/bundles.ts';
+import { type Bundle, coverCode, listingOf, PAPERS_ID, parseBundles } from '../viewer/bundles.ts';
 import Held3D, { afterLeaving } from './Held3D.tsx';
-import { PaperStack, PapersBox } from './papers.tsx';
+import { Folder, PaperStack, PapersBox } from './papers.tsx';
 import { Box, Device, Envelope } from './shapes.tsx';
 
 /** Вещь в руках со сценой three.js — отдельный кусок сборки (грузится, когда вещь взяли). */
@@ -70,12 +70,13 @@ export default function HeldThing({ held }: { held: Held }) {
 /**
  * Пачки бумаг из помещений (PH-B): коробка — щелчок по пачке — пачка в руках; её крутят
  * (торец, подложка), щелчок по верхнему листу — «пролистать»: опись пачки открывается листом.
- * Закрыть пачку — обратно к коробке.
+ * Торчащий картон тянут — папка в руках (RD-A); открыть — опись на этом листе. Esc — на шаг назад.
  */
 function Papers() {
   const body = useGame((g) => g.materials.find((m) => m.id === PAPERS_ID)?.body ?? '');
   const bundles = useMemo(() => parseBundles(body).bundles, [body]);
   const [pick, setPick] = useState<Bundle | null>(null);
+  const [folder, setFolder] = useState<{ code: string | null; listing: string } | null>(null);
   const close = () => useGame.getState().hold(null);
   const leaf = async (b: Bundle) => {
     const r = await postAction('ОСМОТР', PAPERS_ID, `листать ${b.id}`).catch(() => null);
@@ -88,6 +89,40 @@ function Papers() {
       useGame.getState().openViewer(id);
     });
   };
+  // Вытащили картон: движок отдаёт опись пачки (правила card-p02, card-p09 — «вытащить»).
+  const pull = async (b: Bundle, n: number) => {
+    const r = await postAction('ОСМОТР', `${PAPERS_ID} ${b.id} картон`, 'вытащить').catch(
+      () => null,
+    );
+    if (!r) return;
+    if (r.released.length) useGame.getState().addReleased(r.released);
+    const id = listingOf(b.id, useGame.getState().materials);
+    if (!id) return;
+    const body = useGame.getState().materials.find((m) => m.id === id)?.body ?? '';
+    afterLeaving(() => setFolder({ code: coverCode(body, n), listing: id }));
+  };
+  if (pick && folder)
+    return (
+      <Held3D
+        key={`folder-${pick.id}`}
+        mode="free"
+        half={[1.6, 1.2]}
+        label={folder.code ? `Папка ${folder.code}` : 'Папка'}
+        onClose={() => setFolder(null)}
+      >
+        <Folder
+          code={folder.code}
+          onOpen={() =>
+            afterLeaving(() => {
+              close();
+              useGame
+                .getState()
+                .openViewer(folder.listing, folder.code ? { q: folder.code, k: 0 } : undefined);
+            })
+          }
+        />
+      </Held3D>
+    );
   if (pick)
     return (
       <Held3D
@@ -97,7 +132,11 @@ function Papers() {
         label={`Пачка ${pick.id} · ${pick.room} · ${pick.sheets} л.`}
         onClose={() => setPick(null)}
       >
-        <PaperStack bundle={pick} onLeaf={() => void leaf(pick)} />
+        <PaperStack
+          bundle={pick}
+          onLeaf={() => void leaf(pick)}
+          onPull={(n) => void pull(pick, n)}
+        />
       </Held3D>
     );
   return (

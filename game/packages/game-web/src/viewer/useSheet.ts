@@ -243,7 +243,11 @@ export function useSheet(
     };
   }, []);
 
-  /** Средняя кнопка — как было: без приближения. */
+  /** Зажатое колесо — сдвинуть приближённый лист (правка автора 10.11). */
+  const pan = (dx: number, dy: number) =>
+    setZoom((z) => (z.s === 1 ? z : { ...z, tx: z.tx + dx, ty: z.ty + dy }));
+
+  /** Правая кнопка — как было: без приближения (правка автора 10.11; прежде — средняя). */
   const reset = () => {
     setZoom({ s: 1, tx: 0, ty: 0 });
     onLeave();
@@ -259,6 +263,7 @@ export function useSheet(
     tilt,
     zoom,
     onWheel,
+    pan,
     closeup,
     reset,
   };

@@ -219,10 +219,26 @@ export function Viewer({ materialId }: ViewerProps) {
       role="dialog"
       aria-label={material?.title ?? person?.name}
       onPointerDown={(e) => {
-        // Средняя кнопка — как было: лицом, без приближения (как у вещей в руках).
-        if (e.button === 1) {
+        // Правая кнопка — как было, без приближения; зажатое колесо — сдвинуть приближённый лист
+        // (правка автора 10.11, как у вещей в руках).
+        if (e.button === 2) {
           e.preventDefault();
           sheet.reset();
+          return;
+        }
+        if (e.button === 1) {
+          e.preventDefault();
+          let at = { x: e.clientX, y: e.clientY };
+          const move = (ev: globalThis.PointerEvent) => {
+            sheet.pan(ev.clientX - at.x, ev.clientY - at.y);
+            at = { x: ev.clientX, y: ev.clientY };
+          };
+          const stop = () => {
+            window.removeEventListener('pointermove', move);
+            window.removeEventListener('pointerup', stop);
+          };
+          window.addEventListener('pointermove', move);
+          window.addEventListener('pointerup', stop);
           return;
         }
         downOutside.current = e.button === 0 && isOutside(e);
@@ -230,6 +246,7 @@ export function Viewer({ materialId }: ViewerProps) {
       onMouseDown={(e) => {
         if (e.button === 1) e.preventDefault();
       }}
+      onContextMenu={(e) => e.preventDefault()}
       onPointerUp={(e) => {
         // Выделение текста, начатое на листе и законченное снаружи, — не «закрыть».
         if (downOutside.current && isOutside(e) && Date.now() - openedAt.current > OPEN_GUARD_MS)

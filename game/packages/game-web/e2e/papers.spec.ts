@@ -1,6 +1,15 @@
 import type { Page } from '@playwright/test';
 import { expect, STRIP, sheet, test, toWall } from './fixtures.ts';
 
+/** Повернуть пачку в руках правым торцом к игроку, взявшись за верхний лист. */
+async function edgeOn(page: Page) {
+  await page.mouse.move(683, 330);
+  await page.mouse.down();
+  await page.mouse.move(683 - 175, 330, { steps: 12 });
+  await page.mouse.up();
+  await page.waitForTimeout(400);
+}
+
 /** Глубоко приблизить лист в точке (колесом) — до крупного плана. */
 async function zoomInAt(page: Page, x: number, y: number) {
   await page.mouse.move(x, y);
@@ -27,6 +36,80 @@ test('пачки (PH-B): коробка на столе; пачка в рука�
   await expect(page.getByTestId('inbox-L981')).toHaveCount(1);
 });
 
+test('торчащий картон — вытащить (RD-A): папка A-24 в руках, открыть — опись П-02 на ней; поворот за лист картон не тянет', async ({
+  page,
+}) => {
+  await page.getByTestId('device-29').click();
+  await page.getByTestId('stack-П-02').click({ force: true });
+  await expect(page.getByTestId('stack-leaf')).toHaveCount(1);
+  // Повернуть пачку, взявшись за верхний лист: картон внутри не тянется сквозь бумагу.
+  await edgeOn(page);
+  await expect(page.getByTestId('folder-open')).toHaveCount(0);
+  // Край картона (у П-02 — один слой, лист 18) — вытащить.
+  await expect(page.getByTestId('stack-layer-18')).toHaveCount(1);
+  await page.getByTestId('stack-layer-18').click({ force: true });
+  await expect(page.getByTestId('folder-open')).toHaveCount(1);
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', 'Папка A-24');
+  // Esc — обратно к пачке; ещё раз вытащить и открыть.
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('stack-leaf')).toHaveCount(1);
+  await edgeOn(page);
+  await page.getByTestId('stack-layer-18').click({ force: true });
+  await page.getByTestId('folder-open').click({ force: true });
+  await expect(page.getByTestId('viewer-paper')).toContainText('пачка П-02');
+  expect(await page.evaluate(() => CSS.highlights.get('case-find')?.size ?? 0)).toBeGreaterThan(0);
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('inbox-L981')).toHaveCount(1);
+});
+
+test('за край тянут мышью: коротко — картон вернулся, дальше половины — вытащен', async ({
+  page,
+}) => {
+  await page.getByTestId('device-29').click();
+  await page.getByTestId('stack-П-02').click({ force: true });
+  await page.mouse.move(683, 330);
+  await page.mouse.down();
+  await page.mouse.move(683 - 175, 330, { steps: 12 });
+  await page.mouse.up();
+  await page.waitForTimeout(800);
+  const box = await page.getByTestId('stack-layer-18').boundingBox();
+  if (!box) throw new Error('нет края');
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2 + 60;
+  // Короткая протяжка — картон вернулся, папки нет.
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 40, y, { steps: 5 });
+  await page.mouse.up();
+  await page.waitForTimeout(300);
+  await expect(page.getByTestId('folder-open')).toHaveCount(0);
+  // Длинная — вытащен.
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 220, y, { steps: 10 });
+  await page.mouse.up();
+  await expect(page.getByTestId('folder-open')).toHaveCount(1);
+});
+
+test('П-09: пять обложек торчат — каждую можно вытащить; у пачки без картона тянуть нечего', async ({
+  page,
+}) => {
+  await page.getByTestId('device-29').click();
+  await page.getByTestId('stack-П-09').click({ force: true });
+  await expect(page.locator('[data-testid^="stack-layer-"]')).toHaveCount(5);
+  await edgeOn(page);
+  await page.getByTestId('stack-layer-4').click({ force: true });
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /^Папка A-\d+$/);
+  // Esc — к пачке, ещё раз — к коробке.
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('stack-leaf')).toHaveCount(1);
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('stack-П-01')).toHaveCount(1);
+  await page.getByTestId('stack-П-01').click({ force: true });
+  await expect(page.getByTestId('stack-leaf')).toHaveCount(1);
+  await expect(page.locator('[data-testid^="stack-layer-"]')).toHaveCount(0);
+});
+
 test('опись П-05: строки 19–24 вблизи — пересканы лицом вверх (FV-A); соседние строки — тихо', async ({
   page,
 }) => {
@@ -41,7 +124,7 @@ test('опись П-05: строки 19–24 вблизи — пересканы
   await zoomInAt(page, o.x + o.width / 2, o.y + o.height / 2);
   await page.waitForTimeout(800);
   await expect(page.getByTestId('viewer-closeup')).toHaveCount(0);
-  await page.mouse.click(683, 400, { button: 'middle' });
+  await page.mouse.click(683, 400, { button: 'right' });
   // Строка 19–24 — на этой или следующей странице (зависит от шрифтов).
   const row = page.locator('tr[data-osmotr-target="L985 лист 19–24"]');
   const shown = () =>

@@ -1,5 +1,8 @@
-import { useMemo } from 'react';
+import type { ThreeEvent } from '@react-three/fiber';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Group } from 'three';
 import type { Bundle } from '../viewer/bundles.ts';
+import { holdPart, useSpot } from './Held3D.tsx';
 import { Plate, useActive, useTexture } from './shapes.tsx';
 import { paintTexture } from './texture.ts';
 
@@ -56,8 +59,98 @@ function useSlip(label: string) {
   );
 }
 
+/** Протянуть мышью столько, px, — край вытащен до конца. */
+const PULL_PX = 160;
+
+/**
+ * Слой картона в пачке (RD-A, решение автора 10.11): выступает по краям чуть шире листов.
+ * Навели — край едва заметно выдвигается (совсем чуть-чуть — правка автора), курсор «взять».
+ * Потянуть — картон выезжает из пачки за мышью; отпустили раньше половины — вернулся; дальше —
+ * вытащен. Щелчок по невидимой кнопке края (клавиатура, тесты) — вытащить сразу.
+ */
+function CardLayer({ n, z, onPull }: { n: number; z: number; onPull: () => void }) {
+  const [hover, setHover] = useState(false);
+  const [slide, setSlide] = useState(0);
+  const live = useRef(0);
+  const anchor = useRef<Group>(null);
+  useSpot(anchor, {
+    id: `layer-${n}`,
+    label: 'Вытащить картон из пачки',
+    testId: `stack-layer-${n}`,
+    onClick: onPull,
+  });
+  useEffect(
+    () => () => {
+      document.body.style.cursor = '';
+    },
+    [],
+  );
+  // Картон берут за край: мышь попала в него первым (не сквозь бумагу) и в торцевую грань, а не
+  // в плоскость. За плоскость (у П-09 сверху лежит обложка) — пачку вращают, как обычно.
+  const first = (e: ThreeEvent<PointerEvent>) =>
+    e.intersections[0]?.object === e.object && Math.abs(e.face?.normal.z ?? 1) < 0.5;
+  const down = (e: ThreeEvent<PointerEvent>) => {
+    if (e.button !== 0 || !first(e)) return;
+    e.stopPropagation();
+    holdPart();
+    document.body.style.cursor = 'grabbing';
+    const x0 = e.clientX;
+    const y0 = e.clientY;
+    const move = (ev: PointerEvent) => {
+      live.current = Math.min(1, Math.hypot(ev.clientX - x0, ev.clientY - y0) / PULL_PX);
+      setSlide(live.current);
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      document.body.style.cursor = '';
+      if (live.current >= 0.5) {
+        setSlide(1);
+        onPull();
+      } else setSlide(0);
+      live.current = 0;
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+  // Выступ за край листа: 0,012 в покое, при наведении — на волосок больше.
+  const out = hover ? 0.017 : 0.012;
+  return (
+    <group position={[slide * W * 0.9, 0, z]}>
+      <mesh
+        onPointerDown={down}
+        onPointerMove={(e) => {
+          const on = first(e);
+          if (on !== hover) {
+            setHover(on);
+            document.body.style.cursor = on ? 'grab' : '';
+          }
+        }}
+        onPointerOut={() => {
+          setHover(false);
+          document.body.style.cursor = '';
+        }}
+      >
+        <boxGeometry args={[W + 2 * out, H + 2 * out, CARD_T]} />
+        <meshStandardMaterial color={CARD} roughness={0.95} />
+      </mesh>
+      {/* Кнопка края — у правого торца, видна, когда торец смотрит на игрока. */}
+      <group ref={anchor} position={[W / 2 + out, 0, 0]} rotation={[0, Math.PI / 2, 0]} />
+    </group>
+  );
+}
+
 /** Пачка целиком: бумага, слои картона, подложка; верхний лист — щелчок «пролистать». */
-export function PaperStack({ bundle: b, onLeaf }: { bundle: Bundle; onLeaf: () => void }) {
+export function PaperStack({
+  bundle: b,
+  onLeaf,
+  onPull,
+}: {
+  bundle: Bundle;
+  onLeaf: () => void;
+  /** Вытащили слой картона, что лежит перед листом n. */
+  onPull: (n: number) => void;
+}) {
   const d = stackDepth(b.sheets);
   const face = useSheetFace(b);
   const slip = useSlip(`${b.id} · ${b.room} · ${b.sheets} л.`);
@@ -81,10 +174,7 @@ export function PaperStack({ bundle: b, onLeaf }: { bundle: Bundle; onLeaf: () =
         <meshStandardMaterial color={PAPER} roughness={0.95} />
       </mesh>
       {b.layers.map((n) => (
-        <mesh key={n} position={[0, 0, layerZ(n, b.sheets, d)]}>
-          <boxGeometry args={[W + 0.024, H + 0.024, CARD_T]} />
-          <meshStandardMaterial color={CARD} roughness={0.95} />
-        </mesh>
+        <CardLayer key={n} n={n} z={layerZ(n, b.sheets, d)} onPull={() => onPull(n)} />
       ))}
       {/* Подложка снизу — картон с ярлыком бюро. */}
       <mesh position={[0, 0, -d / 2 - BASE_T / 2]}>
@@ -176,6 +266,44 @@ function SmallStack({ bundle: b, onPick }: { bundle: Bundle; onPick: () => void 
       </mesh>
       <group position={[0, size[1] / 2 - 0.08, d / 2 + 0.004]}>
         <Plate w={0.42} h={0.12} z={0} map={slip} />
+      </group>
+    </group>
+  );
+}
+
+/**
+ * Папка, вытащенная из пачки (RD-A): картонная обложка скоросшивателя, на ней — наклейка с кодом
+ * дела. Щелчок по обложке — открыть: опись пачки на этом листе (обложка, фото, копия бланка).
+ */
+export function Folder({ code, onOpen }: { code: string | null; onOpen: () => void }) {
+  const cover = useTexture(
+    () =>
+      paintTexture(W, H, CARD, ({ ctx, w, h, text }) => {
+        if (!code) return;
+        ctx.fillStyle = '#f1ead6';
+        ctx.fillRect(w * 0.3, h * 0.12, w * 0.4, h * 0.1);
+        ctx.fillStyle = INK;
+        text(code, w * 0.36, h * 0.135, w * 0.3, '700 120px system-ui, sans-serif', 130);
+      }),
+    [code],
+  );
+  const open = useActive('folder', 'Открыть папку', 'folder-open', onOpen);
+  return (
+    <group scale={0.78} rotation={[0.12, -0.25, 0]}>
+      <mesh>
+        <boxGeometry args={[W, H, 0.03]} />
+        <meshStandardMaterial color={CARD} roughness={0.95} />
+      </mesh>
+      <group position={[0, 0, 0.016]} ref={open.anchor}>
+        <mesh {...open.handlers}>
+          <planeGeometry args={[W, H]} />
+          <meshStandardMaterial
+            map={cover}
+            roughness={0.95}
+            emissive="#ffffff"
+            emissiveIntensity={open.hover ? 0.05 : 0}
+          />
+        </mesh>
       </group>
     </group>
   );

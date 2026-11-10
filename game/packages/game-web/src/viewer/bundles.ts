@@ -70,3 +70,20 @@ export const listingOf = (bundleId: string, materials: { id: string; title: stri
 /** Цель крупного плана строки описи: «L985 лист 19–24» (FV-A). */
 export const rowTarget = (listingId: string, firstCell: string) =>
   `${listingId} лист ${firstCell.trim()}`;
+
+/** Строка описи пачки, где лежит лист n: первая ячейка — «18» или «1–3». */
+export function rowOfSheet(listingBody: string, n: number): string | null {
+  for (const line of listingBody.split('\n')) {
+    const c = cells(line);
+    const m = /^(\d+)(?:\s*[–-]\s*(\d+))?$/.exec(c[0] ?? '');
+    if (!m) continue;
+    const from = Number(m[1]);
+    const to = Number(m[2] ?? m[1]);
+    if (n >= from && n <= to) return line;
+  }
+  return null;
+}
+
+/** Код дела на обложке папки, вытащенной из пачки (лист n): «A-24». */
+export const coverCode = (listingBody: string, n: number) =>
+  /A-\d+/.exec(rowOfSheet(listingBody, n) ?? '')?.[0] ?? null;

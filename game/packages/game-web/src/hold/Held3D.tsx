@@ -16,7 +16,8 @@ import { zoomStep } from './zoom.ts';
 /**
  * Вещь в руках (этап 4a, решения автора 09.11): без меню и кнопок — всё руками.
  * Зажать и тянуть — вращать; колесо — ближе к той точке, что под курсором (не общий зум);
- * средняя кнопка мыши — как было; щелчок по самой вещи (печать, экран) — вскрыть или включить;
+ * правая кнопка — как было, зажатое колесо — сдвинуть вещь (правка автора 10.11; прежде
+ * «как было» — средняя); щелчок по самой вещи (печать, экран) — вскрыть или включить;
  * щелчок мимо, ✕ или Esc — положить. Лист и конверт только переворачиваются (лицо/оборот) и
  * ложатся ровно — читать всегда удобно; предметы вертятся свободно.
  */
@@ -34,6 +35,11 @@ interface Gesture {
   released: boolean;
   wheel: { x: number; y: number; deltaY: number }[];
   reset: boolean;
+  /** Сдвиг зажатым колесом с прошлого кадра, px. */
+  panX: number;
+  panY: number;
+  /** За часть вещи взялись (тянут край картона) — вещь не вращается. */
+  part: boolean;
 }
 
 /** Порог «щелчок, а не протяжка», px. */
@@ -58,6 +64,11 @@ export function onClickPart(fn: () => void) {
     e?.stopPropagation();
     if ((gestureNow?.current.moved ?? 0) < CLICK_PX) fn();
   };
+}
+
+/** Часть вещи берёт протяжку себе (тянут край картона): вещь при этом не вращается. */
+export function holdPart() {
+  if (gestureNow) gestureNow.current.part = true;
 }
 
 /**
@@ -140,6 +151,19 @@ function Rig({
 
   useFrame((_, dt) => {
     const g = gesture.current;
+    if (g.part) {
+      g.dx = 0;
+      g.dy = 0;
+    }
+    if (g.panX || g.panY) {
+      // Сдвиг зажатым колесом: вещь едет за мышью (камера — обратно), не дальше края вещи.
+      const per = (2 * camTarget.current.z * Math.tan((30 * Math.PI) / 360)) / size.height;
+      const t = camTarget.current;
+      t.x = Math.max(-half[0], Math.min(half[0], t.x - g.panX * per));
+      t.y = Math.max(-half[1], Math.min(half[1], t.y + g.panY * per));
+      g.panX = 0;
+      g.panY = 0;
+    }
     if (g.dx || g.dy) {
       if (mode === 'flip') yaw.current += g.dx * ROT_PER_PX;
       else {
@@ -213,6 +237,9 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
     released: false,
     wheel: [],
     reset: false,
+    panX: 0,
+    panY: 0,
+    part: false,
   });
   const wrap = useRef<HTMLDivElement>(null);
   const buttons = useRef(new Map<string, HTMLButtonElement>());
@@ -247,14 +274,31 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
 
   // Протяжку ведём по окну: кнопка может уйти за край вещи и даже экрана.
   const onPointerDown = (e: ReactPointerEvent) => {
-    // Средняя кнопка — вернуть как было (правка автора 09.11: двойной щелчок мимо вещи клал её).
+    const g = gesture.current;
+    // Правая кнопка — вернуть как было (правка автора 10.11; прежде — средняя).
+    if (e.button === 2) {
+      e.preventDefault();
+      g.reset = true;
+      return;
+    }
+    // Зажатое колесо — сдвинуть вещь (правка автора 10.11).
     if (e.button === 1) {
       e.preventDefault();
-      gesture.current.reset = true;
+      let at = { x: e.clientX, y: e.clientY };
+      const pan = (ev: PointerEvent) => {
+        g.panX += ev.clientX - at.x;
+        g.panY += ev.clientY - at.y;
+        at = { x: ev.clientX, y: ev.clientY };
+      };
+      const stop = () => {
+        window.removeEventListener('pointermove', pan);
+        window.removeEventListener('pointerup', stop);
+      };
+      window.addEventListener('pointermove', pan);
+      window.addEventListener('pointerup', stop);
       return;
     }
     if (e.button !== 0) return;
-    const g = gesture.current;
     g.moved = 0;
     let last = { x: e.clientX, y: e.clientY };
     const move = (ev: PointerEvent) => {
@@ -265,6 +309,7 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
     };
     const up = () => {
       g.released = true;
+      g.part = false;
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
     };
@@ -294,6 +339,7 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
       onMouseDown={(e) => {
         if (e.button === 1) e.preventDefault();
       }}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <Canvas
         camera={{ position: [0, 0, CAM_Z], fov: 30 }}

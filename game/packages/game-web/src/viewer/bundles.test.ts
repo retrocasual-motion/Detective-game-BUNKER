@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { isBundleListing, listingOf, parseBundles, rowTarget } from './bundles.ts';
+import {
+  coverCode,
+  isBundleListing,
+  listingOf,
+  parseBundles,
+  rowOfSheet,
+  rowTarget,
+} from './bundles.ts';
 
 const BODY = `# Сканы — превью пачек
 
@@ -38,5 +45,27 @@ describe('пачки сканов (4b-2a)', () => {
 
   it('строка описи — цель крупного плана для движка (FV-A)', () => {
     expect(rowTarget('L985', ' 19–24 ')).toBe('L985 лист 19–24');
+  });
+});
+
+describe('папка, вытащенная из пачки (RD-A)', () => {
+  const L981 = `| Листы | Что на листе |
+|---|---|
+| 1–17 | Чистый бланк |
+| 18 | Картонная обложка папки-скоросшивателя. Наклейка с кодом: «A-24». |
+| 19 | Фотография |`;
+  const L989 = `| Листы | Код | Что |
+|---|---|---|
+| 1–3 | A-11 | обложка |
+| 4–6 | A-17 | обложка |`;
+  it('строка описи по номеру листа — одиночному и диапазону', () => {
+    expect(rowOfSheet(L981, 18)).toContain('Картонная обложка');
+    expect(rowOfSheet(L981, 5)).toContain('Чистый бланк');
+    expect(rowOfSheet(L981, 99)).toBeNull();
+  });
+  it('код на обложке', () => {
+    expect(coverCode(L981, 18)).toBe('A-24');
+    expect(coverCode(L989, 4)).toBe('A-17');
+    expect(coverCode(L981, 5)).toBeNull();
   });
 });
