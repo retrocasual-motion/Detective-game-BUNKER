@@ -4,7 +4,7 @@ import { expect, STRIP, sheet, test, toWall } from './fixtures.ts';
 /** Коробка с пачками в руках → пачка в руках. */
 async function stackInHands(page: Page, id: string) {
   await page.getByTestId('device-29').click();
-  await page.getByTestId(`stack-${id}`).click({ force: true });
+  await page.getByTestId(`stack-${id}`).dispatchEvent('click');
   await expect(page.getByTestId('stack-leaf')).toHaveCount(1);
 }
 
@@ -45,12 +45,17 @@ test('пачку листают в руках (LF-A): лист — в стопк
   await expect(page.getByTestId('held-caption')).toContainText('лист 3 из 96');
   await page.getByTestId('stack-back').click({ force: true });
   await expect(page.getByTestId('held-caption')).toContainText('лист 2 из 96');
-  // Опись пачки пришла в дело — сразу на стену, не во «Входящие».
-  await expect(sheet(page, 'L982')).toHaveCount(1);
+  // Опись пачки пришла в дело — на стену, не во «Входящие»; пока пачка в руках, на стене её не
+  // видно (правка автора 10.11: появляется, когда вещь закрыли).
   await expect(page.getByTestId('inbox-L982')).toHaveCount(0);
-  // Esc — обратно к коробке.
+  await expect(sheet(page, 'L982')).toHaveCount(0);
+  // Esc — обратно к коробке; ещё раз — вещь отложена: опись появилась на стене и светится.
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('stack-П-05')).toHaveCount(1);
+  await expect(sheet(page, 'L982')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(sheet(page, 'L982')).toHaveCount(1);
+  await expect(sheet(page, 'L982')).toHaveAttribute('data-found', 'true');
 });
 
 test('зажать на листе — листы сами не бегут (правка автора 10.11: без быстрого листания)', async ({
@@ -84,12 +89,14 @@ test('папка из пачки (RD-A): за край — в руках A-24; �
     'Пачка П-02 · Комната анкет · 38 л.',
   );
   await expect(page.getByTestId('stack-layer-18')).toHaveCount(0);
-  // На стене — сама папка (картон, наклейка A-24); опись пачки — во «Входящие», не на стену.
-  await expect(sheet(page, 'F:П-02/18')).toContainText('A-24');
-  await expect(sheet(page, 'L981')).toHaveCount(0);
+  // Пока вещь в руках — на стене ничего нового.
+  await expect(sheet(page, 'F:П-02/18')).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('stack-П-01')).toHaveCount(1);
   await page.keyboard.press('Escape');
+  // Отложили — на стене сама папка (картон, наклейка A-24); опись пачки — во «Входящие».
+  await expect(sheet(page, 'F:П-02/18')).toContainText('A-24');
+  await expect(sheet(page, 'L981')).toHaveCount(0);
   // Отложили — записка «На стене: Папка A-24 · Показать»; «Показать» — к стене, папка светится.
   await expect(page.getByTestId('placed-note')).toContainText('Папка A-24');
   await page.getByTestId('placed-show').click();
@@ -123,7 +130,7 @@ test('обложку папки щелчок листает (правка авт
   await expect(page.getByTestId('held-caption')).toContainText('лист 2 из 15');
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /^Пачка П-09/);
   await page.keyboard.press('Escape');
-  await page.getByTestId('stack-П-02').click({ force: true });
+  await page.getByTestId('stack-П-02').dispatchEvent('click');
   await edgeOn(page);
   await page.getByTestId('stack-layer-18').click({ force: true });
   await page.getByTestId('folder-open').click({ force: true });
@@ -182,12 +189,16 @@ test('П-09: пять папок — пять краёв картона, за к
   await expect(page.locator('[data-testid^="stack-layer-"]')).toHaveCount(4);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('stack-П-01')).toHaveCount(1);
-  // На стене — одна папка из П-09 и одна опись, без повторов.
-  await expect(page.locator('[data-testid^="wall-F:П-09/"]')).toHaveCount(1);
-  await expect(page.locator('[data-testid^="wall-L98"]')).toHaveCount(0);
-  await page.getByTestId('stack-П-01').click({ force: true });
+  await page.getByTestId('stack-П-01').dispatchEvent('click');
   await expect(page.getByTestId('stack-leaf')).toHaveCount(1);
   await expect(page.locator('[data-testid^="stack-layer-"]')).toHaveCount(0);
+  // Отложили всё — на стене одна папка из П-09, описи нет, без повторов.
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('stack-П-01')).toHaveCount(1);
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('held')).toHaveCount(0);
+  await expect(page.locator('[data-testid^="wall-F:П-09/"]')).toHaveCount(1);
+  await expect(page.locator('[data-testid^="wall-L98"]')).toHaveCount(0);
 });
 
 test('П-05: долистать до листов текстом вниз — щелчок переворачивает: справки L957, на стене', async ({
@@ -237,10 +248,11 @@ test('опись П-05 со стены: строки 19–24 вблизи — п
 }) => {
   await stackInHands(page, 'П-05');
   await page.getByTestId('stack-leaf').click({ force: true });
-  await expect(sheet(page, 'L985')).toHaveCount(1);
+  await expect(page.getByTestId('held-caption')).toContainText('лист 2 из');
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('stack-П-01')).toHaveCount(1);
   await page.keyboard.press('Escape');
+  await expect(sheet(page, 'L985')).toHaveCount(1);
   await toWall(page);
   await sheet(page, 'L985').click(STRIP);
   await expect(page.getByTestId('viewer-paper')).toContainText('пачка П-05');

@@ -36,7 +36,10 @@ test('открытое ложится во «Входящие» на столе:
   await expect(viewer).toContainText('vaultline-program.com');
   await page.getByTestId('viewer-to-wall').click();
   await expect(page.getByTestId('viewer-to-wall')).toHaveText('На стене');
+  // Пока лист открыт — на стене не видно; закрыли — появился и светится (правка автора 10.11).
+  await expect(page.getByTestId('wall-L101')).toHaveCount(0);
   await page.keyboard.press('Escape');
+  await expect(page.getByTestId('wall-L101')).toHaveAttribute('data-found', 'true');
   await expect(page.getByTestId('inbox-L101')).toHaveCount(0);
   await expect(page.getByTestId('inbox-tray')).toHaveText('Входящие');
   await toWall(page);

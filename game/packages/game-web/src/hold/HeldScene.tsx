@@ -1,11 +1,4 @@
-import {
-  CONTAINERS,
-  type ContainerId,
-  containerContents,
-  containerLabelId,
-  focusCamera,
-  folderItemId,
-} from '@bunker/shared';
+import { CONTAINERS, type ContainerId, containerContents, folderItemId } from '@bunker/shared';
 import { useMemo, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
 import { type Held, useGame } from '../store.ts';
@@ -279,10 +272,9 @@ function Opened({
             data-testid="envelope-to-wall"
             onClick={() => {
               close();
-              // Стена — сразу у новой группы (ярлык с названием конверта).
-              const g = useGame.getState();
-              const label = g.state?.wall.items.find((i) => i.id === containerLabelId(id));
-              g.setView('wall', label ? focusCamera(label.x, label.y) : undefined);
+              // К стене — как со стола (ZM-B, правка автора 10.11: прежний наезд на ярлык группы
+              // шёл мимо этого вида); новое на стене светится.
+              useGame.getState().setView('wall');
             }}
           >
             Перейти к стене

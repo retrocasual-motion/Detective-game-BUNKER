@@ -100,6 +100,18 @@ interface GameStore {
    */
   placed: { ids: string[]; text: string; at: number } | null;
   dismissPlaced(): void;
+  /**
+   * Повешено, но ещё не показано (правка автора 10.11): пока лист открыт или вещь в руках, на
+   * стене этого не видно — появится и засветится, когда игрок их закроет. В сохранении — сразу.
+   */
+  pendingWall: string[];
+  /** Показать отложенное на стене (лист и вещь закрыты). */
+  showPendingWall(): void;
+  /**
+   * Новое на стене (правка автора 10.11): всё, что туда повесили — из конверта, «На стену»,
+   * найденное руками, — светится, пока игрок не взялся за стену или не ушёл к столу от неё.
+   */
+  freshWall: string[];
   /** Через ms заглянуть, не пришёл ли ответ на ходатайство (MAIL-B: письмо во «Входящие»). */
   checkMailIn(ms: number): void;
   load(): Promise<void>;
@@ -134,12 +146,23 @@ interface GameStore {
   updateState(fn: (s: PlayerState) => PlayerState): void;
 }
 
+const onWallNow = (s: PlayerState | null) => new Set((s?.wall.items ?? []).map((i) => i.id));
+
 export const useGame = create<GameStore>((set, get) => {
   const saver = createSaver(putState, 500, (saveStatus) => set({ saveStatus }));
   if (typeof window !== 'undefined') {
     // Закрыли вкладку или перезагрузили раньше, чем истекла задержка, — дошлём сразу.
     window.addEventListener('pagehide', () => void saver.flush());
   }
+  // Что повесили только что: прячется, пока лист или вещь открыты, и светится (правка автора 10.11).
+  const markNew = (before: ReadonlySet<string>) => {
+    const added = (get().state?.wall.items ?? []).map((i) => i.id).filter((id) => !before.has(id));
+    if (!added.length) return;
+    set({
+      pendingWall: [...get().pendingWall, ...added],
+      freshWall: [...get().freshWall, ...added],
+    });
+  };
 
   return {
     materials: [],
@@ -156,6 +179,8 @@ export const useGame = create<GameStore>((set, get) => {
     searchOpen: false,
     excerpt: null,
     placed: null,
+    pendingWall: [],
+    freshWall: [],
     foundId: null,
     wallFly: 0,
     binned: null,
@@ -170,7 +195,9 @@ export const useGame = create<GameStore>((set, get) => {
 
     openContainer(id) {
       const { materials } = get();
+      const before = onWallNow(get().state);
       get().updateState((s) => openContainer(s, materials, id));
+      markNew(before);
     },
 
     hold(h) {
@@ -202,6 +229,7 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     pinToWall(materialId) {
+      const before = onWallNow(get().state);
       get().updateState((s) => {
         if (s.wall.items.some((i) => i.id === materialId)) return s;
         const c = shownCamera(s);
@@ -211,6 +239,7 @@ export const useGame = create<GameStore>((set, get) => {
         const k = s.wall.items.filter((i) => i.id.startsWith('L')).length % 6;
         return moveItem(materialId, cx - 80 + k * 30, cy - 110 + k * 30)(s);
       });
+      markNew(before);
     },
 
     addFound(released, near = '29', hang) {
@@ -247,7 +276,13 @@ export const useGame = create<GameStore>((set, get) => {
       set({
         placed: { ids: added, text: added.map(title).join('; '), at: Date.now() },
         foundId: added[0] ?? null,
+        pendingWall: [...get().pendingWall, ...added],
+        freshWall: [...get().freshWall, ...added],
       });
+    },
+
+    showPendingWall() {
+      if (get().pendingWall.length) set({ pendingWall: [] });
     },
 
     dismissPlaced() {
@@ -306,7 +341,7 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     clearFound() {
-      if (get().foundId) set({ foundId: null });
+      if (get().foundId || get().freshWall.length) set({ foundId: null, freshWall: [] });
     },
 
     setSearchOpen(open) {

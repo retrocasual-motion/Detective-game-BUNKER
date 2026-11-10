@@ -73,16 +73,28 @@ function paintList(p: Painter, items: Item[], top: number) {
 }
 
 /** Активная часть: щелчок мышью по ней и невидимая кнопка поверх (клавиатура, тесты). */
-export function useActive(id: string, label: string, testId: string, action: () => void) {
+export function useActive(
+  id: string,
+  label: string,
+  testId: string,
+  action: () => void,
+  /**
+   * Тесная часть среди соседних (ярлыки в коробке): мышь до невидимой кнопки не доходит — её
+   * ловит сама часть, и ближняя заслоняет дальние (правка автора 10.11: наведение шло насквозь).
+   */
+  tight = false,
+) {
   const anchor = useRef<Group>(null);
-  useSpot(anchor, { id, label, testId, onClick: action });
   const [hover, setHover] = useState(false);
+  useSpot(anchor, { id, label, testId, onClick: action, onHover: setHover, passive: tight });
   const handlers = {
     onClick: onClickPart(action),
-    onPointerOver: () => {
+    onPointerOver: (e?: { stopPropagation(): void }) => {
+      if (tight) e?.stopPropagation();
       setHover(true);
       setPartCursor('pointer');
     },
+    ...(tight ? { onPointerMove: (e: { stopPropagation(): void }) => e.stopPropagation() } : {}),
     onPointerOut: () => {
       setHover(false);
       setPartCursor('');

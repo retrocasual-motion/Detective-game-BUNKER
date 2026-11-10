@@ -54,6 +54,8 @@ interface WallCardProps {
   onSelect?(id: string): void;
   /** Найдено поиском (SR-D) — подсвечено. */
   found?: boolean;
+  /** Только что появилась на стене (найдено руками) — короткий «прилёт». */
+  arriving?: boolean;
 }
 
 /**
@@ -83,6 +85,7 @@ export const WallCard = memo(function WallCard({
   follow,
   onSelect,
   found,
+  arriving,
 }: WallCardProps) {
   const [liveW, setLiveW] = useState<number | null>(null);
   const resize = useRef<{ x: number; w: number } | null>(null);
@@ -99,7 +102,7 @@ export const WallCard = memo(function WallCard({
 
   return (
     <div
-      className={`wall-card wall-card-${kind}${shift ? ' wall-card-dragging' : ''}${hidden ? ' wall-card-over-folder' : ''}${selected ? ' wall-card-selected' : ''}${found ? ' wall-card-found' : ''}`}
+      className={`wall-card wall-card-${kind}${shift ? ' wall-card-dragging' : ''}${hidden ? ' wall-card-over-folder' : ''}${selected ? ' wall-card-selected' : ''}${found ? ' wall-card-found' : ''}${arriving ? ' wall-card-arriving' : ''}`}
       data-testid={`wall-${id}`}
       data-wall-item={id}
       data-selected={selected || undefined}
