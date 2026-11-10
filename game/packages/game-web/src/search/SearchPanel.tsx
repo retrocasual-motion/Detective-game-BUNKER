@@ -14,12 +14,18 @@ export function SearchPanel() {
   const open = useGame((g) => g.searchOpen);
   const setOpen = useGame((g) => g.setSearchOpen);
   const materials = useVisibleMaterials();
-  const viewerOpen = useGame((g) => g.viewerId !== null);
   const [query, setQuery] = useState('');
   const deferred = useDeferredValue(query);
   const input = useRef<HTMLInputElement>(null);
   const found = useMemo(() => searchCase(materials, deferred), [materials, deferred]);
   const total = found.reduce((n, f) => n + f.hits.length, 0);
+  // SR-D (решение автора 10.11): лист — сразу на найденном месте, под ним доска подводит его
+  // карточку к центру и подсвечивает. Панель остаётся — следующий результат одним щелчком.
+  const showFound = (id: string, k: number) => {
+    const g = useGame.getState();
+    g.openViewer(id, { q: deferred, k });
+    g.revealOnWall(id);
+  };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -59,12 +65,7 @@ export function SearchPanel() {
     );
 
   return (
-    <section
-      className="search-panel"
-      data-testid="search-panel"
-      aria-label="Поиск по делу"
-      inert={viewerOpen}
-    >
+    <section className="search-panel" data-testid="search-panel" aria-label="Поиск по делу">
       <div className="search-head">
         <input
           ref={input}
@@ -102,7 +103,7 @@ export function SearchPanel() {
                 key={h.k}
                 type="button"
                 className="search-hit"
-                onClick={() => useGame.getState().openViewer(f.id, { q: deferred, k: h.k })}
+                onClick={() => showFound(f.id, h.k)}
               >
                 {h.before}
                 <mark>{h.match}</mark>
@@ -113,9 +114,7 @@ export function SearchPanel() {
               <button
                 type="button"
                 className="search-more"
-                onClick={() =>
-                  useGame.getState().openViewer(f.id, { q: deferred, k: PER_MATERIAL })
-                }
+                onClick={() => showFound(f.id, PER_MATERIAL)}
               >
                 ещё {f.hits.length - PER_MATERIAL} в этом материале
               </button>

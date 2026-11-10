@@ -155,6 +155,9 @@ export function WallView() {
   const updateState = useGame((g) => g.updateState);
   const throwAway = useGame((g) => g.throwAway);
   const openViewer = useGame((g) => g.openViewer);
+  // Найдено поиском (SR-D): подсвечено; камера доски плывёт к нему (wallFly).
+  const foundId = useGame((g) => g.foundId);
+  const wallFly = useGame((g) => g.wallFly);
   const [live, setLive] = useState<{ id: string; dx: number; dy: number } | null>(null);
   // Выделение (MS-D): правая кнопка — рамка и выбор, Shift — то же для тачпада. Не сохраняется.
   const [selected, setSelected] = useState<ReadonlySet<string>>(NONE);
@@ -232,8 +235,19 @@ export function WallView() {
 
   // Ушли к столу — выделение снято; Esc у стены — тоже.
   useEffect(() => {
-    if (atDesk) setSelected(NONE);
+    if (atDesk) {
+      setSelected(NONE);
+      useGame.getState().clearFound();
+    }
   }, [atDesk]);
+  // Подсветка найденного держится, пока игрок не взялся за стену.
+  useEffect(() => {
+    const root = el.current;
+    if (!foundId || !root) return;
+    const off = () => useGame.getState().clearFound();
+    root.addEventListener('pointerdown', off, { capture: true });
+    return () => root.removeEventListener('pointerdown', off, { capture: true });
+  }, [foundId]);
   useEffect(() => {
     if (!onWallView || selected.size === 0) return;
     const onKey = (e: KeyboardEvent) => {
@@ -389,10 +403,11 @@ export function WallView() {
     [updateState],
   );
 
-  // Стол ↔ стена: камера доски перетекает за время полёта камеры комнаты, без скачка.
+  // Стол ↔ стена — камера доски перетекает за время полёта камеры комнаты, без скачка; так же
+  // плывёт к найденному поиском (новый wallFly).
   const camera = useCameraTween(
     wall ? (atDesk ? boardCamera(vp) : wall.camera) : NO_CAMERA,
-    atDesk,
+    `${atDesk}:${wallFly}`,
     vp,
   );
   if (!wall) return null;
@@ -553,6 +568,7 @@ export function WallView() {
         deleteLabel={note ? undefined : 'В корзину'}
         hidden={ghost?.id === item.id}
         selected={shown.has(item.id)}
+        found={foundId === item.id}
         follow={
           live && groupDrag && live.id !== item.id && selected.has(item.id)
             ? { x: live.dx, y: live.dy }
