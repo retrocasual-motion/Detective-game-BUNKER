@@ -32,9 +32,9 @@ describe('buildStartingMaterials', () => {
     expect(materials[0]?.title).toBe('Входящее письмо');
   });
 
-  it('кладёт устройства 24, 47, 48, 49, 50 в вид «Слева»', () => {
+  it('изъятые вещи (берут в руки): устройства 24, 47–50 и коробка пачек 29 (PH-B)', () => {
     const evidence = materials.filter((m) => m.placement === 'evidence').map((m) => m.id);
-    expect(evidence).toEqual(['24', '47', '48', '49', '50']);
+    expect(evidence).toEqual(['24', '29', '47', '48', '49', '50']);
   });
 
   it('читает только player/ и не оставляет \r в тексте', () => {

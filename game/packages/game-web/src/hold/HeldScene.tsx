@@ -5,9 +5,12 @@ import {
   containerLabelId,
   focusCamera,
 } from '@bunker/shared';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { postAction } from '../api.ts';
 import { type Held, useGame } from '../store.ts';
+import { type Bundle, listingOf, PAPERS_ID, parseBundles } from '../viewer/bundles.ts';
 import Held3D, { afterLeaving } from './Held3D.tsx';
+import { PaperStack, PapersBox } from './papers.tsx';
 import { Box, Device, Envelope } from './shapes.tsx';
 
 /** Вещь в руках со сценой three.js — отдельный кусок сборки (грузится, когда вещь взяли). */
@@ -45,6 +48,8 @@ export default function HeldThing({ held }: { held: Held }) {
     );
   }
 
+  if (held.id === PAPERS_ID) return <Papers />;
+
   const title = titles.get(held.id) ?? held.id;
   return (
     <Held3D mode="free" half={[1.6, 1.2]} label={title} onClose={close}>
@@ -58,6 +63,46 @@ export default function HeldThing({ held }: { held: Held }) {
           })
         }
       />
+    </Held3D>
+  );
+}
+
+/**
+ * Пачки бумаг из помещений (PH-B): коробка — щелчок по пачке — пачка в руках; её крутят
+ * (торец, подложка), щелчок по верхнему листу — «пролистать»: опись пачки открывается листом.
+ * Закрыть пачку — обратно к коробке.
+ */
+function Papers() {
+  const body = useGame((g) => g.materials.find((m) => m.id === PAPERS_ID)?.body ?? '');
+  const bundles = useMemo(() => parseBundles(body).bundles, [body]);
+  const [pick, setPick] = useState<Bundle | null>(null);
+  const close = () => useGame.getState().hold(null);
+  const leaf = async (b: Bundle) => {
+    const r = await postAction('ОСМОТР', PAPERS_ID, `листать ${b.id}`).catch(() => null);
+    if (!r) return;
+    if (r.released.length) useGame.getState().addReleased(r.released);
+    const id = listingOf(b.id, useGame.getState().materials);
+    if (!id) return;
+    afterLeaving(() => {
+      close();
+      useGame.getState().openViewer(id);
+    });
+  };
+  if (pick)
+    return (
+      <Held3D
+        key={pick.id}
+        mode="free"
+        half={[1.6, 1.2]}
+        label={`Пачка ${pick.id} · ${pick.room} · ${pick.sheets} л.`}
+        onClose={() => setPick(null)}
+      >
+        <PaperStack bundle={pick} onLeaf={() => void leaf(pick)} />
+      </Held3D>
+    );
+  return (
+    <Held3D mode="free" half={[1.6, 1.2]} label="Бумаги из помещений · 9 пачек" onClose={close}>
+      <PapersBox bundles={bundles} onPick={(b) => afterLeaving(() => setPick(b))} />
     </Held3D>
   );
 }

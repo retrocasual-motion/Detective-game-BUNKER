@@ -17,8 +17,7 @@ import { usePetition } from '../petition/petition-store.ts';
 import { clearFind, highlightFind } from '../search/highlight.ts';
 import { useGame } from '../store.ts';
 import { isLetter, takeOutOfBin } from '../wall/wall-actions.ts';
-import { BundlePreview } from './BundlePreview.tsx';
-import { BUNDLE_PREVIEW_ID, isBundleListing, rowTarget } from './bundles.ts';
+import { isBundleListing, rowTarget } from './bundles.ts';
 import { sameRange, snapToWords, unitRangeAt } from './selectUnit.ts';
 import { unwrapLines } from './text.ts';
 import { useSheet } from './useSheet.ts';
@@ -172,9 +171,7 @@ export function Viewer({ materialId }: ViewerProps) {
   };
   // Разбор Markdown — один раз на материал, а не на каждое движение мыши (инструменты двигаются).
   const doc = useMemo(() => {
-    // Превью пачек — девять сканов стопок (PK-B); у описи пачки строка — своя цель крупного
-    // плана: «L985 лист 19–24» (FV-A).
-    if (material?.id === BUNDLE_PREVIEW_ID) return <BundlePreview body={material.body} />;
+    // У описи пачки строка — своя цель крупного плана: «L985 лист 19–24» (FV-A).
     const components: Components | undefined =
       material && isBundleListing(material.id)
         ? {

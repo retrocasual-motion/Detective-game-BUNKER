@@ -1,0 +1,182 @@
+import { useMemo } from 'react';
+import type { Bundle } from '../viewer/bundles.ts';
+import { Plate, useActive, useTexture } from './shapes.tsx';
+import { paintTexture } from './texture.ts';
+
+/**
+ * Пачки бумаг из помещений (29) — физическая улика (PH-B, решение автора 10.11): коробка с
+ * девятью пачками, пачку берут в руки и крутят. Сверху — верхний лист; по краям — торец:
+ * бумага, а где есть, слои картона (выступают чуть шире листов, темнее); снизу — картонная
+ * подложка с ярлыком бюро. Листы видны, только когда пачку пролистывают (опись — ответ дела).
+ * Размеры — как в жизни (A4), толщина по числу листов чуть преувеличена, чтобы торец читался.
+ */
+
+const PAPER = '#ece7da';
+const SHEET = '#f4f1e8';
+const CARD = '#8c6f4c';
+const BASE = '#7a6248';
+const INK = '#2b2925';
+const BOX = '#8a7656';
+
+/** Лист A4 в единицах сцены. */
+const W = 2.1;
+const H = 2.97;
+const CARD_T = 0.014;
+const BASE_T = 0.03;
+
+/** Толщина пачки по числу листов. */
+export const stackDepth = (sheets: number) => 0.02 + sheets * 0.0045;
+
+/** Где лежит слой картона «перед листом n» (1 — сверху), по оси толщины (верх — +d/2). */
+const layerZ = (n: number, sheets: number, d: number) => d / 2 - ((n - 1) / sheets) * d;
+
+function useSheetFace(b: Bundle) {
+  return useTexture(
+    () =>
+      paintTexture(W, H, SHEET, ({ ctx, w, h, text }) => {
+        ctx.fillStyle = INK;
+        let y = text(b.top, w * 0.09, h * 0.12, w * 0.82, '64px Georgia, serif', 80);
+        // Ниже — строки листа, мелко (с руки не прочесть).
+        ctx.fillStyle = 'rgb(0 0 0 / 16%)';
+        for (y += 40; y < h * 0.9; y += 46)
+          ctx.fillRect(w * 0.09, y, w * (0.5 + ((y * 7) % 30) / 100), 10);
+      }),
+    [b.top],
+  );
+}
+
+function useSlip(label: string) {
+  return useTexture(
+    () =>
+      paintTexture(1.1, 0.3, '#efe6cc', ({ ctx, w, h, text }) => {
+        ctx.fillStyle = INK;
+        text(label, w * 0.06, h * 0.22, w * 0.9, '600 56px system-ui, sans-serif', 64);
+      }),
+    [label],
+  );
+}
+
+/** Пачка целиком: бумага, слои картона, подложка; верхний лист — щелчок «пролистать». */
+export function PaperStack({ bundle: b, onLeaf }: { bundle: Bundle; onLeaf: () => void }) {
+  const d = stackDepth(b.sheets);
+  const face = useSheetFace(b);
+  const slip = useSlip(`${b.id} · ${b.room} · ${b.sheets} л.`);
+  const base = useTexture(
+    () =>
+      paintTexture(W + 0.08, H + 0.08, BASE, ({ ctx, w, h, text }) => {
+        ctx.fillStyle = '#efe6cc';
+        ctx.fillRect(w * 0.25, h * 0.4, w * 0.5, h * 0.14);
+        ctx.fillStyle = INK;
+        text(`${b.id}`, w * 0.3, h * 0.42, w * 0.4, '700 90px system-ui, sans-serif', 100);
+        text(b.room, w * 0.3, h * 0.47, w * 0.4, '50px system-ui, sans-serif', 60);
+      }),
+    [b.id, b.room],
+  );
+  const leaf = useActive('leaf', `Пролистать пачку ${b.id}`, 'stack-leaf', onLeaf);
+  return (
+    <group scale={0.78}>
+      {/* Бумага — чуть уже картона: слои картона видны по краям. */}
+      <mesh>
+        <boxGeometry args={[W, H, d]} />
+        <meshStandardMaterial color={PAPER} roughness={0.95} />
+      </mesh>
+      {b.layers.map((n) => (
+        <mesh key={n} position={[0, 0, layerZ(n, b.sheets, d)]}>
+          <boxGeometry args={[W + 0.024, H + 0.024, CARD_T]} />
+          <meshStandardMaterial color={CARD} roughness={0.95} />
+        </mesh>
+      ))}
+      {/* Подложка снизу — картон с ярлыком бюро. */}
+      <mesh position={[0, 0, -d / 2 - BASE_T / 2]}>
+        <boxGeometry args={[W + 0.08, H + 0.08, BASE_T]} />
+        <meshStandardMaterial color={BASE} roughness={0.95} />
+      </mesh>
+      <Plate w={W + 0.08} h={H + 0.08} z={-d / 2 - BASE_T - 0.001} back map={base} />
+      {/* Верхний лист: щелчок — пролистать пачку. */}
+      <group position={[0, 0, d / 2 + 0.001]} ref={leaf.anchor}>
+        <mesh {...leaf.handlers}>
+          <planeGeometry args={[W, H]} />
+          <meshStandardMaterial
+            map={face}
+            roughness={0.9}
+            emissive="#ffffff"
+            emissiveIntensity={leaf.hover ? 0.06 : 0}
+          />
+        </mesh>
+      </group>
+      <group position={[-W / 2 + 0.6, H / 2 - 0.2, d / 2 + 0.004]} rotation={[0, 0, 0.04]}>
+        <Plate w={1.1} h={0.3} z={0} map={slip} />
+      </group>
+    </group>
+  );
+}
+
+const COLS = 3;
+const CELL: [number, number] = [0.92, 1.24];
+const SMALL = 0.36;
+
+/** Коробка с девятью пачками (вид сверху, чуть наклонена); щелчок по пачке — взять её. */
+export function PapersBox({ bundles, onPick }: { bundles: Bundle[]; onPick: (b: Bundle) => void }) {
+  const rows = Math.ceil(bundles.length / COLS);
+  const tray: [number, number] = [COLS * CELL[0] + 0.2, rows * CELL[1] + 0.2];
+  return (
+    <group rotation={[-0.42, 0, 0]} scale={0.62}>
+      {/* Дно и бортики коробки. */}
+      <mesh position={[0, 0, -0.05]}>
+        <boxGeometry args={[tray[0], tray[1], 0.06]} />
+        <meshStandardMaterial color={BOX} roughness={0.95} />
+      </mesh>
+      {[
+        [0, tray[1] / 2, tray[0], 0.06],
+        [0, -tray[1] / 2, tray[0], 0.06],
+        [tray[0] / 2, 0, 0.06, tray[1]],
+        [-tray[0] / 2, 0, 0.06, tray[1]],
+      ].map(([x, y, w, h]) => (
+        <mesh key={`${x}:${y}`} position={[x as number, y as number, 0.2]}>
+          <boxGeometry args={[w as number, h as number, 0.5]} />
+          <meshStandardMaterial color={BOX} roughness={0.95} />
+        </mesh>
+      ))}
+      {bundles.map((b, k) => (
+        <group
+          key={b.id}
+          position={[
+            ((k % COLS) - (COLS - 1) / 2) * CELL[0],
+            ((rows - 1) / 2 - Math.floor(k / COLS)) * CELL[1],
+            0,
+          ]}
+        >
+          <SmallStack bundle={b} onPick={() => onPick(b)} />
+        </group>
+      ))}
+    </group>
+  );
+}
+
+function SmallStack({ bundle: b, onPick }: { bundle: Bundle; onPick: () => void }) {
+  const d = stackDepth(b.sheets) * SMALL * 1.4;
+  const face = useSheetFace(b);
+  const slip = useSlip(b.id);
+  const pick = useActive(`stack-${b.id}`, `Взять пачку ${b.id}`, `stack-${b.id}`, onPick);
+  const size = useMemo(() => [W * SMALL, H * SMALL] as const, []);
+  return (
+    <group position={[0, 0, d / 2]} ref={pick.anchor}>
+      <mesh {...pick.handlers}>
+        <boxGeometry args={[size[0], size[1], d]} />
+        <meshStandardMaterial color={PAPER} roughness={0.95} />
+      </mesh>
+      <mesh position={[0, 0, d / 2 + 0.001]} {...pick.handlers}>
+        <planeGeometry args={[size[0], size[1]]} />
+        <meshStandardMaterial
+          map={face}
+          roughness={0.9}
+          emissive="#ffffff"
+          emissiveIntensity={pick.hover ? 0.12 : 0}
+        />
+      </mesh>
+      <group position={[0, size[1] / 2 - 0.08, d / 2 + 0.004]}>
+        <Plate w={0.42} h={0.12} z={0} map={slip} />
+      </group>
+    </group>
+  );
+}

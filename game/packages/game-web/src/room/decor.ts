@@ -291,6 +291,19 @@ export function deskObjects(
         testId: `container-${c.id}`,
       };
     }),
+    // Коробка с пачками бумаг из помещений (29, PH-B): на месте конверта «Документация объекта»,
+    // когда он вскрыт.
+    {
+      key: 'papers',
+      label: 'Коробка: пачки бумаг из помещений (9 пачек)',
+      boxes: [
+        box(0.4, 0.6, 0.17, 0.12, 0.045, col('--color-box')),
+        box(0.4, 0.595, 0.14, 0.09, 0.008, col('--color-newspaper'), 0.04),
+      ],
+      hotspot: { kind: 'material' as const, id: '29' },
+      tag: 'Изъято · 29',
+      testId: 'device-29',
+    },
     {
       key: 'monitor',
       label: 'Компьютер следователя',
@@ -343,8 +356,13 @@ export function deskObjects(
       ],
     },
   ];
-  // Устройства лежат на столе, когда вскрыт конверт «Осмотр места происшествия и изъятое» (A-260).
-  return opened.includes('scene') ? all : all.filter((o) => !DEVICE_KEYS.has(o.key));
+  // Устройства лежат на столе, когда вскрыт конверт «Осмотр места происшествия и изъятое» (A-260);
+  // коробка с пачками — когда вскрыт «Документация объекта и программы».
+  return all.filter(
+    (o) =>
+      !(DEVICE_KEYS.has(o.key) && !opened.includes('scene')) &&
+      !(o.key === 'papers' && !opened.includes('bunker')),
+  );
 }
 
 /** Изъятые устройства на столе (24, 47–50). */

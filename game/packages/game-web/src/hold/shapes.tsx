@@ -22,7 +22,7 @@ export interface Item {
   title: string;
 }
 
-function useTexture(make: () => CanvasTexture, deps: unknown[]) {
+export function useTexture(make: () => CanvasTexture, deps: unknown[]) {
   // biome-ignore lint/correctness/useExhaustiveDependencies: текстура пересоздаётся по deps
   const tex = useMemo(make, deps);
   useEffect(() => () => tex.dispose(), [tex]);
@@ -30,7 +30,7 @@ function useTexture(make: () => CanvasTexture, deps: unknown[]) {
 }
 
 /** Плоскость с краской: лицо (к +z) или оборот (повёрнута к −z). */
-function Plate({
+export function Plate({
   w,
   h,
   z,
@@ -73,7 +73,7 @@ function paintList(p: Painter, items: Item[], top: number) {
 }
 
 /** Активная часть: щелчок мышью по ней и невидимая кнопка поверх (клавиатура, тесты). */
-function useActive(id: string, label: string, testId: string, action: () => void) {
+export function useActive(id: string, label: string, testId: string, action: () => void) {
   const anchor = useRef<Group>(null);
   useSpot(anchor, { id, label, testId, onClick: action });
   const [hover, setHover] = useState(false);
