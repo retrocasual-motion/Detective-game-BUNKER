@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import Markdown from 'react-markdown';
+import Markdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { trackReading } from '../dev/readingLog.ts';
@@ -17,6 +17,8 @@ import { usePetition } from '../petition/petition-store.ts';
 import { clearFind, highlightFind } from '../search/highlight.ts';
 import { useGame } from '../store.ts';
 import { isLetter, takeOutOfBin } from '../wall/wall-actions.ts';
+import { BundlePreview } from './BundlePreview.tsx';
+import { BUNDLE_PREVIEW_ID, isBundleListing, rowTarget } from './bundles.ts';
 import { sameRange, snapToWords, unitRangeAt } from './selectUnit.ts';
 import { unwrapLines } from './text.ts';
 import { useSheet } from './useSheet.ts';
@@ -29,6 +31,11 @@ interface ViewerProps {
 const OPEN_GUARD_MS = 400;
 const INSIDE =
   '.viewer-paper, .viewer-tools, .to-petition, .viewer-closeup, .viewer-stack-hit, .viewer-corner';
+
+/** Текст узла разметки (первая ячейка строки описи пачки). */
+type TextNode = { type: string; value?: string; children?: TextNode[] };
+const textOf = (n: TextNode): string =>
+  n.type === 'text' ? (n.value ?? '') : (n.children ?? []).map(textOf).join('');
 
 /**
  * Просмотрщик материала (TECH_PLAN 4.3). Серый прототип: текст пакета дословно; строки внутри
@@ -164,14 +171,28 @@ export function Viewer({ materialId }: ViewerProps) {
     setSel(null);
   };
   // Разбор Markdown — один раз на материал, а не на каждое движение мыши (инструменты двигаются).
-  const doc = useMemo(
-    () => (
-      <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+  const doc = useMemo(() => {
+    // Превью пачек — девять сканов стопок (PK-B); у описи пачки строка — своя цель крупного
+    // плана: «L985 лист 19–24» (FV-A).
+    if (material?.id === BUNDLE_PREVIEW_ID) return <BundlePreview body={material.body} />;
+    const components: Components | undefined =
+      material && isBundleListing(material.id)
+        ? {
+            tr: ({ node, ...props }) => {
+              const first = node?.children.find(
+                (c): c is Extract<typeof c, { type: 'element' }> => c.type === 'element',
+              );
+              if (first?.tagName !== 'td') return <tr {...props} />;
+              return <tr {...props} data-osmotr-target={rowTarget(material.id, textOf(first))} />;
+            },
+          }
+        : undefined;
+    return (
+      <Markdown remarkPlugins={[remarkGfm, remarkBreaks]} components={components}>
         {material ? unwrapLines(material.body) : ''}
       </Markdown>
-    ),
-    [material],
-  );
+    );
+  }, [material]);
 
   const { goTo, page } = sheet;
   useEffect(() => {
