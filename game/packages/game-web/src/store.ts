@@ -100,6 +100,13 @@ interface GameStore {
    */
   placed: { ids: string[]; text: string; at: number } | null;
   dismissPlaced(): void;
+  /**
+   * Повешено, но ещё не показано (правка автора 10.11): пока лист открыт или вещь в руках, на
+   * стене этого не видно — появится и засветится, когда игрок их закроет. В сохранении — сразу.
+   */
+  pendingWall: string[];
+  /** Показать отложенное на стене (лист и вещь закрыты). */
+  showPendingWall(): void;
   /** Через ms заглянуть, не пришёл ли ответ на ходатайство (MAIL-B: письмо во «Входящие»). */
   checkMailIn(ms: number): void;
   load(): Promise<void>;
@@ -156,6 +163,7 @@ export const useGame = create<GameStore>((set, get) => {
     searchOpen: false,
     excerpt: null,
     placed: null,
+    pendingWall: [],
     foundId: null,
     wallFly: 0,
     binned: null,
@@ -247,7 +255,12 @@ export const useGame = create<GameStore>((set, get) => {
       set({
         placed: { ids: added, text: added.map(title).join('; '), at: Date.now() },
         foundId: added[0] ?? null,
+        pendingWall: [...get().pendingWall, ...added],
       });
+    },
+
+    showPendingWall() {
+      if (get().pendingWall.length) set({ pendingWall: [] });
     },
 
     dismissPlaced() {

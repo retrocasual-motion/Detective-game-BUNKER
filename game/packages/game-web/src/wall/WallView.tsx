@@ -159,6 +159,22 @@ export function WallView() {
   // Найдено поиском (SR-D): подсвечено; камера доски плывёт к нему (wallFly).
   const foundId = useGame((g) => g.foundId);
   const wallFly = useGame((g) => g.wallFly);
+  // Найденное, пока его читают, на стене не видно (правка автора 10.11): появится — с подсветкой
+  // и коротким «прилётом», — когда лист и вещь закрыты.
+  const pending = useGame((g) => g.pendingWall);
+  const busy = useGame((g) => g.held !== null || g.viewerId !== null);
+  const [arriving, setArriving] = useState<ReadonlySet<string>>(NONE);
+  useEffect(() => {
+    if (busy || pending.length === 0) return;
+    setArriving(new Set(pending));
+    useGame.getState().showPendingWall();
+  }, [busy, pending]);
+  useEffect(() => {
+    if (arriving.size === 0) return;
+    const t = setTimeout(() => setArriving(NONE), 1200);
+    return () => clearTimeout(t);
+  }, [arriving]);
+  const waiting = useMemo(() => new Set(pending), [pending]);
   const [live, setLive] = useState<{ id: string; dx: number; dy: number } | null>(null);
   // Выделение (MS-D): правая кнопка — рамка и выбор, Shift — то же для тачпада. Не сохраняется.
   const [selected, setSelected] = useState<ReadonlySet<string>>(NONE);
@@ -590,6 +606,7 @@ export function WallView() {
         hidden={ghost?.id === item.id}
         selected={shown.has(item.id)}
         found={foundId === item.id}
+        arriving={arriving.has(item.id)}
         follow={
           live && groupDrag && live.id !== item.id && selected.has(item.id)
             ? { x: live.dx, y: live.dy }
@@ -617,7 +634,7 @@ export function WallView() {
         onBackgroundClick={() => setSelected(NONE)}
         onMarquee={onMarquee}
       >
-        {wall.items.map(render)}
+        {wall.items.filter((i) => !waiting.has(i.id)).map(render)}
         <WallThreads
           at={at}
           threads={wall.threads}

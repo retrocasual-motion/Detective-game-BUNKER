@@ -521,8 +521,15 @@ const KRAFT = '#b48d5f';
 const TAB_X = [-0.8, 0, 0.8];
 const TAB: [number, number] = [0.86, 0.3];
 /** Насколько конверт приподнимается при наведении и куда уходит, когда его вынули. */
-const LIFT_HOVER = 0.14;
+const LIFT_HOVER = 0.1;
 const LIFT_OUT = 1.6;
+
+/**
+ * Заслонка наведения: стенки короба и сами конверты не пропускают мышь к тому, что за ними
+ * (правка автора 10.11: вёл мышью по передней стенке — конверты за ней поднимались).
+ */
+const stop = (e: ThreeEvent<PointerEvent>) => e.stopPropagation();
+const BLOCK = { onPointerOver: stop, onPointerMove: stop };
 
 /**
  * Коробка с пачками (BX-A, решение автора 10.11): открытый архивный короб, наклонён к игроку;
@@ -552,7 +559,7 @@ export function PapersBox({ bundles, onPick }: { bundles: Bundle[]; onPick: (b: 
   return (
     <group rotation={[0.62, 0, 0]} position={[0, -0.1, 0]} scale={0.6}>
       {/* Дно и стенки короба. */}
-      <mesh position={[0, -BOX_H / 2 + WALL / 2, 0]}>
+      <mesh position={[0, -BOX_H / 2 + WALL / 2, 0]} {...BLOCK}>
         <boxGeometry args={[BOX_W, WALL, BOX_D]} />
         <meshStandardMaterial color={BOX} roughness={0.95} />
       </mesh>
@@ -561,12 +568,12 @@ export function PapersBox({ bundles, onPick }: { bundles: Bundle[]; onPick: (b: 
         [-BOX_W / 2 + WALL / 2, 0, WALL, BOX_D],
         [BOX_W / 2 - WALL / 2, 0, WALL, BOX_D],
       ].map(([x, z, w, d]) => (
-        <mesh key={`${x}:${z}`} position={[x as number, 0, z as number]}>
+        <mesh key={`${x}:${z}`} position={[x as number, 0, z as number]} {...BLOCK}>
           <boxGeometry args={[w as number, BOX_H, d as number]} />
           <meshStandardMaterial color={BOX} roughness={0.95} />
         </mesh>
       ))}
-      <group position={[0, 0, BOX_D / 2 - WALL / 2]}>
+      <group position={[0, 0, BOX_D / 2 - WALL / 2]} {...BLOCK}>
         <mesh>
           <boxGeometry args={[BOX_W, BOX_H, WALL]} />
           <meshStandardMaterial color={BOX} roughness={0.95} />
@@ -660,37 +667,48 @@ function EnvelopeFile({
     [b.id, b.room, empty],
   );
   const glow = pick.hover && !empty ? 0.04 : 0;
+  const tabY = ENV_H / 2 + TAB[1] / 2 - 0.04;
   return (
-    <group ref={lift}>
-      <mesh {...pick.handlers}>
-        <boxGeometry args={[ENV_W, ENV_H, d]} />
-        <meshStandardMaterial
-          color={KRAFT}
-          roughness={0.95}
-          emissive="#ffffff"
-          emissiveIntensity={glow}
-        />
-      </mesh>
-      <mesh position={[0, 0, d / 2 + 0.002]} {...pick.handlers}>
-        <planeGeometry args={[ENV_W, ENV_H]} />
-        <meshStandardMaterial
-          map={face}
-          roughness={0.95}
-          emissive="#ffffff"
-          emissiveIntensity={glow}
-        />
-      </mesh>
-      {/* Ярлык на верхнем крае — его видно поверх соседних конвертов. */}
-      <group position={[tabX, ENV_H / 2 + TAB[1] / 2 - 0.04, d / 2 + 0.004]} ref={pick.anchor}>
-        <mesh {...pick.handlers}>
-          <planeGeometry args={[TAB[0], TAB[1]]} />
+    <group>
+      {/* Конверт берут только за ярлык (правка автора 10.11): зона наведения — на месте ярлыка,
+          неподвижная и с запасом на подъём, чтобы конверт не дрожал под мышью. */}
+      <group position={[tabX, tabY, d / 2 + 0.01]} ref={pick.anchor}>
+        <mesh position={[0, LIFT_HOVER / 2, 0]} {...pick.handlers}>
+          <planeGeometry args={[TAB[0], TAB[1] + LIFT_HOVER]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        </mesh>
+      </group>
+      <group ref={lift}>
+        <mesh {...BLOCK}>
+          <boxGeometry args={[ENV_W, ENV_H, d]} />
           <meshStandardMaterial
-            map={tab}
-            roughness={0.9}
+            color={KRAFT}
+            roughness={0.95}
             emissive="#ffffff"
             emissiveIntensity={glow}
           />
         </mesh>
+        <mesh position={[0, 0, d / 2 + 0.002]} {...BLOCK}>
+          <planeGeometry args={[ENV_W, ENV_H]} />
+          <meshStandardMaterial
+            map={face}
+            roughness={0.95}
+            emissive="#ffffff"
+            emissiveIntensity={glow}
+          />
+        </mesh>
+        {/* Ярлык на верхнем крае — его видно поверх соседних конвертов. */}
+        <group position={[tabX, tabY, d / 2 + 0.004]}>
+          <mesh>
+            <planeGeometry args={[TAB[0], TAB[1]]} />
+            <meshStandardMaterial
+              map={tab}
+              roughness={0.9}
+              emissive="#ffffff"
+              emissiveIntensity={glow}
+            />
+          </mesh>
+        </group>
       </group>
     </group>
   );

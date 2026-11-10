@@ -1235,7 +1235,24 @@ button {
       0 0 calc(var(--sel-w, 3px) * 16) calc(var(--sel-w, 3px) * 5) rgb(243 226 107 / 75%);
   }
 }
-:root[data-motion="reduce"] .wall-card-found > .card {
+/* Найдено руками — появляется на стене, когда лист закрыт (правка автора 10.11): короткий
+   «прилёт», потом свечение. */
+.wall-card-arriving > .card {
+  animation: wall-arrive 0.5s ease-out;
+}
+.wall-card-arriving.wall-card-found > .card {
+  animation:
+    wall-arrive 0.5s ease-out,
+    found-glow 1.4s ease-in-out 0.5s 2;
+}
+@keyframes wall-arrive {
+  from {
+    opacity: 0;
+    scale: 1.25;
+  }
+}
+:root[data-motion="reduce"] .wall-card-found > .card,
+:root[data-motion="reduce"] .wall-card-arriving > .card {
   animation: none;
 }
 /* Со стола карточек не видно. */
