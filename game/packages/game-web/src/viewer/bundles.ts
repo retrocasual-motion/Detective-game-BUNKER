@@ -160,3 +160,30 @@ export function sheetPages(listingBody: string, b: Pick<Bundle, 'sheets' | 'laye
   while (pages.length < b.sheets) pages.push({ text: '', faceDown: false, cover: null });
   return pages.slice(0, b.sheets);
 }
+
+/** Папка в пачке — обложка и два листа в ней (П-02: 18–20; П-09: по три листа на дело). */
+export const FOLDER_SHEETS = 3;
+
+/**
+ * Что осталось в пачке, когда из неё вынули папки (taken: «П-02/18»): число листов, слои
+ * картона и листы — по порядку, без вынутых; orig — номер листа в исходной пачке.
+ */
+export function remaining(b: Bundle, taken: readonly string[], sheets: Sheet[] | null) {
+  const out = taken
+    .filter((t) => t.startsWith(`${b.id}/`))
+    .map((t) => Number(t.slice(b.id.length + 1)));
+  const orig: number[] = [];
+  for (let n = 1; n <= b.sheets; n++)
+    if (!out.some((o) => n >= o && n < o + FOLDER_SHEETS)) orig.push(n);
+  return {
+    bundle: {
+      ...b,
+      sheets: orig.length,
+      layers: b.layers.filter((n) => !out.includes(n)).map((n) => orig.indexOf(n) + 1),
+    },
+    sheets: sheets
+      ? orig.map((n) => sheets[n - 1] ?? { text: '', faceDown: false, cover: null })
+      : null,
+    orig,
+  };
+}

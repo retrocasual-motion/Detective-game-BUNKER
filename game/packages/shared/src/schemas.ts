@@ -131,5 +131,13 @@ export const PlayerStateSchema = z.object({
    * на стене, конверты считаются вскрытыми (openedOf).
    */
   opened: z.array(z.enum(CONTAINER_IDS)).max(CONTAINER_IDS.length).optional(),
+  /**
+   * Папки, вынутые из пачек (RD-A, правка автора 10.11): «П-02/18» — папка, что лежала перед
+   * листом 18 пачки П-02. Вынутая из пачки пропадает: её листов там больше нет.
+   */
+  taken: z
+    .array(z.string().regex(/^П-0[1-9]\/\d{1,3}$/))
+    .max(20)
+    .optional(),
 });
 export type PlayerState = z.infer<typeof PlayerStateSchema>;

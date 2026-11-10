@@ -4,6 +4,7 @@ import {
   isBundleListing,
   listingOf,
   parseBundles,
+  remaining,
   rowOfSheet,
   rowTarget,
   sheetPages,
@@ -99,5 +100,21 @@ describe('листание пачки в руках (LF-A)', () => {
     expect(p).toHaveLength(24);
     expect(p[0]?.text).toContain('День 12. А. Коул');
     expect(p[23]?.text).toContain('День 1. Л. Моро. Что хотите добавить: «Рисую. Хорошо.»');
+  });
+});
+
+describe('вынутая папка пропадает из пачки', () => {
+  const b = { id: 'П-02', room: 'Комната анкет', sheets: 41, top: '', side: '', layers: [18] };
+  it('без её трёх листов и без её картона; номера исходных листов сохраняются', () => {
+    const r = remaining(b, ['П-02/18', 'П-09/4'], null);
+    expect(r.bundle.sheets).toBe(38);
+    expect(r.bundle.layers).toEqual([]);
+    expect(r.orig.slice(16, 19)).toEqual([17, 21, 22]);
+  });
+  it('у П-09 вынули первую — остальные слои сдвигаются', () => {
+    const p9 = { ...b, id: 'П-09', sheets: 15, layers: [1, 4, 7, 10, 13] };
+    const r = remaining(p9, ['П-09/1'], null);
+    expect(r.bundle.sheets).toBe(12);
+    expect(r.bundle.layers).toEqual([1, 4, 7, 10]);
   });
 });

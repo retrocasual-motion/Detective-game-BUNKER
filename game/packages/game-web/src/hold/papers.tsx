@@ -1,6 +1,6 @@
 import { type ThreeEvent, useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { DoubleSide, type Group, type Mesh, Vector3 } from 'three';
+import { BackSide, FrontSide, type Group, type Mesh, PlaneGeometry, Vector3 } from 'three';
 import { reducedMotion } from '../motion.ts';
 import type { Bundle, Sheet } from '../viewer/bundles.ts';
 import { holdPart, setPartCursor, useSpot } from './Held3D.tsx';
@@ -133,7 +133,8 @@ function CardLayer({ n, z, onPull }: { n: number; z: number; onPull: () => void 
   const reach = (e: ThreeEvent<PointerEvent>) => {
     if (e.intersections[0]?.object !== e.object) return false;
     const axis = e.object.getWorldDirection(new Vector3());
-    return Math.abs(axis.dot(e.ray.direction)) < 0.8;
+    // Сбоку — уже при повороте на 15–20° (правка автора 10.11); прямо сверху — нет.
+    return Math.abs(axis.dot(e.ray.direction)) < 0.975;
   };
   const down = (e: ThreeEvent<PointerEvent>) => {
     if (e.button !== 0 || !reach(e)) return;
@@ -193,51 +194,59 @@ function CardLayer({ n, z, onPull }: { n: number; z: number; onPull: () => void 
   );
 }
 
-/** Лист, который перекладывают: перелетает с пачки в отложенную стопку (или обратно). */
-function Flying({
-  from,
-  to,
-  z,
-  dir,
-  at,
-}: {
-  from: number;
-  to: number;
-  z: number;
-  dir: 1 | -1;
-  at: number;
-}) {
-  const pivot = useRef<Group>(null);
+/** Сколько длится переворот листа, мс. */
+const FLIP_MS = 520;
+
+/**
+ * Лист, который перекладывают (правка автора 10.11: «живой», не доска): лист гнётся — поднимается
+ * от корешка, свободный край отстаёт и догоняет; лицом — его текст, оборотом — чистая бумага.
+ * Корешок — левый край пачки; лист ложится вплотную слева.
+ */
+function Flying({ sheet, dir, at, z }: { sheet: Sheet; dir: 1 | -1; at: number; z: number }) {
+  const geo = useMemo(() => new PlaneGeometry(W, H, 28, 1), []);
+  const base = useMemo(() => Float32Array.from(geo.getAttribute('position').array), [geo]);
+  const face = useFace(sheet);
   const [done, setDone] = useState(false);
+  useEffect(() => () => geo.dispose(), [geo]);
   useFrame(() => {
-    if (done || !pivot.current) return;
-    const t = Math.min(1, (performance.now() - at) / 220);
+    if (done) return;
+    const t = Math.min(1, (performance.now() - at) / FLIP_MS);
     const e = (1 - Math.cos(Math.PI * t)) / 2;
-    pivot.current.rotation.y = -Math.PI * (dir === 1 ? e : 1 - e);
+    const p = dir === 1 ? e : 1 - e;
+    // Угол у корешка и изгиб: свободный край отстаёт сильнее всего посреди переворота.
+    const phi = Math.PI * p;
+    const k = (1.1 * Math.sin(Math.PI * p)) / W;
+    const pos = geo.getAttribute('position');
+    for (let i = 0; i < pos.count; i++) {
+      const u = (base[i * 3] ?? 0) + W / 2;
+      const y = base[i * 3 + 1] ?? 0;
+      // Лист — дуга: угол вдоль листа a(s) = phi − k·s; координаты — интеграл от корешка.
+      const x = k < 1e-4 ? u * Math.cos(phi) : (Math.sin(phi) - Math.sin(phi - k * u)) / k;
+      const zz = k < 1e-4 ? u * Math.sin(phi) : (Math.cos(phi - k * u) - Math.cos(phi)) / k;
+      pos.setXYZ(i, -W / 2 + x, y, zz);
+    }
+    pos.needsUpdate = true;
+    geo.computeVertexNormals();
     if (t >= 1) setDone(true);
   });
   if (done || reducedMotion()) return null;
-  // Ось — посередине между стопками; лист переворачивается через неё.
-  const mid = (from + to) / 2;
-  const right = Math.max(from, to);
   return (
-    <group ref={pivot} position={[mid, 0, z]}>
-      <mesh position={[right - mid, 0, 0]}>
-        <planeGeometry args={[W, H]} />
-        <meshStandardMaterial color={SHEET} roughness={0.9} side={DoubleSide} />
+    <group position={[0, 0, z]}>
+      <mesh geometry={geo}>
+        <meshStandardMaterial map={face} roughness={0.9} side={FrontSide} />
+      </mesh>
+      <mesh geometry={geo}>
+        <meshStandardMaterial color={SHEET} roughness={0.9} side={BackSide} />
       </mesh>
     </group>
   );
 }
 
-/** Задержка до «зажал — листы бегут», мс, и шаг листания, мс. */
-const RIFFLE_AFTER = 320;
-const RIFFLE_EVERY = 80;
-
 /**
- * Пачка целиком (PH-B, LF-A): бумага, слои картона, подложка. Щелчок по верхнему листу —
- * переложить его в стопку слева (лицом вниз), зажать — листы бегут; щелчок по левой стопке —
- * вернуть лист. Обложка папки сверху — щелчок берёт папку; листы текстом вниз — щелчок
+ * Пачка целиком (PH-B, LF-A): бумага, слои картона, подложка. Щелчок по верхнему листу — он
+ * переворачивается через левый край и ложится вплотную слева, лицом вниз, как в книге; щелчок
+ * по левой стопке — вернуть лист. Пачка не прыгает: она на месте, обе стопки плавно съезжают к
+ * середине. Обложка папки сверху — щелчок берёт папку; листы текстом вниз — щелчок
  * переворачивает их.
  */
 export function PaperStack({
@@ -263,11 +272,11 @@ export function PaperStack({
 }) {
   const left = sheets ? page : 0;
   const rest = b.sheets - left;
+  const d0 = stackDepth(b.sheets);
   const dR = stackDepth(rest);
   const dL = left ? stackDepth(left) : 0;
-  const spread = left > 0;
-  const xR = spread ? W / 2 + 0.12 : 0;
-  const xL = -(W / 2 + 0.12);
+  // Обе стопки лежат на одной плоскости (низ исходной пачки): правая убывает, левая растёт.
+  const floor = -d0 / 2;
   const topN = left + 1;
   const top: Sheet = (sheets ? sheets[left] : null) ?? topOf(b);
   const face = useFace(top);
@@ -287,57 +296,34 @@ export function PaperStack({
   const act = top.cover !== null ? () => onPull(topN) : top.faceDown ? onTurnOver : onNext;
   const label =
     top.cover !== null ? 'Взять папку' : top.faceDown ? 'Перевернуть листы' : 'Перелистнуть лист';
-  const riffled = useRef(false);
-  const leaf = useActive('leaf', label, 'stack-leaf', () => {
-    if (riffled.current) riffled.current = false;
-    else act();
-  });
+  const leaf = useActive('leaf', label, 'stack-leaf', act);
   const back = useActive('back', 'Вернуть лист', 'stack-back', onPrev);
-  // Зажал на листе и не двигал — листы бегут, пока держишь (до обложки или листов текстом вниз).
-  const next = useRef(onNext);
-  next.current = onNext;
-  const canRiffle = useRef(true);
-  canRiffle.current = top.cover === null && !top.faceDown && rest > 0 && sheets !== null;
-  const press = (e: ThreeEvent<PointerEvent>) => {
-    if (e.button !== 0) return;
-    const x0 = e.clientX;
-    const y0 = e.clientY;
-    let moved = false;
-    let run: ReturnType<typeof setInterval> | null = null;
-    const start = setTimeout(() => {
-      if (moved || !canRiffle.current) return;
-      holdPart();
-      riffled.current = true;
-      run = setInterval(() => {
-        if (canRiffle.current) next.current();
-        else if (run) clearInterval(run);
-      }, RIFFLE_EVERY);
-    }, RIFFLE_AFTER);
-    const move = (ev: PointerEvent) => {
-      if (Math.abs(ev.clientX - x0) + Math.abs(ev.clientY - y0) > 6) moved = true;
-    };
-    const up = () => {
-      clearTimeout(start);
-      if (run) clearInterval(run);
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-    };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-  };
-  // Перелёт листа при каждом шаге.
+  // Пара стопок плавно съезжает к середине, когда слева появились листы.
+  const shift = useRef<Group>(null);
+  const spread = left > 0;
+  useFrame((_, dt) => {
+    const g = shift.current;
+    if (!g) return;
+    const to = spread ? W / 2 : 0;
+    g.position.x += (to - g.position.x) * ease(dt);
+  });
+  // Переворот листа при каждом шаге: вперёд — лист, что был сверху; назад — тот, что вернули.
   const last = useRef(left);
-  const [fly, setFly] = useState<{ dir: 1 | -1; at: number } | null>(null);
+  const [fly, setFly] = useState<{ dir: 1 | -1; at: number; sheet: Sheet } | null>(null);
   useEffect(() => {
-    if (left !== last.current) setFly({ dir: left > last.current ? 1 : -1, at: performance.now() });
+    if (left !== last.current && sheets) {
+      const dir = left > last.current ? 1 : -1;
+      const sheet = sheets[dir === 1 ? left - 1 : left] ?? topOf(b);
+      setFly({ dir, at: performance.now(), sheet });
+    }
     last.current = left;
-  }, [left]);
+  }, [left, sheets, b]);
   return (
-    <group scale={spread ? 0.6 : 0.78}>
-      {/* Пачка справа: что осталось. */}
-      <group position={[xR, 0, 0]}>
+    <group scale={0.78}>
+      <group ref={shift}>
+        {/* Пачка справа: что осталось. */}
         {rest > 0 && (
-          <mesh>
+          <mesh position={[0, 0, floor + dR / 2]}>
             <boxGeometry args={[W, H, dR]} />
             <meshStandardMaterial color={PAPER} roughness={0.95} />
           </mesh>
@@ -345,17 +331,22 @@ export function PaperStack({
         {b.layers
           .filter((n) => n > topN)
           .map((n) => (
-            <CardLayer key={n} n={n} z={layerZ(n - left, rest, dR)} onPull={() => onPull(n)} />
+            <CardLayer
+              key={n}
+              n={n}
+              z={floor + dR / 2 + layerZ(n - left, rest, dR)}
+              onPull={() => onPull(n)}
+            />
           ))}
         {/* Подложка снизу — картон с ярлыком бюро. */}
-        <mesh position={[0, 0, -dR / 2 - BASE_T / 2]}>
+        <mesh position={[0, 0, floor - BASE_T / 2]}>
           <boxGeometry args={[W + 0.08, H + 0.08, BASE_T]} />
           <meshStandardMaterial color={BASE} roughness={0.95} />
         </mesh>
-        <Plate w={W + 0.08} h={H + 0.08} z={-dR / 2 - BASE_T - 0.001} back map={base} />
+        <Plate w={W + 0.08} h={H + 0.08} z={floor - BASE_T - 0.001} back map={base} />
         {rest > 0 && (
-          <group position={[0, 0, dR / 2 + 0.001]} ref={leaf.anchor}>
-            <mesh {...leaf.handlers} onPointerDown={press}>
+          <group position={[0, 0, floor + dR + 0.001]} ref={leaf.anchor}>
+            <mesh {...leaf.handlers}>
               <planeGeometry args={[W, H]} />
               <meshStandardMaterial
                 map={face}
@@ -367,36 +358,35 @@ export function PaperStack({
           </group>
         )}
         {left === 0 && (
-          <group position={[-W / 2 + 0.6, H / 2 - 0.2, dR / 2 + 0.004]} rotation={[0, 0, 0.04]}>
+          <group position={[-W / 2 + 0.6, H / 2 - 0.2, floor + dR + 0.004]} rotation={[0, 0, 0.04]}>
             <Plate w={1.1} h={0.3} z={0} map={slip} />
           </group>
         )}
+        {/* Слева, вплотную — переложенные листы, лицом вниз; щелчок — вернуть верхний. */}
+        {spread && (
+          <group position={[-W, 0, floor + dL / 2]}>
+            <mesh {...back.handlers}>
+              <boxGeometry args={[W, H, dL]} />
+              <meshStandardMaterial
+                color={SHEET}
+                roughness={0.95}
+                emissive="#ffffff"
+                emissiveIntensity={back.hover ? 0.06 : 0}
+              />
+            </mesh>
+            <group position={[0, 0, dL / 2 + 0.001]} ref={back.anchor} />
+          </group>
+        )}
+        {fly && (
+          <Flying
+            key={fly.at}
+            sheet={fly.sheet}
+            dir={fly.dir}
+            at={fly.at}
+            z={floor + Math.max(dR, dL) + 0.006}
+          />
+        )}
       </group>
-      {/* Слева — переложенные листы, лицом вниз; щелчок — вернуть верхний. */}
-      {spread && (
-        <group position={[xL, 0, -dR / 2 + dL / 2]}>
-          <mesh {...back.handlers}>
-            <boxGeometry args={[W, H, dL]} />
-            <meshStandardMaterial
-              color={SHEET}
-              roughness={0.95}
-              emissive="#ffffff"
-              emissiveIntensity={back.hover ? 0.06 : 0}
-            />
-          </mesh>
-          <group position={[0, 0, dL / 2 + 0.001]} ref={back.anchor} />
-        </group>
-      )}
-      {fly && (
-        <Flying
-          key={fly.at}
-          from={fly.dir === 1 ? xR : xL}
-          to={fly.dir === 1 ? xL : xR}
-          z={dR / 2 + 0.02}
-          dir={fly.dir}
-          at={fly.at}
-        />
-      )}
     </group>
   );
 }

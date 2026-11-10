@@ -54,7 +54,7 @@ test('пачку листают в руках (LF-A): лист — в стопк
   await expect(page.getByTestId('stack-П-05')).toHaveCount(1);
 });
 
-test('зажать на листе — листы бегут; у обложки папки (П-02, лист 18) останавливаются', async ({
+test('зажать на листе — листы сами не бегут (правка автора 10.11: без быстрого листания)', async ({
   page,
 }) => {
   await stackInHands(page, 'П-02');
@@ -64,14 +64,12 @@ test('зажать на листе — листы бегут; у обложки 
   if (!b) throw new Error('нет листа');
   await page.mouse.move(b.x + b.width / 2 + 40, b.y + b.height / 2 + 60);
   await page.mouse.down();
-  await expect(page.getByTestId('held-caption')).toContainText('лист 18 из 41', { timeout: 6000 });
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(1500);
   await page.mouse.up();
-  await expect(page.getByTestId('held-caption')).toContainText('лист 18 из 41');
-  await expect(page.getByTestId('stack-leaf')).toHaveAttribute('aria-label', 'Взять папку');
+  await expect(page.getByTestId('held-caption')).toContainText(/лист [23] из 41/);
 });
 
-test('папка из пачки (RD-A): за край или долистав — в руках A-24; открыть — только её листы; на стене', async ({
+test('папка из пачки (RD-A): за край — в руках A-24; из пачки она пропала (38 листов), и после перезагрузки тоже', async ({
   page,
 }) => {
   await stackInHands(page, 'П-02');
@@ -80,19 +78,37 @@ test('папка из пачки (RD-A): за край или долистав �
   await expect(page.getByTestId('folder-open')).toHaveCount(0);
   await page.getByTestId('stack-layer-18').click({ force: true });
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', 'Папка A-24');
-  // Esc — обратно к пачке.
+  // Esc — обратно к пачке: папки в ней больше нет.
   await page.keyboard.press('Escape');
-  await expect(page.getByTestId('stack-leaf')).toHaveCount(1);
-  // Долистать до обложки и взять папку щелчком.
+  await expect(page.getByTestId('held')).toHaveAttribute(
+    'aria-label',
+    'Пачка П-02 · Комната анкет · 38 л.',
+  );
+  await expect(page.getByTestId('stack-layer-18')).toHaveCount(0);
+  await expect(sheet(page, 'L981')).toHaveCount(1);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await page.reload();
+  await expect(page.getByTestId('room')).toBeVisible();
+  await stackInHands(page, 'П-02');
+  await expect(page.getByTestId('held')).toHaveAttribute(
+    'aria-label',
+    'Пачка П-02 · Комната анкет · 38 л.',
+  );
+});
+
+test('долистать до обложки (лист 18) — взять папку; открыть — только её листы', async ({
+  page,
+}) => {
+  await stackInHands(page, 'П-02');
   await leafTo(page, 18);
+  await expect(page.getByTestId('stack-leaf')).toHaveAttribute('aria-label', 'Взять папку');
   await page.getByTestId('stack-leaf').click({ force: true });
   await page.getByTestId('folder-open').click({ force: true });
   const viewer = page.getByTestId('viewer');
   await expect(viewer).toHaveAttribute('aria-label', /^Папка A-24 \(пачка П-02, листы 18–20\)/);
   await expect(page.getByTestId('viewer-paper')).toContainText('Фотография');
   await expect(page.getByTestId('viewer-paper')).not.toContainText('Чистый бланк анкеты');
-  await page.keyboard.press('Escape');
-  await expect(sheet(page, 'L981')).toHaveCount(1);
 });
 
 test('за край тянут мышью: коротко — картон вернулся, дальше половины — вытащен', async ({

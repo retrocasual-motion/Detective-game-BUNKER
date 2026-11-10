@@ -11,9 +11,11 @@ import { type Held, useGame } from '../store.ts';
 import {
   type Bundle,
   coverCode,
+  FOLDER_SHEETS,
   listingOf,
   PAPERS_ID,
   parseBundles,
+  remaining,
   sheetPages,
 } from '../viewer/bundles.ts';
 import Held3D, { afterLeaving } from './Held3D.tsx';
@@ -81,50 +83,60 @@ export default function HeldThing({ held }: { held: Held }) {
  */
 function Papers() {
   const body = useGame((g) => g.materials.find((m) => m.id === PAPERS_ID)?.body ?? '');
-  const bundles = useMemo(() => parseBundles(body).bundles, [body]);
+  const all = useMemo(() => parseBundles(body).bundles, [body]);
   const materials = useGame((g) => g.materials);
-  const [pick, setPick] = useState<Bundle | null>(null);
+  const taken = useGame((g) => g.state?.taken ?? NONE);
+  const [pickId, setPickId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [folder, setFolder] = useState<{ code: string | null; listing: string; n: number } | null>(
     null,
   );
   const close = () => useGame.getState().hold(null);
-  // Листы пачки — из её описи, когда опись пришла (её отдаёт движок на первое «листать»).
-  const listing = pick ? listingOf(pick.id, materials) : null;
-  const listingBody = materials.find((m) => m.id === listing)?.body ?? null;
-  const sheets = useMemo(
-    () => (pick && listingBody ? sheetPages(listingBody, pick) : null),
-    [pick, listingBody],
-  );
+  // Пачка как она есть сейчас: без вынутых папок (их листов там больше нет).
+  const view = (b: Bundle) => {
+    const listing = listingOf(b.id, materials);
+    const text = materials.find((m) => m.id === listing)?.body ?? null;
+    return remaining(b, taken, text ? sheetPages(text, b) : null);
+  };
+  const orig = all.find((b) => b.id === pickId) ?? null;
+  const now = orig ? view(orig) : null;
   const take = (b: Bundle) => {
     setPage(0);
-    setPick(b);
+    setPickId(b.id);
   };
   // Первое перелистывание — «ОСМОТР | 29 | листать П-0N»: опись — сразу на стену (AW-B).
   const next = async () => {
-    if (!pick) return;
-    if (!sheets) {
-      const r = await postAction('ОСМОТР', PAPERS_ID, `листать ${pick.id}`).catch(() => null);
+    if (!orig || !now) return;
+    if (!now.sheets) {
+      const r = await postAction('ОСМОТР', PAPERS_ID, `листать ${orig.id}`).catch(() => null);
       if (!r || r.quiet) return;
       useGame.getState().addFound(r.released);
     }
-    setPage((p) => Math.min(pick.sheets, p + 1));
+    setPage((p) => Math.min(now.bundle.sheets, p + 1));
   };
-  // Взяли папку — за торчащий край или долистав до обложки (правила card-p02, card-p09).
-  const pull = async (b: Bundle, n: number) => {
-    const r = await postAction('ОСМОТР', `${PAPERS_ID} ${b.id} картон`, 'вытащить').catch(
+  // Взяли папку — за торчащий край или долистав до обложки (правила card-p02, card-p09). Она
+  // пропадает из пачки: её листов там больше нет (taken).
+  const pull = async (n: number) => {
+    if (!orig || !now) return;
+    const first = now.orig[n - 1] ?? n;
+    const r = await postAction('ОСМОТР', `${PAPERS_ID} ${orig.id} картон`, 'вытащить').catch(
       () => null,
     );
     if (!r) return;
     useGame.getState().addFound(r.released);
-    const id = listingOf(b.id, useGame.getState().materials);
+    // Список материалов — уже с описью, что только что пришла (снимок до addFound её не знает).
+    const g = useGame.getState();
+    const id = listingOf(orig.id, g.materials);
     if (!id) return;
-    const text = useGame.getState().materials.find((m) => m.id === id)?.body ?? '';
-    afterLeaving(() => setFolder({ code: coverCode(text, n), listing: id, n }));
+    const text = g.materials.find((m) => m.id === id)?.body ?? '';
+    g.updateState((s) => ({ ...s, taken: [...(s.taken ?? []), `${orig.id}/${first}`] }));
+    setPage((p) => Math.min(p, Math.max(0, n - 1)));
+    afterLeaving(() => setFolder({ code: coverCode(text, first), listing: id, n: first }));
   };
   // Листы текстом вниз (П-05, 19–24) — перевернуть: движок отдаёт их лицом вверх (L957).
-  const turnOver = async (b: Bundle) => {
-    const r = await postAction('ОСМОТР', b.id, 'перевернуть нижние листы').catch(() => null);
+  const turnOver = async () => {
+    if (!orig) return;
+    const r = await postAction('ОСМОТР', orig.id, 'перевернуть нижние листы').catch(() => null);
     if (!r || r.quiet || !r.released.length) return;
     useGame.getState().addFound(r.released);
     const id = r.released[0]?.id;
@@ -134,10 +146,10 @@ function Papers() {
       useGame.getState().openViewer(id);
     });
   };
-  if (pick && folder)
+  if (orig && folder)
     return (
       <Held3D
-        key={`folder-${pick.id}-${folder.n}`}
+        key={`folder-${orig.id}-${folder.n}`}
         mode="free"
         half={[1.6, 1.2]}
         label={folder.code ? `Папка ${folder.code}` : 'Папка'}
@@ -149,9 +161,9 @@ function Papers() {
             afterLeaving(() => {
               close();
               // Только листы папки — обложка и что в ней (до отдельного документа, DS-A).
-              const to = Math.min(pick.sheets, folder.n + 2);
+              const to = Math.min(orig.sheets, folder.n + FOLDER_SHEETS - 1);
               useGame.getState().openViewer(folder.listing, undefined, {
-                title: `Папка ${folder.code ?? ''} (пачка ${pick.id}, листы ${folder.n}–${to})`,
+                title: `Папка ${folder.code ?? ''} (пачка ${orig.id}, листы ${folder.n}–${to})`,
                 from: folder.n,
                 to,
               });
@@ -160,39 +172,49 @@ function Papers() {
         />
       </Held3D>
     );
-  if (pick)
+  if (orig && now) {
+    const total = now.bundle.sheets;
     return (
       <Held3D
-        key={pick.id}
+        key={orig.id}
         mode="free"
         half={[1.6, 1.2]}
-        label={`Пачка ${pick.id} · ${pick.room} · ${pick.sheets} л.`}
+        label={`Пачка ${orig.id} · ${orig.room} · ${total} л.`}
         caption={
-          sheets && page > 0
-            ? page >= pick.sheets
-              ? `${pick.id}: все ${pick.sheets} л. пролистаны`
-              : `${pick.id} · лист ${page + 1} из ${pick.sheets}`
+          now.sheets && page > 0
+            ? page >= total
+              ? `${orig.id}: все ${total} л. пролистаны`
+              : `${orig.id} · лист ${page + 1} из ${total}`
             : undefined
         }
-        onClose={() => setPick(null)}
+        onClose={() => setPickId(null)}
       >
         <PaperStack
-          bundle={pick}
-          sheets={sheets}
+          bundle={now.bundle}
+          sheets={now.sheets}
           page={page}
           onNext={() => void next()}
           onPrev={() => setPage((p) => Math.max(0, p - 1))}
-          onPull={(n) => void pull(pick, n)}
-          onTurnOver={() => void turnOver(pick)}
+          onPull={(n) => void pull(n)}
+          onTurnOver={() => void turnOver()}
         />
       </Held3D>
     );
+  }
   return (
     <Held3D mode="free" half={[1.6, 1.2]} label="Бумаги из помещений · 9 пачек" onClose={close}>
-      <PapersBox bundles={bundles} onPick={(b) => afterLeaving(() => take(b))} />
+      <PapersBox
+        bundles={all.map((b) => {
+          const v = view(b);
+          return { ...v.bundle, top: v.sheets?.[0]?.text ?? b.top };
+        })}
+        onPick={(b) => afterLeaving(() => take(b))}
+      />
     </Held3D>
   );
 }
+
+const NONE: readonly string[] = [];
 
 /** Вскрыто: документы вышли из конверта и висят на стене группой под названием. */
 function Opened({
