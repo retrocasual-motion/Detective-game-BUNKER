@@ -192,15 +192,12 @@
 }
 .lap-icons {
   position: absolute;
-  left: 14px;
-  top: 12px;
-  bottom: 46px;
-  display: flex;
-  flex-flow: column wrap;
-  align-content: flex-start;
-  gap: 8px 6px;
+  inset: 0 0 34px;
+  pointer-events: none;
 }
 .lap-icon {
+  position: absolute;
+  pointer-events: auto;
   width: 92px;
   padding: 4px 2px;
   display: flex;

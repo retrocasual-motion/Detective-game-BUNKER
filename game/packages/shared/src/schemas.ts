@@ -105,6 +105,31 @@ export const MAX_DRAFTS = 4;
 export const ViewSchema = z.enum(['desk', 'wall']);
 export type View = z.infer<typeof ViewSchema>;
 
+/** Окно на рабочем столе ноутбука: что в нём (вид и путь или адрес), где, какого размера. */
+export const LapWindowSchema = z.object({
+  id: z.string().min(1).max(240),
+  kind: z.enum(['folder', 'file', 'props', 'browser', 'printer']),
+  /** Папка или файл: путь от рабочего стола («Тревога/vneshnee_take1.wav»). */
+  path: z.string().max(240).optional(),
+  /** Браузер: открытый адрес. */
+  url: z.string().max(400).optional(),
+  x: z.number(),
+  y: z.number(),
+  w: z.number(),
+  h: z.number(),
+  z: z.number(),
+  min: z.boolean(),
+  max: z.boolean(),
+});
+export type LapWindow = z.infer<typeof LapWindowSchema>;
+
+export const LaptopDeskSchema = z.object({
+  /** Значки, которые игрок передвинул: имя → место (px экрана ноутбука). */
+  icons: z.record(z.string().max(120), z.object({ x: z.number(), y: z.number() })).optional(),
+  windows: z.array(LapWindowSchema).max(30).optional(),
+});
+export type LaptopDesk = z.infer<typeof LaptopDeskSchema>;
+
 export const STATE_VERSION = 5;
 
 export const PlayerStateSchema = z.object({
@@ -160,6 +185,11 @@ export const PlayerStateSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional(),
+  /**
+   * Рабочий стол ноутбука руководителя (4c-1, правка автора 10.11): где стоят значки и какие
+   * окна открыты — как на настоящем ноутбуке, после выхода всё на месте.
+   */
+  laptop: LaptopDeskSchema.optional(),
   /** Совмещённые на стене листы (WL-A, MG-A): «L990» — висит вместо своих половин. */
   joined: z
     .array(z.string().regex(/^L\d{3}$/))

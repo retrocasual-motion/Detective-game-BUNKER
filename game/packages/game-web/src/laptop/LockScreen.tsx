@@ -48,14 +48,36 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
     return () => clearInterval(t);
   }, [blockedUntil]);
 
-  const reset = (ms: number) =>
-    setTimeout(() => {
+  // Отложенная очистка после попытки. Начали рисовать раньше — она отменяется (правка автора
+  // 10.11: очистка срабатывала посреди нового ключа — линия «пропадала»).
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reset = (ms: number) => {
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    resetTimer.current = setTimeout(() => {
+      resetTimer.current = null;
       setPath([]);
       setState('idle');
     }, ms);
+  };
+  const cancelReset = () => {
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    resetTimer.current = null;
+  };
+  // Ушли с экрана — отложенная очистка не нужна.
+  useEffect(
+    () => () => {
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+    },
+    [],
+  );
 
   const submit = async (p: number[]) => {
     if (wait > 0) return;
+    // Случайный щелчок по точке — не попытка; две-три точки — «не меньше четырёх».
+    if (p.length < 2) {
+      setPath([]);
+      return;
+    }
     if (p.length < 4) {
       setState('short');
       reset(1100);
@@ -101,11 +123,13 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
   const down = (e: PointerEvent<SVGSVGElement>) => {
     if (wait > 0 || state === 'check' || e.button !== 0) return;
     const p = point(e);
-    const n = p && dotAt(p);
-    if (!p || !n) return;
+    if (!p) return;
+    // Рисовать можно начать и рядом с точкой: точки цепляются, когда линия проходит по ним.
+    const n = dotAt(p);
+    cancelReset();
     e.currentTarget.setPointerCapture(e.pointerId);
     setState('idle');
-    setPath([n]);
+    setPath(n ? [n] : []);
     setPen(p);
   };
   const move = (e: PointerEvent<SVGSVGElement>) => {

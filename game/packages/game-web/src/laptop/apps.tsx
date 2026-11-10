@@ -467,7 +467,18 @@ export function Printer({ lap }: { lap: Laptop }) {
  * Браузер ноутбука: адресная строка и «Избранное» (четыре закладки, L560). Страница — та же,
  * что у браузера компьютера дела (движок «АДРЕС»); сохранённая страница — без сети.
  */
-export function Browser({ lap, saved }: { lap: Laptop; saved?: LapFile }) {
+export function Browser({
+  lap,
+  saved,
+  url: start,
+  onUrl,
+}: {
+  lap: Laptop;
+  saved?: LapFile;
+  /** Открытый адрес (из сохранения): страница загружается снова. */
+  url?: string;
+  onUrl?: (url: string) => void;
+}) {
   const [url, setUrl] = useState(saved ? `file:///${saved.path}` : '');
   const [page, setPage] = useState<{ body: string; material: string | null } | null>(
     saved ? { body: saved.body, material: saved.material } : null,
@@ -480,8 +491,15 @@ export function Browser({ lap, saved }: { lap: Laptop; saved?: LapFile }) {
     void go(address);
   };
 
+  // Окно из сохранения — та же страница.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: только при открытии окна
+  useEffect(() => {
+    if (start && !saved) void go(start);
+  }, []);
+
   const go = async (address: string) => {
     setUrl(address);
+    onUrl?.(address);
     setTyped(address);
     const r = await postAction('АДРЕС', 'браузер', address).catch(() => null);
     const g = useGame.getState();

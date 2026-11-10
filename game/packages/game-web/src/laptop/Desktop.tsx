@@ -1,3 +1,4 @@
+import type { LapWindow } from '@bunker/shared';
 import { type PointerEvent, type ReactNode, useEffect, useRef, useState } from 'react';
 import { ddmmyyyy, gameNow, hhmm } from '../clock.ts';
 import { useGame } from '../store.ts';
@@ -12,19 +13,20 @@ import {
   Properties,
   SheetView,
 } from './apps.tsx';
-import { fileOfMaterial, type LapFile, type Laptop } from './files.ts';
+import { fileOfMaterial, findFile, type LapFile, type Laptop } from './files.ts';
 
 /**
  * Рабочий стол ноутбука (4c-1, UI-A): обои со знаком VAULTLINE, значки слева столбцом (только из
  * канона), окна с заголовком и тремя кнопками, панель задач с меню, кнопками окон и часами
- * (CL-D: время игрока, дата игры). Окна не сохраняются — вход сохраняется.
+ * (CL-D: время игрока, дата игры). Значки двигают куда угодно; окна и места значков
+ * сохраняются в деле (правка автора 10.11): вышел из ноутбука, вернулся — всё как было.
  */
 
 type Win =
   | { id: string; kind: 'folder'; path: string }
   | { id: string; kind: 'file'; file: LapFile }
   | { id: string; kind: 'props'; file: LapFile }
-  | { id: string; kind: 'browser'; saved?: LapFile }
+  | { id: string; kind: 'browser'; saved?: LapFile; url?: string }
   | { id: string; kind: 'printer' };
 
 interface Placed {
@@ -68,6 +70,48 @@ const iconOf = (w: Win) =>
       ? w.file.type
       : w.kind;
 
+/** Окно — в сохранение: вид и путь (или адрес), место и размер. */
+const toSaved = (p: Placed): LapWindow => {
+  const { win } = p;
+  const base = {
+    id: win.id,
+    kind: win.kind,
+    x: p.x,
+    y: p.y,
+    w: p.w,
+    h: p.h,
+    z: p.z,
+    min: p.min,
+    max: p.max,
+  };
+  if (win.kind === 'folder') return { ...base, path: win.path };
+  if (win.kind === 'file' || win.kind === 'props') return { ...base, path: win.file.path };
+  if (win.kind === 'browser') return { ...base, path: win.saved?.path, url: win.url };
+  return base;
+};
+
+/** Окно из сохранения; файла больше нет — окна нет. */
+function fromSaved(w: LapWindow, lap: Laptop): Placed | null {
+  const at = { x: w.x, y: w.y, w: w.w, h: w.h, z: w.z, min: w.min, max: w.max };
+  if (w.kind === 'folder') return { ...at, win: { id: w.id, kind: 'folder', path: w.path ?? '' } };
+  if (w.kind === 'printer') return { ...at, win: { id: w.id, kind: 'printer' } };
+  if (w.kind === 'browser') {
+    const saved = w.path ? (findFile(lap, w.path) ?? undefined) : undefined;
+    return { ...at, win: { id: w.id, kind: 'browser', saved, url: w.url } };
+  }
+  const file = w.path ? findFile(lap, w.path) : null;
+  return file ? { ...at, win: { id: w.id, kind: w.kind, file } } : null;
+}
+
+/** Сетка значков по умолчанию: столбцами сверху вниз, слева направо (px экрана ноутбука). */
+const ICON_W = 100;
+const ICON_H = 80;
+const ICONS_PER_COL = 8;
+const gridAt = (k: number) => ({
+  x: 12 + Math.floor(k / ICONS_PER_COL) * ICON_W,
+  y: 10 + (k % ICONS_PER_COL) * ICON_H,
+});
+
 export function Desktop({
   lap,
   material,
@@ -78,10 +122,26 @@ export function Desktop({
   material: string | null;
   onLogout: () => void;
 }) {
-  const [wins, setWins] = useState<Placed[]>([]);
+  const saved = useGame.getState().state?.laptop;
+  const [wins, setWins] = useState<Placed[]>(() =>
+    (saved?.windows ?? []).flatMap((w) => fromSaved(w, lap) ?? []),
+  );
+  const [iconPos, setIconPos] = useState<Record<string, { x: number; y: number }>>(
+    () => saved?.icons ?? {},
+  );
   const [selIcon, setSelIcon] = useState<string | null>(null);
   const [startOpen, setStartOpen] = useState(false);
-  const z = useRef(1);
+  const z = useRef(wins.reduce((m, p) => Math.max(m, p.z), 1));
+  // В сохранение — не на каждом шаге перетаскивания, а когда всё замерло.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      useGame.getState().updateState((st) => ({
+        ...st,
+        laptop: { icons: iconPos, windows: wins.map(toSaved) },
+      }));
+    }, 400);
+    return () => clearTimeout(t);
+  }, [wins, iconPos]);
   const started = useGame((g) => g.state?.started);
   const [now, setNow] = useState(() => gameNow(started));
   useEffect(() => {
@@ -195,21 +255,17 @@ export function Desktop({
         </div>
       </div>
       <div className="lap-icons">
-        {icons.map((i) => (
-          <button
+        {icons.map((i, k) => (
+          <DesktopIcon
             key={i.key}
-            type="button"
-            className={`lap-icon${selIcon === i.key ? ' lap-icon-sel' : ''}`}
-            data-testid={`lap-icon-${i.name}`}
-            onClick={() => setSelIcon(i.key)}
-            onDoubleClick={i.act}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') i.act();
-            }}
-          >
-            <FileIcon type={i.type} size={36} />
-            <span>{i.name}</span>
-          </button>
+            name={i.name}
+            type={i.type}
+            at={iconPos[i.key] ?? gridAt(k)}
+            selected={selIcon === i.key}
+            onSelect={() => setSelIcon(i.key)}
+            onOpen={i.act}
+            onMove={(at) => setIconPos((m) => ({ ...m, [i.key]: at }))}
+          />
         ))}
       </div>
 
@@ -255,7 +311,21 @@ export function Desktop({
             ) : p.win.kind === 'props' ? (
               <Properties f={p.win.file} />
             ) : p.win.kind === 'browser' ? (
-              <Browser lap={lap} saved={p.win.saved} />
+              <Browser
+                lap={lap}
+                saved={p.win.saved}
+                url={p.win.url}
+                onUrl={(url) => {
+                  const id = p.win.id;
+                  setWins((l) =>
+                    l.map((q) =>
+                      q.win.id === id && q.win.kind === 'browser'
+                        ? { ...q, win: { ...q.win, url } }
+                        : q,
+                    ),
+                  );
+                }}
+              />
             ) : (
               <Printer lap={lap} />
             )}
@@ -334,6 +404,83 @@ export function Desktop({
         </div>
       </div>
     </div>
+  );
+}
+
+/** Масштаб экрана ноутбука на окне игрока (экран вписан в окно). */
+const screenScale = (el: Element) => {
+  const screen = el.closest('.lap-screen') as HTMLElement | null;
+  return screen ? screen.getBoundingClientRect().width / screen.offsetWidth : 1;
+};
+
+/** Значок на рабочем столе: щелчок — выделить, двойной — открыть, протянуть — переставить. */
+function DesktopIcon({
+  name,
+  type,
+  at,
+  selected,
+  onSelect,
+  onOpen,
+  onMove,
+}: {
+  name: string;
+  type: string;
+  at: { x: number; y: number };
+  selected: boolean;
+  onSelect: () => void;
+  onOpen: () => void;
+  onMove: (at: { x: number; y: number }) => void;
+}) {
+  const drag = useRef<{
+    sx: number;
+    sy: number;
+    x: number;
+    y: number;
+    scale: number;
+    moved: boolean;
+  } | null>(null);
+  return (
+    <button
+      type="button"
+      className={`lap-icon${selected ? ' lap-icon-sel' : ''}`}
+      style={{ left: at.x, top: at.y }}
+      data-testid={`lap-icon-${name}`}
+      onPointerDown={(e) => {
+        if (e.button !== 0) return;
+        onSelect();
+        drag.current = {
+          sx: e.clientX,
+          sy: e.clientY,
+          x: at.x,
+          y: at.y,
+          scale: screenScale(e.currentTarget),
+          moved: false,
+        };
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }}
+      onPointerMove={(e) => {
+        const d = drag.current;
+        if (!d) return;
+        const dx = (e.clientX - d.sx) / d.scale;
+        const dy = (e.clientY - d.sy) / d.scale;
+        if (!d.moved && Math.hypot(dx, dy) < 5) return;
+        d.moved = true;
+        onMove({
+          x: Math.round(Math.min(1280 - ICON_W, Math.max(0, d.x + dx))),
+          y: Math.round(Math.min(800 - 34 - ICON_H, Math.max(0, d.y + dy))),
+        });
+      }}
+      onPointerUp={() => {
+        drag.current = null;
+      }}
+      onDoubleClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') onOpen();
+      }}
+    >
+      <FileIcon type={type} size={36} />
+      <span>{name}</span>
+    </button>
   );
 }
 

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CanvasTexture, Group } from 'three';
+import { useGame } from '../store.ts';
 import { onClickPart, setPartCursor, useSpot } from './Held3D.tsx';
+import { paintLaptopFace } from './laptopFace.ts';
 import { type Painter, paintTexture } from './texture.ts';
 
 /**
@@ -255,27 +257,48 @@ function Screen({
   z,
   label,
   onUse,
+  face,
 }: {
   w: number;
   h: number;
   z: number;
   label: string;
   onUse: () => void;
+  /** Что горит на экране (включённое устройство): картинка светится сама. */
+  face?: CanvasTexture;
 }) {
   const s = useActive('screen', label, 'device-use', onUse);
   return (
     <group position={[0, 0, z]} ref={s.anchor}>
       <mesh {...s.handlers}>
         <planeGeometry args={[w, h]} />
-        <meshStandardMaterial
-          color="#16212a"
-          roughness={0.25}
-          emissive="#3a5566"
-          emissiveIntensity={s.hover ? 0.6 : 0.15}
-        />
+        {face ? (
+          <meshBasicMaterial
+            map={face}
+            toneMapped={false}
+            color={s.hover ? '#ffffff' : '#e4e8ee'}
+          />
+        ) : (
+          <meshStandardMaterial
+            color="#16212a"
+            roughness={0.25}
+            emissive="#3a5566"
+            emissiveIntensity={s.hover ? 0.6 : 0.15}
+          />
+        )}
       </mesh>
     </group>
   );
+}
+
+/** Экран ноутбука в руках — уже включён: вход или рабочий стол (правка автора 10.11). */
+function LaptopScreen({ onUse }: { onUse: () => void }) {
+  const unlocked = useGame((g) => g.materials.some((m) => m.id === 'L560'));
+  const face = useTexture(
+    () => paintTexture(2.5, 1.55, null, paintLaptopFace(unlocked)),
+    [unlocked],
+  );
+  return <Screen w={2.5} h={1.55} z={0.041} label="Открыть ноутбук" onUse={onUse} face={face} />;
 }
 
 export function Device({ id, tag, onUse }: { id: string; tag: string; onUse: () => void }) {
@@ -291,7 +314,7 @@ export function Device({ id, tag, onUse }: { id: string; tag: string; onUse: () 
             <boxGeometry args={[2.8, 1.85, 0.08]} />
             <meshStandardMaterial color={DEVICE} roughness={0.6} />
           </mesh>
-          <Screen w={2.5} h={1.55} z={0.041} label="Открыть ноутбук" onUse={onUse} />
+          <LaptopScreen onUse={onUse} />
         </group>
         <group rotation={[-Math.PI / 2, 0, 0]}>
           <Tag text={tag} at={[0.95, -1.15, -0.69]} />

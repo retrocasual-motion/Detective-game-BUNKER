@@ -162,3 +162,41 @@ test('выделил строку в окне — «В ходатайство»:
     'e.pierce.uk@mailbridge.net',
   );
 });
+
+test('неверный ключ и сразу новый — новый не обрывается (правка автора 10.11)', async ({
+  page,
+}) => {
+  await laptopUp(page);
+  await draw(page, [1, 2, 3, 6]);
+  await expect(page.getByTestId('laptop-lock-msg')).toHaveText('Неверный ключ');
+  // Сразу, пока «Неверный ключ» ещё на экране: отложенная очистка не стирает новый ключ.
+  await draw(page, KEY);
+  await expect(page.getByTestId('laptop-desktop')).toBeVisible();
+});
+
+test('значки двигают; окна и места значков — на месте после выхода и перезагрузки', async ({
+  page,
+}) => {
+  await laptopUp(page);
+  await unlock(page);
+  const icon = page.getByTestId('lap-icon-Доклад_Р.txt');
+  const a = await icon.boundingBox();
+  if (!a) throw new Error('нет значка');
+  await page.mouse.move(a.x + a.width / 2, a.y + 20);
+  await page.mouse.down();
+  await page.mouse.move(a.x + a.width / 2 + 300, a.y + 60, { steps: 10 });
+  await page.mouse.up();
+  const b = await icon.boundingBox();
+  expect((b?.x ?? 0) - a.x).toBeGreaterThan(200);
+  await icon.dblclick();
+  await expect(page.getByTestId('lap-notepad')).toBeVisible();
+  await page.waitForTimeout(700);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await page.reload();
+  await expect(page.getByTestId('room')).toBeVisible();
+  await laptopUp(page);
+  await expect(page.getByTestId('lap-notepad')).toContainText('e.pierce.uk@mailbridge.net');
+  const c = await page.getByTestId('lap-icon-Доклад_Р.txt').boundingBox();
+  expect(Math.abs((c?.x ?? 0) - (b?.x ?? 0))).toBeLessThan(3);
+});
