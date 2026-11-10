@@ -107,6 +107,8 @@
   --viewer-tools-width: 150px;
   --viewer-paper-width: 660px;
   --folder-width: min(520px, 38vw);
+  /* Панель поиска; при открытой папке ходатайства — уже, чтобы листу хватило места (SR-D). */
+  --search-width: min(420px, 100vw);
   --folder-height: min(82vh, 720px);
   --corner-width: 240px;
   --corner-height: 48px;

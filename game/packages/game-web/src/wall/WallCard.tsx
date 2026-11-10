@@ -52,6 +52,8 @@ interface WallCardProps {
   follow?: { x: number; y: number } | null;
   /** Shift + щелчок — добавить к выделению или убрать. */
   onSelect?(id: string): void;
+  /** Найдено поиском (SR-D) — подсвечено. */
+  found?: boolean;
 }
 
 /**
@@ -80,6 +82,7 @@ export const WallCard = memo(function WallCard({
   selected,
   follow,
   onSelect,
+  found,
 }: WallCardProps) {
   const [liveW, setLiveW] = useState<number | null>(null);
   const resize = useRef<{ x: number; w: number } | null>(null);
@@ -96,13 +99,14 @@ export const WallCard = memo(function WallCard({
 
   return (
     <div
-      className={`wall-card wall-card-${kind}${shift ? ' wall-card-dragging' : ''}${hidden ? ' wall-card-over-folder' : ''}${selected ? ' wall-card-selected' : ''}`}
+      className={`wall-card wall-card-${kind}${shift ? ' wall-card-dragging' : ''}${hidden ? ' wall-card-over-folder' : ''}${selected ? ' wall-card-selected' : ''}${found ? ' wall-card-found' : ''}`}
       data-testid={`wall-${id}`}
       data-wall-item={id}
       data-selected={selected || undefined}
+      data-found={found || undefined}
       style={{
         // Рамка выделения — одной толщины на экране при любом приближении.
-        ...(selected ? { '--sel-w': `${2.5 / zoom}px` } : {}),
+        ...(selected || found ? { '--sel-w': `${2.5 / zoom}px` } : {}),
         translate: `${x}px ${y}px`,
         rotate: `${place.rot + drag.tilt}deg`,
         zIndex: shift ? 100000 + place.z : place.z,

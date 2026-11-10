@@ -876,6 +876,14 @@ button {
 .viewer-with-folder {
   padding-left: calc(var(--folder-width) + var(--space-4));
 }
+/* Папка ходатайства и поиск открыты вместе — панель поиска уже (SR-D). */
+:root:has(.petition-open) {
+  --search-width: min(280px, 22vw);
+}
+/* Панель поиска справа (SR-D) — лист левее, не под ней. */
+.viewer-with-search {
+  padding-right: calc(var(--search-width) + var(--space-4));
+}
 /* Лист всегда одной ширины (не по длине строк) и ровно по центру; кнопки — снаружи справа,
    они не сдвигают лист. */
 .viewer-stage {
@@ -885,6 +893,12 @@ button {
   /* Колонка ~66 знаков (UX-C1, RD-1): лист уже, шрифт крупнее. */
   width: min(var(--viewer-paper-width), 100% - 2 * (var(--viewer-tools-width) + var(--space-2)));
   max-height: 100%;
+}
+/* Папка слева и поиск справа — лист не держит запас под кнопки с двух сторон: кнопки только
+   справа, лист шире (иначе на 1366×768 он сжимался до нечитаемого). */
+.viewer-with-folder.viewer-with-search .viewer-stage {
+  width: min(var(--viewer-paper-width), 100% - var(--viewer-tools-width) - var(--space-2));
+  margin-right: calc(var(--viewer-tools-width) + var(--space-2));
 }
 /* Выделение в листе — как маркером: это выбор строки для ходатайства (правка автора 09.11). */
 .viewer-paper ::selection {
@@ -1206,6 +1220,23 @@ button {
   color: rgb(255 255 255 / 78%);
   font-size: 12px;
   pointer-events: none;
+}
+/* Найдено поиском (SR-D): карточка светится маркером. */
+.wall-card-found > .card {
+  box-shadow:
+    0 0 0 var(--sel-w, 3px) var(--color-marker),
+    0 0 calc(var(--sel-w, 3px) * 10) calc(var(--sel-w, 3px) * 3) rgb(243 226 107 / 55%);
+  animation: found-glow 1.4s ease-in-out 2;
+}
+@keyframes found-glow {
+  50% {
+    box-shadow:
+      0 0 0 calc(var(--sel-w, 3px) * 1.6) var(--color-marker),
+      0 0 calc(var(--sel-w, 3px) * 16) calc(var(--sel-w, 3px) * 5) rgb(243 226 107 / 75%);
+  }
+}
+:root[data-motion="reduce"] .wall-card-found > .card {
+  animation: none;
 }
 /* Со стола карточек не видно. */
 .face-wall:not(.face-active) .wall-blanks {
@@ -1709,10 +1740,11 @@ button {
   top: 0;
   right: 0;
   bottom: 0;
-  z-index: 39;
+  /* Над затемнением листа: при открытом листе панель работает (SR-D). */
+  z-index: 41;
   display: flex;
   flex-direction: column;
-  width: min(420px, 100vw);
+  width: var(--search-width);
   padding: var(--space-3);
   background: var(--color-surface);
   border-left: 1px solid var(--color-border);

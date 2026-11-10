@@ -1,5 +1,7 @@
 import {
   boardCamera,
+  CARD_H,
+  CARD_W,
   type Camera,
   type ContainerId,
   DEVICE_IDS,
@@ -11,10 +13,12 @@ import {
   reconcile,
   sealedIds,
   type View,
+  WALL_BOUNDS,
 } from '@bunker/shared';
 import { useMemo } from 'react';
 import { create } from 'zustand';
 import { getMaterials, getPendingMail, getState, putState } from './api.ts';
+import { clampToBounds } from './canvas/math.ts';
 import { createSaver } from './save.ts';
 import { type Binned, binLetter, moveItem, takeLetter, unbinLetter } from './wall/wall-actions.ts';
 
@@ -23,6 +27,21 @@ const screen = () => ({ width: window.innerWidth, height: window.innerHeight });
 /** Камера, с которой доска видна сейчас: со стола — вся целиком (WB-C), у стены — своя. */
 export const shownCamera = (s: PlayerState) =>
   s.view === 'desk' ? boardCamera(screen()) : s.wall.camera;
+
+/** Найденное поиском показывается не мельче этого (карточка ~100 px, заголовок читается). */
+const REVEAL_ZOOM = 0.6;
+
+/** Часть экрана, не закрытая панелью поиска (справа) и папкой ходатайства (слева). */
+function freeArea(vp: { width: number; height: number }) {
+  const panel = document.querySelector('.search-panel')?.getBoundingClientRect();
+  const folder = document.querySelector('.petition-open .petition-folder')?.getBoundingClientRect();
+  return {
+    left: folder ? folder.right : 0,
+    right: panel ? panel.left : vp.width,
+    top: 0,
+    bottom: vp.height,
+  };
+}
 
 /** Сколько можно «Вернуть» выброшенное письмо, мс. */
 const UNDO_MS = 6000;
@@ -80,6 +99,17 @@ interface GameStore {
   find: { q: string; k: number } | null;
   /** Поиск по делу открыт (RD-C). */
   searchOpen: boolean;
+  /** Карточка, найденная поиском, — подсвечена на стене (SR-D). */
+  foundId: string | null;
+  /** Перелёт камеры доски по поиску: меняется — камера стены плывёт к новой цели. */
+  wallFly: number;
+  /**
+   * Показать вещь на стене (SR-D): вид «Стена», камера — вещь по центру свободной части экрана
+   * (не под панелью поиска и папкой), приближение не меньше REVEAL_ZOOM; вещь подсвечена.
+   * false — на стене её нет.
+   */
+  revealOnWall(id: string): boolean;
+  clearFound(): void;
   setSearchOpen(open: boolean): void;
   closeViewer(): void;
   /** Сменить вид. К стене — в вид «как со стола» (ZM-B) или в данную камеру. */
@@ -107,6 +137,8 @@ export const useGame = create<GameStore>((set, get) => {
     held: null,
     find: null,
     searchOpen: false,
+    foundId: null,
+    wallFly: 0,
     binned: null,
 
     dismissArrival() {
@@ -187,6 +219,34 @@ export const useGame = create<GameStore>((set, get) => {
 
     closeViewer() {
       set({ viewerId: null, find: null });
+    },
+
+    revealOnWall(id) {
+      const s = get().state;
+      const item = s?.wall.items.find((i) => i.id === id);
+      if (!s || !item) return false;
+      const vp = screen();
+      const free = freeArea(vp);
+      const cur = s.view === 'wall' ? s.wall.camera : boardCamera(vp);
+      const zoom = Math.max(cur.zoom, REVEAL_ZOOM);
+      const cx = item.x + CARD_W / 2;
+      const cy = item.y + CARD_H / 2;
+      const camera = clampToBounds(
+        {
+          zoom,
+          x: Math.round((free.left + free.right) / 2 - cx * zoom),
+          y: Math.round((free.top + free.bottom) / 2 - cy * zoom),
+        },
+        WALL_BOUNDS,
+        vp,
+      );
+      set({ foundId: id, wallFly: get().wallFly + 1 });
+      get().updateState((st) => ({ ...st, view: 'wall', wall: { ...st.wall, camera } }));
+      return true;
+    },
+
+    clearFound() {
+      if (get().foundId) set({ foundId: null });
     },
 
     setSearchOpen(open) {

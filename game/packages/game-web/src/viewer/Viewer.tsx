@@ -44,6 +44,8 @@ export function Viewer({ materialId }: ViewerProps) {
   const person = PERSONS.find((p) => p.id === materialId);
   const close = useGame((g) => g.closeViewer);
   const folderOpen = useGame((g) => g.petitionOpen);
+  // Поиск открыт — панель справа поверх затемнения, лист левее (SR-D).
+  const searchOpen = useGame((g) => g.searchOpen);
   const openedAt = useRef(Date.now());
   const downOutside = useRef(false);
   const inInbox = useGame((g) =>
@@ -174,6 +176,11 @@ export function Viewer({ materialId }: ViewerProps) {
   const { goTo, page } = sheet;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Печатают в поле поиска рядом с листом — стрелки двигают курсор, а не страницы.
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        if (e.key === 'Escape') close();
+        return;
+      }
       if (e.key === 'Escape') close();
       else if (e.key === 'ArrowRight' || e.key === 'PageDown') goTo(page + 1);
       else if (e.key === 'ArrowLeft' || e.key === 'PageUp') goTo(page - 1);
@@ -189,7 +196,7 @@ export function Viewer({ materialId }: ViewerProps) {
 
   return (
     <div
-      className={`viewer${folderOpen ? ' viewer-with-folder' : ''}`}
+      className={`viewer${folderOpen ? ' viewer-with-folder' : ''}${searchOpen ? ' viewer-with-search' : ''}`}
       data-testid="viewer"
       role="dialog"
       aria-label={material?.title ?? person?.name}
