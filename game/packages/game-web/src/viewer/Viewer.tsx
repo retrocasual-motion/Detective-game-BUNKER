@@ -1,4 +1,4 @@
-import { inboxIds, letterPetition, PERSONS } from '@bunker/shared';
+import { inboxIds, letterPetition, PERSONS, PIECES } from '@bunker/shared';
 import {
   type CSSProperties,
   type MouseEvent,
@@ -18,6 +18,7 @@ import { clearFind, highlightFind } from '../search/highlight.ts';
 import { useGame } from '../store.ts';
 import { isLetter, takeOutOfBin } from '../wall/wall-actions.ts';
 import { excerptBody, isBundleListing, rowTarget } from './bundles.ts';
+import { splitSection } from './pieces.ts';
 import { sameRange, snapToWords, unitRangeAt } from './selectUnit.ts';
 import { unwrapLines } from './text.ts';
 import { useSheet } from './useSheet.ts';
@@ -48,6 +49,9 @@ export function Viewer({ materialId }: ViewerProps) {
   const material = useGame((g) => g.materials.find((m) => m.id === materialId));
   // Папка, вытащенная из пачки, — только её листы из описи (до отдельного документа, DS-A).
   const excerpt = useGame((g) => g.excerpt);
+  // Обрывок, вложенный в этот материал (SRC-A): лежит в листе отдельно, его можно вынуть.
+  const piece = material ? PIECES.find((p) => p.from === material.id) : undefined;
+  const pieceTaken = useGame((g) => !!piece && !!g.state?.pieces?.includes(piece.key));
   // Карточка персонажа — посмотреть поближе (правка автора 09.11).
   const person = PERSONS.find((p) => p.id === materialId);
   const close = useGame((g) => g.closeViewer);
@@ -186,18 +190,44 @@ export function Viewer({ materialId }: ViewerProps) {
             },
           }
         : undefined;
-    return (
+    const md = (text: string) => (
       <Markdown remarkPlugins={[remarkGfm, remarkBreaks]} components={components}>
-        {material
-          ? unwrapLines(
-              excerpt
-                ? excerptBody(material.body, excerpt.title, excerpt.from, excerpt.to)
-                : material.body,
-            )
-          : ''}
+        {unwrapLines(text)}
       </Markdown>
     );
-  }, [material, excerpt]);
+    if (!material) return md('');
+    if (excerpt?.section !== undefined)
+      return md(`# ${excerpt.title}\n\n${splitSection(material.body, excerpt.section).section}`);
+    if (excerpt) return md(excerptBody(material.body, excerpt.title, excerpt.from, excerpt.to));
+    if (!piece) return md(material.body);
+    const { rest, section } = splitSection(material.body, piece.section);
+    return (
+      <>
+        {md(rest)}
+        {pieceTaken ? (
+          <p className="sheet-piece-gone" data-testid="sheet-piece-gone">
+            {piece.section}: вынут, висит на стене.
+          </p>
+        ) : (
+          // biome-ignore lint/a11y/useSemanticElements: обрывок — бумага в листе, кнопка поверх текста
+          <div
+            className="sheet-piece"
+            data-testid="sheet-piece"
+            role="button"
+            tabIndex={0}
+            aria-label="Вынуть обрывок"
+            title="Вынуть обрывок"
+            onClick={() => useGame.getState().takePiece(piece.key)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') useGame.getState().takePiece(piece.key);
+            }}
+          >
+            {md(section)}
+          </div>
+        )}
+      </>
+    );
+  }, [material, excerpt, piece, pieceTaken]);
 
   const { goTo, page } = sheet;
   useEffect(() => {

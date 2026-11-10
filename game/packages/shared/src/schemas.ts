@@ -144,5 +144,18 @@ export const PlayerStateSchema = z.object({
    * После переворота они лежат лицом вверх — пачку листают дальше (правка автора 10.11).
    */
   turned: z.array(z.string()).max(20).optional(),
+  /**
+   * Обрывки, вынутые из материалов (SRC-A, правка автора 10.11): «42/1» — п. 1 личных вещей
+   * Н. Харта, обгоревшая половина листа. На стене — своей карточкой «S:42/1».
+   */
+  pieces: z
+    .array(z.string().regex(/^\d{2}\/\d{1,2}$/))
+    .max(20)
+    .optional(),
+  /** Совмещённые на стене листы (WL-A, MG-A): «L990» — висит вместо своих половин. */
+  joined: z
+    .array(z.string().regex(/^L\d{3}$/))
+    .max(20)
+    .optional(),
 });
 export type PlayerState = z.infer<typeof PlayerStateSchema>;

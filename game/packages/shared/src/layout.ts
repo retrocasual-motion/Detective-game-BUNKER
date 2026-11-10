@@ -7,6 +7,7 @@ import {
   sealedIds,
 } from './archive.ts';
 import { PERSONS } from './persons.ts';
+import { joinedParts, pieceItemId } from './pieces.ts';
 import {
   type Camera,
   type Material,
@@ -242,7 +243,11 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
     ...notes.map((n) => n.id),
     // Папки, вынутые из пачек (RD-A): висят на стене папкой — «F:П-02/18».
     ...(state.taken ?? []).map(folderItemId),
+    // Обрывки, вынутые из материалов (SRC-A): «S:42/1».
+    ...(state.pieces ?? []).map(pieceItemId),
   ]);
+  // Половины, сложенные в один лист (MG-A), на стене не висят — висит совмещённый.
+  const parts = joinedParts(state.joined);
 
   // Корзина — только свои письма-ответы, без повторов; выброшенное на стене не висит.
   const trash = [...new Set(state.trash ?? [])].filter((id) => /^M/.test(id) && known.has(id));
@@ -250,7 +255,7 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
   const seen = new Set<string>();
   const items: WallItem[] = state.wall.items
     .filter((i) => {
-      if (!known.has(i.id) || seen.has(i.id) || binned.has(i.id)) return false;
+      if (!known.has(i.id) || seen.has(i.id) || binned.has(i.id) || parts.has(i.id)) return false;
       seen.add(i.id);
       return true;
     })
@@ -265,7 +270,8 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
   const sealed = sealedIds(state);
   const legacy = state.opened === undefined;
   for (const id of [...PERSONS.map((p) => p.id), ...startingIds(materials)]) {
-    if (seen.has(id) || sealed.has(id) || (!legacy && OFF_WALL_IDS.has(id))) continue;
+    if (seen.has(id) || sealed.has(id) || parts.has(id) || (!legacy && OFF_WALL_IDS.has(id)))
+      continue;
     const slot = startSlot(id, materials);
     if (!slot) continue;
     items.push({ id, ...slot, z: ++z, rot: hangTilt(id) });

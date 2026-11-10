@@ -18,6 +18,7 @@ import {
   CardSchema as PlayerCardSchema,
   type PlayerState,
   PlayerStateSchema,
+  pieceItemId,
   reconcile,
   upgradeState,
 } from '@bunker/shared';
@@ -98,6 +99,8 @@ function invalidReference(s: PlayerState, materials: Material[]): string | null 
     ...s.wall.notes.map((n) => n.id),
     // Папка, вынутая из пачки (RD-A): на стене — «F:П-02/18», если её и правда вынули.
     ...(s.taken ?? []).map(folderItemId),
+    // Обрывок, вынутый из материала (SRC-A): «S:42/1», если его и правда вынули.
+    ...(s.pieces ?? []).map(pieceItemId),
   ]);
   const refs = [...s.wall.items.map((i) => i.id), ...s.wall.threads.flatMap((t) => [t.from, t.to])];
   const bad = refs.find((id) => !allIds.has(id));
