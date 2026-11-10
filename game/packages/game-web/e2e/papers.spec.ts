@@ -17,16 +17,15 @@ async function edgeOn(page: Page) {
   await page.waitForTimeout(400);
 }
 
-/** Щёлкать по верхнему листу, пока подпись не покажет лист n. */
+/**
+ * Листать с первого листа до листа n: после каждого щелчка — дождаться номера следующего листа
+ * (в CI без видеокарты кадр сцены медленный — щелчки не должны обгонять её).
+ */
 async function leafTo(page: Page, n: number) {
-  for (let k = 0; k < n + 2; k++) {
-    const cap = page.getByTestId('held-caption');
-    const t = (await cap.count()) ? ((await cap.textContent()) ?? '') : '';
-    if (t.includes(`лист ${n} из`)) return;
+  for (let k = 2; k <= n; k++) {
     await page.getByTestId('stack-leaf').click({ force: true });
-    await page.waitForTimeout(60);
+    await expect(page.getByTestId('held-caption')).toContainText(`лист ${k} из`);
   }
-  await expect(page.getByTestId('held-caption')).toContainText(`лист ${n} из`);
 }
 
 /** Глубоко приблизить лист в точке (колесом) — до крупного плана. */
@@ -100,6 +99,8 @@ test('папка из пачки (RD-A): за край — в руках A-24; �
 test('долистать до обложки (лист 18) — взять папку; открыть — только её листы', async ({
   page,
 }) => {
+  // Долго листать: в CI без видеокарты каждый кадр сцены медленный.
+  test.slow();
   await stackInHands(page, 'П-02');
   await leafTo(page, 18);
   await expect(page.getByTestId('stack-leaf')).toHaveAttribute('aria-label', 'Взять папку');
@@ -155,6 +156,8 @@ test('П-09: сверху — обложка (взять папку), по кр�
 test('П-05: долистать до листов текстом вниз — щелчок переворачивает: справки L957, на стене', async ({
   page,
 }) => {
+  // Долго листать: в CI без видеокарты каждый кадр сцены медленный.
+  test.slow();
   await stackInHands(page, 'П-05');
   await leafTo(page, 19);
   await expect(page.getByTestId('stack-leaf')).toHaveAttribute('aria-label', 'Перевернуть листы');
