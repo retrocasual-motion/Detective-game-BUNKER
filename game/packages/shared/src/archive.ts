@@ -34,14 +34,17 @@ export const CONTAINERS: readonly Container[] = [
   {
     id: 'bunker',
     label: 'Документация объекта и программы',
-    files: [...range(8, 14), '28', '29', '37', '38', '39'],
+    files: [...range(8, 14), '28', '37', '38', '39'],
+    // Пачки бумаг из помещений (29) — коробка с девятью пачками, физическая улика (PH-B, решение
+    // автора 10.11): берут в руки, а не читают листом.
+    devices: ['29'],
   },
   { id: 'personal', label: 'Личные вещи', files: range(40, 46) },
 ];
 
 export const CONTAINER_IDS = CONTAINERS.map((c) => c.id) as [ContainerId, ...ContainerId[]];
 
-/** Изъятые устройства (24, 47–50): берут в руки, а не читают листом. */
+/** Изъятые вещи (24, 47–50 и коробка пачек 29): берут в руки, а не читают листом. */
 export const DEVICE_IDS: ReadonlySet<string> = new Set(CONTAINERS.flatMap((c) => c.devices ?? []));
 
 /** Газета на столе — бумажный номер (E44, A-260): видна, но на стене со старта не висит. */

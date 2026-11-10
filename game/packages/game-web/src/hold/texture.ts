@@ -22,14 +22,18 @@ export function paintTexture(
   hUnits: number,
   background: string | null,
   paint: (p: Painter) => void,
+  /** Доля полного разрешения (листы пачек — 0,6: их много, грузить в видеокарту быстрее). */
+  scale = 1,
 ): CanvasTexture {
   const canvas = document.createElement('canvas');
   const w = Math.round(wUnits * PX_PER_UNIT);
   const h = Math.round(hUnits * PX_PER_UNIT);
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = Math.round(w * scale);
+  canvas.height = Math.round(h * scale);
   const ctx = canvas.getContext('2d');
   if (ctx) {
+    // Рисуют в полных единицах — холст меньше, масштаб на нём.
+    ctx.scale(scale, scale);
     if (background) {
       ctx.fillStyle = background;
       ctx.fillRect(0, 0, w, h);

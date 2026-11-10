@@ -7,7 +7,8 @@ export const DEFAULT_PACK_DIR = '../../../../playtest/packs/v3.3-2026-10-29';
 export const DEFAULT_PLAYER_DIR = `${DEFAULT_PACK_DIR}/player`;
 
 /** Изъятые устройства лежат в виде «Слева», а не на столе (TECH_PLAN 4.0, 4.2). */
-export const EVIDENCE_IDS = new Set(['24', '47', '48', '49', '50']);
+// 29 — коробка с пачками бумаг из помещений (PH-B, 10.11): изъятая вещь, висит карточкой.
+export const EVIDENCE_IDS = new Set(['24', '29', '47', '48', '49', '50']);
 
 /**
  * Каким предметом материал лежит на столе (TECH_PLAN 4.2, UX-A1). Остальные — лист на бланке.

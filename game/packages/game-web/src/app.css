@@ -1278,6 +1278,30 @@ button {
 .paper-item .card-title {
   font-size: 12px;
 }
+/* Папка из пачки на стене (RD-A) — такая же, как в руках: картон, наклейка с кодом дела. */
+.paper-folder {
+  height: 220px;
+  align-items: center;
+  text-align: center;
+  background: #8c6f4c;
+  color: #f4efe2;
+}
+.folder-sticker {
+  display: block;
+  margin: 26px auto 0;
+  padding: 6px 0;
+  width: 62%;
+  background: #f1ead6;
+  color: #2b2925;
+  font:
+    700 26px system-ui,
+    sans-serif;
+}
+.paper-folder .card-title {
+  margin-top: auto;
+  margin-bottom: var(--space-2);
+  font-size: 13px;
+}
 .board-threads {
   position: absolute;
   /* Нити — поверх листов (у листов свой порядок наложения). */
@@ -1449,6 +1473,19 @@ button {
 }
 
 /* Записка о поступлении (IN-B): вверху по центру; щелчок — к новой колонке на стене. */
+.placed-note {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+.placed-show {
+  padding: 2px var(--space-2);
+  border: 1px solid currentcolor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
 .arrival-note {
   position: absolute;
   top: var(--space-3);
@@ -1935,6 +1972,19 @@ button {
   cursor: grab;
   touch-action: none;
   user-select: none;
+}
+.held-caption {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-4);
+  translate: -50% 0;
+  margin: 0;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius);
+  background: rgb(0 0 0 / 45%);
+  color: rgb(255 255 255 / 88%);
+  font-size: 14px;
+  pointer-events: none;
 }
 .held:active {
   cursor: grabbing;

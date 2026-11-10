@@ -128,34 +128,34 @@ export function useSheet(
   const [tilt, setTilt] = useState({ x: 0, y: 0, gx: 50, gy: 30 });
   const pressed = useRef(false);
 
-  // Ответ движка на действие — один раз на лист; дальше — тот же.
+  // Ответ движка на действие — один раз на цель; дальше — тот же.
   const answers = useRef(new Map<string, Promise<string>>());
 
-  const ask = useCallback(
-    (value: 'увеличить'): Promise<string> => {
-      if (!materialId) return Promise.resolve('');
-      let got = answers.current.get(value);
-      if (!got) {
-        got = postAction('ОСМОТР', materialId, value)
-          .then((r) => {
-            if (r.released.length) useGame.getState().addReleased(r.released);
-            return r.quiet ? '' : r.reply;
-          })
-          .catch(() => '');
-        answers.current.set(value, got);
-      }
-      return got;
-    },
-    [materialId],
-  );
+  const ask = useCallback((target: string, value: string): Promise<string> => {
+    const key = `${target}|${value}`;
+    let got = answers.current.get(key);
+    if (!got) {
+      got = postAction('ОСМОТР', target, value)
+        .then((r) => {
+          if (r.released.length) useGame.getState().addReleased(r.released);
+          return r.quiet ? '' : r.reply;
+        })
+        .catch(() => '');
+      answers.current.set(key, got);
+    }
+    return got;
+  }, []);
 
   // ── Приближение ──
   const [zoom, setZoom] = useState<Zoom>({ s: 1, tx: 0, ty: 0 });
   const [closeup, setCloseup] = useState<string | null>(null);
 
+  /** Где приближают — крупный план того, что под курсором (4b-2a). */
+  const zoomPoint = useRef<{ x: number; y: number } | null>(null);
   const onWheel = (clientX: number, clientY: number, deltaY: number) => {
     const el = refs.zoom.current;
     if (!el) return;
+    zoomPoint.current = { x: clientX, y: clientY };
     setZoom((z) => {
       const s2 = Math.max(1, Math.min(ZOOM_MAX, z.s * (deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP)));
       if (s2 === 1) return { s: 1, tx: 0, ty: 0 };
@@ -170,13 +170,41 @@ export function useSheet(
   };
 
   const near = zoom.s >= CLOSEUP_AT;
+  // Крупный план спрашивает движок о том, что под курсором: у части листа своя цель
+  // (`data-osmotr-target`, действие — `data-osmotr-value`, по умолчанию «увеличить»): торец пачки,
+  // строка описи пачки (4b-2a). Иначе — весь материал, как раньше.
+  const [focus, setFocus] = useState<{ target: string; value: string } | null>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: цель — после каждого шага колеса (zoom)
   useEffect(() => {
-    if (!near) {
+    if (!near || !materialId) {
+      setFocus(null);
+      return;
+    }
+    const p = zoomPoint.current;
+    const part = p
+      ? document
+          .elementsFromPoint(p.x, p.y)
+          .map((e) => e.closest<HTMLElement>('[data-osmotr-target]'))
+          .find((e) => e !== null)
+      : null;
+    const next = part?.dataset.osmotrTarget
+      ? { target: part.dataset.osmotrTarget, value: part.dataset.osmotrValue ?? 'увеличить' }
+      : { target: materialId, value: 'увеличить' };
+    setFocus((cur) => (cur && cur.target === next.target && cur.value === next.value ? cur : next));
+  }, [near, zoom, materialId]);
+  useEffect(() => {
+    if (!focus) {
       setCloseup(null);
       return;
     }
-    void ask('увеличить').then((t) => setCloseup(t || null));
-  }, [near, ask]);
+    let live = true;
+    void ask(focus.target, focus.value).then((t) => {
+      if (live) setCloseup(t || null);
+    });
+    return () => {
+      live = false;
+    };
+  }, [focus, ask]);
 
   /** Мышь над листом: край под курсором чуть приподнимается к игроку (до TILT°), блик — там, где курсор; уголок под мышью не уезжает. */
   const onHover = (clientX: number, clientY: number, buttons: number) => {
@@ -215,7 +243,11 @@ export function useSheet(
     };
   }, []);
 
-  /** Средняя кнопка — как было: без приближения. */
+  /** Зажатое колесо — сдвинуть приближённый лист (правка автора 10.11). */
+  const pan = (dx: number, dy: number) =>
+    setZoom((z) => (z.s === 1 ? z : { ...z, tx: z.tx + dx, ty: z.ty + dy }));
+
+  /** Правая кнопка — как было: без приближения (правка автора 10.11; прежде — средняя). */
   const reset = () => {
     setZoom({ s: 1, tx: 0, ty: 0 });
     onLeave();
@@ -231,6 +263,7 @@ export function useSheet(
     tilt,
     zoom,
     onWheel,
+    pan,
     closeup,
     reset,
   };

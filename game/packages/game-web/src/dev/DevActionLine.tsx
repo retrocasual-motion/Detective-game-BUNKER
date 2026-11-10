@@ -175,6 +175,20 @@ export function DevActionLine() {
             </button>
           </form>
           <div className="dev-line-tools">
+            <button
+              type="button"
+              data-testid="dev-reset"
+              title="Начать дело заново: прогресс и раскладка (то же, что команда «СБРОС»)"
+              disabled={busy}
+              onClick={() => {
+                setBusy(true);
+                void resetState()
+                  .catch(() => undefined)
+                  .then(() => window.location.reload());
+              }}
+            >
+              Сброс
+            </button>
             <button type="button" data-testid="dev-arrange" onClick={arrange}>
               Разложить стену по порядку
             </button>

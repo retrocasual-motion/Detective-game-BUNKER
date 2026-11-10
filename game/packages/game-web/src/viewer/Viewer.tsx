@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import Markdown from 'react-markdown';
+import Markdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { trackReading } from '../dev/readingLog.ts';
@@ -17,6 +17,7 @@ import { usePetition } from '../petition/petition-store.ts';
 import { clearFind, highlightFind } from '../search/highlight.ts';
 import { useGame } from '../store.ts';
 import { isLetter, takeOutOfBin } from '../wall/wall-actions.ts';
+import { excerptBody, isBundleListing, rowTarget } from './bundles.ts';
 import { sameRange, snapToWords, unitRangeAt } from './selectUnit.ts';
 import { unwrapLines } from './text.ts';
 import { useSheet } from './useSheet.ts';
@@ -30,6 +31,11 @@ const OPEN_GUARD_MS = 400;
 const INSIDE =
   '.viewer-paper, .viewer-tools, .to-petition, .viewer-closeup, .viewer-stack-hit, .viewer-corner';
 
+/** Текст узла разметки (первая ячейка строки описи пачки). */
+type TextNode = { type: string; value?: string; children?: TextNode[] };
+const textOf = (n: TextNode): string =>
+  n.type === 'text' ? (n.value ?? '') : (n.children ?? []).map(textOf).join('');
+
 /**
  * Просмотрщик материала (TECH_PLAN 4.3). Серый прототип: текст пакета дословно; строки внутри
  * абзаца склеены (unwrapLines, UX-C1), остальные переносы — как в файле (remark-breaks).
@@ -40,6 +46,8 @@ const INSIDE =
  */
 export function Viewer({ materialId }: ViewerProps) {
   const material = useGame((g) => g.materials.find((m) => m.id === materialId));
+  // Папка, вытащенная из пачки, — только её листы из описи (до отдельного документа, DS-A).
+  const excerpt = useGame((g) => g.excerpt);
   // Карточка персонажа — посмотреть поближе (правка автора 09.11).
   const person = PERSONS.find((p) => p.id === materialId);
   const close = useGame((g) => g.closeViewer);
@@ -164,14 +172,32 @@ export function Viewer({ materialId }: ViewerProps) {
     setSel(null);
   };
   // Разбор Markdown — один раз на материал, а не на каждое движение мыши (инструменты двигаются).
-  const doc = useMemo(
-    () => (
-      <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>
-        {material ? unwrapLines(material.body) : ''}
+  const doc = useMemo(() => {
+    // У описи пачки строка — своя цель крупного плана: «L985 лист 19–24» (FV-A).
+    const components: Components | undefined =
+      material && isBundleListing(material.id)
+        ? {
+            tr: ({ node, ...props }) => {
+              const first = node?.children.find(
+                (c): c is Extract<typeof c, { type: 'element' }> => c.type === 'element',
+              );
+              if (first?.tagName !== 'td') return <tr {...props} />;
+              return <tr {...props} data-osmotr-target={rowTarget(material.id, textOf(first))} />;
+            },
+          }
+        : undefined;
+    return (
+      <Markdown remarkPlugins={[remarkGfm, remarkBreaks]} components={components}>
+        {material
+          ? unwrapLines(
+              excerpt
+                ? excerptBody(material.body, excerpt.title, excerpt.from, excerpt.to)
+                : material.body,
+            )
+          : ''}
       </Markdown>
-    ),
-    [material],
-  );
+    );
+  }, [material, excerpt]);
 
   const { goTo, page } = sheet;
   useEffect(() => {
@@ -199,12 +225,28 @@ export function Viewer({ materialId }: ViewerProps) {
       className={`viewer${folderOpen ? ' viewer-with-folder' : ''}${searchOpen ? ' viewer-with-search' : ''}`}
       data-testid="viewer"
       role="dialog"
-      aria-label={material?.title ?? person?.name}
+      aria-label={excerpt?.title ?? material?.title ?? person?.name}
       onPointerDown={(e) => {
-        // Средняя кнопка — как было: лицом, без приближения (как у вещей в руках).
-        if (e.button === 1) {
+        // Правая кнопка — как было, без приближения; зажатое колесо — сдвинуть приближённый лист
+        // (правка автора 10.11, как у вещей в руках).
+        if (e.button === 2) {
           e.preventDefault();
           sheet.reset();
+          return;
+        }
+        if (e.button === 1) {
+          e.preventDefault();
+          let at = { x: e.clientX, y: e.clientY };
+          const move = (ev: globalThis.PointerEvent) => {
+            sheet.pan(ev.clientX - at.x, ev.clientY - at.y);
+            at = { x: ev.clientX, y: ev.clientY };
+          };
+          const stop = () => {
+            window.removeEventListener('pointermove', move);
+            window.removeEventListener('pointerup', stop);
+          };
+          window.addEventListener('pointermove', move);
+          window.addEventListener('pointerup', stop);
           return;
         }
         downOutside.current = e.button === 0 && isOutside(e);
@@ -212,6 +254,7 @@ export function Viewer({ materialId }: ViewerProps) {
       onMouseDown={(e) => {
         if (e.button === 1) e.preventDefault();
       }}
+      onContextMenu={(e) => e.preventDefault()}
       onPointerUp={(e) => {
         // Выделение текста, начатое на листе и законченное снаружи, — не «закрыть».
         if (downOutside.current && isOutside(e) && Date.now() - openedAt.current > OPEN_GUARD_MS)

@@ -312,3 +312,31 @@ test('крестик неподвижен у верхнего правого у�
   await page.waitForTimeout(250);
   expect(await close.boundingBox()).toEqual(top);
 });
+
+test('правая кнопка — как было; зажатое колесо — сдвинуть приближённый лист (правка автора 10.11)', async ({
+  page,
+}) => {
+  await sheet(page, '07').click(STRIP);
+  const zoom = page.locator('.viewer-zoom');
+  const box = await page.getByTestId('viewer-paper').boundingBox();
+  if (!box) throw new Error('нет листа');
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  for (let i = 0; i < 3; i++) await page.mouse.wheel(0, -120);
+  // Три шага колеса по 1,2 — масштаб 1,728.
+  await expect.poll(() => zoom.getAttribute('style')).toContain('scale(1.728)');
+  const before = await zoom.getAttribute('style');
+  // Зажатое колесо — лист едет за мышью, масштаб тот же.
+  await page.mouse.down({ button: 'middle' });
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 - 120, { steps: 6 });
+  await page.mouse.up({ button: 'middle' });
+  const after = await zoom.getAttribute('style');
+  expect(after).not.toBe(before);
+  expect(/scale\(([\d.]+)\)/.exec(after ?? '')?.[1]).toBe(
+    /scale\(([\d.]+)\)/.exec(before ?? '')?.[1],
+  );
+  await expect(page.getByTestId('viewer')).toBeVisible();
+  // Правая кнопка — как было: без приближения, лист открыт.
+  await page.mouse.click(box.x + box.width / 2, box.y + 40, { button: 'right' });
+  await expect.poll(() => zoom.getAttribute('style')).toContain('scale(1)');
+  await expect(page.getByTestId('viewer')).toBeVisible();
+});

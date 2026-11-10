@@ -16,7 +16,8 @@ import { zoomStep } from './zoom.ts';
 /**
  * Вещь в руках (этап 4a, решения автора 09.11): без меню и кнопок — всё руками.
  * Зажать и тянуть — вращать; колесо — ближе к той точке, что под курсором (не общий зум);
- * средняя кнопка мыши — как было; щелчок по самой вещи (печать, экран) — вскрыть или включить;
+ * правая кнопка — как было, зажатое колесо — сдвинуть вещь (правка автора 10.11; прежде
+ * «как было» — средняя); щелчок по самой вещи (печать, экран) — вскрыть или включить;
  * щелчок мимо, ✕ или Esc — положить. Лист и конверт только переворачиваются (лицо/оборот) и
  * ложатся ровно — читать всегда удобно; предметы вертятся свободно.
  */
@@ -34,6 +35,11 @@ interface Gesture {
   released: boolean;
   wheel: { x: number; y: number; deltaY: number }[];
   reset: boolean;
+  /** Сдвиг зажатым колесом с прошлого кадра, px. */
+  panX: number;
+  panY: number;
+  /** За часть вещи взялись (тянут край картона) — вещь не вращается. */
+  part: boolean;
 }
 
 /** Порог «щелчок, а не протяжка», px. */
@@ -50,6 +56,15 @@ const Y = new Vector3(0, 1, 0);
 // ── Вещь в руках одна: её жест, «уйти» и активные части — на уровне модуля. ──
 
 let gestureNow: RefObject<Gesture> | null = null;
+let wrapNow: HTMLDivElement | null = null;
+
+/**
+ * Курсор над частью вещи (печать, экран, край картона): ставится на саму сцену — у неё свой
+ * курсор «взять», курсор страницы под ним не виден. '' — снова «взять».
+ */
+export function setPartCursor(cursor: string) {
+  if (wrapNow) wrapNow.style.cursor = cursor;
+}
 let leaveNow: ((then: () => void) => void) | null = null;
 
 /** Щелчок по части вещи — только если мышь почти не двигалась (иначе вещь вращали). */
@@ -58,6 +73,11 @@ export function onClickPart(fn: () => void) {
     e?.stopPropagation();
     if ((gestureNow?.current.moved ?? 0) < CLICK_PX) fn();
   };
+}
+
+/** Часть вещи берёт протяжку себе (тянут край картона): вещь при этом не вращается. */
+export function holdPart() {
+  if (gestureNow) gestureNow.current.part = true;
 }
 
 /**
@@ -89,15 +109,28 @@ export function useSpot(ref: RefObject<Object3D | null>, spot: Omit<Spot, 'obj'>
   const { id, label, testId } = spot;
   const click = useRef(spot.onClick);
   click.current = spot.onClick;
+  // После каждой отрисовки: часть могла появиться позже (стопка переложенных листов) или пропасть.
   useEffect(() => {
-    if (!ref.current) return;
-    spots.set(id, { id, label, testId, obj: ref.current, onClick: () => click.current() });
+    const obj = ref.current;
+    const cur = spots.get(id);
+    if (!obj) {
+      if (cur) {
+        spots.delete(id);
+        changed();
+      }
+      return;
+    }
+    if (cur?.obj === obj && cur.label === label && cur.testId === testId) return;
+    spots.set(id, { id, label, testId, obj, onClick: () => click.current() });
     changed();
-    return () => {
+  });
+  useEffect(
+    () => () => {
       spots.delete(id);
       changed();
-    };
-  }, [ref, id, label, testId]);
+    },
+    [id],
+  );
 }
 
 function Rig({
@@ -140,6 +173,19 @@ function Rig({
 
   useFrame((_, dt) => {
     const g = gesture.current;
+    if (g.part) {
+      g.dx = 0;
+      g.dy = 0;
+    }
+    if (g.panX || g.panY) {
+      // Сдвиг зажатым колесом: вещь едет за мышью (камера — обратно), не дальше края вещи.
+      const per = (2 * camTarget.current.z * Math.tan((30 * Math.PI) / 360)) / size.height;
+      const t = camTarget.current;
+      t.x = Math.max(-half[0], Math.min(half[0], t.x - g.panX * per));
+      t.y = Math.max(-half[1], Math.min(half[1], t.y + g.panY * per));
+      g.panX = 0;
+      g.panY = 0;
+    }
     if (g.dx || g.dy) {
       if (mode === 'flip') yaw.current += g.dx * ROT_PER_PX;
       else {
@@ -200,12 +246,21 @@ export interface Held3DProps {
   mode: HoldMode;
   half: [number, number];
   label: string;
+  /** Подпись внизу (лист пачки «18 из 41»). */
+  caption?: string;
   onClose: () => void;
   children: ReactNode;
 }
 
 /** Сцена с вещью и жесты мыши; сама вещь — children (формы из shapes.tsx). */
-export default function Held3D({ mode, half, label, onClose: close, children }: Held3DProps) {
+export default function Held3D({
+  mode,
+  half,
+  label,
+  caption,
+  onClose: close,
+  children,
+}: Held3DProps) {
   const gesture = useRef<Gesture>({
     dx: 0,
     dy: 0,
@@ -213,6 +268,9 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
     released: false,
     wheel: [],
     reset: false,
+    panX: 0,
+    panY: 0,
+    part: false,
   });
   const wrap = useRef<HTMLDivElement>(null);
   const buttons = useRef(new Map<string, HTMLButtonElement>());
@@ -231,6 +289,7 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
   };
   gestureNow = gesture;
   leaveNow = leave;
+  wrapNow = wrap.current;
   const onClose = () => {
     if (!leaving) leave(close);
   };
@@ -247,14 +306,31 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
 
   // Протяжку ведём по окну: кнопка может уйти за край вещи и даже экрана.
   const onPointerDown = (e: ReactPointerEvent) => {
-    // Средняя кнопка — вернуть как было (правка автора 09.11: двойной щелчок мимо вещи клал её).
+    const g = gesture.current;
+    // Правая кнопка — вернуть как было (правка автора 10.11; прежде — средняя).
+    if (e.button === 2) {
+      e.preventDefault();
+      g.reset = true;
+      return;
+    }
+    // Зажатое колесо — сдвинуть вещь (правка автора 10.11).
     if (e.button === 1) {
       e.preventDefault();
-      gesture.current.reset = true;
+      let at = { x: e.clientX, y: e.clientY };
+      const pan = (ev: PointerEvent) => {
+        g.panX += ev.clientX - at.x;
+        g.panY += ev.clientY - at.y;
+        at = { x: ev.clientX, y: ev.clientY };
+      };
+      const stop = () => {
+        window.removeEventListener('pointermove', pan);
+        window.removeEventListener('pointerup', stop);
+      };
+      window.addEventListener('pointermove', pan);
+      window.addEventListener('pointerup', stop);
       return;
     }
     if (e.button !== 0) return;
-    const g = gesture.current;
     g.moved = 0;
     let last = { x: e.clientX, y: e.clientY };
     const move = (ev: PointerEvent) => {
@@ -265,6 +341,7 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
     };
     const up = () => {
       g.released = true;
+      g.part = false;
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
     };
@@ -274,7 +351,10 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
 
   return (
     <div
-      ref={wrap}
+      ref={(el) => {
+        wrap.current = el;
+        wrapNow = el;
+      }}
       role="application"
       className="held"
       data-testid="held"
@@ -294,6 +374,7 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
       onMouseDown={(e) => {
         if (e.button === 1) e.preventDefault();
       }}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <Canvas
         camera={{ position: [0, 0, CAM_Z], fov: 30 }}
@@ -331,6 +412,11 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
           onClick={onClickPart(s.onClick)}
         />
       ))}
+      {caption && (
+        <p className="held-caption" data-testid="held-caption">
+          {caption}
+        </p>
+      )}
       <button
         type="button"
         className="tool tool-close held-close"

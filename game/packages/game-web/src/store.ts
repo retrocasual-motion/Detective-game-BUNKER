@@ -89,12 +89,29 @@ interface GameStore {
   pinToWall(materialId: string): void;
   /** Движок открыл материалы: в дело и во «Входящие» на столе (правка автора 09.11). */
   addReleased(released: Material[]): void;
+  /**
+   * Найдено руками в предмете (AW-B, решение автора 10.11: вытащил, пролистал, перевернул) —
+   * сразу на стену, рядом с вещью-источником; не во «Входящие».
+   */
+  addFound(released: Material[], near?: string, hang?: readonly string[]): void;
+  /**
+   * Что только что повесили на стену из найденного руками (AW-B): записка «На стене: … ·
+   * Показать», когда вещь отложена; сама вещь на стене светится (foundId).
+   */
+  placed: { ids: string[]; text: string; at: number } | null;
+  dismissPlaced(): void;
   /** Через ms заглянуть, не пришёл ли ответ на ходатайство (MAIL-B: письмо во «Входящие»). */
   checkMailIn(ms: number): void;
   load(): Promise<void>;
   setPetitionOpen(open: boolean): void;
   /** Открыть материал; из поиска — с найденным словом (k — какое совпадение показать). */
-  openViewer(materialId: string, find?: { q: string; k: number }): void;
+  openViewer(
+    materialId: string,
+    find?: { q: string; k: number },
+    excerpt?: { title: string; from: number; to: number },
+  ): void;
+  /** Лист открыт выдержкой: только листы from–to описи пачки (папка, вытащенная из пачки). */
+  excerpt: { title: string; from: number; to: number } | null;
   /** Лист открыт из поиска (RD-C): что подсветить. */
   find: { q: string; k: number } | null;
   /** Поиск по делу открыт (RD-C). */
@@ -137,6 +154,8 @@ export const useGame = create<GameStore>((set, get) => {
     held: null,
     find: null,
     searchOpen: false,
+    excerpt: null,
+    placed: null,
     foundId: null,
     wallFly: 0,
     binned: null,
@@ -194,6 +213,47 @@ export const useGame = create<GameStore>((set, get) => {
       });
     },
 
+    addFound(released, near = '29', hang) {
+      const { materials, state } = get();
+      const known = new Set(materials.map((m) => m.id));
+      const fresh = released.filter((m) => !known.has(m.id));
+      const all = fresh.length ? [...materials, ...fresh] : materials;
+      if (fresh.length) set({ materials: all });
+      if (!state) return;
+      // Что вешать: по умолчанию — всё найденное; папку из пачки — саму папку, без описи.
+      const ids = hang ?? released.map((m) => m.id);
+      const before = new Set(state.wall.items.map((i) => i.id));
+      get().updateState((st) => {
+        let s = fresh.length ? reconcile(st, all) : st;
+        const anchor = s.wall.items.find((i) => i.id === near);
+        for (const id of ids) {
+          const m = { id };
+          if (s.wall.items.some((i) => i.id === m.id)) continue;
+          // Правее вещи-источника, рядами по три; нет её на стене — в середину видимой стены.
+          const k = s.wall.items.filter((i) => /^(L|F:)/.test(i.id)).length;
+          const c = shownCamera(s);
+          const base = anchor ?? {
+            x: (window.innerWidth / 2 - c.x) / c.zoom - 200,
+            y: (window.innerHeight / 2 - c.y) / c.zoom - 110,
+          };
+          s = moveItem(m.id, base.x + 220 + (k % 3) * 200, base.y + Math.floor(k / 3) * 270)(s);
+        }
+        return s;
+      });
+      const added = ids.filter((id) => !before.has(id));
+      if (!added.length) return;
+      const title = (id: string) =>
+        id.startsWith('F:') ? 'Папка' : (get().materials.find((m) => m.id === id)?.title ?? id);
+      set({
+        placed: { ids: added, text: added.map(title).join('; '), at: Date.now() },
+        foundId: added[0] ?? null,
+      });
+    },
+
+    dismissPlaced() {
+      set({ placed: null });
+    },
+
     addReleased(released) {
       const { materials, state } = get();
       const known = new Set(materials.map((m) => m.id));
@@ -208,17 +268,17 @@ export const useGame = create<GameStore>((set, get) => {
       set({ petitionOpen: open });
     },
 
-    openViewer(materialId, find) {
+    openViewer(materialId, find, excerpt) {
       // Устройство берут в руки (этап 4a); из поиска — сразу текст.
       if (!find && DEVICE_IDS.has(materialId)) {
         set({ held: { type: 'device', id: materialId } });
         return;
       }
-      set({ viewerId: materialId, find: find ?? null });
+      set({ viewerId: materialId, find: find ?? null, excerpt: excerpt ?? null });
     },
 
     closeViewer() {
-      set({ viewerId: null, find: null });
+      set({ viewerId: null, find: null, excerpt: null });
     },
 
     revealOnWall(id) {
