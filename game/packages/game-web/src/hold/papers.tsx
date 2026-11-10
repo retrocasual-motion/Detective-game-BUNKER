@@ -156,17 +156,6 @@ const BLANK: Sheet = { text: '', faceDown: false, cover: null };
 
 const slipOf = (b: Bundle) => `${b.id} · ${b.room} · ${b.sheets} л.`;
 
-function useSlip(label: string) {
-  return useTexture(
-    () =>
-      paintTexture(1.1, 0.3, '#efe6cc', ({ ctx, w, h, text }) => {
-        ctx.fillStyle = INK;
-        text(label, w * 0.06, h * 0.22, w * 0.9, '600 56px system-ui, sans-serif', 64);
-      }),
-    [label],
-  );
-}
-
 /** Протянуть мышью столько, px, — край вытащен до конца. */
 const PULL_PX = 160;
 /** Выступ картона за край листа: в покое — на волосок, при наведении — средне (правка автора 10.11). */
@@ -513,71 +502,195 @@ export function PaperStack({
   );
 }
 
-const COLS = 3;
-const CELL: [number, number] = [0.92, 1.24];
-const SMALL = 0.36;
+/**
+ * Коробка — архивный короб для изъятого (BX-A, решение автора 10.11): как в жизни (короб для
+ * документов ~38×30×25 см, конверты из крафта с расширением ~229×324 мм стоят на ребре по
+ * порядку, как в картотеке; на верхнем крае каждого — бумажный ярлык с номером пачки). Размеры
+ * ниже — в единицах сцены: 1 см ≈ 0,08.
+ */
+const BOX_W = 3.04;
+const BOX_D = 2.4;
+const BOX_H = 2.0;
+const WALL = 0.05;
+const ENV_W = 2.6;
+const ENV_H = 1.83;
+/** Толщина конверта: сам конверт и пачка в нём (листы чуть толще, чтобы П-01 читалась). */
+const envDepth = (sheets: number) => 0.035 + sheets * 0.0011;
+const KRAFT = '#b48d5f';
+/** Ярлыки по верхнему краю — вразбивку (слева, по центру, справа), чтобы читались все. */
+const TAB_X = [-0.8, 0, 0.8];
+const TAB: [number, number] = [0.86, 0.3];
+/** Насколько конверт приподнимается при наведении и куда уходит, когда его вынули. */
+const LIFT_HOVER = 0.14;
+const LIFT_OUT = 1.6;
 
-/** Коробка с девятью пачками (вид сверху, чуть наклонена); щелчок по пачке — взять её. */
+/**
+ * Коробка с пачками (BX-A, решение автора 10.11): открытый архивный короб, наклонён к игроку;
+ * внутри девять крафтовых конвертов стоят на ребре, как папки в картотеке, у каждого на верхнем
+ * крае — ярлык «П-05 · Медкабинет». Навели — конверт чуть приподнимается; щелчок — конверт
+ * выходит вверх, пачка из него — в руках. Опустевший конверт (все папки вынуты) остаётся тонким.
+ */
 export function PapersBox({ bundles, onPick }: { bundles: Bundle[]; onPick: (b: Bundle) => void }) {
-  const rows = Math.ceil(bundles.length / COLS);
-  const tray: [number, number] = [COLS * CELL[0] + 0.2, rows * CELL[1] + 0.2];
+  const front = useTexture(
+    () =>
+      paintTexture(BOX_W, BOX_H, BOX, ({ ctx, w, h, text }) => {
+        ctx.fillStyle = '#efe6cc';
+        ctx.fillRect(w * 0.32, h * 0.3, w * 0.36, h * 0.26);
+        ctx.fillStyle = INK;
+        text('Изъято · 29', w * 0.35, h * 0.33, w * 0.3, '700 64px system-ui, sans-serif', 72);
+        text('Бумаги из помещений', w * 0.35, h * 0.43, w * 0.3, '40px system-ui, sans-serif', 46);
+        // Ручка-прорезь, как у архивного короба.
+        ctx.fillStyle = '#3b3024';
+        ctx.beginPath();
+        ctx.roundRect(w * 0.4, h * 0.1, w * 0.2, h * 0.08, h * 0.04);
+        ctx.fill();
+      }),
+    [],
+  );
+  // Конверты — от задней стенки к передней, с равными промежутками.
+  const gap = (BOX_D - 2 * WALL - 0.3) / Math.max(1, bundles.length - 1);
   return (
-    <group rotation={[-0.42, 0, 0]} scale={0.62}>
-      {/* Дно и бортики коробки. */}
-      <mesh position={[0, 0, -0.05]}>
-        <boxGeometry args={[tray[0], tray[1], 0.06]} />
+    <group rotation={[0.62, 0, 0]} position={[0, -0.1, 0]} scale={0.6}>
+      {/* Дно и стенки короба. */}
+      <mesh position={[0, -BOX_H / 2 + WALL / 2, 0]}>
+        <boxGeometry args={[BOX_W, WALL, BOX_D]} />
         <meshStandardMaterial color={BOX} roughness={0.95} />
       </mesh>
       {[
-        [0, tray[1] / 2, tray[0], 0.06],
-        [0, -tray[1] / 2, tray[0], 0.06],
-        [tray[0] / 2, 0, 0.06, tray[1]],
-        [-tray[0] / 2, 0, 0.06, tray[1]],
-      ].map(([x, y, w, h]) => (
-        <mesh key={`${x}:${y}`} position={[x as number, y as number, 0.2]}>
-          <boxGeometry args={[w as number, h as number, 0.5]} />
+        [0, -BOX_D / 2 + WALL / 2, BOX_W, WALL],
+        [-BOX_W / 2 + WALL / 2, 0, WALL, BOX_D],
+        [BOX_W / 2 - WALL / 2, 0, WALL, BOX_D],
+      ].map(([x, z, w, d]) => (
+        <mesh key={`${x}:${z}`} position={[x as number, 0, z as number]}>
+          <boxGeometry args={[w as number, BOX_H, d as number]} />
           <meshStandardMaterial color={BOX} roughness={0.95} />
         </mesh>
       ))}
+      <group position={[0, 0, BOX_D / 2 - WALL / 2]}>
+        <mesh>
+          <boxGeometry args={[BOX_W, BOX_H, WALL]} />
+          <meshStandardMaterial color={BOX} roughness={0.95} />
+        </mesh>
+        <Plate w={BOX_W} h={BOX_H} z={WALL / 2 + 0.002} map={front} />
+      </group>
       {bundles.map((b, k) => (
         <group
           key={b.id}
-          position={[
-            ((k % COLS) - (COLS - 1) / 2) * CELL[0],
-            ((rows - 1) / 2 - Math.floor(k / COLS)) * CELL[1],
-            0,
-          ]}
+          position={[0, -BOX_H / 2 + WALL + ENV_H / 2, -BOX_D / 2 + WALL + 0.15 + k * gap]}
+          // Стоят не по линейке: каждый чуть наклонён назад.
+          rotation={[-0.06 - (k % 2) * 0.03, 0, 0]}
         >
-          <SmallStack bundle={b} onPick={() => onPick(b)} />
+          <EnvelopeFile bundle={b} tabX={TAB_X[k % TAB_X.length] ?? 0} onPick={() => onPick(b)} />
         </group>
       ))}
     </group>
   );
 }
 
-function SmallStack({ bundle: b, onPick }: { bundle: Bundle; onPick: () => void }) {
-  const d = stackDepth(b.sheets) * SMALL * 1.4;
-  const face = useFace(topOf(b));
-  const slip = useSlip(b.id);
-  const pick = useActive(`stack-${b.id}`, `Взять пачку ${b.id}`, `stack-${b.id}`, onPick);
-  const size = useMemo(() => [W * SMALL, H * SMALL] as const, []);
+function EnvelopeFile({
+  bundle: b,
+  tabX,
+  onPick,
+}: {
+  bundle: Bundle;
+  tabX: number;
+  onPick: () => void;
+}) {
+  const empty = b.sheets === 0;
+  const d = envDepth(b.sheets);
+  const lift = useRef<Group>(null);
+  const out = useRef(false);
+  const y = useRef(0);
+  const pick = useActive(
+    `stack-${b.id}`,
+    empty ? `Конверт ${b.id} пуст` : `Взять пачку ${b.id}`,
+    `stack-${b.id}`,
+    () => {
+      if (empty || out.current) return;
+      out.current = true;
+      if (reducedMotion()) onPick();
+    },
+  );
+  useFrame((_, dt) => {
+    const to = out.current ? LIFT_OUT : pick.hover && !empty ? LIFT_HOVER : 0;
+    y.current += (to - y.current) * ease(dt);
+    if (lift.current) lift.current.position.y = y.current;
+    // Вынули до конца — пачка в руках (один раз).
+    if (out.current && y.current > LIFT_OUT * 0.85 && !reducedMotion()) {
+      out.current = false;
+      y.current = 0;
+      onPick();
+    }
+  });
+  const face = useTexture(
+    () =>
+      paintTexture(ENV_W, ENV_H, KRAFT, ({ ctx, w, h, text }) => {
+        // Бланк вещдока у верхнего края: номер, помещение, листов; ниже — графы передачи.
+        ctx.fillStyle = '#efe6cc';
+        ctx.fillRect(w * 0.06, h * 0.06, w * 0.88, h * 0.3);
+        ctx.fillStyle = INK;
+        text(slipOf(b), w * 0.09, h * 0.09, w * 0.82, '600 64px system-ui, sans-serif', 72);
+        text('Изъято · дело 29', w * 0.09, h * 0.22, w * 0.82, '40px system-ui, sans-serif', 46);
+        ctx.strokeStyle = 'rgba(43,41,37,0.35)';
+        ctx.lineWidth = 3;
+        for (let r = 0; r < 4; r++) {
+          const yy = h * (0.5 + r * 0.1);
+          ctx.beginPath();
+          ctx.moveTo(w * 0.08, yy);
+          ctx.lineTo(w * 0.92, yy);
+          ctx.stroke();
+        }
+      }),
+    [b.id, b.room, b.sheets],
+  );
+  const tab = useTexture(
+    () =>
+      paintTexture(TAB[0], TAB[1], '#efe6cc', ({ ctx, w, h, text }) => {
+        ctx.fillStyle = INK;
+        text(b.id, w * 0.08, h * 0.12, w * 0.84, '700 70px system-ui, sans-serif', 78);
+        text(
+          empty ? 'пуст' : b.room,
+          w * 0.08,
+          h * 0.56,
+          w * 0.84,
+          '34px system-ui, sans-serif',
+          40,
+        );
+      }),
+    [b.id, b.room, empty],
+  );
+  const glow = pick.hover && !empty ? 0.04 : 0;
   return (
-    <group position={[0, 0, d / 2]} ref={pick.anchor}>
+    <group ref={lift}>
       <mesh {...pick.handlers}>
-        <boxGeometry args={[size[0], size[1], d]} />
-        <meshStandardMaterial color={PAPER} roughness={0.95} />
-      </mesh>
-      <mesh position={[0, 0, d / 2 + 0.001]} {...pick.handlers}>
-        <planeGeometry args={[size[0], size[1]]} />
+        <boxGeometry args={[ENV_W, ENV_H, d]} />
         <meshStandardMaterial
-          map={face}
-          roughness={0.9}
+          color={KRAFT}
+          roughness={0.95}
           emissive="#ffffff"
-          emissiveIntensity={pick.hover ? 0.12 : 0}
+          emissiveIntensity={glow}
         />
       </mesh>
-      <group position={[0, size[1] / 2 - 0.08, d / 2 + 0.004]}>
-        <Plate w={0.42} h={0.12} z={0} map={slip} />
+      <mesh position={[0, 0, d / 2 + 0.002]} {...pick.handlers}>
+        <planeGeometry args={[ENV_W, ENV_H]} />
+        <meshStandardMaterial
+          map={face}
+          roughness={0.95}
+          emissive="#ffffff"
+          emissiveIntensity={glow}
+        />
+      </mesh>
+      {/* Ярлык на верхнем крае — его видно поверх соседних конвертов. */}
+      <group position={[tabX, ENV_H / 2 + TAB[1] / 2 - 0.04, d / 2 + 0.004]} ref={pick.anchor}>
+        <mesh {...pick.handlers}>
+          <planeGeometry args={[TAB[0], TAB[1]]} />
+          <meshStandardMaterial
+            map={tab}
+            roughness={0.9}
+            emissive="#ffffff"
+            emissiveIntensity={glow}
+          />
+        </mesh>
       </group>
     </group>
   );

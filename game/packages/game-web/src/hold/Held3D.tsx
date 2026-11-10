@@ -96,6 +96,8 @@ interface Spot {
   label: string;
   testId: string;
   onClick: () => void;
+  /** Мышь над невидимой кнопкой: она лежит поверх части и забирает наведение у сцены. */
+  onHover?: (on: boolean) => void;
 }
 const spots = new Map<string, Spot>();
 let spotList: Spot[] = [];
@@ -109,6 +111,8 @@ export function useSpot(ref: RefObject<Object3D | null>, spot: Omit<Spot, 'obj'>
   const { id, label, testId } = spot;
   const click = useRef(spot.onClick);
   click.current = spot.onClick;
+  const hover = useRef(spot.onHover);
+  hover.current = spot.onHover;
   // После каждой отрисовки: часть могла появиться позже (стопка переложенных листов) или пропасть.
   useEffect(() => {
     const obj = ref.current;
@@ -121,7 +125,14 @@ export function useSpot(ref: RefObject<Object3D | null>, spot: Omit<Spot, 'obj'>
       return;
     }
     if (cur?.obj === obj && cur.label === label && cur.testId === testId) return;
-    spots.set(id, { id, label, testId, obj, onClick: () => click.current() });
+    spots.set(id, {
+      id,
+      label,
+      testId,
+      obj,
+      onClick: () => click.current(),
+      onHover: (on) => hover.current?.(on),
+    });
     changed();
   });
   useEffect(
@@ -410,6 +421,8 @@ export default function Held3D({
           data-testid={s.testId}
           aria-label={s.label}
           onClick={onClickPart(s.onClick)}
+          onPointerEnter={() => s.onHover?.(true)}
+          onPointerLeave={() => s.onHover?.(false)}
         />
       ))}
       {caption && (

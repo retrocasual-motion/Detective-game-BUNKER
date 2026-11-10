@@ -75,8 +75,8 @@ function paintList(p: Painter, items: Item[], top: number) {
 /** Активная часть: щелчок мышью по ней и невидимая кнопка поверх (клавиатура, тесты). */
 export function useActive(id: string, label: string, testId: string, action: () => void) {
   const anchor = useRef<Group>(null);
-  useSpot(anchor, { id, label, testId, onClick: action });
   const [hover, setHover] = useState(false);
+  useSpot(anchor, { id, label, testId, onClick: action, onHover: setHover });
   const handlers = {
     onClick: onClickPart(action),
     onPointerOver: () => {
