@@ -1,6 +1,14 @@
-import { type ThreeEvent, useFrame } from '@react-three/fiber';
+import { type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BackSide, FrontSide, type Group, type Mesh, PlaneGeometry, Vector3 } from 'three';
+import {
+  BackSide,
+  type CanvasTexture,
+  FrontSide,
+  type Group,
+  type Mesh,
+  PlaneGeometry,
+  Vector3,
+} from 'three';
 import { reducedMotion } from '../motion.ts';
 import type { Bundle, Sheet } from '../viewer/bundles.ts';
 import { holdPart, setPartCursor, useSpot } from './Held3D.tsx';
@@ -11,8 +19,9 @@ import { paintTexture } from './texture.ts';
  * Пачки бумаг из помещений (29) — физическая улика (PH-B, решения автора 10.11): коробка с
  * девятью пачками, пачку берут в руки и крутят. Сверху — верхний лист; по краям — торец:
  * бумага, а где есть, слои картона (выступают чуть шире листов, темнее); снизу — картонная
- * подложка с ярлыком бюро. Пачку листают прямо в руках (LF-A): листы перекладываются в стопку
- * слева. Размеры — как в жизни (A4), толщина по числу листов чуть преувеличена, чтобы торец читался.
+ * подложка с ярлыком бюро. Пачку листают прямо в руках (LF-A): листы переворачиваются через
+ * левый край и ложатся вплотную слева, как в книге. Размеры — как в жизни (A4), толщина по числу
+ * листов чуть преувеличена, чтобы торец читался.
  */
 
 const PAPER = '#ece7da';
@@ -37,22 +46,50 @@ const layerZ = (n: number, sheets: number, d: number) => d / 2 - ((n - 1) / shee
 /** Код дела в тексте («A-24»). */
 const CODE = /A-\d+/;
 
+// ── Лица листов: рисуются один раз и живут в общем кэше (переворот — без задержки). ──
+
+/** Листы пачек рисуются в 0,6 полного разрешения: их много, а видеокарте грузить быстрее. */
+const FACE_SCALE = 0.6;
+const FACE_CACHE = 24;
+/** Единиц текстуры в единице сцены (texture.ts). */
+const PX = 680;
+const faces = new Map<string, CanvasTexture>();
+
+const faceKey = (s: Sheet, slip: string | null) =>
+  `${s.cover ?? '-'}|${s.faceDown ? 1 : 0}|${slip ?? ''}|${s.text}`;
+
 /** Лицо листа: текст, обложка папки (картон с наклейкой) или оборот (лежит текстом вниз). */
-function useFace(top: Sheet) {
-  return useTexture(
-    () =>
-      top.cover !== null
-        ? paintTexture(W, H, CARD, ({ ctx, w, h, text }) => {
-            if (!top.cover) return;
+function faceTexture(s: Sheet, slip: string | null = null): CanvasTexture {
+  const key = faceKey(s, slip);
+  const hit = faces.get(key);
+  if (hit) {
+    faces.delete(key);
+    faces.set(key, hit);
+    return hit;
+  }
+  const len = (y: number) => 0.5 + ((y * 7) % 30) / 100;
+  const tex =
+    s.cover !== null
+      ? paintTexture(
+          W,
+          H,
+          CARD,
+          ({ ctx, w, h, text }) => {
+            if (!s.cover) return;
             ctx.fillStyle = '#f1ead6';
             ctx.fillRect(w * 0.3, h * 0.12, w * 0.4, h * 0.1);
             ctx.fillStyle = INK;
-            text(top.cover, w * 0.36, h * 0.135, w * 0.3, '700 120px system-ui, sans-serif', 130);
-          })
-        : paintTexture(W, H, SHEET, ({ ctx, w, h, text }) => {
-            const len = (y: number) => 0.5 + ((y * 7) % 30) / 100;
-            if (top.faceDown) {
-              // Оборот: пусто; сквозь бумагу просвечивают строки (зеркально) и пятно штампа в углу.
+            text(s.cover, w * 0.36, h * 0.135, w * 0.3, '700 120px system-ui, sans-serif', 130);
+          },
+          FACE_SCALE,
+        )
+      : paintTexture(
+          W,
+          H,
+          SHEET,
+          ({ ctx, w, h, text }) => {
+            if (s.faceDown) {
+              // Оборот: пусто; сквозь бумагу просвечивают строки (зеркально) и пятно штампа.
               ctx.fillStyle = 'rgb(0 0 0 / 6%)';
               for (let y = h * 0.14; y < h * 0.86; y += 46)
                 ctx.fillRect(w * (0.91 - len(y)), y, w * len(y), 9);
@@ -63,13 +100,45 @@ function useFace(top: Sheet) {
               return;
             }
             ctx.fillStyle = INK;
-            let y = text(top.text, w * 0.09, h * 0.12, w * 0.82, '64px Georgia, serif', 80);
+            let y = text(s.text, w * 0.09, h * 0.12, w * 0.82, '64px Georgia, serif', 80);
             // Ниже — строки листа, мелко (с руки не прочесть).
             ctx.fillStyle = 'rgb(0 0 0 / 16%)';
             for (y += 40; y < h * 0.9; y += 46) ctx.fillRect(w * 0.09, y, w * len(y), 10);
-          }),
-    [top.text, top.cover, top.faceDown],
-  );
+          },
+          FACE_SCALE,
+        );
+  if (slip) {
+    // Ярлык бюро — на самом листе: переворачивается вместе с ним (правка автора 10.11).
+    const ctx = (tex.image as HTMLCanvasElement).getContext('2d');
+    if (ctx) {
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(FACE_SCALE, FACE_SCALE);
+      ctx.translate(0.06 * PX, 0.035 * PX);
+      ctx.rotate(0.04);
+      ctx.fillStyle = '#efe6cc';
+      ctx.fillRect(0, 0, 1.1 * PX, 0.3 * PX);
+      ctx.fillStyle = INK;
+      ctx.font = '600 56px system-ui, sans-serif';
+      ctx.textBaseline = 'top';
+      ctx.fillText(slip, 0.06 * PX, 0.066 * PX, 1.0 * PX);
+      ctx.restore();
+      tex.needsUpdate = true;
+    }
+  }
+  faces.set(key, tex);
+  while (faces.size > FACE_CACHE) {
+    const [old, t] = faces.entries().next().value as [string, CanvasTexture];
+    faces.delete(old);
+    t.dispose();
+  }
+  return tex;
+}
+
+function useFace(s: Sheet, slip: string | null = null) {
+  const key = faceKey(s, slip);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: лицо меняется только с ключом листа
+  return useMemo(() => faceTexture(s, slip), [key]);
 }
 
 /** Верхний лист пачки, пока её не листали: текст превью (материал 29); у П-09 сверху — обложка. */
@@ -78,6 +147,11 @@ const topOf = (b: Bundle): Sheet => ({
   faceDown: false,
   cover: b.layers.includes(1) ? (CODE.exec(b.top)?.[0] ?? '') : null,
 });
+
+/** Лист, о котором ещё ничего не известно (опись не пришла): чистые строки. */
+const BLANK: Sheet = { text: '', faceDown: false, cover: null };
+
+const slipOf = (b: Bundle) => `${b.id} · ${b.room} · ${b.sheets} л.`;
 
 function useSlip(label: string) {
   return useTexture(
@@ -102,10 +176,10 @@ const ease = (dt: number) => (reducedMotion() ? 1 : 1 - Math.exp(-dt * SMOOTH));
 
 /**
  * Слой картона в пачке (RD-A, решения автора 10.11). Ловится легко: вокруг края — невидимая
- * зона захвата (шире и толще самого картона), и только когда на пачку смотрят сбоку (сверху и
- * снизу пачку вращают, как обычно). Навели — край плавно выдвигается (средне, не резко) и курсор
- * «рука». Потянуть — картон выезжает за мышью; отпустили раньше половины — плавно вернулся;
- * дальше — вытащен. С клавиатуры — невидимая кнопка края.
+ * зона захвата (шире и толще самого картона), и уже когда пачку чуть повернули (сверху и снизу
+ * её вращают, как обычно). Навели — край плавно выдвигается (средне, не резко) и курсор «рука».
+ * Потянуть — картон выезжает за мышью; отпустили раньше половины — плавно вернулся; дальше —
+ * вытащен. С клавиатуры — невидимая кнопка края.
  */
 function CardLayer({ n, z, onPull }: { n: number; z: number; onPull: () => void }) {
   const [hover, setHover] = useState(false);
@@ -129,7 +203,7 @@ function CardLayer({ n, z, onPull }: { n: number; z: number; onPull: () => void 
     sl.now = sl.dragging ? sl.to : sl.now + (sl.to - sl.now) * k;
     if (group.current) group.current.position.x = sl.now * W * 0.9;
   });
-  // Пачку видно сбоку: луч мыши почти поперёк её толщины; и зона захвата — ближе всего к мыши.
+  // Пачку видно сбоку: луч мыши не вдоль её толщины; и зона захвата — ближе всего к мыши.
   const reach = (e: ThreeEvent<PointerEvent>) => {
     if (e.intersections[0]?.object !== e.object) return false;
     const axis = e.object.getWorldDirection(new Vector3());
@@ -197,22 +271,35 @@ function CardLayer({ n, z, onPull }: { n: number; z: number; onPull: () => void 
 /** Сколько длится переворот листа, мс. */
 const FLIP_MS = 520;
 
+interface Flip {
+  /** 1 — вперёд (справа налево), −1 — назад. */
+  dir: 1 | -1;
+  at: number;
+  sheet: Sheet;
+  slip: string | null;
+  /** Высота верха правой и левой стопки, между которыми лист летит. */
+  zRight: number;
+  zLeft: number;
+}
+
 /**
- * Лист, который перекладывают (правка автора 10.11: «живой», не доска): лист гнётся — поднимается
- * от корешка, свободный край отстаёт и догоняет; лицом — его текст, оборотом — чистая бумага.
- * Корешок — левый край пачки; лист ложится вплотную слева.
+ * Лист, который перекладывают (правки автора 10.11: «живой», не доска; без прыжков): лист гнётся —
+ * поднимается от корешка, свободный край отстаёт и догоняет; лицом — его текст, оборотом —
+ * чистая бумага. Корешок — левый край пачки; лист плавно опускается с высоты одной стопки на
+ * высоту другой и ложится вплотную слева.
  */
-function Flying({ sheet, dir, at, z }: { sheet: Sheet; dir: 1 | -1; at: number; z: number }) {
+function Flying({ flip, onDone }: { flip: Flip; onDone: () => void }) {
   const geo = useMemo(() => new PlaneGeometry(W, H, 28, 1), []);
   const base = useMemo(() => Float32Array.from(geo.getAttribute('position').array), [geo]);
-  const face = useFace(sheet);
-  const [done, setDone] = useState(false);
+  const face = useFace(flip.sheet, flip.slip);
+  const group = useRef<Group>(null);
+  const done = useRef(false);
   useEffect(() => () => geo.dispose(), [geo]);
   useFrame(() => {
-    if (done) return;
-    const t = Math.min(1, (performance.now() - at) / FLIP_MS);
+    if (done.current) return;
+    const t = reducedMotion() ? 1 : Math.min(1, (performance.now() - flip.at) / FLIP_MS);
     const e = (1 - Math.cos(Math.PI * t)) / 2;
-    const p = dir === 1 ? e : 1 - e;
+    const p = flip.dir === 1 ? e : 1 - e;
     // Угол у корешка и изгиб: свободный край отстаёт сильнее всего посреди переворота.
     const phi = Math.PI * p;
     const k = (1.1 * Math.sin(Math.PI * p)) / W;
@@ -227,11 +314,15 @@ function Flying({ sheet, dir, at, z }: { sheet: Sheet; dir: 1 | -1; at: number; 
     }
     pos.needsUpdate = true;
     geo.computeVertexNormals();
-    if (t >= 1) setDone(true);
+    // Корешок — с высоты одной стопки на высоту другой: лист не падает в конце.
+    if (group.current) group.current.position.z = flip.zRight + (flip.zLeft - flip.zRight) * p;
+    if (t >= 1) {
+      done.current = true;
+      onDone();
+    }
   });
-  if (done || reducedMotion()) return null;
   return (
-    <group position={[0, 0, z]}>
+    <group ref={group} position={[0, 0, flip.zRight]}>
       <mesh geometry={geo}>
         <meshStandardMaterial map={face} roughness={0.9} side={FrontSide} />
       </mesh>
@@ -245,9 +336,9 @@ function Flying({ sheet, dir, at, z }: { sheet: Sheet; dir: 1 | -1; at: number; 
 /**
  * Пачка целиком (PH-B, LF-A): бумага, слои картона, подложка. Щелчок по верхнему листу — он
  * переворачивается через левый край и ложится вплотную слева, лицом вниз, как в книге; щелчок
- * по левой стопке — вернуть лист. Пачка не прыгает: она на месте, обе стопки плавно съезжают к
- * середине. Обложка папки сверху — щелчок берёт папку; листы текстом вниз — щелчок
- * переворачивает их.
+ * по левой стопке — вернуть лист. Пачка не прыгает и не съезжает: она на месте и того же
+ * размера, листы ложатся слева от неё; пока лист в полёте, его нет ни в одной стопке. Обложка папки
+ * сверху — щелчок берёт папку; листы текстом вниз — щелчок переворачивает их.
  */
 export function PaperStack({
   bundle: b,
@@ -259,7 +350,7 @@ export function PaperStack({
   onTurnOver,
 }: {
   bundle: Bundle;
-  /** Листы по описи — когда пачку начали листать (до того известен только верхний). */
+  /** Листы по описи — когда опись пришла (до того известен только верхний). */
   sheets: Sheet[] | null;
   /** Сколько листов уже переложено в левую стопку. */
   page: number;
@@ -270,17 +361,21 @@ export function PaperStack({
   /** Перевернуть листы, что лежат текстом вниз. */
   onTurnOver: () => void;
 }) {
-  const left = sheets ? page : 0;
-  const rest = b.sheets - left;
+  const sheetAt = (i: number): Sheet => (i === 0 ? topOf(b) : (sheets?.[i] ?? BLANK));
+  const slipAt = (i: number) => (i === 0 ? slipOf(b) : null);
+  const [flip, setFlip] = useState<Flip | null>(null);
   const d0 = stackDepth(b.sheets);
-  const dR = stackDepth(rest);
-  const dL = left ? stackDepth(left) : 0;
   // Обе стопки лежат на одной плоскости (низ исходной пачки): правая убывает, левая растёт.
   const floor = -d0 / 2;
-  const topN = left + 1;
-  const top: Sheet = (sheets ? sheets[left] : null) ?? topOf(b);
-  const face = useFace(top);
-  const slip = useSlip(`${b.id} · ${b.room} · ${b.sheets} л.`);
+  // Пока лист в полёте, его нет ни в одной стопке.
+  const leftCount = flip?.dir === 1 ? page - 1 : page;
+  const rightFirst = flip?.dir === -1 ? page + 1 : page;
+  const rest = b.sheets - rightFirst;
+  const dR = stackDepth(rest);
+  const dL = leftCount > 0 ? stackDepth(leftCount) : 0;
+  const top = sheetAt(rightFirst);
+  const face = useFace(top, slipAt(rightFirst));
+  const topN = rightFirst + 1;
   const base = useTexture(
     () =>
       paintTexture(W + 0.08, H + 0.08, BASE, ({ ctx, w, h, text }) => {
@@ -298,29 +393,36 @@ export function PaperStack({
     top.cover !== null ? 'Взять папку' : top.faceDown ? 'Перевернуть листы' : 'Перелистнуть лист';
   const leaf = useActive('leaf', label, 'stack-leaf', act);
   const back = useActive('back', 'Вернуть лист', 'stack-back', onPrev);
-  // Пара стопок плавно съезжает к середине, когда слева появились листы.
-  const shift = useRef<Group>(null);
-  const spread = left > 0;
-  useFrame((_, dt) => {
-    const g = shift.current;
-    if (!g) return;
-    const to = spread ? W / 2 : 0;
-    g.position.x += (to - g.position.x) * ease(dt);
-  });
-  // Переворот листа при каждом шаге: вперёд — лист, что был сверху; назад — тот, что вернули.
-  const last = useRef(left);
-  const [fly, setFly] = useState<{ dir: 1 | -1; at: number; sheet: Sheet } | null>(null);
+  // Новый шаг — лист в полёт: вперёд — тот, что был сверху; назад — тот, что вернули.
+  const last = useRef(page);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: шаг листания — только по page
   useEffect(() => {
-    if (left !== last.current && sheets) {
-      const dir = left > last.current ? 1 : -1;
-      const sheet = sheets[dir === 1 ? left - 1 : left] ?? topOf(b);
-      setFly({ dir, at: performance.now(), sheet });
-    }
-    last.current = left;
-  }, [left, sheets, b]);
+    const was = last.current;
+    last.current = page;
+    if (page === was) return;
+    const dir = page > was ? 1 : -1;
+    const i = dir === 1 ? page - 1 : page;
+    const restNow = b.sheets - page;
+    setFlip({
+      dir,
+      at: performance.now(),
+      sheet: sheetAt(i),
+      slip: slipAt(i),
+      zRight: floor + stackDepth(dir === 1 ? restNow + 1 : restNow) + 0.004,
+      zLeft: floor + stackDepth(dir === 1 ? page : page + 1) + 0.004,
+    });
+  }, [page]);
+  // Следующий лист рисуется заранее, пока смотрят на этот, — переворот без задержки.
+  const gl = useThree((s) => s.gl);
+  useEffect(() => {
+    if (!sheets) return;
+    const id = setTimeout(() => gl.initTexture(faceTexture(sheets[page + 1] ?? BLANK)), 60);
+    return () => clearTimeout(id);
+  }, [sheets, page, gl]);
+  // Пачка не двигается: лист открывается влево, как обложка книги (правка автора 10.11).
   return (
     <group scale={0.78}>
-      <group ref={shift}>
+      <group>
         {/* Пачка справа: что осталось. */}
         {rest > 0 && (
           <mesh position={[0, 0, floor + dR / 2]}>
@@ -334,7 +436,7 @@ export function PaperStack({
             <CardLayer
               key={n}
               n={n}
-              z={floor + dR / 2 + layerZ(n - left, rest, dR)}
+              z={floor + dR / 2 + layerZ(n - rightFirst, rest, dR)}
               onPull={() => onPull(n)}
             />
           ))}
@@ -357,13 +459,8 @@ export function PaperStack({
             </mesh>
           </group>
         )}
-        {left === 0 && (
-          <group position={[-W / 2 + 0.6, H / 2 - 0.2, floor + dR + 0.004]} rotation={[0, 0, 0.04]}>
-            <Plate w={1.1} h={0.3} z={0} map={slip} />
-          </group>
-        )}
         {/* Слева, вплотную — переложенные листы, лицом вниз; щелчок — вернуть верхний. */}
-        {spread && (
+        {leftCount > 0 && (
           <group position={[-W, 0, floor + dL / 2]}>
             <mesh {...back.handlers}>
               <boxGeometry args={[W, H, dL]} />
@@ -377,13 +474,11 @@ export function PaperStack({
             <group position={[0, 0, dL / 2 + 0.001]} ref={back.anchor} />
           </group>
         )}
-        {fly && (
+        {flip && (
           <Flying
-            key={fly.at}
-            sheet={fly.sheet}
-            dir={fly.dir}
-            at={fly.at}
-            z={floor + Math.max(dR, dL) + 0.006}
+            key={flip.at}
+            flip={flip}
+            onDone={() => setFlip((f) => (f && f.at === flip.at ? null : f))}
           />
         )}
       </group>

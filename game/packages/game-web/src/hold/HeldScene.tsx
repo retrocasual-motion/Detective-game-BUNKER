@@ -5,7 +5,7 @@ import {
   containerLabelId,
   focusCamera,
 } from '@bunker/shared';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
 import { type Held, useGame } from '../store.ts';
 import {
@@ -104,15 +104,21 @@ function Papers() {
     setPage(0);
     setPickId(b.id);
   };
-  // Первое перелистывание — «ОСМОТР | 29 | листать П-0N»: опись — сразу на стену (AW-B).
+  // Первое перелистывание — «ОСМОТР | 29 | листать П-0N»: опись — сразу на стену (AW-B). Лист
+  // переворачивается сразу, опись подтягивается в это время (правка автора 10.11: без задержки).
+  const asking = useRef(false);
   const next = async () => {
     if (!orig || !now) return;
-    if (!now.sheets) {
-      const r = await postAction('ОСМОТР', PAPERS_ID, `листать ${orig.id}`).catch(() => null);
-      if (!r || r.quiet) return;
-      useGame.getState().addFound(r.released);
-    }
     setPage((p) => Math.min(now.bundle.sheets, p + 1));
+    if (now.sheets || asking.current) return;
+    asking.current = true;
+    const r = await postAction('ОСМОТР', PAPERS_ID, `листать ${orig.id}`).catch(() => null);
+    asking.current = false;
+    if (!r || r.quiet) {
+      setPage(0);
+      return;
+    }
+    useGame.getState().addFound(r.released);
   };
   // Взяли папку — за торчащий край или долистав до обложки (правила card-p02, card-p09). Она
   // пропадает из пачки: её листов там больше нет (taken).
