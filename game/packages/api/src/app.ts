@@ -11,6 +11,7 @@ import {
 import {
   type Card,
   defaultState,
+  folderItemId,
   letterBody,
   type Material,
   PERSONS,
@@ -95,6 +96,8 @@ function invalidReference(s: PlayerState, materials: Material[]): string | null 
     ...materials.map((m) => m.id),
     ...PERSONS.map((p) => p.id),
     ...s.wall.notes.map((n) => n.id),
+    // Папка, вынутая из пачки (RD-A): на стене — «F:П-02/18», если её и правда вынули.
+    ...(s.taken ?? []).map(folderItemId),
   ]);
   const refs = [...s.wall.items.map((i) => i.id), ...s.wall.threads.flatMap((t) => [t.from, t.to])];
   const bad = refs.find((id) => !allIds.has(id));

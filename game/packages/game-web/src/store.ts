@@ -93,7 +93,13 @@ interface GameStore {
    * Найдено руками в предмете (AW-B, решение автора 10.11: вытащил, пролистал, перевернул) —
    * сразу на стену, рядом с вещью-источником; не во «Входящие».
    */
-  addFound(released: Material[], near?: string): void;
+  addFound(released: Material[], near?: string, hang?: readonly string[]): void;
+  /**
+   * Что только что повесили на стену из найденного руками (AW-B): записка «На стене: … ·
+   * Показать», когда вещь отложена; сама вещь на стене светится (foundId).
+   */
+  placed: { ids: string[]; text: string; at: number } | null;
+  dismissPlaced(): void;
   /** Через ms заглянуть, не пришёл ли ответ на ходатайство (MAIL-B: письмо во «Входящие»). */
   checkMailIn(ms: number): void;
   load(): Promise<void>;
@@ -149,6 +155,7 @@ export const useGame = create<GameStore>((set, get) => {
     find: null,
     searchOpen: false,
     excerpt: null,
+    placed: null,
     foundId: null,
     wallFly: 0,
     binned: null,
@@ -206,29 +213,45 @@ export const useGame = create<GameStore>((set, get) => {
       });
     },
 
-    addFound(released, near = '29') {
+    addFound(released, near = '29', hang) {
       const { materials, state } = get();
       const known = new Set(materials.map((m) => m.id));
       const fresh = released.filter((m) => !known.has(m.id));
       const all = fresh.length ? [...materials, ...fresh] : materials;
       if (fresh.length) set({ materials: all });
       if (!state) return;
+      // Что вешать: по умолчанию — всё найденное; папку из пачки — саму папку, без описи.
+      const ids = hang ?? released.map((m) => m.id);
+      const before = new Set(state.wall.items.map((i) => i.id));
       get().updateState((st) => {
         let s = fresh.length ? reconcile(st, all) : st;
         const anchor = s.wall.items.find((i) => i.id === near);
-        for (const m of released) {
+        for (const id of ids) {
+          const m = { id };
           if (s.wall.items.some((i) => i.id === m.id)) continue;
           // Правее вещи-источника, рядами по три; нет её на стене — в середину видимой стены.
-          const k = s.wall.items.filter((i) => /^L/.test(i.id)).length;
+          const k = s.wall.items.filter((i) => /^(L|F:)/.test(i.id)).length;
           const c = shownCamera(s);
           const base = anchor ?? {
             x: (window.innerWidth / 2 - c.x) / c.zoom - 200,
             y: (window.innerHeight / 2 - c.y) / c.zoom - 110,
           };
-          s = moveItem(m.id, base.x + 220 + (k % 3) * 200, base.y + Math.floor(k / 3) * 270 - 0)(s);
+          s = moveItem(m.id, base.x + 220 + (k % 3) * 200, base.y + Math.floor(k / 3) * 270)(s);
         }
         return s;
       });
+      const added = ids.filter((id) => !before.has(id));
+      if (!added.length) return;
+      const title = (id: string) =>
+        id.startsWith('F:') ? 'Папка' : (get().materials.find((m) => m.id === id)?.title ?? id);
+      set({
+        placed: { ids: added, text: added.map(title).join('; '), at: Date.now() },
+        foundId: added[0] ?? null,
+      });
+    },
+
+    dismissPlaced() {
+      set({ placed: null });
     },
 
     addReleased(released) {

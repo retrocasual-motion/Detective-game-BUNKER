@@ -240,6 +240,8 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
     ...materials.map((m) => m.id),
     ...PERSONS.map((p) => p.id),
     ...notes.map((n) => n.id),
+    // Папки, вынутые из пачек (RD-A): висят на стене папкой — «F:П-02/18».
+    ...(state.taken ?? []).map(folderItemId),
   ]);
 
   // Корзина — только свои письма-ответы, без повторов; выброшенное на стене не висит.
@@ -286,6 +288,9 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
 
   return { ...state, wall: { ...state.wall, items, threads, notes: kept }, drafts, trash };
 }
+
+/** Папка, вынутая из пачки, на стене: «F:П-02/18» (taken «П-02/18»). */
+export const folderItemId = (taken: string) => `F:${taken}`;
 
 /** Ярлык группы конверта на стене. */
 export const containerLabelId = (id: ContainerId) => `n:archive-${id}`;

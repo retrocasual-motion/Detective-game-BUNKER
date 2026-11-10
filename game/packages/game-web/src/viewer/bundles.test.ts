@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   coverCode,
+  faceUpTexts,
   isBundleListing,
   listingOf,
   parseBundles,
@@ -116,5 +117,24 @@ describe('вынутая папка пропадает из пачки', () => {
     const r = remaining(p9, ['П-09/1'], null);
     expect(r.bundle.sheets).toBe(12);
     expect(r.bundle.layers).toEqual([1, 4, 7, 10]);
+  });
+});
+
+describe('перевёрнутые листы — лицом вверх (П-05)', () => {
+  const b = { id: 'П-05', room: 'Медкабинет', sheets: 4, top: '', side: '', layers: [] };
+  const sheets = [
+    { text: 'Инструкция', faceDown: false, cover: null },
+    { text: 'Инструкция', faceDown: false, cover: null },
+    { text: 'текстом вниз', faceDown: true, cover: null },
+    { text: 'текстом вниз', faceDown: true, cover: null },
+  ];
+  it('пока не перевернули — текстом вниз; перевернули — лица из пересканов', () => {
+    expect(remaining(b, [], sheets).sheets?.[2]?.faceDown).toBe(true);
+    const up = faceUpTexts(
+      '## Лист 3\n\n> **Справка о выбытии.** Код A-11\n\n## Лист 4\n\n> Код A-17',
+    );
+    const r = remaining(b, [], sheets, ['П-05/3'], up).sheets;
+    expect(r?.[2]).toEqual({ text: 'Справка о выбытии. Код A-11', faceDown: false, cover: null });
+    expect(r?.[3]?.text).toBe('Код A-17');
   });
 });

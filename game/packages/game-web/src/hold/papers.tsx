@@ -37,8 +37,11 @@ const H = 2.97;
 const CARD_T = 0.014;
 const BASE_T = 0.03;
 
-/** Толщина пачки по числу листов. */
-export const stackDepth = (sheets: number) => 0.02 + sheets * 0.0045;
+/**
+ * Толщина пачки по числу листов — преувеличена, чтобы торец читался, но не слишком: у толстой
+ * пачки (96 л.) высокий верх в перспективе «уводил» лист при перевороте (правка автора 10.11).
+ */
+export const stackDepth = (sheets: number) => 0.02 + sheets * 0.0032;
 
 /** Где лежит слой картона «перед листом n» (1 — сверху), по оси толщины (верх — +d/2). */
 const layerZ = (n: number, sheets: number, d: number) => d / 2 - ((n - 1) / sheets) * d;
@@ -391,8 +394,32 @@ export function PaperStack({
   const act = top.cover !== null ? () => onPull(topN) : top.faceDown ? onTurnOver : onNext;
   const label =
     top.cover !== null ? 'Взять папку' : top.faceDown ? 'Перевернуть листы' : 'Перелистнуть лист';
-  const leaf = useActive('leaf', label, 'stack-leaf', act);
-  const back = useActive('back', 'Вернуть лист', 'stack-back', onPrev);
+  // Щелчки во время переворота — в очередь: лист доигрывает, потом следующий (правка автора
+  // 10.11: перелистывание не прерывается). На обложке и листах текстом вниз очередь стоп.
+  const queued = useRef(0);
+  const flying = flip !== null;
+  const plain = top.cover === null && !top.faceDown;
+  const now = useRef({ act, flying, plain });
+  now.current = { act, flying, plain };
+  const leaf = useActive('leaf', label, 'stack-leaf', () => {
+    if (now.current.flying) {
+      if (now.current.plain) queued.current = Math.min(queued.current + 1, 5);
+      return;
+    }
+    now.current.act();
+  });
+  const back = useActive('back', 'Вернуть лист', 'stack-back', () => {
+    if (!now.current.flying) onPrev();
+  });
+  useEffect(() => {
+    if (flying || queued.current === 0) return;
+    if (!plain) {
+      queued.current = 0;
+      return;
+    }
+    queued.current--;
+    now.current.act();
+  }, [flying, plain]);
   // Новый шаг — лист в полёт: вперёд — тот, что был сверху; назад — тот, что вернули.
   const last = useRef(page);
   // biome-ignore lint/correctness/useExhaustiveDependencies: шаг листания — только по page

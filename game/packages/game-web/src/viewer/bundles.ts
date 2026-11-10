@@ -168,7 +168,14 @@ export const FOLDER_SHEETS = 3;
  * Что осталось в пачке, когда из неё вынули папки (taken: «П-02/18»): число листов, слои
  * картона и листы — по порядку, без вынутых; orig — номер листа в исходной пачке.
  */
-export function remaining(b: Bundle, taken: readonly string[], sheets: Sheet[] | null) {
+export function remaining(
+  b: Bundle,
+  taken: readonly string[],
+  sheets: Sheet[] | null,
+  /** Перевёрнутые блоки листов «П-05/19» и лица этих листов (из пересканов, L957). */
+  turned: readonly string[] = [],
+  faceUp: ReadonlyMap<number, string> = new Map(),
+) {
   const out = taken
     .filter((t) => t.startsWith(`${b.id}/`))
     .map((t) => Number(t.slice(b.id.length + 1)));
@@ -181,9 +188,62 @@ export function remaining(b: Bundle, taken: readonly string[], sheets: Sheet[] |
       sheets: orig.length,
       layers: b.layers.filter((n) => !out.includes(n)).map((n) => orig.indexOf(n) + 1),
     },
-    sheets: sheets
-      ? orig.map((n) => sheets[n - 1] ?? { text: '', faceDown: false, cover: null })
-      : null,
+    sheets: sheets ? orig.map((n) => turnUp(sheets, n)) : null,
     orig,
+  };
+
+  // Блок листов текстом вниз, который уже перевернули, — лицом вверх (правка автора 10.11: дальше
+  // листается, а не «перевернуть» снова).
+  function turnUp(all: Sheet[], n: number): Sheet {
+    const s = all[n - 1] ?? { text: '', faceDown: false, cover: null };
+    if (!s.faceDown) return s;
+    let first = n;
+    while (first > 1 && all[first - 2]?.faceDown) first--;
+    if (!turned.includes(`${b.id}/${first}`)) return s;
+    return { text: faceUp.get(n) ?? 'Лист лицом вверх', faceDown: false, cover: null };
+  }
+}
+
+/** Лица листов из пересканов («## Лист 19» и текст под ним цитатой): номер листа → текст. */
+export function faceUpTexts(body: string): Map<number, string> {
+  const out = new Map<number, string>();
+  let n = 0;
+  let buf: string[] = [];
+  const flush = () => {
+    if (n) out.set(n, buf.join(' ').replace(/\*\*/g, '').replace(/\s+/g, ' ').trim());
+  };
+  for (const line of body.split('\n')) {
+    const h = /^##\s+Лист\s+(\d+)/.exec(line);
+    if (h) {
+      flush();
+      n = Number(h[1]);
+      buf = [];
+    } else if (n && line.startsWith('>')) buf.push(line.replace(/^>\s?/, ''));
+  }
+  flush();
+  return out;
+}
+
+/**
+ * Папка, вынутая из пачки, на стене («F:П-02/18»): из какой пачки, с какого листа, опись пачки и
+ * код дела на обложке. Открыть — листы папки из описи (до отдельного документа, DS-A).
+ */
+export function folderOnWall(
+  id: string,
+  materials: { id: string; title: string; body: string }[],
+): { bundle: string; n: number; listing: string; code: string | null; title: string } | null {
+  const m = /^F:(П-0\d)\/(\d+)$/.exec(id);
+  if (!m) return null;
+  const bundle = m[1] ?? '';
+  const n = Number(m[2]);
+  const listing = listingOf(bundle, materials);
+  if (!listing) return null;
+  const code = coverCode(materials.find((x) => x.id === listing)?.body ?? '', n);
+  return {
+    bundle,
+    n,
+    listing,
+    code,
+    title: `Папка ${code ?? ''} (пачка ${bundle}, листы ${n}–${n + FOLDER_SHEETS - 1})`,
   };
 }

@@ -84,11 +84,28 @@ test('папка из пачки (RD-A): за край — в руках A-24; �
     'Пачка П-02 · Комната анкет · 38 л.',
   );
   await expect(page.getByTestId('stack-layer-18')).toHaveCount(0);
-  await expect(sheet(page, 'L981')).toHaveCount(1);
+  // На стене — сама папка (картон, наклейка A-24); опись пачки — во «Входящие», не на стену.
+  await expect(sheet(page, 'F:П-02/18')).toContainText('A-24');
+  await expect(sheet(page, 'L981')).toHaveCount(0);
   await page.keyboard.press('Escape');
+  await expect(page.getByTestId('stack-П-01')).toHaveCount(1);
+  await page.keyboard.press('Escape');
+  // Отложили — записка «На стене: Папка A-24 · Показать»; «Показать» — к стене, папка светится.
+  await expect(page.getByTestId('placed-note')).toContainText('Папка A-24');
+  await page.getByTestId('placed-show').click();
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'wall');
+  await expect(sheet(page, 'F:П-02/18')).toHaveAttribute('data-found', 'true');
+  // Щелчок по папке на стене — её листы.
+  await sheet(page, 'F:П-02/18').click(STRIP);
+  await expect(page.getByTestId('viewer')).toHaveAttribute('aria-label', /^Папка A-24/);
   await page.keyboard.press('Escape');
   await page.reload();
   await expect(page.getByTestId('room')).toBeVisible();
+  // «Показать» увёл к стене — вид сохранился; к коробке — у стола.
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'wall');
+  await expect(sheet(page, 'F:П-02/18')).toContainText('A-24');
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'desk');
   await stackInHands(page, 'П-02');
   await expect(page.getByTestId('held')).toHaveAttribute(
     'aria-label',
@@ -165,6 +182,25 @@ test('П-05: долистать до листов текстом вниз — щ
   await expect(page.getByTestId('viewer-paper')).toContainText('Справка о выбытии');
   await page.keyboard.press('Escape');
   await expect(sheet(page, 'L957')).toHaveCount(1);
+  // Перевёрнутые лежат лицом вверх — пачку листают дальше, до конца (правка автора 10.11).
+  await stackInHands(page, 'П-05');
+  await leafTo(page, 24);
+  await expect(page.getByTestId('stack-leaf')).toHaveAttribute('aria-label', 'Перелистнуть лист');
+  await page.getByTestId('stack-leaf').click({ force: true });
+  await expect(page.getByTestId('held-caption')).toContainText('все 24 л. пролистаны');
+});
+
+test.describe('листание с анимацией', () => {
+  test.use({ reducedMotion: 'no-preference' });
+
+  test('частые щелчки — в очередь: каждый лист доигрывает, потом следующий', async ({ page }) => {
+    await stackInHands(page, 'П-03');
+    const leaf = page.getByTestId('stack-leaf');
+    for (let k = 0; k < 4; k++) await leaf.click({ force: true });
+    // Сразу после щелчков — ещё не все четыре: листы идут по одному.
+    await expect(page.getByTestId('held-caption')).not.toContainText('лист 5 из');
+    await expect(page.getByTestId('held-caption')).toContainText('лист 5 из 31', { timeout: 8000 });
+  });
 });
 
 test('опись П-05 со стены: строки 19–24 вблизи — пересканы лицом вверх (FV-A); соседние строки — тихо', async ({

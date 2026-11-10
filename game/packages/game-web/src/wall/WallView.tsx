@@ -27,6 +27,7 @@ import { overFolder, petitionFieldAt } from '../petition/fieldAt.ts';
 import { usePetition } from '../petition/petition-store.ts';
 import { useViewport } from '../room/useViewport.ts';
 import { useGame } from '../store.ts';
+import { FOLDER_SHEETS, folderOnWall } from '../viewer/bundles.ts';
 import { useCameraTween } from './useCameraTween.ts';
 import { isItemCard, type PinHandlers, WallCard } from './WallCard.tsx';
 import { type At, pinOf, WallThreads } from './WallThreads.tsx';
@@ -334,7 +335,16 @@ export function WallView() {
   const activate = useCallback(
     (id: string) => {
       if (id.startsWith('n:')) setEditingNote(id);
-      else openViewer(id);
+      else if (id.startsWith('F:')) {
+        // Папка из пачки — её листы из описи (RD-A, DS-A до отдельного документа).
+        const f = folderOnWall(id, useGame.getState().materials);
+        if (f)
+          openViewer(f.listing, undefined, {
+            title: f.title,
+            from: f.n,
+            to: f.n + FOLDER_SHEETS - 1,
+          });
+      } else openViewer(id);
     },
     [openViewer],
   );
@@ -471,7 +481,18 @@ export function WallView() {
     let size: number | undefined;
     let width: number | undefined;
     let toolbar: ReactNode = null;
-    if (m) {
+    const folder = item.id.startsWith('F:') ? folderOnWall(item.id, materials) : null;
+    if (folder) {
+      // Вынутая из пачки папка висит такой же, какой была в руках: картон, наклейка с кодом.
+      kind = 'folder';
+      label = folder.title;
+      content = (
+        <>
+          <span className="folder-sticker">{folder.code}</span>
+          <span className="card-title">Папка из пачки {folder.bundle}</span>
+        </>
+      );
+    } else if (m) {
       const isItem = isItemCard(m);
       kind = isItem ? 'item' : m.kind;
       label = `${m.id}. ${m.title}`;

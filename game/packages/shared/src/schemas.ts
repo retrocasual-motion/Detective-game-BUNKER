@@ -139,5 +139,10 @@ export const PlayerStateSchema = z.object({
     .array(z.string().regex(/^П-0[1-9]\/\d{1,3}$/))
     .max(20)
     .optional(),
+  /**
+   * Листы, что лежали текстом вниз и перевёрнуты (П-05, листы 19–24): «П-05/19» — блок с листа 19.
+   * После переворота они лежат лицом вверх — пачку листают дальше (правка автора 10.11).
+   */
+  turned: z.array(z.string()).max(20).optional(),
 });
 export type PlayerState = z.infer<typeof PlayerStateSchema>;

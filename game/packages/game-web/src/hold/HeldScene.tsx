@@ -4,6 +4,7 @@ import {
   containerContents,
   containerLabelId,
   focusCamera,
+  folderItemId,
 } from '@bunker/shared';
 import { useMemo, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
@@ -12,6 +13,7 @@ import {
   type Bundle,
   coverCode,
   FOLDER_SHEETS,
+  faceUpTexts,
   listingOf,
   PAPERS_ID,
   parseBundles,
@@ -86,6 +88,10 @@ function Papers() {
   const all = useMemo(() => parseBundles(body).bundles, [body]);
   const materials = useGame((g) => g.materials);
   const taken = useGame((g) => g.state?.taken ?? NONE);
+  const turned = useGame((g) => g.state?.turned ?? NONE);
+  // Перевёрнутые листы П-05 — лицом вверх, лица — из пересканов (L957), когда они пришли.
+  const rescans = materials.find((m) => m.id === RESCANS_ID)?.body ?? '';
+  const faceUp = useMemo(() => faceUpTexts(rescans), [rescans]);
   const [pickId, setPickId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [folder, setFolder] = useState<{ code: string | null; listing: string; n: number } | null>(
@@ -96,7 +102,7 @@ function Papers() {
   const view = (b: Bundle) => {
     const listing = listingOf(b.id, materials);
     const text = materials.find((m) => m.id === listing)?.body ?? null;
-    return remaining(b, taken, text ? sheetPages(text, b) : null);
+    return remaining(b, taken, text ? sheetPages(text, b) : null, turned, faceUp);
   };
   const orig = all.find((b) => b.id === pickId) ?? null;
   const now = orig ? view(orig) : null;
@@ -129,21 +135,34 @@ function Papers() {
       () => null,
     );
     if (!r) return;
-    useGame.getState().addFound(r.released);
+    // Опись пачки — в дело (во «Входящие», без записки); на стену — сама папка (правка автора 10.11).
+    useGame.getState().addFound(r.released, '29', []);
     // Список материалов — уже с описью, что только что пришла (снимок до addFound её не знает).
     const g = useGame.getState();
     const id = listingOf(orig.id, g.materials);
     if (!id) return;
     const text = g.materials.find((m) => m.id === id)?.body ?? '';
-    g.updateState((s) => ({ ...s, taken: [...(s.taken ?? []), `${orig.id}/${first}`] }));
+    const t = `${orig.id}/${first}`;
+    const code = coverCode(text, first);
+    g.updateState((s) => ({ ...s, taken: [...(s.taken ?? []), t] }));
+    useGame.getState().addFound([], '29', [folderItemId(t)]);
+    if (useGame.getState().placed)
+      useGame.setState((st) => ({
+        placed: st.placed && { ...st.placed, text: `Папка ${code ?? ''}` },
+      }));
     setPage((p) => Math.min(p, Math.max(0, n - 1)));
-    afterLeaving(() => setFolder({ code: coverCode(text, first), listing: id, n: first }));
+    afterLeaving(() => setFolder({ code, listing: id, n: first }));
   };
   // Листы текстом вниз (П-05, 19–24) — перевернуть: движок отдаёт их лицом вверх (L957).
   const turnOver = async () => {
     if (!orig) return;
     const r = await postAction('ОСМОТР', orig.id, 'перевернуть нижние листы').catch(() => null);
     if (!r || r.quiet || !r.released.length) return;
+    // Перевёрнутые лежат лицом вверх — пачку листают дальше (правка автора 10.11).
+    const first = now?.orig[page] ?? page + 1;
+    useGame
+      .getState()
+      .updateState((s) => ({ ...s, turned: [...(s.turned ?? []), `${orig.id}/${first}`] }));
     useGame.getState().addFound(r.released);
     const id = r.released[0]?.id;
     if (!id) return;
@@ -221,6 +240,8 @@ function Papers() {
 }
 
 const NONE: readonly string[] = [];
+/** Пересканы листов 19–24 П-05 лицом вверх. */
+const RESCANS_ID = 'L957';
 
 /** Вскрыто: документы вышли из конверта и висят на стене группой под названием. */
 function Opened({
