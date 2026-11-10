@@ -1,9 +1,13 @@
 import {
   boardCamera,
   type Camera,
+  JOIN_OFFSET,
+  JOIN_SNAP,
+  JOINS,
   NOTE_STYLE,
   type Note,
   PERSONS,
+  pieceOf,
   type Thread,
   WALL_BOUNDS,
   type WallItem,
@@ -22,11 +26,12 @@ import { createPortal } from 'react-dom';
 import { Canvas, type Marquee } from '../canvas/Canvas.tsx';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
+import { reducedMotion } from '../motion.ts';
 import { wholeCard } from '../petition/drafts.ts';
 import { overFolder, petitionFieldAt } from '../petition/fieldAt.ts';
 import { usePetition } from '../petition/petition-store.ts';
 import { useViewport } from '../room/useViewport.ts';
-import { useGame } from '../store.ts';
+import { shownCamera, useGame } from '../store.ts';
 import { FOLDER_SHEETS, folderOnWall } from '../viewer/bundles.ts';
 import { useCameraTween } from './useCameraTween.ts';
 import { isItemCard, type PinHandlers, WallCard } from './WallCard.tsx';
@@ -146,6 +151,9 @@ function NoteEditor({
  * удалить (с «Вернуть»). Внизу справа — чистые карточки: «Записка» и «Ярлык».
  */
 const NO_CAMERA: Camera = { x: 0, y: 0, zoom: 1 };
+
+/** Сколько видно защёлкнутые половины до того, как они станут одним листом, мс. */
+const JOIN_PAUSE_MS = 450;
 
 export function WallView() {
   const wall = useGame((g) => g.state?.wall);
@@ -305,6 +313,47 @@ export function WallView() {
     [updateState],
   );
 
+  // Половины одного листа (WL-A, JN-A): отпустили одну у рваного края другой — встаёт встык
+  // (защёлкнулась), через миг движок складывает их в один лист (MG-A). Чужие края не ловятся.
+  const joinedIds = useGame((g) => g.state?.joined);
+  const joinedNow = useMemo(() => new Set(joinedIds ?? []), [joinedIds]);
+  const snapJoin = useCallback(
+    (id: string) => {
+      const g = useGame.getState();
+      const j = JOINS.find((x) => x.top === id || x.bottom === id);
+      if (!j || g.state?.joined?.includes(j.result)) return;
+      const items = g.state?.wall.items ?? [];
+      const top = items.find((i) => i.id === j.top);
+      const bottom = items.find((i) => i.id === j.bottom);
+      if (!top || !bottom) return;
+      const dx = bottom.x - top.x - JOIN_OFFSET.x;
+      const dy = bottom.y - top.y - JOIN_OFFSET.y;
+      // Промах — не меньше 16 экранных px, как ни отдалена стена.
+      const zoom = g.state ? shownCamera(g.state).zoom : 1;
+      const snap = Math.max(JOIN_SNAP, 16 / zoom);
+      if (Math.abs(dx) > snap || Math.abs(dy) > snap) return;
+      // Встык и ровно: тянутая половина подходит к неподвижной.
+      updateState((st) => ({
+        ...st,
+        wall: {
+          ...st.wall,
+          items: st.wall.items.map((i) => {
+            if (i.id === j.top)
+              return id === j.top
+                ? { ...i, x: bottom.x - JOIN_OFFSET.x, y: bottom.y - JOIN_OFFSET.y, rot: 0 }
+                : { ...i, rot: 0 };
+            if (i.id === j.bottom)
+              return id === j.bottom
+                ? { ...i, x: top.x + JOIN_OFFSET.x, y: top.y + JOIN_OFFSET.y, rot: 0 }
+                : { ...i, rot: 0 };
+            return i;
+          }),
+        },
+      }));
+      setTimeout(() => void useGame.getState().joinOnWall(j), reducedMotion() ? 0 : JOIN_PAUSE_MS);
+    },
+    [updateState],
+  );
   const drop = useCallback(
     (id: string, x: number, y: number, at: { x: number; y: number }) => {
       setLive(null);
@@ -327,8 +376,9 @@ export function WallView() {
         return;
       }
       updateState(moveItem(id, x, y));
+      snapJoin(id);
     },
-    [updateState],
+    [updateState, snapJoin],
   );
   // Лист тянут над открытой папкой ходатайства: над ней идёт его призрак (поверх папки), поле
   // под курсором подсвечено (правка автора 09.11).
@@ -362,6 +412,11 @@ export function WallView() {
             from: f.n,
             to: f.n + FOLDER_SHEETS - 1,
           });
+      } else if (pieceOf(id)) {
+        // Обрывок — его раздел в материале, откуда вынут (SRC-A).
+        const p = pieceOf(id);
+        if (p)
+          openViewer(p.from, undefined, { title: p.title, from: 0, to: 0, section: p.section });
       } else openViewer(id);
     },
     [openViewer],
@@ -500,7 +555,33 @@ export function WallView() {
     let width: number | undefined;
     let toolbar: ReactNode = null;
     const folder = item.id.startsWith('F:') ? folderOnWall(item.id, materials) : null;
-    if (folder) {
+    const piece = pieceOf(item.id);
+    if (piece) {
+      // Обрывок, вынутый из материала (SRC-A): рваный край сверху — той же линией, что низ
+      // половины, к которой он подходит (JN-A); правый край и угол обгорели.
+      kind = 'piece';
+      label = piece.title;
+      content = (
+        <>
+          <span className="card-id">
+            {piece.from} · п. {piece.key.split('/')[1]}
+          </span>
+          <span className="card-title">Половина листа, обгоревшая</span>
+        </>
+      );
+    } else if (joinedNow.has(item.id) && m) {
+      // Две половины, сведённые краями (MG-A): одна карточка, разрыв и обгоревший угол видны.
+      kind = 'joined';
+      label = `${m.id}. ${m.title}`;
+      content = (
+        <>
+          <span className="joined-top" aria-hidden />
+          <span className="joined-bottom" aria-hidden />
+          <span className="card-id">{m.id}</span>
+          <span className="card-title">{m.title}</span>
+        </>
+      );
+    } else if (folder) {
       // Вынутая из пачки папка висит такой же, какой была в руках: картон, наклейка с кодом.
       kind = 'folder';
       label = folder.title;

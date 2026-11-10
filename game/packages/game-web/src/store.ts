@@ -5,11 +5,15 @@ import {
   type Camera,
   type ContainerId,
   DEVICE_IDS,
+  type Join,
   type Material,
   openAll,
   openContainer,
   openedOf,
+  PIECES,
   type PlayerState,
+  pieceItemId,
+  pieceOf,
   reconcile,
   sealedIds,
   type View,
@@ -17,7 +21,7 @@ import {
 } from '@bunker/shared';
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import { getMaterials, getPendingMail, getState, putState } from './api.ts';
+import { getMaterials, getPendingMail, getState, postAction, putState } from './api.ts';
 import { clampToBounds } from './canvas/math.ts';
 import { createSaver } from './save.ts';
 import { type Binned, binLetter, moveItem, takeLetter, unbinLetter } from './wall/wall-actions.ts';
@@ -117,13 +121,19 @@ interface GameStore {
   load(): Promise<void>;
   setPetitionOpen(open: boolean): void;
   /** Открыть материал; из поиска — с найденным словом (k — какое совпадение показать). */
-  openViewer(
-    materialId: string,
-    find?: { q: string; k: number },
-    excerpt?: { title: string; from: number; to: number },
-  ): void;
-  /** Лист открыт выдержкой: только листы from–to описи пачки (папка, вытащенная из пачки). */
-  excerpt: { title: string; from: number; to: number } | null;
+  openViewer(materialId: string, find?: { q: string; k: number }, excerpt?: Excerpt): void;
+  /**
+   * Лист открыт выдержкой: только листы from–to описи пачки (папка, вытащенная из пачки) или
+   * один раздел материала (обрывок, вынутый из него, — SRC-A).
+   */
+  excerpt: Excerpt | null;
+  /** Вынуть обрывок из материала (SRC-A): он висит на стене своей карточкой. */
+  takePiece(key: string): void;
+  /**
+   * Свели на стене края двух половин (WL-A, MG-A): движок отдаёт совмещённый лист, он висит
+   * вместо половин (нити — к нему). false — не совместились.
+   */
+  joinOnWall(j: Join): Promise<boolean>;
   /** Лист открыт из поиска (RD-C): что подсветить. */
   find: { q: string; k: number } | null;
   /** Поиск по делу открыт (RD-C). */
@@ -145,6 +155,9 @@ interface GameStore {
   setView(view: View, wallCamera?: Camera): void;
   updateState(fn: (s: PlayerState) => PlayerState): void;
 }
+
+/** Выдержка листа: листы from–to описи пачки или один раздел материала (section). */
+export type Excerpt = { title: string; from: number; to: number; section?: string };
 
 const onWallNow = (s: PlayerState | null) => new Set((s?.wall.items ?? []).map((i) => i.id));
 
@@ -272,7 +285,9 @@ export const useGame = create<GameStore>((set, get) => {
       const added = ids.filter((id) => !before.has(id));
       if (!added.length) return;
       const title = (id: string) =>
-        id.startsWith('F:') ? 'Папка' : (get().materials.find((m) => m.id === id)?.title ?? id);
+        id.startsWith('F:')
+          ? 'Папка'
+          : (pieceOf(id)?.title ?? get().materials.find((m) => m.id === id)?.title ?? id);
       set({
         placed: { ids: added, text: added.map(title).join('; '), at: Date.now() },
         foundId: added[0] ?? null,
@@ -310,6 +325,49 @@ export const useGame = create<GameStore>((set, get) => {
         return;
       }
       set({ viewerId: materialId, find: find ?? null, excerpt: excerpt ?? null });
+    },
+
+    takePiece(key) {
+      const p = PIECES.find((x) => x.key === key);
+      const s = get().state;
+      if (!p || !s || s.pieces?.includes(key)) return;
+      get().updateState((st) => ({ ...st, pieces: [...(st.pieces ?? []), key] }));
+      get().addFound([], p.from, [pieceItemId(key)]);
+    },
+
+    async joinOnWall(j) {
+      const r = await postAction('ОСМОТР', j.target, j.value).catch(() => null);
+      if (!r) return false;
+      get().addFound(r.released, j.top, []);
+      if (!get().materials.some((m) => m.id === j.result)) return false;
+      const parts = new Set([j.top, j.bottom]);
+      const was = get().state?.wall.items.find((i) => i.id === j.top);
+      get().updateState((st) => {
+        const top = st.wall.items.find((i) => i.id === j.top) ?? was;
+        const items = st.wall.items.filter((i) => !parts.has(i.id) && i.id !== j.result);
+        // Нити половин — к совмещённому листу (без петель и повторов).
+        const to = (id: string) => (parts.has(id) ? j.result : id);
+        const seen = new Set<string>();
+        const threads = st.wall.threads
+          .map((t) => ({ ...t, from: to(t.from), to: to(t.to) }))
+          .filter((t) => {
+            const k = [t.from, t.to].sort().join('|');
+            if (t.from === t.to || seen.has(k)) return false;
+            seen.add(k);
+            return true;
+          });
+        const next = {
+          ...st,
+          joined: [...(st.joined ?? []), j.result],
+          wall: { ...st.wall, items, threads },
+        };
+        return top ? moveItem(j.result, top.x, top.y)(next) : next;
+      });
+      set({
+        foundId: j.result,
+        freshWall: [...get().freshWall, j.result],
+      });
+      return true;
     },
 
     closeViewer() {

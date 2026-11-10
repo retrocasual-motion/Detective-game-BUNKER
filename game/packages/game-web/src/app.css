@@ -713,6 +713,88 @@ button {
     0 89%
   );
 }
+/* Обрывок (SRC-A): нижняя половина листа. Рваный верх — та же линия, что низ половины 51
+   (сложенные встык, они сходятся без зазора — JN-A); правая часть и нижний угол сгорели. */
+.paper-piece,
+.joined-bottom {
+  height: 116px;
+  clip-path: polygon(
+    0 1px,
+    4% 8px,
+    11% 2px,
+    20% 10.5px,
+    29% 1px,
+    38% 8px,
+    47% 0,
+    57% 9.3px,
+    61% 14px,
+    58% 30px,
+    65% 44px,
+    57% 60px,
+    63% 76px,
+    54% 92px,
+    44% 100px,
+    33% 96px,
+    22% 108px,
+    10% 101px,
+    3% 110px,
+    0 104px
+  );
+  background:
+    radial-gradient(
+      circle at 0 100%,
+      rgb(42 28 16 / 85%) 0,
+      rgb(107 79 47 / 50%) 14%,
+      transparent 26%
+    ),
+    linear-gradient(100deg, var(--color-paper-sheet) 0 40%, #c9b48d 50%, #6b4f2f 58%, #2a1c10 63%);
+}
+.paper-piece {
+  box-shadow: none;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 35%));
+}
+/* Совмещённый лист (MG-A): две половины встык — разрыв и обгоревший угол видны. */
+.paper-joined {
+  background: none;
+  box-shadow: none;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 35%));
+}
+.joined-top,
+.joined-bottom {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  z-index: 0;
+}
+.joined-top {
+  top: 0;
+  height: 118px;
+  background: var(--color-paper-sheet);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% 88%,
+    92% 94%,
+    84% 89%,
+    75% 97%,
+    66% 90%,
+    57% 96%,
+    47% 88%,
+    38% 95%,
+    29% 89%,
+    20% 97%,
+    11% 90%,
+    4% 95%,
+    0 89%
+  );
+}
+.joined-bottom {
+  top: 104px;
+}
+.paper-joined > :not(.joined-top, .joined-bottom) {
+  position: relative;
+  z-index: 1;
+}
 /* Фото: отпечаток с белым полем, под ним край второго. */
 .paper-photos {
   width: 168px;
@@ -1234,6 +1316,13 @@ button {
       0 0 0 calc(var(--sel-w, 3px) * 1.6) var(--color-marker),
       0 0 calc(var(--sel-w, 3px) * 16) calc(var(--sel-w, 3px) * 5) rgb(243 226 107 / 75%);
   }
+}
+/* Совмещённый лист светится по форме бумаги, а не прямоугольником вокруг сгоревшего угла. */
+.wall-card-found > .card.paper-joined {
+  box-shadow: none;
+  filter: drop-shadow(0 0 calc(var(--sel-w, 3px) * 1.2) var(--color-marker))
+    drop-shadow(0 0 calc(var(--sel-w, 3px) * 5) rgb(243 226 107 / 60%));
+  animation: none;
 }
 /* Найдено руками — появляется на стене, когда лист закрыт (правка автора 10.11): короткий
    «прилёт», потом свечение. */
@@ -2187,4 +2276,40 @@ button {
   box-shadow: var(--shadow-paper-lifted);
   font: 15px / 1.45 var(--font-paper);
   white-space: pre-line;
+}
+
+/* Обрывок в листе (SRC-A): лежит в пакете отдельно — его вынимают щелчком, он уходит на стену. */
+.sheet-piece {
+  margin: var(--space-4) 0 0;
+  padding: 18px 18px 22px;
+  background: linear-gradient(100deg, #efe8d6 0 55%, #cdb892 75%, #8a6a44 92%);
+  clip-path: polygon(
+    0 6px,
+    12% 0,
+    24% 7px,
+    38% 1px,
+    52% 8px,
+    66% 2px,
+    80% 9px,
+    92% 3px,
+    100% 8px,
+    100% 100%,
+    0 100%
+  );
+  cursor: grab;
+  transition:
+    translate 0.2s,
+    filter 0.2s;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 25%));
+}
+.sheet-piece:hover,
+.sheet-piece:focus-visible {
+  translate: 0 -3px;
+  filter: drop-shadow(0 5px 6px rgb(0 0 0 / 30%));
+  outline: none;
+}
+.sheet-piece-gone {
+  margin-top: var(--space-4);
+  font-style: italic;
+  opacity: 0.7;
 }

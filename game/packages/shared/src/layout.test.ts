@@ -88,6 +88,30 @@ describe('«Входящие» на столе', () => {
 });
 
 describe('reconcile', () => {
+  it('обрывок висит, только если вынут; сложенные половины не возвращаются (WL-A, MG-A)', () => {
+    const withL = [...starting, mat('L990')];
+    const s: PlayerState = defaultState(withL);
+    s.wall.items.push({ id: 'S:42/1', x: 0, y: 0, z: 90, rot: 0 });
+    expect(reconcile(s, withL).wall.items.some((i) => i.id === 'S:42/1')).toBe(false);
+    const taken = reconcile({ ...s, pieces: ['42/1'] }, withL);
+    expect(taken.wall.items.some((i) => i.id === 'S:42/1')).toBe(true);
+    const joined = reconcile(
+      {
+        ...taken,
+        joined: ['L990'],
+        wall: {
+          ...taken.wall,
+          items: [...taken.wall.items, { id: 'L990', x: 0, y: 0, z: 91, rot: 0 }],
+        },
+      },
+      withL,
+    );
+    const ids = joined.wall.items.map((i) => i.id);
+    expect(ids).toContain('L990');
+    expect(ids).not.toContain('51');
+    expect(ids).not.toContain('S:42/1');
+  });
+
   it('не меняет корректное состояние', () => {
     const s = defaultState(starting);
     expect(reconcile(s, starting)).toEqual(s);
