@@ -119,7 +119,12 @@ export function startSlot(id: string, materials: Material[]): { x: number; y: nu
 
 /** «Входящие» на столе: открытое по ходу дела, но ещё не повешенное; свежее — первым. */
 export function inboxIds(state: PlayerState, materials: Material[]): string[] {
-  const hidden = new Set([...state.wall.items.map((i) => i.id), ...(state.trash ?? [])]);
+  const hidden = new Set([
+    ...state.wall.items.map((i) => i.id),
+    ...(state.trash ?? []),
+    // Вынутая папка висит на стене папкой — её материал не во «Входящих» (DS-A).
+    ...(state.taken ?? []).flatMap((t) => FOLDER_DOCS[t] ?? []),
+  ]);
   return materials
     .filter((m) => isReleased(m) && !hidden.has(m.id))
     .map((m) => m.id)
@@ -297,6 +302,12 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
 
 /** Папка, вынутая из пачки, на стене: «F:П-02/18» (taken «П-02/18»). */
 export const folderItemId = (taken: string) => `F:${taken}`;
+
+/**
+ * Папка из пачки — отдельный материал (DS-A, A-263): «П-02/18» — папка A-24 (L991). На стене она
+ * висит папкой (F:), поэтому сам материал во «Входящих» не стоит. Папки П-09 — пока выдержкой.
+ */
+export const FOLDER_DOCS: Readonly<Record<string, string>> = { 'П-02/18': 'L991' };
 
 /** Ярлык группы конверта на стене. */
 export const containerLabelId = (id: ContainerId) => `n:archive-${id}`;

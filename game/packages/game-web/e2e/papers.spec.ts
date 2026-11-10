@@ -135,7 +135,8 @@ test('обложку папки щелчок листает (правка авт
   await page.getByTestId('stack-layer-18').click({ force: true });
   await page.getByTestId('folder-open').click({ force: true });
   const viewer = page.getByTestId('viewer');
-  await expect(viewer).toHaveAttribute('aria-label', /^Папка A-24 \(пачка П-02, листы 18–20\)/);
+  // Папка — отдельный материал (DS-A, A-263): только её листы.
+  await expect(viewer).toHaveAttribute('aria-label', 'Папка A-24 из пачки П-02 (листы 18–20)');
   await expect(page.getByTestId('viewer-paper')).toContainText('Фотография');
   await expect(page.getByTestId('viewer-paper')).not.toContainText('Чистый бланк анкеты');
 });

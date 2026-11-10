@@ -5,6 +5,8 @@ import {
   type Camera,
   type ContainerId,
   DEVICE_IDS,
+  FOLDER_DOCS,
+  folderItemId,
   type Join,
   type Material,
   openAll,
@@ -374,8 +376,11 @@ export const useGame = create<GameStore>((set, get) => {
       set({ viewerId: null, find: null, excerpt: null });
     },
 
-    revealOnWall(id) {
+    revealOnWall(found) {
       const s = get().state;
+      // Материал вынутой папки висит на стене папкой (DS-A): показать её.
+      const folder = s?.taken?.find((t) => FOLDER_DOCS[t] === found);
+      const id = folder ? folderItemId(folder) : found;
       const item = s?.wall.items.find((i) => i.id === id);
       if (!s || !item) return false;
       const vp = screen();

@@ -1,3 +1,4 @@
+import { FOLDER_DOCS } from '@bunker/shared';
 /**
  * Пачки бумаг из помещений (этап 4b-2, решение автора 10.11 — PH-B, FV-A): коробка с девятью
  * пачками на столе, пачку берут в руки (hold/papers.tsx). Данные — таблица материала 29 (номер,
@@ -224,6 +225,12 @@ export function faceUpTexts(body: string): Map<number, string> {
   return out;
 }
 
+/** Материал папки, вынутой из пачки, — если он уже в деле (DS-A). */
+export const docOf = (taken: string, materials: { id: string }[]) => {
+  const id = FOLDER_DOCS[taken];
+  return id && materials.some((m) => m.id === id) ? id : null;
+};
+
 /**
  * Папка, вынутая из пачки, на стене («F:П-02/18»): из какой пачки, с какого листа, опись пачки и
  * код дела на обложке. Открыть — листы папки из описи (до отдельного документа, DS-A).
@@ -231,7 +238,15 @@ export function faceUpTexts(body: string): Map<number, string> {
 export function folderOnWall(
   id: string,
   materials: { id: string; title: string; body: string }[],
-): { bundle: string; n: number; listing: string; code: string | null; title: string } | null {
+): {
+  bundle: string;
+  n: number;
+  listing: string;
+  code: string | null;
+  title: string;
+  /** Сама папка — отдельный материал, если он уже в деле (DS-A, A-263). */
+  doc: string | null;
+} | null {
   const m = /^F:(П-0\d)\/(\d+)$/.exec(id);
   if (!m) return null;
   const bundle = m[1] ?? '';
@@ -245,5 +260,6 @@ export function folderOnWall(
     listing,
     code,
     title: `Папка ${code ?? ''} (пачка ${bundle}, листы ${n}–${n + FOLDER_SHEETS - 1})`,
+    doc: docOf(`${bundle}/${n}`, materials),
   };
 }
