@@ -76,11 +76,11 @@ test('предметы со стола висят карточками с ном
   for (const id of ['24', '40', '47', '50']) {
     await expect(sheet(page, id)).toContainText(`Изъято · ${id}`);
   }
-  // Устройство — в руках (этап 4a); щелчок по экрану — включить (пока — лист материала).
+  // Устройство — в руках (этап 4a); щелчок по экрану ноутбука — экран крупно (4c-1).
   await sheet(page, '47').click(STRIP);
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Ноутбук/);
   await page.getByTestId('device-use').click();
-  await expect(page.getByTestId('viewer')).toContainText('Ноутбук');
+  await expect(page.getByTestId('laptop-view')).toBeVisible();
 });
 
 test('куда отпустили, там и висит: без «магнита» и без следов кнопок; после перезагрузки там же', async ({

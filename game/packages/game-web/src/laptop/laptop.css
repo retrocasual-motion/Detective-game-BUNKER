@@ -1,0 +1,957 @@
+/* Ноутбук руководителя экраном к игроку (4c-1). Вид эпохи (2008): окна с заголовком, серые
+   панели, панель задач; своё оформление — без логотипов и шкур настоящих систем. */
+
+.laptop-view {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+}
+.laptop-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgb(10 10 12 / 62%);
+  cursor: default;
+  animation: lap-fade 0.25s ease-out;
+}
+.laptop-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  padding: 34px;
+  border-radius: 14px;
+  background: linear-gradient(#2b2d31, #1d1e21);
+  box-shadow:
+    0 0 0 1px #444,
+    0 30px 80px rgb(0 0 0 / 60%);
+  transform-origin: center;
+  animation: lap-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.laptop-cam {
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  width: 7px;
+  height: 7px;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: #0d0e10;
+  box-shadow: inset 0 0 0 1px #3a3c40;
+}
+@keyframes lap-in {
+  from {
+    opacity: 0;
+    scale: 0.82;
+  }
+}
+@keyframes lap-fade {
+  from {
+    opacity: 0;
+  }
+}
+:root[data-motion="reduce"] .laptop-frame,
+:root[data-motion="reduce"] .laptop-backdrop {
+  animation: none;
+}
+
+/* Содержимое окна тянется на всё окно (правило — раньше прочих: специфичность). */
+.lap-win-body > * {
+  flex: 1;
+  min-height: 0;
+}
+.lap-screen {
+  position: relative;
+  overflow: hidden;
+  background: #0b1320;
+  color: #111;
+  font:
+    13px / 1.35 Tahoma,
+    Verdana,
+    "Segoe UI",
+    sans-serif;
+  cursor: default;
+  user-select: none;
+}
+.lap-screen [data-material],
+.lap-screen [data-material] * {
+  user-select: text;
+}
+
+/* ── Экран входа ─────────────────────────────────────────────── */
+.lap-lock {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 96px;
+  background: radial-gradient(circle at 50% 30%, #1b2b45, #070c16 70%);
+  color: #dfe6ef;
+}
+.lap-avatar {
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 2px solid #8fa3bd;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #0d1522;
+  cursor: zoom-in;
+  transition:
+    width 0.25s,
+    height 0.25s;
+}
+.lap-avatar svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.lap-avatar-big {
+  width: 200px;
+  height: 200px;
+  cursor: zoom-out;
+}
+.lap-user {
+  margin: 10px 0 18px;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+}
+.lap-pattern {
+  width: 272px;
+  height: 272px;
+  touch-action: none;
+  cursor: pointer;
+}
+.lap-pattern-wrong {
+  animation: lap-shake 0.35s;
+}
+@keyframes lap-shake {
+  25% {
+    translate: -6px 0;
+  }
+  75% {
+    translate: 6px 0;
+  }
+}
+.lap-lock-msg {
+  min-height: 20px;
+  margin-top: 10px;
+  font-size: 15px;
+}
+.lap-hint {
+  margin-top: 14px;
+  border: 0;
+  background: none;
+  color: #8fb4ff;
+  text-decoration: underline;
+  font: inherit;
+  cursor: pointer;
+}
+.lap-hint-text {
+  margin-top: 6px;
+  padding: 6px 12px;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 10%);
+  font-style: italic;
+}
+.lap-lock-foot {
+  position: absolute;
+  bottom: 18px;
+  color: #8b97a8;
+  font-size: 12px;
+}
+
+/* ── Рабочий стол ─────────────────────────────────────────────── */
+.lap-desktop {
+  position: absolute;
+  inset: 0;
+}
+.lap-wall {
+  position: absolute;
+  inset: 0 0 34px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(160deg, #23476e, #0f2440 60%, #0a1a30);
+}
+.lap-wall-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  color: rgb(255 255 255 / 13%);
+  font:
+    700 72px / 1 Tahoma,
+    Verdana,
+    sans-serif;
+  letter-spacing: 0.18em;
+}
+.lap-wall-mark svg {
+  width: 220px;
+  height: 220px;
+}
+.lap-icons {
+  position: absolute;
+  left: 14px;
+  top: 12px;
+  bottom: 46px;
+  display: flex;
+  flex-flow: column wrap;
+  align-content: flex-start;
+  gap: 8px 6px;
+}
+.lap-icon {
+  width: 92px;
+  padding: 4px 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  text-shadow: 1px 1px 2px #000;
+  word-break: break-word;
+  cursor: default;
+}
+.lap-icon-sel span {
+  background: #2f5fa8;
+  text-shadow: none;
+}
+.lap-icon:focus-visible {
+  border-color: rgb(255 255 255 / 60%);
+  outline: none;
+}
+
+/* Значки — рисованные. */
+.lap-ico {
+  display: inline-block;
+  flex: none;
+  position: relative;
+  vertical-align: middle;
+}
+.lap-ico-folder {
+  background: linear-gradient(#f6d77a, #e5b546);
+  clip-path: polygon(0 18%, 40% 18%, 48% 8%, 100% 8%, 100% 90%, 0 90%);
+  border-radius: 2px;
+}
+.lap-ico-txt,
+.lap-ico-doc,
+.lap-ico-xls,
+.lap-ico-htm,
+.lap-ico-wav {
+  background: #fff;
+  clip-path: polygon(14% 4%, 70% 4%, 86% 20%, 86% 96%, 14% 96%);
+  box-shadow: inset 0 0 0 1px #9aa;
+}
+.lap-ico-txt {
+  background: repeating-linear-gradient(#fff 0 18%, #9aa7b5 18% 22%) #fff;
+}
+.lap-ico-doc {
+  background: linear-gradient(#2f62b0 0 26%, #fff 26%);
+}
+.lap-ico-xls {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 22%, #3b8a4a 22% 25%),
+    linear-gradient(#3b8a4a 0 22%, #fff 22%);
+}
+.lap-ico-htm {
+  background: radial-gradient(circle at 50% 58%, #3c8fd8 0 30%, #fff 31%);
+}
+.lap-ico-wav {
+  background: radial-gradient(circle at 42% 66%, #e08a2d 0 16%, #fff 17%);
+}
+.lap-ico-trash {
+  background: linear-gradient(90deg, #9fb1c4, #e3ebf3 45%, #9fb1c4);
+  clip-path: polygon(16% 18%, 84% 18%, 76% 96%, 24% 96%);
+}
+.lap-ico-browser {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #8fd0ff, #1f6fc4 70%);
+}
+.lap-ico-printer {
+  background: linear-gradient(#fff 0 30%, #7b8590 30% 75%, #fff 75%);
+  clip-path: polygon(
+    22% 0,
+    78% 0,
+    78% 30%,
+    100% 30%,
+    100% 75%,
+    78% 75%,
+    78% 100%,
+    22% 100%,
+    22% 75%,
+    0 75%,
+    0 30%,
+    22% 30%
+  );
+}
+.lap-ico-props,
+.lap-ico-folderroot {
+  background: #ccd;
+}
+
+/* ── Окна ─────────────────────────────────────────────────────── */
+.lap-win {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #3c5a85;
+  border-radius: 6px 6px 2px 2px;
+  background: #ece9e2;
+  box-shadow: 2px 4px 14px rgb(0 0 0 / 45%);
+}
+.lap-win-max {
+  inset: 0 0 34px;
+  border-radius: 0;
+}
+.lap-title {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 4px 0 8px;
+  border-radius: 5px 5px 0 0;
+  background: linear-gradient(#8ea3bd, #6d84a2);
+  color: #eef2f7;
+  font-weight: 700;
+  font-size: 13px;
+}
+.lap-win-active .lap-title {
+  background: linear-gradient(#3d79c9, #1f53a3);
+  color: #fff;
+}
+.lap-title-text {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lap-title button {
+  width: 22px;
+  height: 21px;
+  padding: 0;
+  border: 1px solid #fff;
+  border-radius: 3px;
+  background: linear-gradient(#5e8fd8, #2b5ead);
+  color: #fff;
+  font:
+    700 13px / 1 Tahoma,
+    sans-serif;
+}
+.lap-title .lap-x {
+  background: linear-gradient(#e2775e, #c0442b);
+}
+.lap-win-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lap-menubar {
+  flex: none;
+  display: flex;
+  gap: 14px;
+  padding: 3px 8px;
+  border-bottom: 1px solid #c9c4b8;
+  background: #f1efe9;
+}
+.lap-toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-bottom: 1px solid #c9c4b8;
+  background: #f4f2ec;
+}
+.lap-toolbar button,
+.lap-player-ctl button,
+.lap-favbar button {
+  padding: 2px 8px;
+  border: 1px solid #a9a39a;
+  border-radius: 3px;
+  background: linear-gradient(#fff, #e3e0d8);
+  font: inherit;
+}
+.lap-address,
+.lap-url {
+  flex: 1;
+  padding: 2px 6px;
+  border: 1px solid #7f9db9;
+  background: #fff;
+  font: inherit;
+}
+.lap-label {
+  color: #555;
+}
+
+/* Проводник */
+.lap-explorer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+.lap-files {
+  border-collapse: collapse;
+  width: 100%;
+}
+.lap-files th {
+  position: sticky;
+  top: 0;
+  padding: 3px 8px;
+  border-right: 1px solid #ddd;
+  border-bottom: 1px solid #ccc;
+  background: #f4f2ec;
+  font-weight: 400;
+  text-align: left;
+}
+.lap-files td {
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+.lap-files tbody tr:hover {
+  background: #eef3fb;
+}
+.lap-files .lap-row-sel,
+.lap-files .lap-row-sel:hover {
+  background: #316ac5;
+  color: #fff;
+}
+.lap-status {
+  margin-top: auto;
+  padding: 2px 8px;
+  border-top: 1px solid #c9c4b8;
+  background: #f1efe9;
+  color: #333;
+  font-size: 12px;
+}
+.lap-menu {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  padding: 2px;
+  border: 1px solid #888;
+  background: #fff;
+  box-shadow: 2px 2px 4px rgb(0 0 0 / 30%);
+}
+.lap-menu button {
+  padding: 4px 18px;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+}
+.lap-menu button:hover {
+  background: #316ac5;
+  color: #fff;
+}
+
+/* Блокнот, документ, таблица */
+.lap-notepad,
+.lap-docview,
+.lap-sheetview,
+.lap-printer,
+.lap-browser {
+  display: flex;
+  flex-direction: column;
+}
+.lap-text {
+  flex: 1;
+  margin: 0;
+  padding: 6px 8px;
+  overflow: auto;
+  background: #fff;
+  font:
+    13px / 1.4 "Lucida Console",
+    "Courier New",
+    monospace;
+  white-space: pre-wrap;
+}
+.lap-doc-scroll,
+.lap-sheet-scroll {
+  flex: 1;
+  overflow: auto;
+  background: #8f9399;
+}
+.lap-doc-scroll {
+  padding: 18px 0;
+}
+.lap-page {
+  width: 600px;
+  margin: 0 auto;
+  padding: 40px 50px;
+  background: #fff;
+  box-shadow: 1px 2px 6px rgb(0 0 0 / 40%);
+  font:
+    14px / 1.5 "Times New Roman",
+    Georgia,
+    serif;
+}
+.lap-page table,
+.lap-printlog table,
+.lap-web table {
+  border-collapse: collapse;
+}
+.lap-page td,
+.lap-page th,
+.lap-printlog td,
+.lap-printlog th,
+.lap-web td,
+.lap-web th {
+  padding: 2px 6px;
+  border: 1px solid #999;
+}
+.lap-printlog {
+  padding: 12px;
+  background: #fff;
+}
+.lap-sheet-scroll {
+  background: #fff;
+}
+.lap-grid {
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.lap-grid th {
+  min-width: 28px;
+  padding: 1px 4px;
+  border: 1px solid #b9b9b9;
+  background: #e9e9e9;
+  font-weight: 400;
+  color: #333;
+}
+.lap-grid td {
+  min-width: 90px;
+  max-width: 260px;
+  padding: 1px 4px;
+  border: 1px solid #d4d4d4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lap-grid .lap-cell-wide {
+  max-width: none;
+  overflow: visible;
+}
+
+/* Проигрыватель */
+.lap-player {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: linear-gradient(#2a2f38, #1a1d23);
+  color: #e6e9ee;
+}
+.lap-player-screen {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 4px;
+  background: #0c0f14;
+}
+.lap-seek {
+  width: 100%;
+}
+.lap-player-ctl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lap-time {
+  margin-left: auto;
+  font-family: "Lucida Console", monospace;
+}
+.lap-transcript {
+  flex: 1;
+  overflow: auto;
+  padding: 8px 10px;
+  border-radius: 3px;
+  background: #f4f2ec;
+  color: #222;
+}
+.lap-transcript-note {
+  color: #777;
+  font-size: 12px;
+}
+
+/* Свойства */
+.lap-props {
+  padding: 12px;
+  background: #ece9e2;
+}
+.lap-props-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #c9c4b8;
+}
+.lap-props dl {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 6px;
+}
+.lap-props dt {
+  color: #555;
+}
+.lap-props dd {
+  margin: 0;
+}
+
+/* Браузер */
+.lap-favbar {
+  flex: none;
+  display: flex;
+  gap: 4px;
+  padding: 3px 6px;
+  border-bottom: 1px solid #c9c4b8;
+  background: #f4f2ec;
+  overflow: hidden;
+}
+.lap-favbar button {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 190px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lap-favbar .lap-fav-on {
+  border-color: #316ac5;
+}
+.lap-web {
+  flex: 1;
+  overflow: auto;
+  padding: 14px 18px;
+  background: #fff;
+  font-family: Verdana, Tahoma, sans-serif;
+}
+.lap-blank {
+  color: #999;
+}
+
+/* Панель задач и меню */
+.lap-taskbar {
+  position: absolute;
+  inset: auto 0 0;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px 0 0;
+  background: linear-gradient(#3a5f95, #1f3d6b);
+  border-top: 1px solid #6f8fbf;
+}
+.lap-startbtn {
+  height: 34px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 0 12px 12px 0;
+  background: linear-gradient(#4a8a5a, #2e6640);
+  color: #fff;
+  font:
+    700 14px Tahoma,
+    sans-serif;
+}
+.lap-startbtn-on {
+  background: linear-gradient(#2e6640, #4a8a5a);
+}
+.lap-tasks {
+  flex: 1;
+  display: flex;
+  gap: 3px;
+  overflow: hidden;
+}
+.lap-tasks button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 190px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid #5a7db3;
+  border-radius: 3px;
+  background: linear-gradient(#4f78b4, #355f9e);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+}
+.lap-tasks button span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lap-tasks .lap-task-on {
+  background: linear-gradient(#1f4580, #2b5598);
+}
+.lap-tray {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 12px;
+  border-left: 1px solid #6f8fbf;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.15;
+}
+.lap-tray-date {
+  font-size: 11px;
+  opacity: 0.85;
+}
+.lap-start {
+  position: absolute;
+  left: 0;
+  bottom: 34px;
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  width: 240px;
+  padding-bottom: 6px;
+  border: 1px solid #1f3d6b;
+  border-radius: 6px 6px 0 0;
+  background: #fff;
+  box-shadow: 2px -2px 10px rgb(0 0 0 / 40%);
+}
+.lap-start-user {
+  padding: 10px 14px;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(#3d79c9, #1f53a3);
+  color: #fff;
+  font-weight: 700;
+}
+.lap-start button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+}
+.lap-start button:hover {
+  background: #316ac5;
+  color: #fff;
+}
+.lap-start hr {
+  width: 100%;
+  margin: 4px 0;
+  border: 0;
+  border-top: 1px solid #ccc;
+}
+
+/* ── По референсам 2007–2008 (проводник, таблица, документ, браузер, меню) ── */
+.lap-explorer-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.lap-taskpane {
+  flex: none;
+  width: 190px;
+  padding: 10px;
+  overflow: auto;
+  background: linear-gradient(90deg, #7ba2e7, #6375d6);
+}
+.lap-taskpane section {
+  margin-bottom: 12px;
+  border-radius: 4px 4px 0 0;
+  background: #d6dff7;
+  overflow: hidden;
+}
+.lap-taskpane h4 {
+  margin: 0;
+  padding: 4px 8px;
+  background: linear-gradient(90deg, #fff, #c6d3f7);
+  color: #215dc6;
+  font-size: 12px;
+}
+.lap-taskpane button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 3px 8px;
+  border: 0;
+  background: none;
+  color: #215dc6;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+}
+.lap-taskpane button:hover {
+  text-decoration: underline;
+}
+.lap-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  font-size: 11px;
+  word-break: break-word;
+}
+.lap-files-wrap {
+  position: relative;
+  flex: 1;
+  overflow: auto;
+  background: #fff;
+}
+.lap-ruler {
+  flex: none;
+  height: 16px;
+  border-bottom: 1px solid #c9c4b8;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 9px, #8a8a8a 9px 10px) center / 600px 5px
+    no-repeat,
+    linear-gradient(
+      90deg,
+      #d9d6cf 0 calc(50% - 300px),
+      #fff calc(50% - 300px) calc(50% + 300px),
+      #d9d6cf calc(50% + 300px)
+    );
+}
+.lap-formula {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border-bottom: 1px solid #c9c4b8;
+  background: #f4f2ec;
+}
+.lap-namebox {
+  width: 60px;
+  padding: 1px 4px;
+  border: 1px solid #7f9db9;
+  background: #fff;
+}
+.lap-fx {
+  color: #555;
+  font-style: italic;
+}
+.lap-formula-text {
+  flex: 1;
+  min-height: 18px;
+  padding: 1px 4px;
+  border: 1px solid #7f9db9;
+  background: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lap-grid .lap-head-on {
+  background: #f9d78a;
+}
+.lap-grid .lap-cell-on {
+  outline: 2px solid #111;
+  outline-offset: -2px;
+}
+.lap-sheettabs {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  padding: 0 0 2px 40px;
+  border-top: 1px solid #999;
+  background: #e9e6df;
+  font-size: 12px;
+}
+.lap-sheettab {
+  padding: 1px 12px;
+  border: 1px solid #999;
+  border-top: 0;
+  background: #d4d0c8;
+}
+.lap-sheettab.lap-sheettab-on {
+  background: #fff;
+  font-weight: 700;
+}
+.lap-navbar {
+  background: linear-gradient(#dfe9f5, #c4d3e6);
+}
+.lap-navbar .lap-round {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #8fc0ff, #2a63b8);
+  color: #fff;
+  font-weight: 700;
+}
+.lap-navbar .lap-round:disabled {
+  background: radial-gradient(circle at 40% 35%, #e7ecf2, #a8b3c1);
+}
+.lap-tabs {
+  flex: none;
+  display: flex;
+  padding: 3px 6px 0;
+  border-bottom: 1px solid #a9b7c9;
+  background: #dfe6ef;
+}
+.lap-tab-on {
+  max-width: 260px;
+  padding: 3px 12px;
+  border: 1px solid #a9b7c9;
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: #fff;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+.lap-start {
+  width: 380px;
+}
+.lap-start-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+}
+.lap-start-pic {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #0d1522;
+}
+.lap-start-pic svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.lap-start-cols {
+  display: flex;
+}
+.lap-start-left,
+.lap-start-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
+}
+.lap-start-right {
+  border-left: 1px solid #9fb6e0;
+  background: #d3e5fa;
+}
+.lap-start-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 8px;
+  background: linear-gradient(#3d79c9, #1f53a3);
+}
+.lap-start .lap-start-foot button {
+  color: #fff;
+}

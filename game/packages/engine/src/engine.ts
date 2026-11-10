@@ -240,7 +240,14 @@ const fieldRule = (c: Content, action: string, target: string) =>
 const fieldKey = (c: Content, action: string, target: string) =>
   `${action}|${fieldRule(c, action, target)?.id ?? norm(target)}`;
 
-function limitFor(c: Content, action: string, target: string): number | null {
+function limitFor(
+  c: Content,
+  action: string,
+  target: string,
+  cfg: EngineConfig = DEFAULT_CONFIG,
+): number | null {
+  const own = cfg.limits?.[action];
+  if (own !== undefined) return own || null;
   const r = fieldRule(c, action, target);
   if (r && r.attempt_limit !== undefined) return r.attempt_limit || null;
   return c.rules.attempt_limit?.[action] ?? null;
@@ -250,6 +257,26 @@ function limitFor(c: Content, action: string, target: string): number | null {
 function freshFails(p: Progress, key: string, now: number, cfg: EngineConfig): number {
   const f = p.fails[key];
   return f && now - f.last < cfg.pauseMs ? f.n : 0;
+}
+
+/**
+ * Через сколько мс поле снова примет значение (0 — принимает). Игра показывает отсчёт на экране
+ * вещи (LK-A).
+ */
+export function fieldWait(
+  c: Content,
+  progress: Progress,
+  action: string,
+  target: string,
+  now: number,
+  cfg: EngineConfig = DEFAULT_CONFIG,
+): number {
+  const limit = limitFor(c, action, target, cfg);
+  if (!limit) return 0;
+  const key = fieldKey(c, action, target);
+  const f = progress.fails[key];
+  if (!f || freshFails(progress, key, now, cfg) < limit) return 0;
+  return Math.max(0, f.last + cfg.pauseMs - now);
 }
 
 function limitReply(c: Content, action: string, target: string): string {
@@ -301,7 +328,7 @@ export function act(
   const gate = formGate(c, p, action);
   if (gate) return done(gate.result, 'final_form', gate.reply);
 
-  const limit = limitFor(c, action, target);
+  const limit = limitFor(c, action, target, cfg);
   const key = fieldKey(c, action, target);
   if (limit && freshFails(p, key, now, cfg) >= limit) {
     return done('лимит', key, limitReply(c, action, target));
