@@ -406,7 +406,8 @@ export function WallView() {
       else if (id.startsWith('F:')) {
         // Папка из пачки — её листы из описи (RD-A, DS-A до отдельного документа).
         const f = folderOnWall(id, useGame.getState().materials);
-        if (f)
+        if (f?.doc) openViewer(f.doc);
+        else if (f)
           openViewer(f.listing, undefined, {
             title: f.title,
             from: f.n,

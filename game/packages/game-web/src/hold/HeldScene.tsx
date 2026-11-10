@@ -5,6 +5,7 @@ import { type Held, useGame } from '../store.ts';
 import {
   type Bundle,
   coverCode,
+  docOf,
   FOLDER_SHEETS,
   faceUpTexts,
   listingOf,
@@ -178,7 +179,12 @@ function Papers() {
           onOpen={() =>
             afterLeaving(() => {
               close();
-              // Только листы папки — обложка и что в ней (до отдельного документа, DS-A).
+              // Папка — отдельный материал (DS-A, A-263); папки П-09 — пока выдержкой из описи.
+              const doc = docOf(`${orig.id}/${folder.n}`, useGame.getState().materials);
+              if (doc) {
+                useGame.getState().openViewer(doc);
+                return;
+              }
               const to = Math.min(orig.sheets, folder.n + FOLDER_SHEETS - 1);
               useGame.getState().openViewer(folder.listing, undefined, {
                 title: `Папка ${folder.code ?? ''} (пачка ${orig.id}, листы ${folder.n}–${to})`,
