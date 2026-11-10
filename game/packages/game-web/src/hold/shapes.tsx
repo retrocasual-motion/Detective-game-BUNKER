@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CanvasTexture, Group } from 'three';
-import { onClickPart, useSpot } from './Held3D.tsx';
+import { onClickPart, setPartCursor, useSpot } from './Held3D.tsx';
 import { type Painter, paintTexture } from './texture.ts';
 
 /**
@@ -81,19 +81,14 @@ export function useActive(id: string, label: string, testId: string, action: () 
     onClick: onClickPart(action),
     onPointerOver: () => {
       setHover(true);
-      document.body.style.cursor = 'pointer';
+      setPartCursor('pointer');
     },
     onPointerOut: () => {
       setHover(false);
-      document.body.style.cursor = '';
+      setPartCursor('');
     },
   };
-  useEffect(
-    () => () => {
-      document.body.style.cursor = '';
-    },
-    [],
-  );
+  useEffect(() => () => setPartCursor(''), []);
   return { anchor, hover, handlers };
 }
 

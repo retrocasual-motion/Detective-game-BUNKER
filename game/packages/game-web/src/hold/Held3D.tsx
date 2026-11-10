@@ -56,6 +56,15 @@ const Y = new Vector3(0, 1, 0);
 // ── Вещь в руках одна: её жест, «уйти» и активные части — на уровне модуля. ──
 
 let gestureNow: RefObject<Gesture> | null = null;
+let wrapNow: HTMLDivElement | null = null;
+
+/**
+ * Курсор над частью вещи (печать, экран, край картона): ставится на саму сцену — у неё свой
+ * курсор «взять», курсор страницы под ним не виден. '' — снова «взять».
+ */
+export function setPartCursor(cursor: string) {
+  if (wrapNow) wrapNow.style.cursor = cursor;
+}
 let leaveNow: ((then: () => void) => void) | null = null;
 
 /** Щелчок по части вещи — только если мышь почти не двигалась (иначе вещь вращали). */
@@ -258,6 +267,7 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
   };
   gestureNow = gesture;
   leaveNow = leave;
+  wrapNow = wrap.current;
   const onClose = () => {
     if (!leaving) leave(close);
   };
@@ -319,7 +329,10 @@ export default function Held3D({ mode, half, label, onClose: close, children }: 
 
   return (
     <div
-      ref={wrap}
+      ref={(el) => {
+        wrap.current = el;
+        wrapNow = el;
+      }}
       role="application"
       className="held"
       data-testid="held"

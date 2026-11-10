@@ -1,8 +1,8 @@
 import type { ThreeEvent } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Group } from 'three';
+import { type Group, Vector3 } from 'three';
 import type { Bundle } from '../viewer/bundles.ts';
-import { holdPart, useSpot } from './Held3D.tsx';
+import { holdPart, setPartCursor, useSpot } from './Held3D.tsx';
 import { Plate, useActive, useTexture } from './shapes.tsx';
 import { paintTexture } from './texture.ts';
 
@@ -63,10 +63,11 @@ function useSlip(label: string) {
 const PULL_PX = 160;
 
 /**
- * Слой картона в пачке (RD-A, решение автора 10.11): выступает по краям чуть шире листов.
- * Навели — край едва заметно выдвигается (совсем чуть-чуть — правка автора), курсор «взять».
- * Потянуть — картон выезжает из пачки за мышью; отпустили раньше половины — вернулся; дальше —
- * вытащен. Щелчок по невидимой кнопке края (клавиатура, тесты) — вытащить сразу.
+ * Слой картона в пачке (RD-A, решения автора 10.11): выступает по краям чуть шире листов.
+ * Ловится легко: вокруг края — невидимая зона захвата (шире и толще самого картона), и только
+ * когда на пачку смотрят сбоку (сверху и снизу пачку вращают, как обычно). Навели — край
+ * заметно выдвигается и курсор «рука». Потянуть — картон выезжает за мышью; отпустили раньше
+ * половины — вернулся; дальше — вытащен. С клавиатуры — невидимая кнопка края.
  */
 function CardLayer({ n, z, onPull }: { n: number; z: number; onPull: () => void }) {
   const [hover, setHover] = useState(false);
@@ -79,21 +80,18 @@ function CardLayer({ n, z, onPull }: { n: number; z: number; onPull: () => void 
     testId: `stack-layer-${n}`,
     onClick: onPull,
   });
-  useEffect(
-    () => () => {
-      document.body.style.cursor = '';
-    },
-    [],
-  );
-  // Картон берут за край: мышь попала в него первым (не сквозь бумагу) и в торцевую грань, а не
-  // в плоскость. За плоскость (у П-09 сверху лежит обложка) — пачку вращают, как обычно.
-  const first = (e: ThreeEvent<PointerEvent>) =>
-    e.intersections[0]?.object === e.object && Math.abs(e.face?.normal.z ?? 1) < 0.5;
+  useEffect(() => () => setPartCursor(''), []);
+  // Пачку видно сбоку: луч мыши почти поперёк её толщины; и зона захвата — ближе всего к мыши.
+  const reach = (e: ThreeEvent<PointerEvent>) => {
+    if (e.intersections[0]?.object !== e.object) return false;
+    const axis = e.object.getWorldDirection(new Vector3());
+    return Math.abs(axis.dot(e.ray.direction)) < 0.8;
+  };
   const down = (e: ThreeEvent<PointerEvent>) => {
-    if (e.button !== 0 || !first(e)) return;
+    if (e.button !== 0 || !reach(e)) return;
     e.stopPropagation();
     holdPart();
-    document.body.style.cursor = 'grabbing';
+    setPartCursor('grabbing');
     const x0 = e.clientX;
     const y0 = e.clientY;
     const move = (ev: PointerEvent) => {
@@ -103,7 +101,7 @@ function CardLayer({ n, z, onPull }: { n: number; z: number; onPull: () => void 
     const up = () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
-      document.body.style.cursor = '';
+      setPartCursor('');
       if (live.current >= 0.5) {
         setSlide(1);
         onPull();
@@ -113,26 +111,32 @@ function CardLayer({ n, z, onPull }: { n: number; z: number; onPull: () => void 
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
   };
-  // Выступ за край листа: 0,012 в покое, при наведении — на волосок больше.
-  const out = hover ? 0.017 : 0.012;
+  // Выступ за край листа: в покое — на волосок, при наведении — заметно (правка автора 10.11).
+  const out = hover ? 0.09 : 0.012;
   return (
     <group position={[slide * W * 0.9, 0, z]}>
+      <mesh>
+        <boxGeometry args={[W + 2 * out, H + 2 * out, CARD_T]} />
+        <meshStandardMaterial color={CARD} roughness={0.95} />
+      </mesh>
+      {/* Зона захвата: шире края и толще картона, невидима. */}
       <mesh
         onPointerDown={down}
         onPointerMove={(e) => {
-          const on = first(e);
+          const on = reach(e);
           if (on !== hover) {
             setHover(on);
-            document.body.style.cursor = on ? 'grab' : '';
+            setPartCursor(on ? 'pointer' : '');
           }
         }}
         onPointerOut={() => {
+          if (!hover) return;
           setHover(false);
-          document.body.style.cursor = '';
+          setPartCursor('');
         }}
       >
-        <boxGeometry args={[W + 2 * out, H + 2 * out, CARD_T]} />
-        <meshStandardMaterial color={CARD} roughness={0.95} />
+        <boxGeometry args={[W + 0.2, H + 0.2, 0.09]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
       {/* Кнопка края — у правого торца, видна, когда торец смотрит на игрока. */}
       <group ref={anchor} position={[W / 2 + out, 0, 0]} rotation={[0, Math.PI / 2, 0]} />
