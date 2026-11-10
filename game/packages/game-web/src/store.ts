@@ -1,7 +1,8 @@
 import {
+  boardCamera,
+  type Camera,
   type ContainerId,
   DEVICE_IDS,
-  fitCamera,
   type Material,
   openAll,
   openContainer,
@@ -19,9 +20,9 @@ import { type Binned, binLetter, moveItem, takeLetter, unbinLetter } from './wal
 
 const screen = () => ({ width: window.innerWidth, height: window.innerHeight });
 
-/** Камера, с которой доска видна сейчас: со стола — вся целиком, у стены — своя. */
+/** Камера, с которой доска видна сейчас: со стола — вся целиком (WB-C), у стены — своя. */
 export const shownCamera = (s: PlayerState) =>
-  s.view === 'desk' ? fitCamera(s.wall, screen()) : s.wall.camera;
+  s.view === 'desk' ? boardCamera(screen()) : s.wall.camera;
 
 /** Сколько можно «Вернуть» выброшенное письмо, мс. */
 const UNDO_MS = 6000;
@@ -81,7 +82,8 @@ interface GameStore {
   searchOpen: boolean;
   setSearchOpen(open: boolean): void;
   closeViewer(): void;
-  setView(view: View): void;
+  /** Сменить вид. К стене — в вид «как со стола» (ZM-B) или в данную камеру. */
+  setView(view: View, wallCamera?: Camera): void;
   updateState(fn: (s: PlayerState) => PlayerState): void;
 }
 
@@ -228,10 +230,16 @@ export const useGame = create<GameStore>((set, get) => {
       }
     },
 
-    setView(view) {
-      // Камеру стены вид не трогает: со стола доска и так видна целиком (shownCamera), у
-      // стены — масштаб, на котором игрок её оставил.
-      get().updateState((s) => (s.view === view ? s : { ...s, view }));
+    setView(view, wallCamera) {
+      // ZM-B (решение автора 10.11): к стене подходят в тот же вид, что со стола, — место
+      // у стены не запоминается; переход — один полёт камеры, доска внутри не двигается.
+      get().updateState((s) =>
+        s.view === view
+          ? s
+          : view === 'wall'
+            ? { ...s, view, wall: { ...s.wall, camera: wallCamera ?? boardCamera(screen()) } }
+            : { ...s, view },
+      );
     },
 
     updateState(fn) {

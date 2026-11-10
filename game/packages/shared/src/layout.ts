@@ -45,8 +45,22 @@ export const NOTE_STYLE = {
   maxWidth: 900,
 } as const;
 
-/** Край пробковой доски: камера и вещи за него не уходят. */
-export const WALL_BOUNDS = { left: -300, top: -300, right: 3700, bottom: 2700 } as const;
+/**
+ * Край пробковой доски: камера и вещи за него не уходят. WB-C (решение автора 10.11): доска
+ * 16:9 и меньше прежней (была 4000×3000) — со стола и у стены видна целиком, одна и та же;
+ * при подходе к стене (ZM-B) карточки различимы. Всё дело (61 вещь с ярлыками) помещается
+ * при любом порядке вскрытия конвертов.
+ */
+export const WALL_BOUNDS = { left: -200, top: -200, right: 3400, bottom: 1825 } as const;
+
+/** Поле вокруг доски на экране, px: рама пробки видна целиком. */
+export const BOARD_PAD = 24;
+
+/** Колонок в группе вскрытого конверта: группы ложатся вширь, а не друг под другом. */
+export const GROUP_COLS = 6;
+
+/** «Разложить»: повешенное сверх стартового — правее сетки, столько в ряд. */
+const REST_COLS = 5;
 
 export const DEFAULT_WALL_CAMERA: Camera = { x: 40, y: 50, zoom: 0.55 };
 
@@ -122,11 +136,9 @@ export function defaultState(materials: Material[]): PlayerState {
 /**
  * Разложить стену по порядку (служебная кнопка для проверок, просьба автора 09.11): персонажи и
  * стартовые материалы — на начальные места (01, 02… сеткой по описи), повешенные письма и
- * записки — рядами под сеткой, по номеру. Нити и тексты записок остаются, камера — исходная.
+ * записки — рядами правее сетки, по номеру. Нити, тексты записок и камера остаются.
  */
 export function arrangeWall(state: PlayerState, materials: Material[]): PlayerState {
-  const rows = Math.ceil(startingIds(materials).length / GRID_COLS);
-  const restTop = GRID_TOP + rows * GRID_DY;
   const noteOrder = new Map(state.wall.notes.map((n, i) => [n.id, i]));
   const rest = state.wall.items
     .filter((i) => !startSlot(i.id, materials))
@@ -140,8 +152,12 @@ export function arrangeWall(state: PlayerState, materials: Material[]): PlayerSt
   const place = (id: string) => {
     const slot = startSlot(id, materials);
     if (slot) return slot;
+    // Остальное — правее сетки, рядами по REST_COLS (доска 16:9 — WB-C).
     const k = rest.indexOf(id);
-    return { x: (k % GRID_COLS) * GRID_DX, y: restTop + Math.floor(k / GRID_COLS) * GRID_DY };
+    return onWall(
+      GRID_COLS * GRID_DX + 100 + (k % REST_COLS) * GRID_DX,
+      GRID_TOP + Math.floor(k / REST_COLS) * GRID_DY,
+    );
   };
   const ordered = [...state.wall.items].sort((a, b) => {
     const pa = place(a.id);
@@ -149,7 +165,7 @@ export function arrangeWall(state: PlayerState, materials: Material[]): PlayerSt
     return pa.y - pb.y || pa.x - pb.x;
   });
   const items = ordered.map((i, k) => ({ ...i, ...place(i.id), z: k + 1, rot: hangTilt(i.id) }));
-  return { ...state, wall: { ...state.wall, camera: DEFAULT_WALL_CAMERA, items } };
+  return { ...state, wall: { ...state.wall, items } };
 }
 
 /** Сохранение версии 4 (колонки «как пришло»): снятое в поле и нити остаются. */
@@ -223,11 +239,14 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
   const trash = [...new Set(state.trash ?? [])].filter((id) => /^M/.test(id) && known.has(id));
   const binned = new Set(trash);
   const seen = new Set<string>();
-  const items: WallItem[] = state.wall.items.filter((i) => {
-    if (!known.has(i.id) || seen.has(i.id) || binned.has(i.id)) return false;
-    seen.add(i.id);
-    return true;
-  });
+  const items: WallItem[] = state.wall.items
+    .filter((i) => {
+      if (!known.has(i.id) || seen.has(i.id) || binned.has(i.id)) return false;
+      seen.add(i.id);
+      return true;
+    })
+    // Доска стала меньше (WB-C): висевшее за новым краем — у края, на пробке.
+    .map((i) => ({ ...i, ...onWall(i.x, i.y) }));
   // Записка без места на стене не нужна.
   const kept = notes.filter((n) => seen.has(n.id));
 
@@ -266,25 +285,39 @@ export const containerLabelId = (id: ContainerId) => `n:archive-${id}`;
 
 const LABEL_H = 80;
 
-/** Свободное место на стене под блок w × h: сверху вниз, сначала слева, потом правее сетки. */
-function freeBlock(items: WallItem[], w: number, h: number): { x: number; y: number } {
+/**
+ * Свободное место на стене под блок w × h: самое верхнее, в нём — самое левое (WB-C: группы
+ * ложатся вширь по доске, а не колонкой под стартовыми материалами).
+ */
+function freeBlock(
+  items: WallItem[],
+  widthOf: (id: string) => number,
+  w: number,
+  h: number,
+): { x: number; y: number } | null {
   const gap = 30;
   const busy = (x: number, y: number) =>
     items.some(
       (i) =>
-        i.x < x + w + gap && i.x + CARD_W + gap > x && i.y < y + h + gap && i.y + CARD_H + gap > y,
+        i.x < x + w + gap &&
+        i.x + widthOf(i.id) + gap > x &&
+        i.y < y + h + gap &&
+        i.y + CARD_H + gap > y,
     );
-  // Сначала под стартовыми материалами (левый край), потом правее сетки.
-  for (const x of [0, GRID_COLS * GRID_DX + 100])
-    for (let y = GRID_TOP; y + h <= WALL_BOUNDS.bottom; y += 30)
-      if (x + w <= WALL_BOUNDS.right && !busy(x, y)) return { x, y };
-  const bottom = items.reduce((m, i) => Math.max(m, i.y + CARD_H), GRID_TOP);
-  return onWall(0, bottom + gap);
+  for (let y = GRID_TOP; y + h <= BOARD_INNER.bottom; y += 30)
+    for (let x = 0; x + w <= BOARD_INNER.right; x += 50) if (!busy(x, y)) return { x, y };
+  return null;
 }
+
+/** Где на доске можно вешать группы: с отступом от рамы. */
+const BOARD_INNER = { right: WALL_BOUNDS.right - 40, bottom: WALL_BOUNDS.bottom - 40 };
+
+/** Сколько колонок пробовать для группы: шире — короче; берётся та, что ляжет выше. */
+const GROUP_COL_CHOICES = [GRID_COLS, 8, GROUP_COLS, 4];
 
 /**
  * Вскрыть конверт архива (A-260): содержимое — на стену группой под ярлыком с названием
- * конверта, на свободное место (со стола доска видна целиком — fitCamera).
+ * конверта, на свободное место (со стола доска видна целиком — boardCamera).
  * Уже вскрытый — без изменений.
  */
 export function openContainer(
@@ -299,18 +332,31 @@ export function openContainer(
   const onWallNow = new Set(state.wall.items.map((i) => i.id));
   const ids = containerContents(c).filter((m) => have.has(m) && !onWallNow.has(m));
   if (!ids.length) return { ...state, opened };
-  const cols = Math.min(GRID_COLS, ids.length);
-  const rows = Math.ceil(ids.length / cols);
-  const at = freeBlock(state.wall.items, cols * GRID_DX, LABEL_H + rows * GRID_DY);
+  const labelW = Math.min(NOTE_STYLE.maxWidth, 60 + c.label.length * 15);
+  const noteW = new Map(state.wall.notes.map((n) => [n.id, n.width ?? NOTE_STYLE[n.kind].width]));
+  const widthOf = (x: string) => noteW.get(x) ?? CARD_W;
+  // Форма группы — та, что ляжет выше всех (потом левее): доска заполняется вширь.
+  const size = (cols: number) => {
+    const rows = Math.ceil(ids.length / cols);
+    return {
+      w: Math.max(labelW, (cols - 1) * GRID_DX + CARD_W),
+      h: LABEL_H + (rows - 1) * GRID_DY + CARD_H,
+    };
+  };
+  let best: { cols: number; at: { x: number; y: number } } | null = null;
+  for (const cols of new Set(GROUP_COL_CHOICES.map((k) => Math.min(k, ids.length)))) {
+    const { w, h } = size(cols);
+    const at = freeBlock(state.wall.items, widthOf, w, h);
+    if (at && (!best || at.y < best.at.y || (at.y === best.at.y && at.x < best.at.x)))
+      best = { cols, at };
+  }
+  // Места нет (игрок завесил доску) — у нижнего края слева; дальше разложит сам.
+  const cols = best?.cols ?? Math.min(GROUP_COLS, ids.length);
+  const at = best?.at ?? onWall(0, BOARD_INNER.bottom - size(cols).h);
   let z = state.wall.items.reduce((m, i) => Math.max(m, i.z), 0);
   const labelId = containerLabelId(id);
   // Ярлык — в одну строку, по длине названия.
-  const label: Note = {
-    id: labelId,
-    kind: 'label',
-    text: c.label,
-    width: Math.min(NOTE_STYLE.maxWidth, 60 + c.label.length * 15),
-  };
+  const label: Note = { id: labelId, kind: 'label', text: c.label, width: labelW };
   const placed: WallItem[] = [
     { id: labelId, x: at.x, y: at.y, z: ++z, rot: 0 },
     ...ids.map((m, k) => ({
@@ -339,42 +385,21 @@ export function openAll(state: PlayerState, materials: Material[]): PlayerState 
 }
 
 /**
- * Камера «вся стена» (правка автора 09.11): со стола доска видна целиком — всё, что на ней
- * висит, вписано в экран с полями; крупнее обычного масштаба не становится. Тем же видом
- * стена встречает, когда к ней подходят.
+ * Камера «вся доска» (WB-C, ZM-B; решения автора 10.11): пробка целиком, по центру экрана, с
+ * полем BOARD_PAD. Со стола доска видна так, к стене подходят в этот же вид, и дальше него
+ * не отдалить — со стола и у стены одна и та же доска.
  */
-export function fitCamera(
-  wall: Pick<PlayerState['wall'], 'items' | 'notes'>,
-  vp: { width: number; height: number },
-): Camera {
-  if (!wall.items.length) return DEFAULT_WALL_CAMERA;
-  const width = new Map(
-    wall.notes.map((n) => [n.id, n.width ?? NOTE_STYLE[n.kind].width] as const),
-  );
-  let left = Number.POSITIVE_INFINITY;
-  let top = Number.POSITIVE_INFINITY;
-  let right = Number.NEGATIVE_INFINITY;
-  let bottom = Number.NEGATIVE_INFINITY;
-  for (const i of wall.items) {
-    left = Math.min(left, i.x);
-    top = Math.min(top, i.y);
-    right = Math.max(right, i.x + (width.get(i.id) ?? CARD_W));
-    bottom = Math.max(bottom, i.y + CARD_H);
-  }
-  const pad = { x: DEFAULT_WALL_CAMERA.x, y: DEFAULT_WALL_CAMERA.y };
+export function boardCamera(vp: { width: number; height: number }): Camera {
+  const w = WALL_BOUNDS.right - WALL_BOUNDS.left;
+  const h = WALL_BOUNDS.bottom - WALL_BOUNDS.top;
   const zoom = Math.max(
     ZOOM_MIN,
-    Math.min(
-      DEFAULT_WALL_CAMERA.zoom,
-      (vp.width - 2 * pad.x) / (right - left),
-      (vp.height - 2 * pad.y) / (bottom - top),
-    ),
+    Math.min((vp.width - 2 * BOARD_PAD) / w, (vp.height - 2 * BOARD_PAD) / h),
   );
-  const round = (n: number) => Math.round(n * 1000) / 1000;
-  // От левого и верхнего поля, как обычный вид; за край пробки камера не заглядывает.
+  const round = (n: number) => Math.round(n * 1e4) / 1e4;
   return {
-    x: Math.round(Math.min(pad.x - left * zoom, -WALL_BOUNDS.left * zoom)),
-    y: Math.round(Math.min(pad.y - top * zoom, -WALL_BOUNDS.top * zoom)),
+    x: round((vp.width - w * zoom) / 2 - WALL_BOUNDS.left * zoom),
+    y: round((vp.height - h * zoom) / 2 - WALL_BOUNDS.top * zoom),
     zoom: round(zoom),
   };
 }

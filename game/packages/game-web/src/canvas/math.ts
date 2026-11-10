@@ -1,4 +1,4 @@
-import { type Camera, ZOOM_MAX, ZOOM_MIN } from '@bunker/shared';
+import { BOARD_PAD, type Camera, ZOOM_MAX, ZOOM_MIN } from '@bunker/shared';
 
 export interface Point {
   x: number;
@@ -31,10 +31,16 @@ export interface Bounds {
  * Камера не уезжает за край стола (UX-B1): точка мира в центре экрана остаётся на столешнице,
  * а отдалить можно не дальше, чем до всего стола целиком (с небольшим полем).
  */
-/** Самый мелкий масштаб, при котором виден весь стол (с полем), — но не крупнее 1. */
+/**
+ * Самый мелкий масштаб — вся доска с полем BOARD_PAD, как со стола (boardCamera, WB-C), — но
+ * не крупнее 1. Округление — как у boardCamera: вид «вся доска» не поправляется на волосок.
+ */
 export function minZoomFor(b: Bounds, viewport: { width: number; height: number }): number {
-  const fit = Math.min(viewport.width / (b.right - b.left), viewport.height / (b.bottom - b.top));
-  return Math.min(1, clampZoom(fit * 0.9));
+  const fit = Math.min(
+    (viewport.width - 2 * BOARD_PAD) / (b.right - b.left),
+    (viewport.height - 2 * BOARD_PAD) / (b.bottom - b.top),
+  );
+  return Math.min(1, clampZoom(Math.round(fit * 1e4) / 1e4));
 }
 
 export function clampToBounds(

@@ -101,12 +101,7 @@ function Opened({
               // Стена — сразу у новой группы (ярлык с названием конверта).
               const g = useGame.getState();
               const label = g.state?.wall.items.find((i) => i.id === containerLabelId(id));
-              if (label)
-                g.updateState((s) => ({
-                  ...s,
-                  wall: { ...s.wall, camera: focusCamera(label.x, label.y) },
-                }));
-              g.setView('wall');
+              g.setView('wall', label ? focusCamera(label.x, label.y) : undefined);
             }}
           >
             Перейти к стене

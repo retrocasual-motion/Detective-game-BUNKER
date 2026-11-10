@@ -1,5 +1,14 @@
 import type { Page } from '@playwright/test';
-import { expect, STRIP, savedPut, sheet, stripPoint, test, toWall } from './fixtures.ts';
+import {
+  bringIntoView,
+  expect,
+  STRIP,
+  savedPut,
+  sheet,
+  stripPoint,
+  test,
+  toWall,
+} from './fixtures.ts';
 
 const folder = (page: Page) => page.getByTestId('petition-folder');
 
@@ -26,6 +35,7 @@ async function selectText(page: Page, text: string) {
 
 /** Карточка из листа: открыть со стены, выделить строку, «В ходатайство», закрыть. */
 async function cardFrom(page: Page, id: string, text: string) {
+  await bringIntoView(page, id);
   await sheet(page, id).click(STRIP);
   await selectText(page, text);
   await page.getByTestId('to-petition').click();
@@ -90,6 +100,7 @@ test('ошибка оформления от адресата — в папке;
     .getByRole('button', { name: 'zapros@okrug-bureau.org' })
     .click();
   await cardFrom(page, '36', 'Протокол');
+  await bringIntoView(page, '35');
   await sheet(page, '35').click(STRIP);
   await page.getByTestId('viewer-whole-to-petition').click();
   await page.keyboard.press('Escape');
@@ -113,6 +124,7 @@ test('общий отказ адресата (PRE-B) — сразу в папк�
     .getByRole('button', { name: 'zapros@okrug-bureau.org' })
     .click();
   await cardFrom(page, '36', 'Протокол');
+  await bringIntoView(page, '35');
   await sheet(page, '35').click(STRIP);
   await page.getByTestId('viewer-whole-to-petition').click();
   await page.keyboard.press('Escape');
@@ -295,6 +307,7 @@ test('выделение для ходатайства (SEL-C): щелчок —
   page,
 }) => {
   await toWall(page);
+  await bringIntoView(page, '25');
   await sheet(page, '25').click(STRIP);
   const selected = () => page.evaluate(() => window.getSelection()?.toString().trim() ?? '');
   // Щелчок посреди слова — вся строка, где оно стоит.
@@ -339,6 +352,7 @@ test('закрытая папка не дрожит: приподнятый яз
 test('открытая папка не мешает: лист открывается правее, стрелки работают', async ({ page }) => {
   await toWall(page);
   await page.getByTestId('petition-corner').click();
+  await bringIntoView(page, '36');
   await sheet(page, '36').click(STRIP);
   await expect(page.getByTestId('viewer')).toBeVisible();
   const f = await folder(page).boundingBox();

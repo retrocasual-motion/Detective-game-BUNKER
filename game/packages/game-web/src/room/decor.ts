@@ -153,7 +153,7 @@ type Col = (name: string) => string;
 
 /** Стены, пол, рама доски, столешница — от дальнего к ближнему. */
 export function roomPolys(r: Room, col: Col): Poly[] {
-  const { p, deskY, deskNear, deskLeft, deskRight, boardHalfW, boardHalfH } = r;
+  const { p, deskY, deskNear, deskLeft, deskRight } = r;
   const left = -1.7 * p;
   const right = 1.7 * p;
   const top = -1.4 * p;
@@ -164,7 +164,6 @@ export function roomPolys(r: Room, col: Col): Poly[] {
   const hy = (floor - top) / 2;
   const zc = (back + front) / 2;
   const hz = (front - back) / 2;
-  const frame = 0.035 * p;
   const deskXc = (deskLeft + deskRight) / 2;
   const deskHx = (deskRight - deskLeft) / 2;
   const edge = 0.04 * p;
@@ -174,11 +173,6 @@ export function roomPolys(r: Room, col: Col): Poly[] {
     { pts: rect([left, yc, zc], [0, 0, hz], [0, hy, 0]), color: col('--color-room-wall') },
     { pts: rect([right, yc, zc], [0, 0, hz], [0, hy, 0]), color: col('--color-room-wall') },
     { pts: rect([0, yc, back], [right, 0, 0], [0, hy, 0]), color: col('--color-room-wall-front') },
-    // Рама доски — чуть больше самой доски (DOM поверх).
-    {
-      pts: rect([0, 0, -3], [boardHalfW + frame, 0, 0], [0, boardHalfH + frame, 0]),
-      color: col('--color-board-frame'),
-    },
     {
       pts: rect([deskXc, deskY, deskNear / 2], [deskHx, 0, 0], [0, 0, deskNear / 2]),
       color: col('--color-desk'),

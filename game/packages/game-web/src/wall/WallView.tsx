@@ -1,6 +1,6 @@
 import {
+  boardCamera,
   type Camera,
-  fitCamera,
   NOTE_STYLE,
   type Note,
   PERSONS,
@@ -323,7 +323,7 @@ export function WallView() {
 
   // Стол ↔ стена: камера доски перетекает за время полёта камеры комнаты, без скачка.
   const camera = useCameraTween(
-    wall ? (atDesk ? fitCamera(wall, vp) : wall.camera) : NO_CAMERA,
+    wall ? (atDesk ? boardCamera(vp) : wall.camera) : NO_CAMERA,
     atDesk,
     vp,
   );

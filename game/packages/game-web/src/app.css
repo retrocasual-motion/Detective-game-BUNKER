@@ -68,8 +68,9 @@ button {
   position: absolute;
   inset: 0;
 }
+/* Плоскость доски — кусок стены комнаты: пробка с рамой висит на ней (WB-C). */
 .face-wall {
-  background: var(--color-cork);
+  background: var(--color-room-wall-front);
 }
 .face-zone {
   position: absolute;
@@ -592,7 +593,10 @@ button {
 .canvas-surface {
   position: absolute;
   background: var(--color-cork);
-  box-shadow: 0 0 0 14px var(--color-board-frame);
+  /* Рама — в мировых единицах: при «вся доска» ~14 px (1366×768), при приближении крупнее. */
+  box-shadow:
+    0 0 0 40px var(--color-board-frame),
+    0 6px 60px 30px rgb(0 0 0 / 35%);
   pointer-events: none;
 }
 .card {
@@ -941,13 +945,10 @@ button {
   position: absolute;
   inset: 0;
 }
+/* Вокруг пробки — стена комнаты (фон .face-wall), рама — у самой пробки (.canvas-surface):
+   со стола и у стены это одна и та же доска, без скачка в конце полёта (WB-C). */
 .wall-surface {
-  background: var(--color-cork);
-}
-/* Со стола край доски — настоящая рама комнаты; внутренняя рамка пробки не нужна (fitCamera). */
-.scene:not([data-view="wall"]) .canvas-surface,
-.scene[data-moving="true"] .canvas-surface {
-  box-shadow: none;
+  background: transparent;
 }
 /* Лист на стене: висит на одной кнопке и качается вокруг неё (WALL-C). */
 .wall-card {

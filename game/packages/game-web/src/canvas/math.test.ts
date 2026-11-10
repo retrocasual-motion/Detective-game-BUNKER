@@ -44,6 +44,6 @@ describe('clampToBounds', () => {
 
   it('отдалить можно только до всего стола', () => {
     const c = clampToBounds({ x: 0, y: 0, zoom: 0.25 }, b, vp);
-    expect(c.zoom).toBeCloseTo(0.45);
+    expect(c.zoom).toBeCloseTo(0.452, 3);
   });
 });
