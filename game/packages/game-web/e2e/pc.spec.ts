@@ -175,3 +175,36 @@ test('архив проекта: пароль 0417 — три документа
   await expect(page.getByTestId('pc-doc').last()).toHaveAttribute('data-material', 'L737');
   await expect(page.getByTestId('inbox-L737')).toHaveCount(0);
 });
+
+test('окна меняют размер за угол; не меньше 460×300; текст терминала не налезает', async ({
+  page,
+}) => {
+  await grant(page, BUREAU);
+  await pcUp(page);
+  await icon(page, 'Экспорт сервера VL-31').dblclick();
+  const win = page.getByTestId('lap-win-Экспорт сервера VL-31');
+  const before = await win.boundingBox();
+  const g = await win.getByTestId('lap-resize-se').boundingBox();
+  if (!before || !g) throw new Error('нет окна');
+  await page.mouse.move(g.x + 5, g.y + 5);
+  await page.mouse.down();
+  await page.mouse.move(g.x - 2000, g.y - 2000, { steps: 6 });
+  await page.mouse.up();
+  const small = await win.boundingBox();
+  if (!small) throw new Error('нет окна');
+  expect(small.width).toBeLessThan(before.width);
+  // Минимум: 460×300 логических px экрана (на экране — с масштабом монитора).
+  const scale = before.width / 1060;
+  expect(small.width).toBeGreaterThan(455 * scale);
+  expect(small.height).toBeGreaterThan(295 * scale);
+  for (const k of [0, 1, 2, 3]) {
+    await page.getByTestId(`pc-part-${k}`).click();
+    const over = await page
+      .getByTestId('pc-term-body')
+      .evaluate(
+        (root) =>
+          [...root.querySelectorAll('td')].filter((c) => c.scrollWidth > c.clientWidth + 1).length,
+      );
+    expect(over).toBe(0);
+  }
+});

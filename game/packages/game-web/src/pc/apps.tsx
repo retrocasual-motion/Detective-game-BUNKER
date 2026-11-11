@@ -249,6 +249,11 @@ export function Terminal({ start }: { start?: string }) {
     const root = body.current;
     if (!root) return;
     for (const td of root.querySelectorAll('td')) td.classList.toggle('pc-pick', pickable(td));
+    // Журнал событий (время · терминал · учётная запись · событие · результат) — свои ширины.
+    for (const t of root.querySelectorAll('table')) {
+      const th = [...t.querySelectorAll('th')].map((x) => x.textContent?.trim());
+      t.classList.toggle('pc-log', th.length === 5 && th[0] === 'Время');
+    }
     for (const tr of root.querySelectorAll('tbody tr')) {
       const cells = [...tr.querySelectorAll('td')].slice(1).map((td) => td.textContent ?? '');
       const on = !!mark && cells.some((c) => hasValue(c, mark));
@@ -271,8 +276,10 @@ export function Terminal({ start }: { start?: string }) {
         }
       }}
     >
-      <div className="pc-term-banner">
-        ОКРУЖНОЕ БЮРО РАССЛЕДОВАНИЙ · ДЕЛО № 09-1128 · ВЫГРУЗКА СЛЕДСТВИЯ С СЕРВЕРА ОБЪЕКТА VL-31
+      {/* Строка заголовка программы — неяркая: не меню и не кнопка (правка автора 11.11). */}
+      <div className="pc-term-head">
+        <span>ОКРУЖНОЕ БЮРО РАССЛЕДОВАНИЙ · ДЕЛО № 09-1128</span>
+        <span>ВЫГРУЗКА С СЕРВЕРА ОБЪЕКТА VL-31</span>
       </div>
       {!doc || !part ? (
         <div className="pc-term-empty" data-testid="pc-terminal-empty">
@@ -281,19 +288,6 @@ export function Terminal({ start }: { start?: string }) {
         </div>
       ) : (
         <div className="pc-term-main">
-          <nav className="pc-term-tabs">
-            {docs.map((d, k) => (
-              <button
-                key={d.key}
-                type="button"
-                className={k === pos.doc ? 'pc-term-tab-on' : undefined}
-                data-testid={`pc-term-${d.key}`}
-                onClick={() => openDoc(k)}
-              >
-                <span>[{d.key}]</span> {d.title}
-              </button>
-            ))}
-          </nav>
           <div className="pc-term-page">
             {doc.parts.length > 1 && (
               <div className="pc-term-parts">
@@ -342,6 +336,21 @@ export function Terminal({ start }: { start?: string }) {
               <Markdown remarkPlugins={[remarkGfm]}>{part.body}</Markdown>
             </section>
           </div>
+          {/* Документы — строкой F-клавиш внизу, как в программах DOS (Norton Commander). */}
+          <nav className="pc-term-tabs">
+            {docs.map((d, k) => (
+              <button
+                key={d.key}
+                type="button"
+                className={k === pos.doc ? 'pc-term-tab-on' : undefined}
+                data-testid={`pc-term-${d.key}`}
+                onClick={() => openDoc(k)}
+              >
+                <kbd>{d.key}</kbd>
+                {d.title}
+              </button>
+            ))}
+          </nav>
         </div>
       )}
     </div>

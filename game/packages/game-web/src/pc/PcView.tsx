@@ -226,14 +226,14 @@ function PcDesktop({ material }: { material: string | null }) {
         ...list,
         {
           win,
-          x: 170 + k * 28,
-          y: 60 + k * 26,
-          w: small ? 460 : win.kind === 'terminal' || win.kind === 'mbx' ? 1000 : 780,
-          h: small ? 300 : 600,
+          x: win.kind === 'terminal' ? 110 : 170 + k * 28,
+          y: win.kind === 'terminal' ? 40 : 60 + k * 26,
+          // Терминал — большим окном, не во весь экран (правка автора 11.11); размер меняют за край.
+          w: small ? 460 : win.kind === 'terminal' ? 1060 : win.kind === 'mbx' ? 1000 : 780,
+          h: small ? 300 : win.kind === 'terminal' ? 640 : 600,
           z: z.current,
           min: false,
-          // Терминал — во весь экран: сутки журнала видны без прокрутки (TM2-A).
-          max: win.kind === 'terminal',
+          max: false,
         },
       ];
     });
@@ -344,6 +344,7 @@ function PcDesktop({ material }: { material: string | null }) {
             onMove={(x, y) => patch(p.win.id, { x, y })}
             onMin={() => patch(p.win.id, { min: true })}
             onMax={() => patch(p.win.id, { max: !p.max })}
+            onResize={(w, h) => patch(p.win.id, { w, h })}
             onClose={() => close(p.win.id)}
           >
             {p.win.kind === 'incoming' ? (

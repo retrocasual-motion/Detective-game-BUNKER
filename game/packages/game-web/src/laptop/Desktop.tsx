@@ -345,6 +345,7 @@ export function Desktop({
             onMove={(x, y) => patch(p.win.id, { x, y })}
             onMin={() => patch(p.win.id, { min: true })}
             onMax={() => patch(p.win.id, { max: !p.max })}
+            onResize={(w, h) => patch(p.win.id, { w, h })}
             onClose={() => close(p.win.id)}
           >
             {p.win.kind === 'folder' ? (
@@ -552,6 +553,9 @@ export function DesktopIcon({
   );
 }
 
+/** Окно не меньше этого — текст читается (правка автора 11.11); не больше рабочего стола. */
+export const WIN_MIN = { w: 460, h: 300 };
+
 export function Window({
   p,
   active,
@@ -563,6 +567,7 @@ export function Window({
   onMin,
   onMax,
   onClose,
+  onResize,
 }: {
   /** Где и какого размера окно (у ноутбука и компьютера — свои виды окон). */
   p: Pick<Placed, 'x' | 'y' | 'w' | 'h' | 'z' | 'max'>;
@@ -575,8 +580,47 @@ export function Window({
   onMin: () => void;
   onMax: () => void;
   onClose: () => void;
+  /** Тянуть за правый, нижний край или угол — новый размер (правка автора 11.11). */
+  onResize?: (w: number, h: number) => void;
 }) {
   const drag = useRef<{ dx: number; dy: number; scale: number } | null>(null);
+  const size = useRef<{
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    scale: number;
+    dir: string;
+  } | null>(null);
+  const startSize = (dir: string) => (e: PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 || p.max) return;
+    e.stopPropagation();
+    const screen = e.currentTarget.closest('.lap-screen') as HTMLElement | null;
+    const scale = screen ? screen.getBoundingClientRect().width / screen.offsetWidth : 1;
+    size.current = { x: e.clientX, y: e.clientY, w: p.w, h: p.h, scale, dir };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const moveSize = (e: PointerEvent<HTMLDivElement>) => {
+    const r = size.current;
+    if (!r || !onResize) return;
+    const w = r.dir.includes('e') ? r.w + (e.clientX - r.x) / r.scale : r.w;
+    const h = r.dir.includes('s') ? r.h + (e.clientY - r.y) / r.scale : r.h;
+    onResize(
+      Math.round(Math.min(AREA_W - p.x, Math.max(WIN_MIN.w, w))),
+      Math.round(Math.min(AREA_H - p.y, Math.max(WIN_MIN.h, h))),
+    );
+  };
+  const grip = (dir: 'e' | 's' | 'se') => (
+    <div
+      className={`lap-rs lap-rs-${dir}`}
+      data-testid={`lap-resize-${dir}`}
+      onPointerDown={startSize(dir)}
+      onPointerMove={moveSize}
+      onPointerUp={() => {
+        size.current = null;
+      }}
+    />
+  );
   const down = (e: PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0 || p.max || (e.target as Element).closest('button')) return;
     const screen = e.currentTarget.closest('.lap-screen') as HTMLElement | null;
@@ -631,6 +675,13 @@ export function Window({
         </button>
       </div>
       <div className="lap-win-body">{children}</div>
+      {onResize && !p.max && (
+        <>
+          {grip('e')}
+          {grip('s')}
+          {grip('se')}
+        </>
+      )}
     </section>
   );
 }
