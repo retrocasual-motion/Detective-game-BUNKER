@@ -321,6 +321,26 @@ export const DEVICE_MATERIALS: Readonly<Record<string, readonly string[]>> = {
   '47': ['L560', 'L561', 'L562', 'L563', 'L564', 'L565', 'L947'],
   // Телефон Габриэля: содержимое после разблокировки и крупный план экрана блокировки.
   '48': ['L540', 'L949'],
+  // Компьютер следователя (4c-3, DI-A): ответы бюро с вложениями, журналы сервера (TM-A),
+  // экспорт ящика, архив проекта и выпуски газеты из архива номеров.
+  pc: [
+    'L214',
+    'L215',
+    'L387',
+    'L388',
+    'L389',
+    'L390',
+    'L452',
+    'L453',
+    'L735',
+    'L736',
+    'L737',
+    'L738',
+    'L831',
+    'L832',
+    'L833',
+    'L834',
+  ],
 };
 export const deviceOf = (materialId: string) =>
   Object.keys(DEVICE_MATERIALS).find((d) => DEVICE_MATERIALS[d]?.includes(materialId)) ?? null;

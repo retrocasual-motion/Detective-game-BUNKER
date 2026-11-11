@@ -128,7 +128,7 @@ const cellOf = (p: { x: number; y: number }) => ({
   r: (p.y - PAD - (CELL_H - ICON_H) / 2) / CELL_H,
 });
 
-function snapToGrid(at: { x: number; y: number }, taken: { x: number; y: number }[]) {
+export function snapToGrid(at: { x: number; y: number }, taken: { x: number; y: number }[]) {
   const busy = new Set(
     taken.map((p) => {
       const q = cellOf(p);
@@ -151,10 +151,10 @@ function snapToGrid(at: { x: number; y: number }, taken: { x: number; y: number 
 }
 
 /** По умолчанию — столбцами сверху вниз от левого верхнего угла. */
-const gridAt = (k: number) => cellAt(Math.floor(k / GRID_ROWS), k % GRID_ROWS);
+export const gridAt = (k: number) => cellAt(Math.floor(k / GRID_ROWS), k % GRID_ROWS);
 
 /** Сохранённые места — в клетки нынешней сетки (могли быть от прежней). */
-function settle(keys: string[], saved: Record<string, { x: number; y: number }>) {
+export function settle(keys: string[], saved: Record<string, { x: number; y: number }>) {
   const out: Record<string, { x: number; y: number }> = {};
   const placed: { x: number; y: number }[] = [];
   keys.forEach((key, k) => {
@@ -478,7 +478,7 @@ const screenScale = (el: Element) => {
 };
 
 /** Значок на рабочем столе: щелчок — выделить, двойной — открыть, протянуть — переставить. */
-function DesktopIcon({
+export function DesktopIcon({
   name,
   type,
   at,
@@ -552,7 +552,7 @@ function DesktopIcon({
   );
 }
 
-function Window({
+export function Window({
   p,
   active,
   title,
@@ -564,7 +564,8 @@ function Window({
   onMax,
   onClose,
 }: {
-  p: Placed;
+  /** Где и какого размера окно (у ноутбука и компьютера — свои виды окон). */
+  p: Pick<Placed, 'x' | 'y' | 'w' | 'h' | 'z' | 'max'>;
   active: boolean;
   title: string;
   icon: string;

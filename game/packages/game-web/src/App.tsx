@@ -1,6 +1,6 @@
 import { type ContainerId, inboxIds, openedOf } from '@bunker/shared';
 import { useEffect, useMemo } from 'react';
-import { ComputerScreen } from './computer/ComputerScreen.tsx';
+
 import { ArrivalNote } from './desk/ArrivalNote.tsx';
 import { Notebook } from './desk/Notebook.tsx';
 import { PlacedNote } from './desk/PlacedNote.tsx';
@@ -8,6 +8,7 @@ import { ThrowToast, TrashView } from './desk/TrashBin.tsx';
 import { DevActionLine } from './dev/DevActionLine.tsx';
 import { HeldView } from './hold/HeldView.tsx';
 import { LaptopView } from './laptop/LaptopView.tsx';
+import { PcView } from './pc/PcView.tsx';
 import { PetitionCorner } from './petition/PetitionCorner.tsx';
 import { PhoneView } from './phone/PhoneView.tsx';
 import { RoomScene } from './room/RoomScene.tsx';
@@ -86,7 +87,7 @@ export function App() {
       )}
       <ArrivalNote />
       <PlacedNote />
-      <ComputerScreen />
+      <PcView />
       <LaptopView />
       <PhoneView />
       <TrashView />

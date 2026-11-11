@@ -1,0 +1,454 @@
+/* Компьютер следователя (4c-3): рабочее место специалиста Окружного бюро расследований.
+   Полицейский вид (правка автора 11.11): тёмно-синие обои с гербом бюро, служебная полоса
+   «для служебного пользования», строгая панель задач; программа выгрузки — терминал 2000-х
+   (чёрный экран, янтарный текст, вкладки по F-клавишам). Окна и проводник — от ноутбука. */
+
+.pc-view {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+}
+
+/* Офисный монитор 2009 года: тёмно-серая рамка, подбородок с индикатором питания. */
+.pc-monitor {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  padding: 30px 30px 48px;
+  border-radius: 6px;
+  background: linear-gradient(#3a3c40, #26282b);
+  box-shadow:
+    0 0 0 1px #4a4c50,
+    inset 0 1px 0 #55585d,
+    0 30px 80px rgb(0 0 0 / 60%);
+  transform-origin: center;
+  transition:
+    left 0.3s var(--ease-camera),
+    transform 0.3s var(--ease-camera);
+  animation: lap-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+:root[data-motion="reduce"] .pc-monitor {
+  transition: none;
+  animation: none;
+}
+.pc-monitor-chin {
+  position: absolute;
+  inset: auto 30px 0;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.pc-power {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6fd06a;
+  box-shadow: 0 0 6px #6fd06a;
+}
+.pc-screen {
+  background: #07101d;
+}
+
+/* ── Рабочий стол ─────────────────────────────────────────── */
+.pc-wall {
+  background:
+    repeating-linear-gradient(0deg, rgb(255 255 255 / 1.5%) 0 2px, transparent 2px 4px),
+    radial-gradient(ellipse at 50% 42%, #18335a 0%, #0c1d36 55%, #060f1d 100%);
+}
+.pc-seal {
+  width: 360px;
+  height: 360px;
+  color: rgb(214 186 112 / 22%);
+}
+.pc-banner {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 1;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 12px;
+  border-bottom: 2px solid #c9a650;
+  background: linear-gradient(#13284a, #0b1a33);
+  color: #dfe6f0;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+.pc-banner span:first-child {
+  color: #e8cf86;
+  font-weight: 700;
+}
+.pc-banner-dsp {
+  margin-left: auto;
+  padding: 1px 8px;
+  border: 1px solid #b33a3a;
+  color: #ff9c8f;
+  font-weight: 700;
+}
+.pc-icons {
+  inset: 26px 0 34px;
+}
+
+/* Значки: замо́к (зашифрованное вложение) и сервер (выгрузка). */
+.lap-ico-lock {
+  background: linear-gradient(transparent 0 42%, #d7a93a 42% 96%, transparent 96%);
+}
+.lap-ico-lock::before {
+  content: "";
+  position: absolute;
+  inset: 6% 28% 58%;
+  border: 3px solid #9aa2ad;
+  border-bottom: 0;
+  border-radius: 50% 50% 0 0;
+}
+.lap-ico-lock::after {
+  content: "";
+  position: absolute;
+  left: 44%;
+  top: 60%;
+  width: 12%;
+  height: 20%;
+  border-radius: 2px;
+  background: #3b2c0a;
+}
+.lap-ico-server {
+  background:
+    radial-gradient(circle at 20% 20%, #5ee05e 0 6%, transparent 7%),
+    radial-gradient(circle at 20% 52%, #5ee05e 0 6%, transparent 7%),
+    radial-gradient(circle at 20% 84%, #e0b05e 0 6%, transparent 7%),
+    repeating-linear-gradient(#59606b 0 28%, #1d2026 28% 34%);
+  clip-path: inset(4% 12% 4% 12% round 2px);
+}
+
+/* ── Окно пароля ──────────────────────────────────────────── */
+.pc-pass {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  background: #ece9e2;
+}
+.pc-pass-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #c9c4b8;
+}
+.pc-pass-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pc-pass-field input {
+  flex: 1;
+  padding: 3px 6px;
+  border: 1px solid #7f9db9;
+  font: inherit;
+}
+.pc-pass-msg {
+  min-height: 18px;
+  color: #a12a1a;
+}
+.pc-pass-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+.pc-pass-actions button,
+.pc-news-form button {
+  min-width: 90px;
+  padding: 3px 12px;
+  border: 1px solid #6f7a88;
+  border-radius: 3px;
+  background: linear-gradient(#fff, #e3e0d8);
+  font: inherit;
+}
+
+/* ── Почтовый клиент экспорта ящика ───────────────────────── */
+.pc-mail {
+  display: flex;
+  background: #fff;
+}
+.pc-mail-folders {
+  flex: none;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-right: 1px solid #c9c4b8;
+  background: #eef2f8;
+  font-size: 12px;
+  word-break: break-all;
+}
+.pc-mail-folder-on {
+  padding: 2px 6px;
+  background: #316ac5;
+  color: #fff;
+}
+.pc-mail-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.pc-mail-list {
+  flex: none;
+  display: block;
+  max-height: 40%;
+  overflow: auto;
+  border-collapse: collapse;
+  border-bottom: 3px double #c9c4b8;
+  font-size: 12px;
+}
+.pc-mail-list th {
+  position: sticky;
+  top: 0;
+  padding: 3px 8px;
+  border-bottom: 1px solid #ccc;
+  background: #f4f2ec;
+  font-weight: 400;
+  text-align: left;
+}
+.pc-mail-list td {
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+.pc-mail-list tbody tr:hover {
+  background: #eef3fb;
+}
+.pc-mail-list .pc-row-sel,
+.pc-mail-list .pc-row-sel:hover {
+  background: #316ac5;
+  color: #fff;
+}
+.pc-mail-read {
+  flex: 1;
+  overflow: auto;
+  padding: 10px 16px;
+}
+.pc-mail-head {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #ddd;
+  font-size: 12px;
+}
+.pc-mail-head span {
+  display: inline-block;
+  width: 48px;
+  color: #666;
+}
+
+/* ── Контейнер архива ─────────────────────────────────────── */
+.pc-archive {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+.pc-archive-head {
+  padding: 6px 10px;
+  border-bottom: 1px solid #c9c4b8;
+  background: #f4f2ec;
+  color: #2c5a2c;
+}
+
+/* ── «Экспорт сервера VL-31»: терминал 2000-х ─────────────── */
+.pc-term {
+  display: flex;
+  flex-direction: column;
+  outline: none;
+  background: #050505;
+  color: #f2b13c;
+  font:
+    13px / 1.45 "Lucida Console",
+    "Courier New",
+    monospace;
+  text-shadow: 0 0 2px rgb(242 177 60 / 45%);
+}
+.pc-term-banner {
+  flex: none;
+  padding: 4px 10px;
+  background: #f2b13c;
+  color: #050505;
+  font-weight: 700;
+  text-shadow: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pc-term-empty {
+  padding: 14px 12px;
+}
+.pc-term-cursor {
+  display: inline-block;
+  width: 9px;
+  height: 15px;
+  margin-left: 4px;
+  vertical-align: -2px;
+  background: #f2b13c;
+  animation: pc-blink 1s steps(1) infinite;
+}
+:root[data-motion="reduce"] .pc-term-cursor {
+  animation: none;
+}
+@keyframes pc-blink {
+  50% {
+    opacity: 0;
+  }
+}
+.pc-term-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.pc-term-tabs {
+  flex: none;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  border-right: 1px solid #5c4215;
+}
+.pc-term-tabs button {
+  padding: 4px 8px;
+  border: 0;
+  border-bottom: 1px dashed #3a2a0d;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-shadow: inherit;
+}
+.pc-term-tabs button span {
+  color: #ffd98a;
+}
+.pc-term-tabs button:hover {
+  background: #1c1407;
+}
+.pc-term-tabs .pc-term-tab-on,
+.pc-term-tabs .pc-term-tab-on:hover {
+  background: #f2b13c;
+  color: #050505;
+  text-shadow: none;
+}
+.pc-term-tabs .pc-term-tab-on span {
+  color: #050505;
+}
+.pc-term-body {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 8px 14px;
+}
+.pc-term-title {
+  margin-bottom: 8px;
+  color: #ffd98a;
+}
+.pc-term-body table {
+  border-collapse: collapse;
+}
+.pc-term-body td,
+.pc-term-body th {
+  padding: 1px 8px;
+  border: 1px solid #5c4215;
+  text-align: left;
+  vertical-align: top;
+}
+.pc-term-body code,
+.pc-term-body pre {
+  font: inherit;
+}
+.pc-term-body h1,
+.pc-term-body h2,
+.pc-term-body h3 {
+  font-size: inherit;
+  color: #ffd98a;
+}
+.pc-term-body a {
+  color: inherit;
+}
+
+/* ── Поступления и браузер ────────────────────────────────── */
+.pc-empty {
+  margin: 0;
+  padding: 18px;
+  color: #777;
+}
+.pc-news-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 10px;
+  border: 1px solid #c9c4b8;
+  background: #f7f5ef;
+}
+.pc-news-form label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pc-news-form input {
+  width: 130px;
+  padding: 3px 6px;
+  border: 1px solid #7f9db9;
+  font: inherit;
+}
+.pc-news-msg {
+  min-height: 18px;
+  margin-top: 6px;
+  color: #a12a1a;
+}
+
+/* Панель задач: тёмно-синяя, кнопка «Бюро» — золото по синему. */
+.pc-taskbar {
+  background: linear-gradient(#142a4c, #0a1830);
+  border-top: 2px solid #c9a650;
+}
+.pc-startbtn {
+  border-radius: 0;
+  background: linear-gradient(#1f3f6e, #142a4c);
+  border-right: 1px solid #c9a650;
+  color: #e8cf86;
+  letter-spacing: 0.06em;
+}
+.pc-startbtn.lap-startbtn-on {
+  background: linear-gradient(#0d1f3b, #1f3f6e);
+}
+.pc-taskbar .lap-tasks button {
+  border-color: #2f4f80;
+  background: linear-gradient(#1f3a66, #172e52);
+}
+.pc-taskbar .lap-tasks .lap-task-on {
+  background: linear-gradient(#0d1f3b, #18325a);
+  border-color: #c9a650;
+}
+.pc-taskbar .lap-tray {
+  border-left-color: #2f4f80;
+}
+.pc-start .pc-start-user,
+.pc-start .lap-start-foot {
+  background: linear-gradient(#1f3f6e, #0d1f3b);
+  color: #e8cf86;
+}
+.pc-start {
+  width: 300px;
+  border-color: #0d1f3b;
+}
+
+/* Окна компьютера — строже, чем у ноутбука: тёмно-синий заголовок. */
+.pc-desktop .lap-win {
+  border-color: #1d3558;
+}
+.pc-desktop .lap-title {
+  background: linear-gradient(#5d6f88, #46566c);
+}
+.pc-desktop .lap-win-active .lap-title {
+  background: linear-gradient(#24477a, #142a4c);
+}

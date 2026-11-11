@@ -37,24 +37,17 @@ test('щелчок по устройству — вещь в руках (эта�
   await expect(viewer).toBeHidden();
 });
 
-test('монитор: щелчок — экран крупно, значки разделов, «Пусто»; ✕, Esc и щелчок мимо закрывают', async ({
+test('монитор: щелчок — компьютер следователя крупно; Esc и щелчок мимо закрывают', async ({
   page,
 }) => {
   await page.getByTestId('computer-monitor').click();
   const computer = page.getByTestId('computer');
   await expect(computer).toBeVisible();
-  for (const s of ['Поступления', 'Почта', 'Приобщить страницу']) {
-    await expect(page.getByTestId(`computer-tab-${s}`)).toBeVisible();
-  }
-  await page.getByTestId('computer-tab-Почта').click();
-  await expect(page.getByTestId('computer-panel')).toHaveText('Пусто');
+  for (const s of ['Поступления', 'Экспорт сервера VL-31', 'Браузер'])
+    await expect(page.getByTestId(`lap-icon-${s}`)).toBeVisible();
   // Стрелки при открытом компьютере не переключают вид.
   await page.keyboard.press('ArrowUp');
   await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'desk');
-  await page.getByTestId('computer-close').click();
-  await expect(computer).toBeHidden();
-
-  await page.getByTestId('computer-monitor').click();
   await page.keyboard.press('Escape');
   await expect(computer).toBeHidden();
 
