@@ -39,6 +39,58 @@ test('блокнот: язычок — страница, записи сохра
   await expect(text(page)).toHaveValue('Спросить про ящик Эммы');
 });
 
+test('пишут на любой строке: щелчок по пятой строке пустой страницы — курсор там', async ({
+  page,
+}) => {
+  await page.getByTestId('notebook-tab').click();
+  const box = await text(page).boundingBox();
+  if (!box) throw new Error('нет страницы');
+  await page.mouse.click(box.x + 120, box.y + 30 * 4 + 15);
+  await page.keyboard.type('пятая');
+  await expect(text(page)).toHaveValue('\n\n\n\nпятая');
+});
+
+test('ниже записи щёлкнули — пишут там, а не в начале первой строки', async ({ page }) => {
+  await page.getByTestId('notebook-tab').click();
+  await text(page).pressSequentially('Ящик Эммы');
+  const box = await text(page).boundingBox();
+  if (!box) throw new Error('нет страницы');
+  await page.mouse.click(box.x + 100, box.y + 30 * 3 + 12);
+  await page.keyboard.type('вопрос');
+  await expect(text(page)).toHaveValue(/^Ящик Эммы\n+вопрос$/);
+});
+
+test('страницы: листают вперёд и назад, на каждой своё; после перезагрузки так же', async ({
+  page,
+}) => {
+  await page.getByTestId('notebook-tab').click();
+  await expect(page.getByTestId('notebook-next')).toBeDisabled();
+  await text(page).fill('первая');
+  await page.getByTestId('notebook-next').click();
+  await expect(page.getByTestId('notebook-page')).toHaveText('2');
+  await expect(text(page)).toHaveValue('');
+  await text(page).fill('вторая');
+  await page.getByTestId('notebook-prev').click();
+  await expect(text(page)).toHaveValue('первая');
+  await page.waitForTimeout(800);
+  await page.reload();
+  await expect(page.getByTestId('room')).toBeVisible();
+  await page.getByTestId('notebook-tab').click();
+  // Открывается на последней исписанной странице.
+  await expect(page.getByTestId('notebook-page')).toHaveText('2');
+  await expect(text(page)).toHaveValue('вторая');
+});
+
+test('страница кончилась: Enter на последней строке — следующая страница', async ({ page }) => {
+  await page.getByTestId('notebook-tab').click();
+  await text(page).fill(Array.from({ length: 15 }, (_, k) => `строка ${k + 1}`).join('\n'));
+  await page.keyboard.press('Control+End');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('notebook-page')).toHaveText('2');
+  await page.keyboard.type('дальше');
+  await expect(text(page)).toHaveValue('дальше');
+});
+
 test('поверх листа: лист не закрывается, стрелки и Esc в блокноте до листа не доходят', async ({
   page,
 }) => {

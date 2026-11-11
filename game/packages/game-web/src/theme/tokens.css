@@ -111,7 +111,8 @@
   --search-width: min(420px, 100vw);
   --folder-height: min(82vh, 720px);
   /* Блокнот следователя (DV-A). */
-  --notebook-width: min(360px, 27vw);
+  /* Одной ширины на любом экране: перенос строк на странице не меняется. */
+  --notebook-width: 340px;
   --notebook-tab-width: 120px;
   --corner-width: 240px;
   --corner-height: 48px;

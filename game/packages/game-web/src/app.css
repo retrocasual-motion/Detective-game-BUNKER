@@ -968,7 +968,6 @@ button {
 /* Папка ходатайства и поиск открыты вместе — панель поиска уже (SR-D). */
 :root:has(.petition-open) {
   --search-width: min(280px, 22vw);
-  --notebook-width: min(280px, 22vw);
 }
 /* Панель поиска справа (SR-D) — лист левее, не под ней. */
 .viewer-with-search {
@@ -2332,7 +2331,8 @@ button {
   bottom: 0;
   z-index: 50;
   width: var(--notebook-width);
-  height: var(--folder-height);
+  /* Страница — 15 строк по 30 px на любом экране: язычок, пружина, страница, низ. */
+  height: calc(var(--corner-height) + 26px + 450px + 44px);
   translate: 0 calc(100% - var(--corner-height) - var(--notebook-peek));
   transition:
     translate 0.3s var(--ease-camera),
@@ -2392,16 +2392,25 @@ button {
     radial-gradient(circle at 50% 62%, #4a4a48 0 4px, transparent 4.5px) 0 0 / 22px 22px repeat-x,
     linear-gradient(#2f3a33 0 9px, transparent 9px);
 }
+/* Крестик — над страницей, слева от язычка: не закрывает строки. */
 .notebook-close {
   position: absolute;
-  top: 30px;
-  right: var(--space-2);
+  top: calc(var(--corner-height) * -1 + 6px);
+  right: calc(var(--notebook-tab-width) + var(--space-2));
   z-index: 1;
 }
+.notebook-page {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+}
 .notebook-text {
-  flex: 1;
-  min-height: 0;
+  display: block;
+  height: 100%;
   width: 100%;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
   padding: 0 44px 0 52px;
   border: none;
   outline: none;
@@ -2425,4 +2434,38 @@ button {
 :root[data-motion="reduce"] .notebook,
 :root[data-motion="reduce"] .notebook-tab {
   transition: none;
+}
+
+/* Невидимая копия страницы — считать строки (перенос по словам), как у самой страницы. */
+.notebook-mirror {
+  position: absolute;
+  inset: 0 0 auto;
+  height: auto;
+  visibility: hidden;
+  pointer-events: none;
+}
+/* Низ страницы: перелистнуть назад и вперёд, номер страницы. */
+.notebook-foot {
+  flex: none;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  border-top: 1px solid #e2d8bd;
+  color: #6b6249;
+  font: 14px var(--font-paper);
+}
+.notebook-turn {
+  width: 34px;
+  height: 28px;
+  border: 1px solid #cfc3a3;
+  border-radius: var(--radius);
+  background: #efe7cf;
+  color: #4a4330;
+  font-size: 20px;
+  line-height: 1;
+}
+.notebook-turn:disabled {
+  opacity: 0.35;
 }
