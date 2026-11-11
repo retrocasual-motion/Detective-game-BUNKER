@@ -68,12 +68,12 @@ test('ответы бюро — в «Поступлениях»; термина�
   await expect(term).toBeVisible();
   await expect(page.getByTestId('pc-term-F1')).toContainText('Приложение № 7');
   await expect(page.getByTestId('pc-term-body')).toHaveAttribute('data-material', 'L214');
-  // L214 — семь вкладок, затем L387 и копии экспортов.
-  await expect(page.getByTestId('pc-term-F8')).toContainText('Материалы сеансов');
+  // L214 — четыре вкладки (A-264), затем L387 и копии экспортов.
+  await expect(page.getByTestId('pc-term-F5')).toContainText('Материалы сеансов');
   await page.getByTestId('pc-term-F2').click();
   await expect(page.getByTestId('pc-term-body')).toContainText('F2');
   await term.focus();
-  await page.keyboard.press('F8');
+  await page.keyboard.press('F5');
   await expect(page.getByTestId('pc-term-body')).toHaveAttribute('data-material', 'L387');
 });
 
@@ -92,7 +92,7 @@ test('экспорт ящика: неверный пароль — «Невер�
   await input.fill('тоффи');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('pc-mail')).toBeVisible();
-  await expect(page.getByTestId('pc-letter-11')).toBeVisible();
+  await expect(page.getByTestId('pc-letter-10')).toBeVisible();
   await page.getByTestId('pc-letter-2').click();
   await expect(page.getByTestId('pc-mail-read')).toContainText('j.mercer@sentinel-labs.net');
   await expect(page.getByTestId('inbox-L453')).toHaveCount(0);
