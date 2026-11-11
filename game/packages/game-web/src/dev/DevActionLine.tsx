@@ -24,6 +24,22 @@ const PREPARE = [
   'ПАРОЛЬ | ноутбук | 5-1-2-3-6-9-8-7-4',
 ];
 
+/**
+ * «КОМПЬЮТЕР» — ответы бюро для проверки компьютера следователя (4c-3): журналы сервера (L214,
+ * L215, L387–L390), экспорт ящика (L452) и архив проекта (L735). Пароли и даты выпусков — не
+ * вводятся: их проверяют руками на компьютере. Строки — из сквозного прохода пакета v3.3.
+ */
+const COMPUTER = [
+  'ХОДАТАЙСТВО | zapros@okrug-bureau.org | прошу: 20, «вызов переведён на голосовую почту» ; основание: 20, «приложение № 7»',
+  'ХОДАТАЙСТВО | zapros@okrug-bureau.org | прошу: 28, «терминал технической (отметки обходов)» ; основание: 30, «С 08:10»',
+  'ХОДАТАЙСТВО | zapros@okrug-bureau.org | прошу: 04, «Материалы сеансов пользователей служебного узла» ; основание: L214, «сеанс пользователя 05 — просмотр и экспорт»',
+  'АДРЕС | браузер | mailbridge.net',
+  'ХОДАТАЙСТВО | lawful-requests@mailbridge.net | прошу: L249, «Запросы органов» ; основание: L387, «e.pierce.uk@mailbridge.net»',
+  'АДРЕС | браузер | vaultline-program.com',
+  'ОСМОТР | 29__бумаги_из_помещений (пачка П-02, слой картона сбоку) | вытащить картон',
+  'ХОДАТАЙСТВО | documents@vaultline-program.com | прошу: L991, «Выбыл досрочно. Опись — архив проекта» ; основание: 26, «бланк VAULTLINE № VL-31»',
+];
+
 interface Entry {
   id: number;
   line: string;
@@ -37,7 +53,7 @@ interface Entry {
  * руками, пока игровых действий в интерфейсе нет (папка — этап 3, замки и осмотр — этап 4).
  * Формат — как в сквозном проходе пакета: «ДЕЙСТВИЕ | ЦЕЛЬ | ЗНАЧЕНИЕ» (хвост «=> …» и «# …»
  * можно не убирать); «СБРОС» — начать дело заново; «ПОРЯДОК» — разложить стену по порядку;
- * «ПОДГОТОВКА» — открыть всё для проверки ходатайств. В игре для игроков её нет.
+ * «ПОДГОТОВКА» — открыть всё для проверки ходатайств; «КОМПЬЮТЕР» — ответы бюро для компьютера. В игре для игроков её нет.
  */
 export function DevActionLine() {
   const [open, setOpen] = useState(false);
@@ -65,14 +81,18 @@ export function DevActionLine() {
     note('ПОРЯДОК', 'Стена разложена по порядку.');
   };
 
-  const prepare = async () => {
+  const prepare = async (
+    lines: readonly string[] = PREPARE,
+    name = 'ПОДГОТОВКА',
+    done = 'Адреса и материалы для проверки ходатайств открыты (лоток «Входящие»).',
+  ) => {
     if (busy) return;
     setBusy(true);
     // Конверты архива (A-260) — все вскрыты: карточки берутся из стартовых материалов.
     const g = useGame.getState();
     g.updateState((s) => openAll(s, g.materials));
     const opened: string[] = [];
-    for (const l of PREPARE) {
+    for (const l of lines) {
       const r = await postActionLine(l).catch(() => null);
       if (r) {
         addReleased(r.released);
@@ -84,9 +104,9 @@ export function DevActionLine() {
       [
         {
           id: Date.now(),
-          line: 'ПОДГОТОВКА',
+          line: name,
           result: 'готово',
-          reply: 'Адреса и материалы для проверки ходатайств открыты (лоток «Входящие»).',
+          reply: done,
           opened,
         },
         ...l,
@@ -106,6 +126,15 @@ export function DevActionLine() {
     if (cmd === 'ПОДГОТОВКА') {
       setLine('');
       await prepare();
+      return;
+    }
+    if (cmd === 'КОМПЬЮТЕР') {
+      setLine('');
+      await prepare(
+        COMPUTER,
+        'КОМПЬЮТЕР',
+        'Ответы бюро — на компьютере следователя («Поступления», «Экспорт сервера VL-31»). Пароли и даты — вводить на компьютере.',
+      );
       return;
     }
     setBusy(true);
@@ -200,6 +229,21 @@ export function DevActionLine() {
               onClick={() => void prepare()}
             >
               Подготовка к ходатайствам
+            </button>
+            <button
+              type="button"
+              data-testid="dev-computer"
+              disabled={busy}
+              title="Выдать ответы бюро для проверки компьютера следователя (команда «КОМПЬЮТЕР»)"
+              onClick={() =>
+                void prepare(
+                  COMPUTER,
+                  'КОМПЬЮТЕР',
+                  'Ответы бюро — на компьютере следователя («Поступления», «Экспорт сервера VL-31»). Пароли и даты — вводить на компьютере.',
+                )
+              }
+            >
+              Ответы бюро для компьютера
             </button>
             <button type="button" data-testid="dev-reading" onClick={showReading}>
               Время чтения
