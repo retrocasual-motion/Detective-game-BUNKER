@@ -38,6 +38,19 @@ export interface Proc {
   parent: number;
   /** Полный путь к исполняемому файлу (может быть пустым, если система его не отдала). */
   exe: string;
+  /** Командная строка процесса: путь к программе — из неё, если `exe` пустой. */
+  cmd?: string;
+}
+
+/**
+ * Путь к программе процесса. Бывает, Windows не отдаёт `ExecutablePath` (случай 11.11: у
+ * осиротевшего io_worker он пустой) — тогда первое слово командной строки, в кавычках или без.
+ */
+export function exeOf(p: Proc): string {
+  if (p.exe) return p.exe;
+  const cmd = (p.cmd ?? '').trim();
+  const quoted = /^"([^"]+)"/.exec(cmd);
+  return quoted?.[1] ?? cmd.split(/\s+/)[0] ?? '';
 }
 
 /** Файл лежит внутри папки (пути Windows и POSIX; регистр букв не важен). */
@@ -52,7 +65,10 @@ const inside = (dir: string, file: string) => {
  * его потомки — даже если сам `owner` уже умер. Чужие программы на порту не трогаем.
  */
 export function stalePids(procs: Proc[], owners: number[], gameDir: string): number[] {
-  const ours = (p: Proc) => /postgres(\.exe)?$/i.test(p.exe) && inside(gameDir, p.exe);
+  const ours = (p: Proc) => {
+    const exe = exeOf(p);
+    return /postgres(\.exe)?$/i.test(exe) && inside(gameDir, exe);
+  };
   const picked = new Set<number>();
   const queue = [...owners];
   while (queue.length) {
@@ -73,7 +89,7 @@ const run = promisify(execFile);
 async function snapshot(port: number): Promise<{ owners: number[]; procs: Proc[] }> {
   const ps = [
     `$o = @(Get-NetTCPConnection -State Listen -LocalPort ${port} -ErrorAction SilentlyContinue | ForEach-Object { $_.OwningProcess } | Select-Object -Unique)`,
-    `$p = @(Get-CimInstance Win32_Process -Filter "Name='postgres.exe'" | ForEach-Object { @{ pid = $_.ProcessId; parent = $_.ParentProcessId; exe = [string]$_.ExecutablePath } })`,
+    `$p = @(Get-CimInstance Win32_Process -Filter "Name='postgres.exe'" | ForEach-Object { @{ pid = $_.ProcessId; parent = $_.ParentProcessId; exe = [string]$_.ExecutablePath; cmd = [string]$_.CommandLine } })`,
     '@{ owners = $o; procs = $p } | ConvertTo-Json -Depth 3 -Compress',
   ].join('; ');
   const { stdout } = await run('powershell', ['-NoProfile', '-NonInteractive', '-Command', ps], {

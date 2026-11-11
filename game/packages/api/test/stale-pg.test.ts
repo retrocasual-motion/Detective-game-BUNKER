@@ -16,6 +16,16 @@ describe('зависшая база разработки (случай 09.11)', 
     expect(stalePids(procs, [48544], GAME).sort((a, b) => a - b)).toEqual([700, 36164]);
   });
 
+  it('система не отдала путь к программе — берём его из командной строки (случай 11.11)', () => {
+    const cmd = `"${PG.replaceAll('\\', '/')}" --forkchild="io_worker" 5440`;
+    const procs = [{ pid: 37996, parent: 4108, exe: '', cmd }];
+    expect(stalePids(procs, [4108], GAME)).toEqual([37996]);
+    const other = [
+      { pid: 7, parent: 4108, exe: '', cmd: '"C:/Program Files/Other/postgres.exe" -D x' },
+    ];
+    expect(stalePids(other, [4108], GAME)).toEqual([]);
+  });
+
   it('чужая программа на порту — не трогаем', () => {
     const procs = [{ pid: 5, parent: 1, exe: 'C:\\Program Files\\Other\\postgres.exe' }];
     expect(stalePids(procs, [5], GAME)).toEqual([]);
