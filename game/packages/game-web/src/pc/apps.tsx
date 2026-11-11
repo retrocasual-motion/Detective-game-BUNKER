@@ -1,11 +1,21 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { postAction } from '../api.ts';
 import { FileIcon } from '../laptop/apps.tsx';
 import { useGame } from '../store.ts';
-import { type Incoming, incoming, issueOf, mailbox, normalizeDate, serverTabs } from './content.ts';
+import {
+  forScreen,
+  hasValue,
+  type Incoming,
+  incoming,
+  issueOf,
+  locate,
+  mailbox,
+  normalizeDate,
+  serverDocs,
+} from './content.ts';
 
 /**
  * Программы компьютера следователя (4c-3; CO-A, DI-A, TM-A): «Поступления» — вложения ответов
@@ -201,79 +211,153 @@ export function DocWindow({ id }: { id: string }) {
   return (
     <div className="lap-doc-scroll">
       <div className="lap-page" data-material={m.id} data-testid="pc-doc">
-        {md(m.body)}
+        {md(forScreen(m.body))}
       </div>
     </div>
   );
 }
 
+/** Ячейки, по которым можно щёлкнуть, — короткие значения (код, терминал, маршрут), не время. */
+const pickable = (td: HTMLTableCellElement) => {
+  const t = (td.textContent ?? '').trim();
+  return td.tagName === 'TD' && td.cellIndex > 0 && t.length > 0 && t.length <= 32 && t !== '—';
+};
+
 /**
- * «Экспорт сервера VL-31» (TM-A): экран терминала 2000-х; вкладки — что пришло по ходатайствам
- * (L214 по разделам, L215, L387, копии экспортов). Клавиши F1… — вкладки.
+ * «Экспорт сервера VL-31» (TM-A; вид TM2-A + TM2-B — автор 11.11): терминал 2000-х. Слева — не
+ * больше четырёх документов (что пришло по ходатайствам), F1… — документ; над текстом — разделы
+ * ярлыками. Щелчок по коду, терминалу или маршруту в таблице — строки с этим значением ярче,
+ * прочие бледнеют (не исчезают); «✕» — как было. Ввода нет; поиск — свой, по делу.
  */
 export function Terminal({ start }: { start?: string }) {
   const materials = useGame((g) => g.materials);
-  const tabs = useMemo(() => serverTabs(materials), [materials]);
-  const first = Math.max(
-    0,
-    tabs.findIndex((t) => t.material === start),
-  );
-  const [i, setI] = useState(first);
-  const cur = tabs[i];
+  const docs = useMemo(() => serverDocs(materials), [materials]);
+  const [pos, setPos] = useState(() => locate(docs, start));
+  const [mark, setMark] = useState<string | null>(null);
+  const body = useRef<HTMLElement>(null);
+  const doc = docs[pos.doc] ?? docs[0];
+  const part = doc?.parts[pos.part] ?? doc?.parts[0];
+  // Другой документ — выделение снимается: оно работает внутри документа (по всем его разделам).
+  const openDoc = (d: number) => {
+    setPos({ doc: d, part: docs[d]?.start ?? 0 });
+    setMark(null);
+  };
+
+  // Выделение — по всем таблицам открытой части; ячейки, по которым можно щёлкнуть, — отмечены.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: пересчёт при смене части и значения
+  useLayoutEffect(() => {
+    const root = body.current;
+    if (!root) return;
+    for (const td of root.querySelectorAll('td')) td.classList.toggle('pc-pick', pickable(td));
+    // Журнал событий (время · терминал · учётная запись · событие · результат) — свои ширины.
+    for (const t of root.querySelectorAll('table')) {
+      const th = [...t.querySelectorAll('th')].map((x) => x.textContent?.trim());
+      t.classList.toggle('pc-log', th.length === 5 && th[0] === 'Время');
+    }
+    for (const tr of root.querySelectorAll('tbody tr')) {
+      const cells = [...tr.querySelectorAll('td')].slice(1).map((td) => td.textContent ?? '');
+      const on = !!mark && cells.some((c) => hasValue(c, mark));
+      tr.classList.toggle('pc-row-on', on);
+      tr.classList.toggle('pc-row-off', !!mark && !on);
+    }
+  }, [mark, pos, part?.body]);
+
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: F1… — вкладки терминала, когда он в фокусе
+    // biome-ignore lint/a11y/noStaticElementInteractions: F1… — документы терминала, когда он в фокусе
     <div
       className="pc-term"
       data-testid="pc-terminal"
       tabIndex={-1}
       onKeyDown={(e) => {
-        const n = /^F(\d+)$/.exec(e.key)?.[1];
-        if (n && tabs[Number(n) - 1]) {
+        const n = /^F(\d)$/.exec(e.key)?.[1];
+        if (n && docs[Number(n) - 1]) {
           e.preventDefault();
-          setI(Number(n) - 1);
+          openDoc(Number(n) - 1);
         }
       }}
     >
-      <div className="pc-term-banner">
-        ОКРУЖНОЕ БЮРО РАССЛЕДОВАНИЙ · ДЕЛО № 09-1128 · ВЫГРУЗКА СЛЕДСТВИЯ С СЕРВЕРА ОБЪЕКТА VL-31
+      {/* Строка заголовка программы — неяркая: не меню и не кнопка (правка автора 11.11). */}
+      <div className="pc-term-head">
+        <span>ОКРУЖНОЕ БЮРО РАССЛЕДОВАНИЙ · ДЕЛО № 09-1128</span>
+        <span>ВЫГРУЗКА С СЕРВЕРА ОБЪЕКТА VL-31</span>
       </div>
-      {tabs.length === 0 ? (
+      {!doc || !part ? (
         <div className="pc-term-empty" data-testid="pc-terminal-empty">
           &gt; НЕТ ДАННЫХ. Выгрузки с сервера объекта выдаются бюро по ходатайству специалиста.
           <span className="pc-term-cursor" />
         </div>
       ) : (
         <div className="pc-term-main">
+          <div className="pc-term-page">
+            {doc.parts.length > 1 && (
+              <div className="pc-term-parts">
+                {doc.parts.map((p, k) => (
+                  <button
+                    key={p.label}
+                    type="button"
+                    aria-pressed={k === pos.part}
+                    className={k === pos.part ? 'pc-part-on' : undefined}
+                    data-testid={`pc-part-${k}`}
+                    onClick={() => setPos({ doc: pos.doc, part: k })}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            {mark && (
+              <div className="pc-term-mark" data-testid="pc-mark">
+                Выделено: <b>{mark}</b>
+                <button
+                  type="button"
+                  aria-label="Снять выделение"
+                  data-testid="pc-mark-clear"
+                  onClick={() => setMark(null)}
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            {/* biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: щелчок по ячейке — необязательное выделение; всё читается и без него */}
+            <section
+              ref={body}
+              className="pc-term-body"
+              data-material={part.material}
+              data-testid="pc-term-body"
+              onClick={(e) => {
+                const td = (e.target as HTMLElement).closest('td');
+                if (!td || !pickable(td) || window.getSelection()?.toString()) return;
+                const v = (td.textContent ?? '').trim();
+                setMark((m) => (m === v ? null : v));
+              }}
+            >
+              {/* Паспорт выгрузки — над первым разделом документа, не над каждым. */}
+              {doc.note && pos.part === 0 && <div className="pc-term-note">{doc.note}</div>}
+              <Markdown remarkPlugins={[remarkGfm]}>{part.body}</Markdown>
+            </section>
+          </div>
+          {/* Документы — строкой F-клавиш внизу, как в программах DOS (Norton Commander). */}
           <nav className="pc-term-tabs">
-            {tabs.map((t, k) => (
+            {docs.map((d, k) => (
               <button
-                key={`${t.material}-${t.title}`}
+                key={d.key}
                 type="button"
-                className={k === i ? 'pc-term-tab-on' : undefined}
-                data-testid={`pc-term-${t.key}`}
-                onClick={() => setI(k)}
+                className={k === pos.doc ? 'pc-term-tab-on' : undefined}
+                data-testid={`pc-term-${d.key}`}
+                onClick={() => openDoc(k)}
               >
-                <span>[{t.key}]</span> {t.title}
+                <kbd>{d.key}</kbd>
+                {d.title}
               </button>
             ))}
           </nav>
-          <section
-            className="pc-term-body"
-            data-material={cur?.material}
-            data-testid="pc-term-body"
-          >
-            <div className="pc-term-title">
-              &gt; {cur?.key} · {cur?.title}
-            </div>
-            {cur && <Markdown remarkPlugins={[remarkGfm]}>{cur.body}</Markdown>}
-          </section>
         </div>
       )}
     </div>
   );
 }
 
-/** «Поступления»: вложения ответов бюро — по одному, как пришли. */
+/** «Поступления»: письма-ответы; вложение каждого сохранено на рабочий стол (правка автора 11.11). */
 export function IncomingFolder({ open }: { open: (it: Incoming) => void }) {
   const materials = useGame((g) => g.materials);
   const list = useMemo(() => incoming(materials), [materials]);
@@ -287,14 +371,14 @@ export function IncomingFolder({ open }: { open: (it: Incoming) => void }) {
       <div className="lap-files-wrap">
         {list.length === 0 ? (
           <p className="pc-empty" data-testid="pc-incoming-empty">
-            Поступлений нет. Вложения ответов на ходатайства появляются здесь.
+            Поступлений нет. Ответы на ходатайства с вложениями появляются здесь.
           </p>
         ) : (
           <table className="lap-files">
             <thead>
               <tr>
-                <th>Имя</th>
-                <th>Тип</th>
+                <th>Письмо</th>
+                <th>Вложение</th>
               </tr>
             </thead>
             <tbody>
@@ -307,26 +391,16 @@ export function IncomingFolder({ open }: { open: (it: Incoming) => void }) {
                   onDoubleClick={() => open(it)}
                 >
                   <td>
-                    <FileIcon
-                      type={it.kind === 'letter' ? 'txt' : it.kind === 'server' ? 'server' : 'lock'}
-                      size={16}
-                    />{' '}
-                    {it.name}
+                    <FileIcon type="txt" size={16} /> {it.name}
                   </td>
-                  <td>
-                    {it.kind === 'letter'
-                      ? 'Письмо'
-                      : it.kind === 'server'
-                        ? 'Выгрузка сервера'
-                        : 'Зашифрованный файл'}
-                  </td>
+                  <td>{it.attachment ? `${it.attachment} — на рабочем столе` : '—'}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
-      <div className="lap-status">Объектов: {list.length}</div>
+      <div className="lap-status">Писем: {list.length}</div>
     </div>
   );
 }

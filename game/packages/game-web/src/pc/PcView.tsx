@@ -1,5 +1,5 @@
 import type { PcWindow } from '@bunker/shared';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ddmmyyyy, gameNow, hhmm } from '../clock.ts';
 import { useFreeArea, useSelectionPetition } from '../device/deviceView.tsx';
 import { FileIcon } from '../laptop/apps.tsx';
@@ -15,7 +15,7 @@ import {
   PcBrowser,
   Terminal,
 } from './apps.tsx';
-import type { Incoming } from './content.ts';
+import { attachments, type Incoming } from './content.ts';
 import './pc.css';
 
 /** Экран монитора, логические px. */
@@ -41,7 +41,9 @@ interface Placed {
   max: boolean;
 }
 
-const ICONS: { key: string; name: string; type: string; win: Win }[] = [
+type Icon = { key: string; name: string; type: string; win: Win };
+/** Постоянные значки; зашифрованные вложения добавляются своими файлами (правка автора 11.11). */
+const ICONS: Icon[] = [
   {
     key: 'incoming',
     name: 'Поступления',
@@ -149,14 +151,43 @@ function PcDesktop({ material }: { material: string | null }) {
   const [wins, setWins] = useState<Placed[]>(() => (saved?.windows ?? []).map(fromSaved));
   const [iconPos, setIconPos] = useState<Record<string, { x: number; y: number }>>(() =>
     settle(
-      ICONS.map((i) => i.key),
+      // Все сохранённые значки, и вложений тоже (их нет в постоянном списке).
+      [...new Set([...ICONS.map((i) => i.key), ...Object.keys(saved?.icons ?? {})])],
       saved?.icons ?? {},
     ),
   );
+  const materials = useGame((g) => g.materials);
+  // Вложение ответа — свой файл на рабочем столе: замок, пока пароль не введён (правка автора 11.11).
+  const icons = useMemo<Icon[]>(
+    () => [
+      ...ICONS,
+      ...attachments(materials).map((a) => ({
+        key: `att-${a.id}`,
+        name: a.file,
+        type: a.unlocked ? (a.id === 'mbx' ? 'mail' : 'folder') : 'lock',
+        win: { id: a.id, kind: a.id },
+      })),
+    ],
+    [materials],
+  );
+  // Значки, которые игрок не двигал, — в свободные клетки сетки по порядку.
+  const auto = useMemo(() => {
+    const placed = icons.flatMap((i) =>
+      iconPos[i.key] ? [iconPos[i.key] as { x: number; y: number }] : [],
+    );
+    const out: Record<string, { x: number; y: number }> = {};
+    icons.forEach((i, k) => {
+      if (iconPos[i.key]) return;
+      const p = snapToGrid(gridAt(k), placed);
+      out[i.key] = p;
+      placed.push(p);
+    });
+    return out;
+  }, [icons, iconPos]);
+  const at = (key: string) => iconPos[key] ?? auto[key] ?? gridAt(0);
   const [selIcon, setSelIcon] = useState<string | null>(null);
   const [startOpen, setStartOpen] = useState(false);
   const z = useRef(wins.reduce((m, p) => Math.max(m, p.z), 1));
-  const materials = useGame((g) => g.materials);
   const has = (id: string) => materials.some((m) => m.id === id);
   const title = (id: string) => materials.find((m) => m.id === id)?.title ?? id;
   const started = useGame((g) => g.state?.started);
@@ -195,10 +226,11 @@ function PcDesktop({ material }: { material: string | null }) {
         ...list,
         {
           win,
-          x: 170 + k * 28,
-          y: 60 + k * 26,
-          w: small ? 460 : win.kind === 'terminal' || win.kind === 'mbx' ? 1000 : 780,
-          h: small ? 300 : 600,
+          x: win.kind === 'terminal' ? 110 : 170 + k * 28,
+          y: win.kind === 'terminal' ? 40 : 60 + k * 26,
+          // Терминал — большим окном, не во весь экран (правка автора 11.11); размер меняют за край.
+          w: small ? 460 : win.kind === 'terminal' ? 1060 : win.kind === 'mbx' ? 1000 : 780,
+          h: small ? 300 : win.kind === 'terminal' ? 640 : 600,
           z: z.current,
           min: false,
           max: false,
@@ -206,11 +238,8 @@ function PcDesktop({ material }: { material: string | null }) {
       ];
     });
   };
-  const openIncoming = (it: Incoming) => {
-    if (it.kind === 'letter') openWin({ id: `doc:${it.material}`, kind: 'doc', ref: it.material });
-    else if (it.kind === 'server') openWin({ id: 'terminal', kind: 'terminal', ref: it.material });
-    else openWin({ id: it.kind, kind: it.kind });
-  };
+  const openIncoming = (it: Incoming) =>
+    openWin({ id: `doc:${it.material}`, kind: 'doc', ref: it.material });
   // Из поиска — сразу туда, где лежит материал.
   // biome-ignore lint/correctness/useExhaustiveDependencies: только при входе с материалом
   useEffect(() => {
@@ -258,7 +287,11 @@ function PcDesktop({ material }: { material: string | null }) {
           ? 'browser'
           : w.kind === 'doc'
             ? 'doc'
-            : 'lock';
+            : w.kind === 'mbx' && has('L453')
+              ? 'mail'
+              : w.kind === 'enc' && has('L736')
+                ? 'folder'
+                : 'lock';
 
   return (
     <div className="lap-desktop pc-desktop" data-testid="pc-desktop">
@@ -277,22 +310,22 @@ function PcDesktop({ material }: { material: string | null }) {
         <span className="pc-banner-dsp">ДЛЯ СЛУЖЕБНОГО ПОЛЬЗОВАНИЯ</span>
       </div>
       <div className="lap-icons pc-icons">
-        {ICONS.map((i, k) => (
+        {icons.map((i) => (
           <DesktopIcon
             key={i.key}
             name={i.name}
             type={i.type}
-            at={iconPos[i.key] ?? gridAt(k)}
+            at={at(i.key)}
             selected={selIcon === i.key}
             onSelect={() => setSelIcon(i.key)}
             onOpen={() => openWin(i.win)}
             onMove={(at) => setIconPos((m) => ({ ...m, [i.key]: at }))}
             onDrop={() =>
               setIconPos((m) => {
-                const taken = ICONS.map((o, j) =>
-                  o.key === i.key ? null : (m[o.key] ?? gridAt(j)),
-                ).filter((p): p is { x: number; y: number } => p !== null);
-                return { ...m, [i.key]: snapToGrid(m[i.key] ?? gridAt(k), taken) };
+                const taken = icons
+                  .filter((o) => o.key !== i.key)
+                  .map((o) => m[o.key] ?? auto[o.key] ?? gridAt(0));
+                return { ...m, [i.key]: snapToGrid(m[i.key] ?? at(i.key), taken) };
               })
             }
           />
@@ -311,6 +344,7 @@ function PcDesktop({ material }: { material: string | null }) {
             onMove={(x, y) => patch(p.win.id, { x, y })}
             onMin={() => patch(p.win.id, { min: true })}
             onMax={() => patch(p.win.id, { max: !p.max })}
+            onResize={(w, h) => patch(p.win.id, { w, h })}
             onClose={() => close(p.win.id)}
           >
             {p.win.kind === 'incoming' ? (

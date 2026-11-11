@@ -63,6 +63,7 @@
 /* Содержимое окна тянется на всё окно (правило — раньше прочих: специфичность). */
 .lap-win-body > * {
   flex: 1;
+  min-width: 0;
   min-height: 0;
 }
 .lap-screen {
@@ -350,9 +351,46 @@
 }
 .lap-win-body {
   flex: 1;
+  min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+/* Размер окна — за правый, нижний край и угол (правка автора 11.11). */
+.lap-rs {
+  position: absolute;
+  z-index: 3;
+  touch-action: none;
+}
+.lap-rs-e {
+  top: 28px;
+  right: -4px;
+  bottom: 8px;
+  width: 8px;
+  cursor: ew-resize;
+}
+.lap-rs-s {
+  left: 0;
+  right: 8px;
+  bottom: -4px;
+  height: 8px;
+  cursor: ns-resize;
+}
+.lap-rs-se {
+  right: -2px;
+  bottom: -2px;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  background: linear-gradient(
+    135deg,
+    transparent 55%,
+    rgb(0 0 0 / 35%) 55% 62%,
+    transparent 62% 72%,
+    rgb(0 0 0 / 35%) 72% 79%,
+    transparent 79%
+  );
 }
 
 .lap-menubar {
@@ -489,6 +527,8 @@
 }
 .lap-page {
   width: 600px;
+  max-width: calc(100% - 24px);
+  box-sizing: border-box;
   margin: 0 auto;
   padding: 40px 50px;
   background: #fff;

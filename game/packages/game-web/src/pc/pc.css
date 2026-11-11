@@ -115,6 +115,17 @@
   border-radius: 2px;
   background: #3b2c0a;
 }
+/* Почта (ящик открыт): конверт. */
+.lap-ico-mail {
+  background:
+    linear-gradient(to bottom right, transparent 49%, #8a7a55 50%, transparent 52%) left / 50% 70%
+    no-repeat,
+    linear-gradient(to bottom left, transparent 49%, #8a7a55 50%, transparent 52%) right / 50% 70%
+    no-repeat,
+    #f3ead2;
+  clip-path: inset(18% 6% 18% 6% round 2px);
+  box-shadow: inset 0 0 0 1px #8a7a55;
+}
 .lap-ico-server {
   background:
     radial-gradient(circle at 20% 20%, #5ee05e 0 6%, transparent 7%),
@@ -262,23 +273,30 @@
 .pc-term {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   outline: none;
   background: #050505;
-  color: #f2b13c;
+  color: #e9a83a;
   font:
-    13px / 1.45 "Lucida Console",
+    12px / 1.3 "Lucida Console",
     "Courier New",
     monospace;
-  text-shadow: 0 0 2px rgb(242 177 60 / 45%);
 }
-.pc-term-banner {
+/* Иерархия (правка автора 11.11, по программам DOS эпохи): заголовок — тусклой строкой, разделы —
+   вкладками-словами, документы — строкой F-клавиш внизу. Ярко — только то, что выбрано. */
+.pc-term-head {
   flex: none;
-  padding: 4px 10px;
-  background: #f2b13c;
-  color: #050505;
-  font-weight: 700;
-  text-shadow: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 10px;
+  border-bottom: 1px solid #3a2a0d;
+  color: #8a6a2c;
+  letter-spacing: 0.04em;
   white-space: nowrap;
+  overflow: hidden;
+}
+.pc-term-head span {
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -291,7 +309,7 @@
   height: 15px;
   margin-left: 4px;
   vertical-align: -2px;
-  background: #f2b13c;
+  background: #e9a83a;
   animation: pc-blink 1s steps(1) infinite;
 }
 :root[data-motion="reduce"] .pc-term-cursor {
@@ -306,59 +324,124 @@
   flex: 1;
   min-height: 0;
   display: flex;
+  flex-direction: column;
 }
-.pc-term-tabs {
-  flex: none;
-  width: 250px;
+.pc-term-page {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: auto;
-  border-right: 1px solid #5c4215;
 }
-.pc-term-tabs button {
-  padding: 4px 8px;
+/* Разделы документа — словами в одну строку; выбранный подчёркнут и ярче. */
+.pc-term-parts {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 18px;
+  padding: 6px 12px 4px;
+}
+.pc-term-parts button {
+  padding: 1px 0;
   border: 0;
-  border-bottom: 1px dashed #3a2a0d;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: #9b7634;
+  font: inherit;
+}
+.pc-term-parts button:hover {
+  color: #e9a83a;
+}
+.pc-term-parts .pc-part-on,
+.pc-term-parts .pc-part-on:hover {
+  border-bottom-color: #ffc861;
+  color: #ffd27a;
+}
+.pc-term-mark {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 12px;
+  padding: 2px 8px;
+  background: #1c1407;
+  color: #ffd27a;
+}
+.pc-term-mark button {
+  padding: 0 6px;
+  border: 1px solid #5c4215;
   background: none;
   color: inherit;
   font: inherit;
-  text-align: left;
-  text-shadow: inherit;
-}
-.pc-term-tabs button span {
-  color: #ffd98a;
-}
-.pc-term-tabs button:hover {
-  background: #1c1407;
-}
-.pc-term-tabs .pc-term-tab-on,
-.pc-term-tabs .pc-term-tab-on:hover {
-  background: #f2b13c;
-  color: #050505;
-  text-shadow: none;
-}
-.pc-term-tabs .pc-term-tab-on span {
-  color: #050505;
 }
 .pc-term-body {
   flex: 1;
-  min-width: 0;
+  min-height: 0;
   overflow: auto;
-  padding: 8px 14px;
+  padding: 4px 12px 10px;
+  border-top: 1px solid #3a2a0d;
 }
-.pc-term-title {
-  margin-bottom: 8px;
-  color: #ffd98a;
+.pc-term-note {
+  margin: 4px 0 6px;
+  color: #8a6a2c;
 }
+.pc-term-body p,
+.pc-term-body ul {
+  margin: 4px 0 8px;
+}
+.pc-term-body ul {
+  padding-left: 18px;
+}
+/* Таблицы — по ширине окна; текст переносится внутри ячейки и не налезает на соседнюю. */
 .pc-term-body table {
+  width: 100%;
   border-collapse: collapse;
 }
 .pc-term-body td,
 .pc-term-body th {
-  padding: 1px 8px;
-  border: 1px solid #5c4215;
+  padding: 1px 6px;
+  border: 1px solid #2c200a;
   text-align: left;
   vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.pc-term-body th {
+  color: #ffd27a;
+  font-weight: 400;
+}
+/* Журнал событий: доли ширины заданы, время — в одну строку. */
+.pc-term-body table.pc-log {
+  table-layout: fixed;
+}
+.pc-term-body table.pc-log th:nth-child(1) {
+  width: 13.5ch;
+}
+.pc-term-body table.pc-log th:nth-child(2) {
+  width: 17%;
+}
+.pc-term-body table.pc-log th:nth-child(3) {
+  width: 15%;
+}
+.pc-term-body table.pc-log th:nth-child(4) {
+  width: 38%;
+}
+.pc-term-body table.pc-log td:first-child {
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+/* Выделение щелчком (TM2-B): подчёркивание — только под курсором, без подсказки заранее. */
+.pc-term-body td.pc-pick {
+  cursor: pointer;
+}
+.pc-term-body td.pc-pick:hover {
+  text-decoration: underline dotted;
+}
+.pc-term-body tr.pc-row-on td {
+  background: #2a1d07;
+  color: #ffe2a3;
+}
+.pc-term-body tr.pc-row-off td {
+  opacity: 0.35;
 }
 .pc-term-body code,
 .pc-term-body pre {
@@ -367,11 +450,48 @@
 .pc-term-body h1,
 .pc-term-body h2,
 .pc-term-body h3 {
+  margin: 10px 0 4px;
   font-size: inherit;
-  color: #ffd98a;
+  color: #ffd27a;
 }
 .pc-term-body a {
   color: inherit;
+}
+/* Документы — строкой F-клавиш внизу: номер клавиши — светлым квадратом, название — рядом. */
+.pc-term-tabs {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  border-top: 1px solid #5c4215;
+  background: #0c0905;
+}
+.pc-term-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px 3px 4px;
+  border: 0;
+  background: none;
+  color: #9b7634;
+  font: inherit;
+  text-align: left;
+}
+.pc-term-tabs kbd {
+  padding: 0 4px;
+  background: #3a2a0d;
+  color: #e9a83a;
+  font: inherit;
+}
+.pc-term-tabs button:hover {
+  color: #e9a83a;
+}
+.pc-term-tabs .pc-term-tab-on,
+.pc-term-tabs .pc-term-tab-on:hover {
+  color: #ffd27a;
+}
+.pc-term-tabs .pc-term-tab-on kbd {
+  background: #e9a83a;
+  color: #050505;
 }
 
 /* ── Поступления и браузер ────────────────────────────────── */
