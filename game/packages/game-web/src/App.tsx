@@ -2,6 +2,7 @@ import { type ContainerId, inboxIds, openedOf } from '@bunker/shared';
 import { useEffect, useMemo } from 'react';
 import { ComputerScreen } from './computer/ComputerScreen.tsx';
 import { ArrivalNote } from './desk/ArrivalNote.tsx';
+import { Notebook } from './desk/Notebook.tsx';
 import { PlacedNote } from './desk/PlacedNote.tsx';
 import { ThrowToast, TrashView } from './desk/TrashBin.tsx';
 import { DevActionLine } from './dev/DevActionLine.tsx';
@@ -92,6 +93,7 @@ export function App() {
       <ThrowToast />
       {viewerId && <Viewer key={viewerId} materialId={viewerId} />}
       <PetitionCorner />
+      <Notebook />
       {import.meta.env.DEV && <DevActionLine />}
     </div>
   );

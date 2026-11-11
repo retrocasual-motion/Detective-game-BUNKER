@@ -287,6 +287,20 @@ export function findFile(lap: Laptop, path: string): LapFile | null {
   return walk(lap.desktop);
 }
 
+const flat = (s: string) =>
+  s
+    .replace(/[*|`>]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+
+/** Файл ноутбука, из которого взята цитата (у L560 их несколько); не нашли — первый из материала. */
+export function fileOfQuote(lap: Laptop, material: string, quote: string): LapFile | null {
+  const files = allFiles(lap).filter((f) => f.material === material);
+  const q = flat(quote);
+  return files.find((f) => flat(f.body).includes(q)) ?? files[0] ?? null;
+}
+
 /** Где открыть материал на ноутбуке (поиск): первый файл из него. */
 export const fileOfMaterial = (lap: Laptop, material: string) =>
   allFiles(lap).find((f) => f.material === material) ?? null;

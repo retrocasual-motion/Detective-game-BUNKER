@@ -36,18 +36,29 @@ export function LaptopView() {
   const folderShown = useGame((g) => g.petitionOpen);
   const toAddress = usePetition((p) => p.field === 'to');
 
+  const notebookShown = useGame((g) => g.notebookOpen);
+  // Ноутбук — в свободном месте: папка ходатайства и блокнот лежат сверху и его не закрывают
+  // (правка автора 11.11).
+  const [centerX, setCenterX] = useState<number | null>(null);
   useEffect(() => {
-    const fitScreen = () =>
+    const fitScreen = () => {
+      const edge = (sel: string) => document.querySelector(sel)?.getBoundingClientRect();
+      const left = folderShown ? (edge('.petition')?.right ?? 0) : 0;
+      const right = notebookShown
+        ? (edge('.notebook')?.left ?? window.innerWidth)
+        : window.innerWidth;
+      setCenterX((left + right) / 2);
       setScale(
         Math.min(
-          (window.innerWidth - 40) / (SCREEN_W + BEZEL * 2),
+          (right - left - 40) / (SCREEN_W + BEZEL * 2),
           (window.innerHeight - 40) / (SCREEN_H + BEZEL * 2),
         ),
       );
+    };
     fitScreen();
     window.addEventListener('resize', fitScreen);
     return () => window.removeEventListener('resize', fitScreen);
-  }, []);
+  }, [folderShown, notebookShown]);
 
   useEffect(() => {
     if (!laptop) return;
@@ -114,6 +125,7 @@ export function LaptopView() {
         style={{
           width: SCREEN_W + BEZEL * 2,
           height: SCREEN_H + BEZEL * 2,
+          left: centerX ?? undefined,
           transform: `translate(-50%, -50%) scale(${scale})`,
         }}
       >

@@ -10,6 +10,9 @@ import { useGame } from '../store.ts';
  */
 
 const FIELD = 'ноутбук';
+/** Печатают в поле (адрес в папке ходатайства): клавиши — не ключу ноутбука. */
+const typing = (t: EventTarget | null) =>
+  t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement;
 const STEP = 96;
 const PAD = 40;
 const SIZE = PAD * 2 + STEP * 2;
@@ -149,7 +152,7 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
   // Клавиатура: цифры 1–9 — точки, Enter — войти, Backspace — назад.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (wait > 0 || state === 'check') return;
+      if (wait > 0 || state === 'check' || typing(e.target)) return;
       if (/^[1-9]$/.test(e.key)) setPath((list) => add(list, Number(e.key)));
       else if (e.key === 'Backspace') setPath((list) => list.slice(0, -1));
       else if (e.key === 'Enter') void submit(path);
@@ -259,7 +262,7 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
 export function Welcome({ onEnter }: { onEnter: () => void }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') onEnter();
+      if (e.key === 'Enter' && !typing(e.target)) onEnter();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
