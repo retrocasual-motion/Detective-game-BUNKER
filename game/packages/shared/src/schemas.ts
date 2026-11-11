@@ -194,6 +194,8 @@ export const PlayerStateSchema = z.object({
    * окна открыты — как на настоящем ноутбуке, после выхода всё на месте.
    */
   laptop: LaptopDeskSchema.optional(),
+  /** Телефон Габриэля (4c-2): какой экран открыт — после выхода телефон там же. */
+  phone: z.object({ screen: z.string().max(80) }).optional(),
   /** Совмещённые на стене листы (WL-A, MG-A): «L990» — висит вместо своих половин. */
   joined: z
     .array(z.string().regex(/^L\d{3}$/))
