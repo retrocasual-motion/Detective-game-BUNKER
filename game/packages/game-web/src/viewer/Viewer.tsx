@@ -56,6 +56,7 @@ export function Viewer({ materialId }: ViewerProps) {
   const person = PERSONS.find((p) => p.id === materialId);
   const close = useGame((g) => g.closeViewer);
   const folderOpen = useGame((g) => g.petitionOpen);
+  const notebookOpen = useGame((g) => g.notebookOpen);
   // Поиск открыт — панель справа поверх затемнения, лист левее (SR-D).
   const searchOpen = useGame((g) => g.searchOpen);
   const openedAt = useRef(Date.now());
@@ -252,7 +253,7 @@ export function Viewer({ materialId }: ViewerProps) {
 
   return (
     <div
-      className={`viewer${folderOpen ? ' viewer-with-folder' : ''}${searchOpen ? ' viewer-with-search' : ''}`}
+      className={`viewer${folderOpen ? ' viewer-with-folder' : ''}${searchOpen ? ' viewer-with-search' : ''}${notebookOpen ? ' viewer-with-notebook' : ''}`}
       data-testid="viewer"
       role="dialog"
       aria-label={excerpt?.title ?? material?.title ?? person?.name}

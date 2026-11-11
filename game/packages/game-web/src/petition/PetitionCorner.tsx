@@ -1,6 +1,7 @@
-import { type Card, type Draft, type DraftField, MAX_DRAFTS } from '@bunker/shared';
+import { type Card, type Draft, type DraftField, deviceOf, MAX_DRAFTS } from '@bunker/shared';
 import { type PointerEvent, useMemo } from 'react';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
+import { buildLaptop, fileOfQuote } from '../laptop/files.ts';
 import { useGame, useVisibleMaterials } from '../store.ts';
 import { addressBook } from './drafts.ts';
 import { petitionFieldAt } from './fieldAt.ts';
@@ -28,11 +29,11 @@ const HINT: Record<DraftField, string> = {
  * Карточку в поле можно взять мышью и перетащить в другое поле карточек (правка автора 09.11):
  * в пустое — переходит, с занятым — меняются местами.
  */
-function dragCard(e: PointerEvent, card: Card, from: 'ask' | 'basis') {
+function dragCard(e: PointerEvent, card: Card, source: string, from: 'ask' | 'basis') {
   const other = from === 'ask' ? 'basis' : 'ask';
   const pet = usePetition.getState();
   startGhostDrag(e.nativeEvent, {
-    label: `${card.file} · «${card.quote}»`,
+    label: `${source} · «${card.quote}»`,
     className: 'drag-ghost-paper',
     canDrop: (pt) => {
       const ok = petitionFieldAt(pt.x, pt.y) === other;
@@ -45,15 +46,28 @@ function dragCard(e: PointerEvent, card: Card, from: 'ask' | 'basis') {
   });
 }
 
+/** Откуда карточка: файл на ноутбуке называем файлом, а не служебным номером материала. */
+function useCardSource(card: Card): string {
+  const materials = useGame((g) => g.materials);
+  return useMemo(() => {
+    if (deviceOf(card.file) !== '47') return card.file;
+    if (card.file === 'L562') return 'Ноутбук · журнал печати';
+    const lap = buildLaptop(materials);
+    const f = lap && fileOfQuote(lap, card.file, card.quote);
+    return f ? `Ноутбук · ${f.name}` : 'Ноутбук';
+  }, [card, materials]);
+}
+
 function CardView({ card, from }: { card: Card; from: 'ask' | 'basis' }) {
+  const source = useCardSource(card);
   return (
     <span
       className="petition-card"
       data-testid="petition-card"
       title="Перетащите в другое поле — карточки поменяются местами"
-      onPointerDown={(e) => dragCard(e, card, from)}
+      onPointerDown={(e) => dragCard(e, card, source, from)}
     >
-      <span className="petition-card-file">{card.file}</span>
+      <span className="petition-card-file">{source}</span>
       <span className="petition-card-quote">«{card.quote}»</span>
     </span>
   );

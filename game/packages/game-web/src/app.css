@@ -954,6 +954,13 @@ button {
   background: var(--color-viewer-backdrop);
   transition: padding-left 0.25s;
 }
+/* Открыт блокнот — лист левее него. */
+.viewer-with-notebook {
+  padding-right: calc(var(--notebook-width) + var(--space-4) * 2);
+}
+.viewer-with-search.viewer-with-notebook {
+  padding-right: calc(var(--search-width) + var(--notebook-width) + var(--space-4) * 2);
+}
 /* Открыта папка ходатайства — лист встаёт по центру свободного места справа от неё. */
 .viewer-with-folder {
   padding-left: calc(var(--folder-width) + var(--space-4));
@@ -961,6 +968,7 @@ button {
 /* Папка ходатайства и поиск открыты вместе — панель поиска уже (SR-D). */
 :root:has(.petition-open) {
   --search-width: min(280px, 22vw);
+  --notebook-width: min(280px, 22vw);
 }
 /* Панель поиска справа (SR-D) — лист левее, не под ней. */
 .viewer-with-search {
@@ -978,6 +986,7 @@ button {
 }
 /* Папка слева и поиск справа — лист не держит запас под кнопки с двух сторон: кнопки только
    справа, лист шире (иначе на 1366×768 он сжимался до нечитаемого). */
+.viewer-with-folder.viewer-with-notebook .viewer-stage,
 .viewer-with-folder.viewer-with-search .viewer-stage {
   width: min(var(--viewer-paper-width), 100% - var(--viewer-tools-width) - var(--space-2));
   margin-right: calc(var(--viewer-tools-width) + var(--space-2));
@@ -1276,7 +1285,8 @@ button {
 /* Чистые карточки у края доски (внизу справа): взять записку или ярлык. */
 .wall-blanks {
   position: absolute;
-  right: var(--space-4);
+  /* Правый нижний угол — язычок блокнота. */
+  right: calc(var(--space-4) + var(--notebook-tab-width) + var(--space-3));
   bottom: var(--space-3);
   z-index: 30;
   display: flex;
@@ -2312,4 +2322,107 @@ button {
   margin-top: var(--space-4);
   font-style: italic;
   opacity: 0.7;
+}
+
+/* Блокнот следователя (DV-A): язычок внизу справа, выезжает как папка ходатайства; поверх листа
+   и ноутбука. Страница в линейку, поле слева красной чертой. */
+.notebook {
+  position: absolute;
+  right: var(--space-4);
+  bottom: 0;
+  z-index: 50;
+  width: var(--notebook-width);
+  height: var(--folder-height);
+  translate: 0 calc(100% - var(--corner-height) - var(--notebook-peek));
+  transition:
+    translate 0.3s var(--ease-camera),
+    right 0.25s;
+  pointer-events: none;
+  --notebook-peek: 8px;
+}
+.notebook-open {
+  translate: 0 0;
+}
+/* Поиск открыт — блокнот рядом с панелью, не под ней. */
+:root:has(.search-panel) .notebook {
+  right: calc(var(--search-width) + var(--space-3));
+}
+.notebook-tab {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: var(--notebook-tab-width);
+  height: var(--corner-height);
+  border: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: #2f3a33;
+  color: #e9e4d3;
+  font: 14px var(--font-paper);
+  box-shadow: 0 -2px 4px rgb(0 0 0 / 25%);
+  pointer-events: auto;
+  transition: translate 0.2s ease-out;
+}
+.notebook:not(.notebook-open) .notebook-tab:hover {
+  translate: 0 -10px;
+}
+.notebook-tab[aria-expanded="true"] {
+  font-weight: bold;
+}
+.notebook-pad {
+  position: absolute;
+  inset: var(--corner-height) 0 0;
+  display: flex;
+  flex-direction: column;
+  padding: 26px 0 0;
+  border-radius: 0 var(--radius) 0 0;
+  background: #f6f1df;
+  box-shadow: var(--shadow-paper-lifted);
+  pointer-events: auto;
+}
+.notebook:not(.notebook-open) .notebook-pad {
+  visibility: hidden;
+  transition: visibility 0s 0.25s;
+}
+/* Пружина блокнота по верхнему краю. */
+.notebook-rings {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 22px;
+  background:
+    radial-gradient(circle at 50% 62%, #4a4a48 0 4px, transparent 4.5px) 0 0 / 22px 22px repeat-x,
+    linear-gradient(#2f3a33 0 9px, transparent 9px);
+}
+.notebook-close {
+  position: absolute;
+  top: 30px;
+  right: var(--space-2);
+  z-index: 1;
+}
+.notebook-text {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  padding: 0 44px 0 52px;
+  border: none;
+  outline: none;
+  resize: none;
+  overscroll-behavior: contain;
+  color: #1f2a4d;
+  font:
+    17px / 30px "Segoe Print",
+    "Bradley Hand",
+    "Comic Sans MS",
+    cursive;
+  background-color: transparent;
+  background-image:
+    linear-gradient(90deg, transparent 40px, #d98a86 40px 41px, transparent 41px),
+    linear-gradient(transparent 29px, #a9bfd6 29px);
+  background-size:
+    100% 100%,
+    100% 30px;
+  background-attachment: local;
+}
+:root[data-motion="reduce"] .notebook,
+:root[data-motion="reduce"] .notebook-tab {
+  transition: none;
 }

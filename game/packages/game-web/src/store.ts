@@ -67,6 +67,9 @@ interface GameStore {
   viewerId: string | null;
   /** Открыта папка ходатайства. */
   petitionOpen: boolean;
+  /** Блокнот следователя выдвинут (DV-A). */
+  notebookOpen: boolean;
+  setNotebookOpen(open: boolean): void;
   /** Сервер не ответил при загрузке — игра повторяет запрос. */
   loadFailed: boolean;
   /** Последнее поступление в дело (записка «Поступило»). */
@@ -198,6 +201,7 @@ export const useGame = create<GameStore>((set, get) => {
     saveStatus: 'saved',
     viewerId: null,
     petitionOpen: false,
+    notebookOpen: false,
     loadFailed: false,
     arrival: null,
     computerOpen: false,
@@ -341,6 +345,10 @@ export const useGame = create<GameStore>((set, get) => {
       const all = [...materials, ...fresh];
       set({ materials: all, arrival: { ids: fresh.map((m) => m.id), at: Date.now() } });
       if (state) get().updateState((s) => reconcile(s, all));
+    },
+
+    setNotebookOpen(open) {
+      set({ notebookOpen: open });
     },
 
     setPetitionOpen(open) {

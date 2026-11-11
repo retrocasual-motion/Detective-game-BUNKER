@@ -110,6 +110,9 @@
   /* Панель поиска; при открытой папке ходатайства — уже, чтобы листу хватило места (SR-D). */
   --search-width: min(420px, 100vw);
   --folder-height: min(82vh, 720px);
+  /* Блокнот следователя (DV-A). */
+  --notebook-width: min(360px, 27vw);
+  --notebook-tab-width: 120px;
   --corner-width: 240px;
   --corner-height: 48px;
   --card-width: 160px;
