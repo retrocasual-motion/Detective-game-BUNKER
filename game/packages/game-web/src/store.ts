@@ -94,6 +94,11 @@ interface GameStore {
    */
   laptop: { material: string | null } | null;
   openLaptop(material?: string | null): void;
+  /** Телефон Габриэля экраном к игроку (4c-2, SCR-C). */
+  phone: { material: string | null } | null;
+  openPhone(material?: string | null): void;
+  /** Отойти от телефона: снова вещь в руках (или положить, toHands = false). */
+  closePhone(toHands?: boolean): void;
   /** Отойти от экрана: ноутбук снова вещь в руках (или положить, toHands = false). */
   closeLaptop(toHands?: boolean): void;
   /** Поле ввода не примет значение до этого момента, мс (LK-A): по полю — «ноутбук». */
@@ -208,6 +213,7 @@ export const useGame = create<GameStore>((set, get) => {
     trashOpen: false,
     held: null,
     laptop: null,
+    phone: null,
     fieldBlockedUntil: {},
     find: null,
     searchOpen: false,
@@ -236,6 +242,14 @@ export const useGame = create<GameStore>((set, get) => {
 
     openLaptop(material = null) {
       set({ laptop: { material }, held: null, viewerId: null });
+    },
+
+    openPhone(material = null) {
+      set({ phone: { material }, held: null, viewerId: null });
+    },
+
+    closePhone(toHands = true) {
+      set({ phone: null, held: toHands ? { type: 'device', id: '48' } : null });
     },
 
     closeLaptop(toHands = true) {
@@ -359,6 +373,10 @@ export const useGame = create<GameStore>((set, get) => {
       // Файл устройства открывают на самом устройстве (LW-A): ноутбук — экраном к игроку.
       if (deviceOf(materialId) === '47') {
         get().openLaptop(materialId);
+        return;
+      }
+      if (deviceOf(materialId) === '48') {
+        get().openPhone(materialId);
         return;
       }
       // Устройство берут в руки (этап 4a); из поиска — сразу текст.

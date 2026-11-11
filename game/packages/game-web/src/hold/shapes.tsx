@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CanvasTexture, Group } from 'three';
+import { gameNow, hhmm } from '../clock.ts';
 import { useGame } from '../store.ts';
 import { onClickPart, setPartCursor, useSpot } from './Held3D.tsx';
 import { paintLaptopFace } from './laptopFace.ts';
+import { paintPhoneFace } from './phoneFace.ts';
 import { type Painter, paintTexture } from './texture.ts';
 
 /**
@@ -301,6 +303,19 @@ function LaptopScreen({ onUse }: { onUse: () => void }) {
   return <Screen w={2.5} h={1.55} z={0.041} label="Открыть ноутбук" onUse={onUse} face={face} />;
 }
 
+/** Экран телефона в руках — уже горит: экран блокировки с уведомлениями (как на живом экране). */
+function PhoneScreen({ onUse }: { onUse: () => void }) {
+  const unlocked = useGame((g) => g.materials.some((m) => m.id === 'L540'));
+  const body48 = useGame((g) => g.materials.find((m) => m.id === '48')?.body ?? '');
+  const started = useGame((g) => g.state?.started);
+  const time = hhmm(gameNow(started));
+  const face = useTexture(
+    () => paintTexture(0.82, 1.6, null, paintPhoneFace(unlocked, body48, time)),
+    [unlocked, body48, time],
+  );
+  return <Screen w={0.82} h={1.6} z={0.051} label="Включить телефон" onUse={onUse} face={face} />;
+}
+
 export function Device({ id, tag, onUse }: { id: string; tag: string; onUse: () => void }) {
   if (id === '47')
     return (
@@ -328,7 +343,7 @@ export function Device({ id, tag, onUse }: { id: string; tag: string; onUse: () 
           <boxGeometry args={[0.95, 1.9, 0.1]} />
           <meshStandardMaterial color={DARK} roughness={0.4} />
         </mesh>
-        <Screen w={0.82} h={1.6} z={0.051} label="Включить телефон" onUse={onUse} />
+        <PhoneScreen onUse={onUse} />
         <Tag text={tag} at={[0.85, -0.9, 0.07]} />
       </group>
     );

@@ -68,6 +68,10 @@ export default function HeldThing({ held }: { held: Held }) {
               useGame.getState().openLaptop();
               return;
             }
+            if (held.id === '48') {
+              useGame.getState().openPhone();
+              return;
+            }
             close();
             useGame.getState().readMaterial(held.id);
           })

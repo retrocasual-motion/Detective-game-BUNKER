@@ -319,6 +319,8 @@ export const FOLDER_DOCS: Readonly<Record<string, string>> = { 'П-02/18': 'L991
 export const DEVICE_MATERIALS: Readonly<Record<string, readonly string[]>> = {
   // L947 — крупный план картинки учётной записи на экране входа.
   '47': ['L560', 'L561', 'L562', 'L563', 'L564', 'L565', 'L947'],
+  // Телефон Габриэля: содержимое после разблокировки и крупный план экрана блокировки.
+  '48': ['L540', 'L949'],
 };
 export const deviceOf = (materialId: string) =>
   Object.keys(DEVICE_MATERIALS).find((d) => DEVICE_MATERIALS[d]?.includes(materialId)) ?? null;

@@ -1,0 +1,699 @@
+/* Телефон Габриэля экраном к игроку (4c-2). Устройство интерфейса — как у сенсорных смартфонов
+   2009 года (строка состояния, часы и уведомления на экране блокировки, клавиатура 3 × 4, сетка
+   значков, навигационная полоса с «‹ назад», вкладки внизу, пузыри сообщений); оформление своё,
+   без копирования марок. */
+
+.phone-view {
+  position: fixed;
+  inset: 0;
+  /* Ниже папки ходатайства и блокнота (слой 50) — как ноутбук. */
+  z-index: 39;
+}
+.phone-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgb(10 10 12 / 62%);
+  cursor: default;
+  animation: ph-fade 0.25s ease-out;
+}
+.phone-body {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  padding: 70px 14px 80px;
+  border-radius: 46px;
+  background: linear-gradient(160deg, #2c2d30, #141518);
+  box-shadow:
+    0 0 0 2px #4a4b4f,
+    0 30px 80px rgb(0 0 0 / 60%);
+  transition:
+    left 0.3s var(--ease-camera),
+    transform 0.3s var(--ease-camera);
+  animation: ph-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.phone-speaker {
+  position: absolute;
+  left: 50%;
+  top: 32px;
+  width: 54px;
+  height: 6px;
+  margin-left: -27px;
+  border-radius: 3px;
+  background: #0b0b0d;
+  box-shadow: inset 0 0 0 1px #3a3b3f;
+}
+.phone-home-btn {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  width: 52px;
+  height: 52px;
+  margin-left: -26px;
+  border: 2px solid #3a3b3f;
+  border-radius: 50%;
+  background: radial-gradient(circle, #1e1f22 55%, #111 100%);
+  cursor: pointer;
+}
+.phone-home-btn::after {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  border: 2px solid #6a6b70;
+  border-radius: 4px;
+}
+@keyframes ph-in {
+  from {
+    opacity: 0;
+    scale: 0.82;
+  }
+}
+@keyframes ph-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.ph-screen {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  color: #111;
+  font:
+    15px / 1.3 Helvetica,
+    Arial,
+    sans-serif;
+  user-select: none;
+}
+.ph-screen [data-material],
+.ph-screen [data-material] * {
+  user-select: text;
+}
+.ph-status {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 5;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  background: rgb(0 0 0 / 70%);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.ph-signal {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 10px;
+  width: 40px;
+}
+.ph-signal i {
+  width: 3px;
+  background: #fff;
+}
+.ph-signal i:nth-child(1) {
+  height: 3px;
+}
+.ph-signal i:nth-child(2) {
+  height: 5px;
+}
+.ph-signal i:nth-child(3) {
+  height: 7px;
+}
+.ph-signal i:nth-child(4) {
+  height: 9px;
+}
+.ph-battery {
+  position: relative;
+  width: 22px;
+  height: 10px;
+  margin-left: 18px;
+  border: 1px solid #fff;
+  border-radius: 2px;
+  background:
+    linear-gradient(90deg, #fff 70%, transparent 70%) 1px 1px / calc(100% - 2px) calc(100% - 2px)
+    no-repeat;
+}
+.ph-battery::after {
+  content: "";
+  position: absolute;
+  right: -3px;
+  top: 2px;
+  width: 2px;
+  height: 4px;
+  background: #fff;
+}
+.ph-stage {
+  position: absolute;
+  inset: 20px 0 0;
+  overflow: hidden;
+}
+
+/* ── Экран блокировки ───────────────────────────────────────── */
+.ph-lock {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* Обои: смеющаяся женщина у жёлтой стены (L949) — фото придёт на этапе изготовления. */
+.ph-wallpaper {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  cursor: zoom-in;
+  background:
+    radial-gradient(ellipse 22% 13% at 50% 42%, rgb(60 40 20 / 40%) 0 98%, transparent 100%),
+    radial-gradient(ellipse 30% 24% at 50% 70%, rgb(60 40 20 / 35%) 0 98%, transparent 100%),
+    linear-gradient(#e0bb45, #a9842a);
+}
+.ph-lock-clock {
+  position: relative;
+  padding: 8px 0 10px;
+  background: rgb(0 0 0 / 50%);
+  color: #fff;
+  text-align: center;
+  pointer-events: none;
+}
+.ph-lock-time {
+  font-size: 46px;
+  font-weight: 200;
+  line-height: 1;
+}
+.ph-lock-date {
+  margin-top: 4px;
+  font-size: 14px;
+}
+.ph-notes {
+  position: relative;
+  margin: 8px 12px 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+.ph-notes li {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 6px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 60%);
+  color: #fff;
+  font-size: 13px;
+}
+.ph-notes span {
+  opacity: 0.75;
+  font-size: 11px;
+}
+.ph-lock-bottom {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 14px 18px;
+  background: rgb(0 0 0 / 60%);
+}
+
+/* Ввод кода: «Enter passcode», четыре клетки, клавиатура 3 × 4. */
+.ph-pass {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 10px 0 0;
+  background: rgb(14 16 20 / 88%);
+  color: #fff;
+  text-align: center;
+}
+.ph-pass-title {
+  font-size: 15px;
+}
+.ph-dots {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 6px 0 8px;
+}
+.ph-dots span {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #9aa3ad;
+  border-radius: 4px;
+  background: #fff;
+}
+.ph-dots .ph-dot-on {
+  background: radial-gradient(circle, #111 0 6px, #fff 6.5px);
+}
+.ph-dots-wrong {
+  animation: ph-shake 0.35s;
+}
+@keyframes ph-shake {
+  25% {
+    translate: -8px 0;
+  }
+  75% {
+    translate: 8px 0;
+  }
+}
+.ph-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: #555a62;
+}
+.ph-key {
+  height: 44px;
+  border: 0;
+  background: linear-gradient(#f4f5f7, #c9cdd3);
+  color: #111;
+  font:
+    700 24px Helvetica,
+    Arial,
+    sans-serif;
+}
+.ph-key:active {
+  background: linear-gradient(#5d8fd8, #2d5fa8);
+  color: #fff;
+}
+.ph-key-text {
+  font-size: 14px;
+  background: linear-gradient(#6a7078, #4a5058);
+  color: #fff;
+}
+.ph-key[aria-disabled="true"] {
+  cursor: default;
+}
+
+/* «slide to unlock»: дорожка и ползунок; надпись переливается. */
+.ph-slide {
+  position: relative;
+  height: 46px;
+  border: 1px solid #555;
+  border-radius: 10px;
+  background: linear-gradient(#1b1c1f, #33353a);
+}
+.ph-slide-text {
+  position: absolute;
+  inset: 0 0 0 60px;
+  display: grid;
+  place-items: center;
+  color: transparent;
+  font-size: 18px;
+  background: linear-gradient(90deg, #777 0 40%, #fff 50%, #777 60% 100%) 0 0 / 200% 100%;
+  background-clip: text;
+  animation: ph-shine 2.4s linear infinite;
+  pointer-events: none;
+}
+@keyframes ph-shine {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+.ph-slide-knob {
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 58px;
+  height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(#fbfbfb, #b9bcc1);
+  color: #555;
+  font-size: 20px;
+  cursor: grab;
+  transition: translate 0.25s ease-out;
+}
+
+/* ── Домашний экран ─────────────────────────────────────────── */
+.ph-home {
+  position: absolute;
+  inset: 0;
+  padding: 16px 10px;
+  background: linear-gradient(160deg, #1f3550, #0b1422);
+}
+.ph-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px 6px;
+}
+.ph-app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  background: none;
+  color: #fff;
+  cursor: pointer;
+}
+.ph-icon {
+  position: relative;
+  width: 57px;
+  height: 57px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 50%);
+}
+/* Блик сверху, как у значков того времени. */
+.ph-icon::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 50%;
+  background: linear-gradient(rgb(255 255 255 / 45%), rgb(255 255 255 / 10%));
+  border-radius: 12px 12px 50% 50% / 12px 12px 18% 18%;
+}
+.ph-icon-phone {
+  background: linear-gradient(#7bd35b, #2f8e1f);
+}
+.ph-icon-messages {
+  background: linear-gradient(#8fd96b, #3c9a2a);
+}
+.ph-icon-contacts {
+  background: linear-gradient(#d8c8a8, #8f7a58);
+}
+.ph-icon svg {
+  position: absolute;
+  inset: 12px;
+  width: 33px;
+  height: 33px;
+}
+.ph-app-label {
+  font-size: 11px;
+  text-shadow: 0 1px 2px #000;
+}
+
+/* ── Приложения ─────────────────────────────────────────────── */
+.ph-app-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+.ph-nav {
+  flex: none;
+  position: relative;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(#8ea3c0, #5f7697);
+  border-bottom: 1px solid #3f5574;
+  color: #fff;
+  text-shadow: 0 -1px 0 rgb(0 0 0 / 40%);
+}
+.ph-nav-title {
+  font-size: 19px;
+  font-weight: 700;
+}
+.ph-back {
+  position: absolute;
+  left: 6px;
+  top: 7px;
+  height: 30px;
+  padding: 0 10px 0 8px;
+  border: 1px solid #3f5574;
+  border-radius: 6px 8px 8px 6px;
+  background: linear-gradient(#7d93b2, #4f6688);
+  color: #fff;
+  font:
+    700 12px Helvetica,
+    Arial,
+    sans-serif;
+}
+.ph-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.ph-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ph-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+.ph-row-hit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ph-row-tall {
+  flex-direction: column;
+  align-items: stretch;
+}
+.ph-row-main {
+  flex: 1;
+  font-size: 17px;
+  font-weight: 700;
+}
+.ph-missed {
+  color: #d22;
+}
+.ph-row-sub {
+  margin-right: 8px;
+  color: #888;
+  font-size: 13px;
+}
+.ph-row-side {
+  color: #3769c2;
+  font-size: 13px;
+}
+.ph-row-snippet {
+  width: 100%;
+  padding-bottom: 6px;
+  overflow: hidden;
+  color: #777;
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ph-chevron {
+  color: #aaa;
+  font-size: 22px;
+}
+.ph-vm-body {
+  padding: 0 0 10px;
+}
+.ph-transcript {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+.ph-note {
+  color: #999;
+  font-size: 11px;
+}
+.ph-play {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ph-play-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #9aa3ad;
+  border-radius: 50%;
+  background: linear-gradient(#fff, #d8dbe0);
+  font-size: 12px;
+}
+.ph-play-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: #d4d8de;
+  overflow: hidden;
+}
+.ph-play-track span {
+  display: block;
+  height: 100%;
+  background: #3769c2;
+}
+.ph-play-time {
+  color: #666;
+  font-size: 11px;
+}
+.ph-card {
+  padding: 18px 14px;
+  background: linear-gradient(#e4e8ee, #f6f7f9);
+  min-height: 100%;
+}
+.ph-card-pic {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 8px;
+  background: #b9c2cf;
+  color: #fff;
+  font-size: 30px;
+  font-weight: 700;
+}
+.ph-card-name {
+  margin: 8px 0 16px;
+  font-size: 22px;
+  font-weight: 700;
+}
+.ph-card-field {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1px solid #cfd4db;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 16px;
+}
+.ph-card-field span {
+  min-width: 52px;
+  color: #3769c2;
+  font-size: 13px;
+  font-weight: 700;
+}
+.ph-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 100%;
+  padding: 10px 8px;
+  background: #dbe2ec;
+}
+.ph-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 82%;
+}
+.ph-msg-mine {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+.ph-bubble {
+  padding: 7px 11px;
+  border-radius: 16px;
+  background: linear-gradient(#f6f6f6, #dedede);
+  font-size: 14px;
+  box-shadow: 0 1px 1px rgb(0 0 0 / 20%);
+}
+.ph-msg-mine .ph-bubble {
+  background: linear-gradient(#c8f2a6, #8fd25c);
+}
+.ph-msg-when {
+  margin: 1px 6px 0;
+  color: #6b7480;
+  font-size: 10px;
+}
+.ph-voice {
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ph-voice-body {
+  margin-top: 6px;
+}
+.ph-tabs {
+  flex: none;
+  height: 49px;
+  display: flex;
+  background: linear-gradient(#3a3a3a, #111);
+}
+.ph-tabs button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  padding-bottom: 3px;
+  border: 0;
+  background: none;
+  color: #999;
+  font:
+    700 10px Helvetica,
+    Arial,
+    sans-serif;
+}
+.ph-tabs .ph-tab-on {
+  margin: 2px;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 14%);
+  color: #fff;
+}
+.ph-tab-ico {
+  width: 24px;
+  height: 22px;
+  border-radius: 4px;
+  background: currentcolor;
+  opacity: 0.85;
+}
+.ph-tab-recents {
+  border-radius: 50%;
+}
+.ph-tab-voicemail {
+  border-radius: 11px;
+  height: 12px;
+  margin-bottom: 5px;
+}
+
+/* ── Переходы: приложение раскрывается из значка, экраны въезжают сбоку. ── */
+.ph-anim-open {
+  animation: ph-open 0.3s ease-out;
+}
+.ph-anim-push {
+  animation: ph-push 0.3s ease-out;
+}
+.ph-anim-back {
+  animation: ph-back 0.3s ease-out;
+}
+@keyframes ph-open {
+  from {
+    opacity: 0;
+    scale: 0.15;
+  }
+}
+@keyframes ph-push {
+  from {
+    translate: 100% 0;
+  }
+}
+@keyframes ph-back {
+  from {
+    translate: -40% 0;
+    opacity: 0.6;
+  }
+}
+:root[data-motion="reduce"]
+  :is(
+    .phone-body,
+    .phone-backdrop,
+    .ph-anim-open,
+    .ph-anim-push,
+    .ph-anim-back,
+    .ph-slide-text,
+    .ph-dots-wrong
+  ) {
+  animation: none;
+}
+:root[data-motion="reduce"] .phone-body {
+  transition: none;
+}

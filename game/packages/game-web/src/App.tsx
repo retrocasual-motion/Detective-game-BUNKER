@@ -9,6 +9,7 @@ import { DevActionLine } from './dev/DevActionLine.tsx';
 import { HeldView } from './hold/HeldView.tsx';
 import { LaptopView } from './laptop/LaptopView.tsx';
 import { PetitionCorner } from './petition/PetitionCorner.tsx';
+import { PhoneView } from './phone/PhoneView.tsx';
 import { RoomScene } from './room/RoomScene.tsx';
 import { KEY_DIR, NAV } from './room/views.ts';
 import { SearchPanel } from './search/SearchPanel.tsx';
@@ -87,6 +88,7 @@ export function App() {
       <PlacedNote />
       <ComputerScreen />
       <LaptopView />
+      <PhoneView />
       <TrashView />
       <HeldView />
       <SearchPanel />
