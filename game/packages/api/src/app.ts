@@ -48,7 +48,7 @@ export interface AppDeps {
   engine?: { content: Content; locked: Material[] };
   /** Часы (для лимитов попыток); в тестах — свои. */
   now?: () => number;
-  /** Через сколько ответ на ходатайство ложится во «Входящие», мс (T-11-A; DELAY-A). */
+  /** Через сколько ответ на запрос ложится во «Входящие», мс (T-11-A; DELAY-A). */
   mailDelayMs?: number;
 }
 
@@ -63,7 +63,7 @@ interface Letter {
 
 const letterId = (n: number) => `M${String(n).padStart(3, '0')}`;
 
-/** Ходатайство из папки (этап 3): Кому, Прошу, На основании. */
+/** Запрос из папки (этап 3): Кому, Прошу, На основании. */
 const PetitionSchema = z.object({
   to: z.string().min(1).max(200),
   ask: PlayerCardSchema,
@@ -255,7 +255,7 @@ export function createApp({
     const parsed = ActionSchema.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'неверное действие' }, 400);
     // «Решить дело» до конца (ФИНАЛ, СТОП) — этап 5: пока в production закрывать дело нельзя.
-    // Ходатайство игрок отправляет папкой (/api/petition): ответ — письмом через задержку.
+    // Запрос игрок отправляет папкой (/api/petition): ответ — письмом через задержку.
     const a = parsed.data.action;
     if (production && (a === 'ФИНАЛ' || a === 'СТОП' || a === 'ХОДАТАЙСТВО')) {
       return c.json({ error: 'неверное действие' }, 400);
@@ -277,7 +277,7 @@ export function createApp({
   });
 
   /**
-   * Отправить ходатайство из папки (4.11; FORM-B, MAIL-B). Ошибка оформления — сразу ответом
+   * Отправить запрос из папки (4.11; FORM-B, MAIL-B). Ошибка оформления — сразу ответом
    * (422), письмо не уходит и попытка не тратится; лимит отказов — тоже ответом. Общий отказ
    * адресата (PRE-B) — `{refused}` сразу, без письма, попытка засчитана. Иначе движок решает,
    * а ответ ложится письмом во «Входящие» через `mailDelayMs`.
@@ -285,7 +285,7 @@ export function createApp({
   app.post('/api/petition', bodyLimit({ maxSize: 64 * 1024 }), async (c) => {
     if (!engine) return c.notFound();
     const parsed = PetitionSchema.safeParse(await c.req.json().catch(() => null));
-    if (!parsed.success) return c.json({ error: 'Ходатайство не оформлено.' }, 400);
+    if (!parsed.success) return c.json({ error: 'Запрос не оформлен.' }, 400);
     const { to, ask, basis } = parsed.data;
     const run = queue.then(async () => {
       const before = await loadProgress();
@@ -326,7 +326,7 @@ export function createApp({
       await db.insert(playerLetters).values({
         playerId: PLAYER_ID,
         n,
-        title: `Ответ на ходатайство № ${n}`,
+        title: `Ответ на запрос № ${n}`,
         body,
         released: outcome.released,
         sentAt: new Date(t),

@@ -66,7 +66,7 @@ export function Viewer({ materialId }: ViewerProps) {
   );
   const pinToWall = useGame((g) => g.pinToWall);
   const [pinned, setPinned] = useState(false);
-  // Письмо-ответ (этап 3): повторить ходатайство (RP-A), выбросить или достать (TR-A).
+  // Письмо-ответ (этап 3): повторить запрос (RP-A), выбросить или достать (TR-A).
   const letter = material && isLetter(material.id) ? material : null;
   const petition = useMemo(() => (letter ? letterPetition(letter.body) : null), [letter]);
   const inTrash = useGame((g) => g.state?.trash.includes(materialId) ?? false);
@@ -93,12 +93,12 @@ export function Viewer({ materialId }: ViewerProps) {
 
   // Время чтения (RD-A) — только в разработке.
   useEffect(() => (import.meta.env.DEV ? trackReading(materialId) : undefined), [materialId]);
-  // Выделенная строка листа — кнопка «В ходатайство» у её конца (K-A).
+  // Выделенная строка листа — кнопка «В запрос» у её конца (K-A).
   const [sel, setSel] = useState<{ text: string; x: number; y: number } | null>(null);
   const toAddress = usePetition((p) => p.field === 'to');
   const folderShown = useGame((g) => g.petitionOpen);
 
-  // Выделение «для ходатайства» (SEL-C): щелчок отмечает строку целиком, протягивание — слова.
+  // Выделение «для запроса» (SEL-C): щелчок отмечает строку целиком, протягивание — слова.
   const downAt = useRef<{ x: number; y: number } | null>(null);
   const marked = useRef<Range | null>(null);
 
@@ -111,7 +111,7 @@ export function Viewer({ materialId }: ViewerProps) {
     return () => document.removeEventListener('selectionchange', onChange);
   }, []);
 
-  /** Кнопка «В ходатайство» — у конца выделения, но всегда на экране. */
+  /** Кнопка «В запрос» — у конца выделения, но всегда на экране. */
   const showButton = (paper: Element) => {
     const s = window.getSelection();
     const text = s?.toString() ?? '';
@@ -430,10 +430,10 @@ export function Viewer({ materialId }: ViewerProps) {
               type="button"
               className="tool"
               data-testid="viewer-whole-to-petition"
-              title="Материал целиком — карточкой в ходатайство (для фото, аудио, видео, писем)"
+              title="Материал целиком — карточкой в запрос (для фото, аудио, видео, писем)"
               onClick={() => usePetition.getState().addCard(wholeCard(material))}
             >
-              В ходатайство целиком
+              В запрос целиком
             </button>
           )}
           {petition && (
@@ -444,7 +444,7 @@ export function Viewer({ materialId }: ViewerProps) {
               title="Новый черновик с тем же адресом и карточками — замените ту, что не подошла"
               onClick={() => setNoRoom(!usePetition.getState().repeat(petition))}
             >
-              Повторить ходатайство
+              Повторить запрос
             </button>
           )}
           {noRoom && (
@@ -507,7 +507,7 @@ export function Viewer({ materialId }: ViewerProps) {
           onMouseDown={(e) => e.preventDefault()}
           onClick={toPetition}
         >
-          {folderShown && toAddress && emailIn(sel.text) ? 'В «Кому»' : 'В ходатайство'}
+          {folderShown && toAddress && emailIn(sel.text) ? 'В «Кому»' : 'В запрос'}
         </button>
       )}
     </div>

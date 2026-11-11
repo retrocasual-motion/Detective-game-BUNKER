@@ -76,14 +76,14 @@ export const resetState = async (): Promise<void> => {
   await check(await fetch('/api/state', { method: 'DELETE' }));
 };
 
-/** Итог отправки ходатайства: номер и задержка ответа — или ошибка оформления (FORM-B). */
+/** Итог отправки запроса: номер и задержка ответа — или ошибка оформления (FORM-B). */
 export type PetitionResult =
   | { ok: true; n: number; delayMs: number }
   /** Общий отказ адресата (PRE-B): ответ сразу, письма нет, попытка засчитана. */
   | { ok: true; refused: string }
   | { ok: false; error: string };
 
-/** Отправить ходатайство из папки (этап 3). */
+/** Отправить запрос из папки (этап 3). */
 export const postPetition = async (to: string, ask: Card, basis: Card): Promise<PetitionResult> => {
   const res = await fetch('/api/petition', {
     method: 'POST',

@@ -5,7 +5,7 @@ import type { PhoneContent, Voicemail } from './content.ts';
  * Приложения телефона (4c-2, PH-A, по референсам смартфонов 2009 года): «Phone» — вкладки внизу
  * (Recents, Contacts, Voicemail), «Messages» — список переписок, внутри пузыри, «Contacts» —
  * список и карточка. Звонить нельзя (CALL-A): кнопок вызова нет, номера только читают. Текст
- * выделяется для ходатайства (data-material = L540).
+ * выделяется для запроса (data-material = L540).
  */
 
 export type Screen =

@@ -29,7 +29,7 @@ async function cardFrom(page: Page, id: string, text: string) {
   await page.keyboard.press('Escape');
 }
 
-/** Отправить ходатайство в бюро и дождаться письма M001 во «Входящих» (вид «Стол»). */
+/** Отправить запрос в бюро и дождаться письма M001 во «Входящих» (вид «Стол»). */
 async function getLetter(page: Page) {
   await toWall(page);
   await page.getByTestId('petition-corner').click();
@@ -47,7 +47,7 @@ async function getLetter(page: Page) {
   await expect(page.getByTestId('inbox-M001')).toBeVisible();
 }
 
-test('«Повторить ходатайство» (RP-A): черновик с тем же адресом и карточками, папка открыта', async ({
+test('«Повторить запрос» (RP-A): черновик с тем же адресом и карточками, папка открыта', async ({
   page,
 }) => {
   await getLetter(page);
@@ -85,7 +85,7 @@ test('письмо — в корзину из просмотра; «Вернут
   await expect(page.getByTestId('trash-bin')).toContainText('Корзина · 1');
 
   await page.getByTestId('trash-bin').click();
-  await expect(page.getByTestId('trash-M001')).toContainText('Ответ на ходатайство № 1');
+  await expect(page.getByTestId('trash-M001')).toContainText('Ответ на запрос № 1');
   // Развернуть и прочитать прямо из корзины.
   await page.getByTestId('trash-M001').locator('.trash-crumple').click();
   await expect(page.getByTestId('viewer')).toContainText('Прошу: 25');

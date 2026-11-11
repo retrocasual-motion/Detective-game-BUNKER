@@ -113,7 +113,7 @@ test('приложения: переписка с голосовым, конта
   await expect(page.getByTestId('phone-screen-voicemail')).toBeVisible();
 });
 
-test('выделил номер — «В ходатайство»: карточка из телефона; папка поверх телефона', async ({
+test('выделил номер — «В запрос»: карточка из телефона; папка поверх телефона', async ({
   page,
 }) => {
   await phoneUp(page);

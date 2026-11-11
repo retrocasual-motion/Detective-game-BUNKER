@@ -13,7 +13,7 @@ import {
   wholeCard,
 } from './drafts.ts';
 
-describe('черновики ходатайств', () => {
+describe('черновики запросов', () => {
   it('не больше четырёх; пустые убираются при закрытии', () => {
     let s = defaultState([]);
     for (const id of ['a', 'b', 'c', 'd', 'e']) s = addDraft(id)(s);
@@ -74,7 +74,7 @@ describe('карточки и адреса', () => {
   });
 });
 
-describe('«Повторить ходатайство» (RP-A)', () => {
+describe('«Повторить запрос» (RP-A)', () => {
   const p = {
     to: 'zapros@okrug-bureau.org',
     ask: { file: '04', quote: 'строка 53' },

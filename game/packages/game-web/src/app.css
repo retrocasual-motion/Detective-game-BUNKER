@@ -209,7 +209,7 @@ button {
   border-radius: var(--radius);
 }
 
-/* Папка ходатайства (PET-A; этап 3): уголки внизу слева — по черновику; открытая — слева на
+/* Папка запроса (PET-A; этап 3): уголки внизу слева — по черновику; открытая — слева на
    треть экрана, без затемнения. Внутри — бланк: поля — строки (UX-K1, K2). */
 .petition {
   position: absolute;
@@ -550,7 +550,7 @@ button {
   background: transparent;
   border-radius: var(--radius);
 }
-/* Кнопка «В ходатайство» у конца выделенной строки (K-A). */
+/* Кнопка «В запрос» у конца выделенной строки (K-A). */
 .to-petition {
   position: fixed;
   z-index: 60;
@@ -961,11 +961,11 @@ button {
 .viewer-with-search.viewer-with-notebook {
   padding-right: calc(var(--search-width) + var(--notebook-width) + var(--space-4) * 2);
 }
-/* Открыта папка ходатайства — лист встаёт по центру свободного места справа от неё. */
+/* Открыта папка запроса — лист встаёт по центру свободного места справа от неё. */
 .viewer-with-folder {
   padding-left: calc(var(--folder-width) + var(--space-4));
 }
-/* Папка ходатайства и поиск открыты вместе — панель поиска уже (SR-D). */
+/* Папка запроса и поиск открыты вместе — панель поиска уже (SR-D). */
 :root:has(.petition-open) {
   --search-width: min(280px, 22vw);
 }
@@ -990,7 +990,7 @@ button {
   width: min(var(--viewer-paper-width), 100% - var(--viewer-tools-width) - var(--space-2));
   margin-right: calc(var(--viewer-tools-width) + var(--space-2));
 }
-/* Выделение в листе — как маркером: это выбор строки для ходатайства (правка автора 09.11). */
+/* Выделение в листе — как маркером: это выбор строки для запроса (правка автора 09.11). */
 .viewer-paper ::selection {
   background: var(--color-marker);
   color: var(--color-card-text);
@@ -1067,7 +1067,7 @@ button {
 .wall-card-dragging {
   transition: none;
 }
-/* Над папкой ходатайства вместо листа идёт его призрак (поверх папки). */
+/* Над папкой запроса вместо листа идёт его призрак (поверх папки). */
 .wall-card-over-folder {
   opacity: 0.25;
 }
@@ -2227,7 +2227,7 @@ button {
   opacity: 0.7;
 }
 
-/* Блокнот следователя (DV-A): язычок внизу справа, выезжает как папка ходатайства; поверх листа
+/* Блокнот следователя (DV-A): язычок внизу справа, выезжает как папка запроса; поверх листа
    и ноутбука. Страница в линейку, поле слева красной чертой. */
 .notebook {
   position: absolute;
@@ -2242,14 +2242,14 @@ button {
     translate 0.3s var(--ease-camera),
     right 0.25s;
   pointer-events: none;
-  /* Закрытый — из-под края торчит верх блокнота с пружиной, как полоска папки ходатайства. */
+  /* Закрытый — из-под края торчит верх блокнота с пружиной, как полоска папки запроса. */
   --notebook-peek: 30px;
   --notebook-lift: 10px;
 }
 .notebook-open {
   translate: 0 0;
 }
-/* Навели на язычок или верх блокнота — он приподнимается (как папка ходатайства). */
+/* Навели на язычок или верх блокнота — он приподнимается (как папка запроса). */
 .notebook:not(.notebook-open):has(.notebook-tab:hover, .notebook-pad:hover) {
   translate: 0 calc(100% - var(--corner-height) - var(--notebook-peek) - var(--notebook-lift));
 }

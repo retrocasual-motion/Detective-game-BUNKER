@@ -32,7 +32,7 @@ export default defineConfig({
         API_PORT: E2E.API_PORT,
         DATABASE_URL: `postgres://postgres:postgres@localhost:${E2E.PG_PORT}/bunker`,
         NODE_ENV: 'development',
-        // Ответ на ходатайство в автотестах — почти сразу.
+        // Ответ на запрос в автотестах — почти сразу.
         MAIL_DELAY_MS: '1500',
       },
     },

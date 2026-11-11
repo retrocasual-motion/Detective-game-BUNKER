@@ -21,8 +21,8 @@ const LABEL: Record<DraftField, string> = {
 /** Пустое активное поле подсказывает, как его заполнить (это интерфейс, не подсказка по делу). */
 const HINT: Record<DraftField, string> = {
   to: 'выберите адрес из книги ниже или выделите адрес в документе',
-  ask: 'выделите строку в документе и нажмите «В ходатайство» или перетащите сюда лист со стены',
-  basis: 'выделите строку в документе и нажмите «В ходатайство» или перетащите сюда лист со стены',
+  ask: 'выделите строку в документе и нажмите «В запрос» или перетащите сюда лист со стены',
+  basis: 'выделите строку в документе и нажмите «В запрос» или перетащите сюда лист со стены',
 };
 
 /**
@@ -139,9 +139,9 @@ function AddressBook() {
 }
 
 /**
- * Папка ходатайства (TECH_PLAN 4.11; PET-A; этап 3): уголки внизу слева — по черновику
+ * Папка запроса (TECH_PLAN 4.11; PET-A; этап 3): уголки внизу слева — по черновику
  * (до трёх). Открытая папка — бланк: «Кому» (адресная книга или выделенный адрес), «Прошу»,
- * «На основании» (карточки K-A: выделить строку → «В ходатайство», или перетащить лист со
+ * «На основании» (карточки K-A: выделить строку → «В запрос», или перетащить лист со
  * стены). Номер дела ставится сам. «Отправить» — штамп «Отправлено № N», ответ придёт
  * письмом во «Входящие» на столе (MAIL-B). Ошибка оформления — тут же, письмо не уходит (E-A).
  */
@@ -176,7 +176,7 @@ export function PetitionCorner() {
         style={{ left: i * TAB_STEP }}
         onClick={() => toggle(d?.id)}
       >
-        {i === 0 ? 'Ходатайство' : `Черновик ${i + 1}`}
+        {i === 0 ? 'Запрос' : `Черновик ${i + 1}`}
       </button>
     );
   };
@@ -185,8 +185,8 @@ export function PetitionCorner() {
       type="button"
       className="folder-tab folder-tab-new"
       data-testid="petition-new"
-      aria-label="Новое ходатайство"
-      title="Новое ходатайство (ещё одна папка в стопке)"
+      aria-label="Новый запрос"
+      title="Новый запрос (ещё одна папка в стопке)"
       style={{ left: last * TAB_STEP + TAB_W + 6 }}
       onClick={create}
     >
@@ -216,7 +216,7 @@ export function PetitionCorner() {
             <section
               className="petition-folder"
               data-testid="petition-folder"
-              aria-label="Папка ходатайства"
+              aria-label="Папка запроса"
               inert={!open}
             >
               <button
@@ -230,7 +230,8 @@ export function PetitionCorner() {
               </button>
               <header className="petition-head">
                 <span className="petition-head-title">
-                  Ходатайство
+                  {/* На папке — полностью, на ярлычке — коротко «Запрос» (A-265). */}
+                  Запрос документов
                   {drafts.length > 1 && draft && (
                     <span className="petition-head-draft" data-testid="petition-head-draft">
                       {drafts.indexOf(draft) + 1} из {drafts.length}
@@ -299,7 +300,7 @@ export function PetitionCorner() {
       )}
       {sentNote && (
         <div className="petition-sent-note" data-testid="petition-sent-note" role="status">
-          Ходатайство отправлено. Ответ придёт письмом во «Входящие» на столе.
+          Запрос отправлен. Ответ придёт письмом во «Входящие» на столе.
         </div>
       )}
     </>

@@ -1,8 +1,8 @@
 import type { Card } from './schemas.ts';
 
 /**
- * Письмо-ответ на ходатайство (этап 3): тело собирает сервер, а «Повторить ходатайство»
- * (RP-A, решение автора 09.11) читает из него адрес и копию ходатайства. Формат — здесь,
+ * Письмо-ответ на запрос (этап 3): тело собирает сервер, а «Повторить запрос»
+ * (RP-A, решение автора 09.11) читает из него адрес и копию запроса. Формат — здесь,
  * в одном месте для обеих сторон.
  */
 export interface LetterParts {
@@ -19,7 +19,7 @@ const FILE = String.raw`\d{2}|L\d{3}|M\d{3}`;
 
 export function letterBody({ n, to, reply, attached, ask, basis }: LetterParts): string {
   return [
-    `# Ответ на ходатайство № ${n}`,
+    `# Ответ на запрос № ${n}`,
     '',
     `**От:** ${to}`,
     '**Кому:** вам',
@@ -29,13 +29,13 @@ export function letterBody({ n, to, reply, attached, ask, basis }: LetterParts):
     ...(attached.length ? [`**Вложения:** ${attached.join('; ')}`, ''] : []),
     '---',
     '',
-    `Ваше ходатайство № ${n}`,
+    `Ваш запрос № ${n}`,
     `Прошу: ${ask.file} — «${ask.quote}»`,
     `На основании: ${basis.file} — «${basis.quote}»`,
   ].join('\n');
 }
 
-/** Ходатайство, на которое пришло письмо: адрес и обе карточки (null — это не письмо-ответ). */
+/** Запрос, на который пришло письмо: адрес и обе карточки (null — это не письмо-ответ). */
 export function letterPetition(body: string): { to: string; ask: Card; basis: Card } | null {
   const to = /^\*\*От:\*\* (\S+)$/m.exec(body)?.[1];
   const card = (head: string): Card | null => {

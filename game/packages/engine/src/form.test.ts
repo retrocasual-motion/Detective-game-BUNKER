@@ -8,8 +8,8 @@ import { emptyProgress } from './types.ts';
 const here = dirname(fileURLToPath(import.meta.url));
 const content = readPack(join(here, '../../../../playtest/packs/v3.3-2026-10-29'));
 
-describe('ошибки оформления ходатайства (FORM-B)', () => {
-  it('все 7 правил есть в access.json и все — отказы ходатайств', () => {
+describe('ошибки оформления запроса (FORM-B)', () => {
+  it('все 7 правил есть в access.json и все — отказы запросов', () => {
     const byId = new Map(content.rules.rules.map((r) => [r.id, r]));
     for (const id of FORM_RULE_IDS) {
       const r = byId.get(id);
@@ -48,7 +48,7 @@ describe('ошибки оформления ходатайства (FORM-B)', ()
     expect(err).toMatch(/адресной книге/);
   });
 
-  it('оформленное ходатайство (пусть и с отказом по существу) — можно отправлять', () => {
+  it('оформленный запрос (пусть и с отказом по существу) — можно отправлять', () => {
     const err = petitionFormError(content, emptyProgress(), 'zapros@okrug-bureau.org', [
       { file: '06', quote: 'Состав группы и персонала программы' },
       { file: '04', quote: 'Опись материалов дела' },
