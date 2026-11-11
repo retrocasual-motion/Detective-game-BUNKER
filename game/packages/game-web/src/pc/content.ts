@@ -23,12 +23,17 @@ export function serverTabs(materials: readonly Mat[]): ServerTab[] {
   const l214 = get('L214');
   if (l214) {
     const parts = l214.body.split(/\n(?=## )/);
+    // Паспорт приложения (одна строка, A-264) — в начале первой вкладки, не своей вкладкой.
     const intro = parts[0]?.replace(/^#\s[^\n]*\n+/, '').trim() ?? '';
-    tabs.push({ title: 'Приложение № 7 — сведения', material: 'L214', body: intro });
-    for (const p of parts.slice(1)) {
+    parts.slice(1).forEach((p, k) => {
       const head = /^## (?:\d+\.\s*)?([^\n]+)/.exec(p)?.[1]?.trim() ?? '';
-      tabs.push({ title: head, material: 'L214', body: p.replace(/^##[^\n]*\n+/, '').trim() });
-    }
+      const body = p.replace(/^##[^\n]*\n+/, '').trim();
+      tabs.push({
+        title: k === 0 ? `Приложение № 7 · ${head}` : head,
+        material: 'L214',
+        body: k === 0 && intro ? `${intro}\n\n${body}` : body,
+      });
+    });
   }
   for (const id of ['L215', 'L387', 'L388', 'L389', 'L390']) {
     const m = get(id);

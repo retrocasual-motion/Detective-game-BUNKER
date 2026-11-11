@@ -10,19 +10,22 @@ const mat = (id: string) => {
 };
 
 describe('компьютер следователя — из канона', () => {
-  it('вкладки экспорта сервера — только пришедшее; у L214 — шесть разделов и сведения', () => {
+  it('вкладки экспорта сервера — только пришедшее; у L214 — четыре раздела (A-264), паспорт — в первом', () => {
     expect(serverTabs([])).toEqual([]);
     const tabs = serverTabs([mat('L214')]);
-    expect(tabs).toHaveLength(7);
-    expect(tabs[1]?.title).toBe('Состояние на 13.10.2009 00:00:00');
-    expect(tabs[6]?.title).toContain('Папка экспорта');
+    expect(tabs).toHaveLength(4);
+    expect(tabs[0]?.title).toBe('Приложение № 7 · Состояние на 13.10.2009 00:00:00');
+    expect(tabs[0]?.body).toMatch(/^Дело № 09-1128/);
+    expect(tabs[1]?.title).toContain('Журнал событий и внутреннего канала');
+    expect(tabs[2]?.title).toContain('Узел связи за заезд');
     const more = serverTabs([mat('L214'), mat('L387'), mat('L388')]);
-    expect(more.map((t) => t.key).at(-1)).toBe('F9');
+    expect(more.map((t) => t.key).at(-1)).toBe('F6');
     expect(more.at(-1)?.material).toBe('L388');
   });
-  it('экспорт ящика — 11 писем с датой, адресами и темой', () => {
+  it('экспорт ящика — 10 писем (без «Ключ», A-264) с датой, адресами и темой', () => {
     const letters = mailbox(mat('L453').body);
-    expect(letters).toHaveLength(11);
+    expect(letters).toHaveLength(10);
+    expect(letters.some((l) => l.subject === 'Ключ')).toBe(false);
     expect(letters[1]).toMatchObject({
       n: 2,
       date: '28.08.2009',
