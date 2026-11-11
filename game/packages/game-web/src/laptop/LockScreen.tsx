@@ -10,7 +10,7 @@ import { useGame } from '../store.ts';
  */
 
 const FIELD = 'ноутбук';
-/** Печатают в поле (адрес в папке ходатайства): клавиши — не ключу ноутбука. */
+/** Печатают в поле (адрес в папке запроса): клавиши — не ключу ноутбука. */
 const typing = (t: EventTarget | null) =>
   t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement;
 const STEP = 96;

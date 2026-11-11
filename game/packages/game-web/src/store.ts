@@ -39,7 +39,7 @@ export const shownCamera = (s: PlayerState) =>
 /** Найденное поиском показывается не мельче этого (карточка ~100 px, заголовок читается). */
 const REVEAL_ZOOM = 0.6;
 
-/** Часть экрана, не закрытая панелью поиска (справа) и папкой ходатайства (слева). */
+/** Часть экрана, не закрытая панелью поиска (справа) и папкой запроса (слева). */
 function freeArea(vp: { width: number; height: number }) {
   const panel = document.querySelector('.search-panel')?.getBoundingClientRect();
   const folder = document.querySelector('.petition-open .petition-folder')?.getBoundingClientRect();
@@ -65,7 +65,7 @@ interface GameStore {
   saveStatus: SaveStatus;
   /** Материал, открытый в просмотрщике (null — закрыт). */
   viewerId: string | null;
-  /** Открыта папка ходатайства. */
+  /** Открыта папка запроса. */
   petitionOpen: boolean;
   /** Блокнот следователя выдвинут (DV-A). */
   notebookOpen: boolean;
@@ -142,7 +142,7 @@ interface GameStore {
    * найденное руками, — светится, пока игрок не взялся за стену или не ушёл к столу от неё.
    */
   freshWall: string[];
-  /** Через ms заглянуть, не пришёл ли ответ на ходатайство (MAIL-B: письмо во «Входящие»). */
+  /** Через ms заглянуть, не пришёл ли ответ на запрос (MAIL-B: письмо во «Входящие»). */
   checkMailIn(ms: number): void;
   load(): Promise<void>;
   setPetitionOpen(open: boolean): void;
@@ -506,7 +506,7 @@ export const useGame = create<GameStore>((set, get) => {
             new URLSearchParams(window.location.search).get('opened') === 'all'
           )
             get().updateState((s) => openAll(s, materials));
-          // Письма, которые ещё в пути (ходатайство отправили до перезагрузки).
+          // Письма, которые ещё в пути (запрос отправили до перезагрузки).
           getPendingMail()
             .then((inMs) => {
               for (const ms of inMs) get().checkMailIn(ms);
@@ -544,7 +544,7 @@ export const useGame = create<GameStore>((set, get) => {
 
 /**
  * Материалы, которые игрок видит: без невскрытых конвертов архива (A-260). По ним — поиск по
- * делу (A-196: «по открытым текстам») и адресная книга ходатайства.
+ * делу (A-196: «по открытым текстам») и адресная книга запроса.
  */
 export function useVisibleMaterials(): Material[] {
   const materials = useGame((g) => g.materials);

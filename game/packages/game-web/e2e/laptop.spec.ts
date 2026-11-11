@@ -134,9 +134,7 @@ test('проводник: «Тревога» — записи, «Свойств�
   await expect(page.getByTestId('lap-sheet')).toContainText('Front Range Savings');
 });
 
-test('выделил строку в окне — «В ходатайство»: карточка из файла ноутбука (PT-A)', async ({
-  page,
-}) => {
+test('выделил строку в окне — «В запрос»: карточка из файла ноутбука (PT-A)', async ({ page }) => {
   await laptopUp(page);
   await unlock(page);
   await page.getByTestId('lap-icon-Доклад_Р.txt').dblclick();

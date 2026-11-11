@@ -49,7 +49,7 @@ interface PetitionStore {
   /** Новый черновик (не больше трёх). */
   create(): void;
   /**
-   * «Повторить ходатайство» из письма-ответа (RP-A): черновик с тем же адресом и карточками,
+   * «Повторить запрос» из письма-ответа (RP-A): черновик с тем же адресом и карточками,
    * папка открыта, активно «Прошу» — следующая строка заменит карточку. false — все черновики
    * заняты.
    */
@@ -220,7 +220,7 @@ export const usePetition = create<PetitionStore>((set, get) => {
       set({ sending: true, error: null, refusal: null, missing: [] });
       const r = await postPetition(d.to, d.ask, d.basis).catch(() => ({
         ok: false as const,
-        error: 'Нет связи с сервером — ходатайство не ушло. Попробуйте ещё раз.',
+        error: 'Нет связи с сервером — запрос не ушёл. Попробуйте ещё раз.',
       }));
       if (!r.ok) {
         set({ sending: false, error: r.error });

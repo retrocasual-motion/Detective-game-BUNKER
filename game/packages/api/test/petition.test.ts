@@ -102,7 +102,7 @@ const send = (askFile: string, a = app()) =>
   );
 const list = async (a = app()) => (await (await a.request('/api/materials')).json()) as Material[];
 
-describe('ходатайство из папки (этап 3)', () => {
+describe('запрос из папки (этап 3)', () => {
   it('ответ — письмом через задержку; до неё ни письма, ни вложений в браузере нет (P-10)', async () => {
     const res = await send('01');
     expect(res.status).toBe(200);
@@ -115,7 +115,7 @@ describe('ходатайство из папки (этап 3)', () => {
     expect(got.map((m) => m.id)).toEqual(['01', '02', 'L101', 'M001']);
     const letter = got.find((m) => m.id === 'M001');
     expect(letter?.kind).toBe('letter');
-    expect(letter?.title).toBe('Ответ на ходатайство № 1');
+    expect(letter?.title).toBe('Ответ на запрос № 1');
     expect(letter?.body).toContain('Бюро: направляем приложение.');
     expect(letter?.body).toContain('**Вложения:** L101');
     expect(letter?.body).toContain('Прошу: 01 — «Материал 01»');
@@ -191,7 +191,7 @@ describe('ходатайство из папки (этап 3)', () => {
     expect(((await res.json()) as { n: number }).n).toBe(2);
   });
 
-  it('в production ходатайство через /api/action не принимается — только папкой', async () => {
+  it('в production запрос через /api/action не принимается — только папкой', async () => {
     const res = await post(
       '/api/action',
       {

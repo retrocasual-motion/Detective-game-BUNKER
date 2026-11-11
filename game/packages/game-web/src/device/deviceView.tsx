@@ -5,8 +5,8 @@ import { useGame } from '../store.ts';
 
 /**
  * Общее у экранов устройств (ноутбук 4c-1, телефон 4c-2): устройство стоит в свободном месте
- * между папкой ходатайства и блокнотом (они лежат сверху — правка автора 11.11); выделенная
- * строка на экране — в ходатайство (PT-A).
+ * между папкой запроса и блокнотом (они лежат сверху — правка автора 11.11); выделенная
+ * строка на экране — в запрос (PT-A).
  */
 
 /** Свободное место по горизонтали: середина и ширина (обновляется, когда папка или блокнот выдвинуты). */
@@ -34,7 +34,7 @@ export function useFreeArea() {
   return area;
 }
 
-/** Выделение на экране устройства — кнопка «В ходатайство» (или «В «Кому»» для адреса). */
+/** Выделение на экране устройства — кнопка «В запрос» (или «В «Кому»» для адреса). */
 export function useSelectionPetition(testId: string) {
   const [sel, setSel] = useState<{ text: string; material: string; x: number; y: number } | null>(
     null,
@@ -89,7 +89,7 @@ export function useSelectionPetition(testId: string) {
       onMouseDown={(e) => e.preventDefault()}
       onClick={toPetition}
     >
-      {folderShown && toAddress && emailIn(sel.text) ? 'В «Кому»' : 'В ходатайство'}
+      {folderShown && toAddress && emailIn(sel.text) ? 'В «Кому»' : 'В запрос'}
     </button>
   );
   return { onUp, button };

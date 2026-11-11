@@ -380,7 +380,7 @@ export function WallView() {
     },
     [updateState, snapJoin],
   );
-  // Лист тянут над открытой папкой ходатайства: над ней идёт его призрак (поверх папки), поле
+  // Лист тянут над открытой папкой запроса: над ней идёт его призрак (поверх папки), поле
   // под курсором подсвечено (правка автора 09.11).
   const [ghost, setGhost] = useState<{ id: string; x: number; y: number } | null>(null);
   const onLive = useCallback(

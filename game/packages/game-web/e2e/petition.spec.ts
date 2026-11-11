@@ -33,7 +33,7 @@ async function selectText(page: Page, text: string) {
   }, text);
 }
 
-/** Карточка из листа: открыть со стены, выделить строку, «В ходатайство», закрыть. */
+/** Карточка из листа: открыть со стены, выделить строку, «В запрос», закрыть. */
 async function cardFrom(page: Page, id: string, text: string) {
   await bringIntoView(page, id);
   await sheet(page, id).click(STRIP);
@@ -154,13 +154,13 @@ test('собрать из карточек, отправить — штамп; �
   await expect(folder(page)).toBeHidden();
   await expect(page.getByTestId('petition-sent-note')).toContainText('во «Входящие» на столе');
   // Черновик ушёл вместе с письмом.
-  await expect(page.getByTestId('petition-corner')).toHaveText('Ходатайство');
+  await expect(page.getByTestId('petition-corner')).toHaveText('Запрос');
   // Письмо приходит через задержку (в автотестах — 1,5 с).
   await expect(page.getByTestId('arrival-note')).toContainText('M001', { timeout: 10_000 });
   await page.getByTestId('arrival-note').click();
   await page.getByTestId('inbox-M001').click();
   const viewer = page.getByTestId('viewer');
-  await expect(viewer).toContainText('Ответ на ходатайство № 1');
+  await expect(viewer).toContainText('Ответ на запрос № 1');
   await expect(viewer).toContainText('Прошу: 25');
 });
 
@@ -303,7 +303,7 @@ async function wordPoint(page: Page, word: string, at = 0.5) {
   );
 }
 
-test('выделение для ходатайства (SEL-C): щелчок — строка целиком, протяжка — целые слова', async ({
+test('выделение для запроса (SEL-C): щелчок — строка целиком, протяжка — целые слова', async ({
   page,
 }) => {
   await toWall(page);

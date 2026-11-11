@@ -30,7 +30,7 @@ export const GENERAL_REFUSAL_IDS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Ошибка оформления ходатайства (текст для папки) или null — можно отправлять. Только
+ * Ошибка оформления запроса (текст для папки) или null — можно отправлять. Только
  * чтение: прогресс не меняется. Лимит попыток проверяет `act` (итог «лимит»).
  */
 export function petitionFormError(
@@ -41,7 +41,5 @@ export function petitionFormError(
 ): string | null {
   const r = resolvePetition(c, progress, target, cards);
   if (!r.hit) return r.result === 'не оформлено' ? r.reply : null;
-  return FORM_RULE_IDS.has(r.hit.id)
-    ? (r.hit.ok ?? r.hit.fail ?? 'Ходатайство не оформлено.')
-    : null;
+  return FORM_RULE_IDS.has(r.hit.id) ? (r.hit.ok ?? r.hit.fail ?? 'Запрос не оформлен.') : null;
 }

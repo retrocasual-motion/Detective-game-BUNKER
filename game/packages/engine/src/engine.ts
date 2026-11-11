@@ -37,7 +37,7 @@ const FORM_SAME_ROUND =
   'Форма заключения только что открыта: заполните её пункты и отправьте заключение.';
 const FORM_AFTER = 'Форма заключения открыта: новые действия недоступны.';
 const LIMIT_REPLY = 'Слишком много неверных попыток: поле ввода примет значение позже.';
-const NOT_FORMED = 'Ходатайство не оформлено: нужны две карточки — «Прошу» и «На основании».';
+const NOT_FORMED = 'Запрос не оформлен: нужны две карточки — «Прошу» и «На основании».';
 const MAIL = 'почта';
 
 const isReleased = (p: Progress, id: string) => p.released.includes(id);
@@ -162,7 +162,7 @@ function cardsOk(r: Rule, cards: [CheckedCard, CheckedCard]): boolean {
 
 type PetitionMiss = Miss & { formed: boolean };
 
-/** Ходатайство: адрес — шаблон цели, карточки — слоты `cards`. */
+/** Запрос: адрес — шаблон цели, карточки — слоты `cards`. */
 export function resolvePetition(
   c: Content,
   p: Progress,

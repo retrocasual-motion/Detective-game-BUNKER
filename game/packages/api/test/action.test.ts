@@ -121,7 +121,7 @@ describe('движок правил на сервере', () => {
     expect(res.status).toBe(400);
   });
 
-  it('ходатайство карточками: ответ правила', async () => {
+  it('запрос карточками: ответ правила', async () => {
     const res = await post('/api/action', {
       action: 'ХОДАТАЙСТВО',
       target: 'zapros@bureau.org',
