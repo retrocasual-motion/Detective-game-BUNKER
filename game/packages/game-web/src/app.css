@@ -1284,8 +1284,8 @@ button {
 /* Чистые карточки у края доски (внизу справа): взять записку или ярлык. */
 .wall-blanks {
   position: absolute;
-  /* Правый нижний угол — язычок блокнота. */
-  right: calc(var(--space-4) + var(--notebook-tab-width) + var(--space-3));
+  /* Правый нижний угол — блокнот (торчит краем). */
+  right: calc(var(--space-4) + var(--notebook-width) + var(--space-3));
   bottom: var(--space-3);
   z-index: 30;
   display: flex;
@@ -1303,8 +1303,12 @@ button {
   background: rgb(201 162 39 / 12%);
   pointer-events: none;
 }
+/* Над записками, не рядом: справа внизу место у блокнота, по центру — кнопка «Стол». */
 .wall-hint {
-  align-self: center;
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--space-2));
+  white-space: nowrap;
   padding: 2px var(--space-2);
   border-radius: var(--radius);
   background: rgb(0 0 0 / 28%);
@@ -2338,10 +2342,16 @@ button {
     translate 0.3s var(--ease-camera),
     right 0.25s;
   pointer-events: none;
-  --notebook-peek: 8px;
+  /* Закрытый — из-под края торчит верх блокнота с пружиной, как полоска папки ходатайства. */
+  --notebook-peek: 30px;
+  --notebook-lift: 10px;
 }
 .notebook-open {
   translate: 0 0;
+}
+/* Навели на язычок или верх блокнота — он приподнимается (как папка ходатайства). */
+.notebook:not(.notebook-open):has(.notebook-tab:hover, .notebook-pad:hover) {
+  translate: 0 calc(100% - var(--corner-height) - var(--notebook-peek) - var(--notebook-lift));
 }
 /* Поиск открыт — блокнот рядом с панелью, не под ней. */
 :root:has(.search-panel) .notebook {
@@ -2362,9 +2372,6 @@ button {
   pointer-events: auto;
   transition: translate 0.2s ease-out;
 }
-.notebook:not(.notebook-open) .notebook-tab:hover {
-  translate: 0 -10px;
-}
 .notebook-tab[aria-expanded="true"] {
   font-weight: bold;
 }
@@ -2379,9 +2386,11 @@ button {
   box-shadow: var(--shadow-paper-lifted);
   pointer-events: auto;
 }
-.notebook:not(.notebook-open) .notebook-pad {
-  visibility: hidden;
-  transition: visibility 0s 0.25s;
+/* Приподнятый не уходит из-под курсора: невидимый «хвост» вниз на высоту подъёма. */
+.notebook:not(.notebook-open) .notebook-pad::after {
+  content: "";
+  position: absolute;
+  inset: 100% 0 calc(var(--notebook-lift) * -1);
 }
 /* Пружина блокнота по верхнему краю. */
 .notebook-rings {
@@ -2391,13 +2400,6 @@ button {
   background:
     radial-gradient(circle at 50% 62%, #4a4a48 0 4px, transparent 4.5px) 0 0 / 22px 22px repeat-x,
     linear-gradient(#2f3a33 0 9px, transparent 9px);
-}
-/* Крестик — над страницей, слева от язычка: не закрывает строки. */
-.notebook-close {
-  position: absolute;
-  top: calc(var(--corner-height) * -1 + 6px);
-  right: calc(var(--notebook-tab-width) + var(--space-2));
-  z-index: 1;
 }
 .notebook-page {
   position: relative;
@@ -2468,4 +2470,12 @@ button {
 }
 .notebook-turn:disabled {
   opacity: 0.35;
+}
+.notebook-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 0;
+  background: none;
+  cursor: pointer;
 }

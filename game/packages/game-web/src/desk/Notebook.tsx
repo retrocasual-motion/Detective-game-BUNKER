@@ -91,7 +91,6 @@ export function Notebook() {
         className="notebook-pad"
         data-testid="notebook"
         aria-label="Блокнот следователя"
-        inert={!open}
         onKeyDown={(e) => {
           e.stopPropagation();
           if (e.key === 'Escape') setOpen(false);
@@ -105,16 +104,18 @@ export function Notebook() {
         }}
       >
         <div className="notebook-rings" aria-hidden />
-        <button
-          type="button"
-          className="tool tool-close notebook-close"
-          aria-label="Закрыть блокнот"
-          title="Закрыть блокнот (записи сохранятся)"
-          onClick={() => setOpen(false)}
-        >
-          ✕
-        </button>
-        <div className="notebook-page" style={{ height: PAGE_LINES * LINE_PX }}>
+        {!open && (
+          // Закрытый: торчащий край — открыть (как полоска папки ходатайства).
+          <button
+            type="button"
+            className="notebook-cover"
+            data-testid="notebook-peek"
+            aria-label="Открыть блокнот"
+            tabIndex={-1}
+            onClick={() => setOpen(true)}
+          />
+        )}
+        <div className="notebook-page" inert={!open} style={{ height: PAGE_LINES * LINE_PX }}>
           <textarea
             ref={area}
             key={at}
@@ -145,7 +146,7 @@ export function Notebook() {
           />
           <div ref={mirror} className="notebook-text notebook-mirror" aria-hidden />
         </div>
-        <div className="notebook-foot">
+        <div className="notebook-foot" inert={!open}>
           <button
             type="button"
             className="notebook-turn"

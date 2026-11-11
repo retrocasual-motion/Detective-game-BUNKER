@@ -31,12 +31,29 @@ test('блокнот: язычок — страница, записи сохра
   await expect(text(page)).toBeFocused();
   await text(page).fill('Спросить про ящик Эммы');
   await page.keyboard.press('Escape');
-  await expect(text(page)).toBeHidden();
+  await expect(page.getByTestId('notebook-tab')).toHaveAttribute('aria-expanded', 'false');
   await page.waitForTimeout(800);
   await page.reload();
   await expect(page.getByTestId('room')).toBeVisible();
   await page.getByTestId('notebook-tab').click();
   await expect(text(page)).toHaveValue('Спросить про ящик Эммы');
+});
+
+test('закрытый блокнот торчит краем, как папка ходатайства: щелчок по краю — открыть', async ({
+  page,
+}) => {
+  const peek = page.getByTestId('notebook-peek');
+  const box = await peek.boundingBox();
+  const vh = page.viewportSize()?.height ?? 768;
+  if (!box) throw new Error('нет края');
+  // Видна полоска блокнота под язычком (не один язычок в воздухе).
+  expect(vh - box.y).toBeGreaterThan(20);
+  await page.mouse.click(box.x + box.width / 2, vh - 10);
+  await expect(page.getByTestId('notebook-tab')).toHaveAttribute('aria-expanded', 'true');
+  await expect(text(page)).toBeFocused();
+  // Язычок — закрыть.
+  await page.getByTestId('notebook-tab').click();
+  await expect(page.getByTestId('notebook-tab')).toHaveAttribute('aria-expanded', 'false');
 });
 
 test('пишут на любой строке: щелчок по пятой строке пустой страницы — курсор там', async ({
@@ -103,7 +120,7 @@ test('поверх листа: лист не закрывается, стрел�
   await text(page).pressSequentially('заметка');
   await page.keyboard.press('ArrowLeft');
   await page.keyboard.press('Escape');
-  await expect(text(page)).toBeHidden();
+  await expect(page.getByTestId('notebook-tab')).toHaveAttribute('aria-expanded', 'false');
   await expect(page.getByTestId('viewer')).toBeVisible();
   await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'wall');
 });
