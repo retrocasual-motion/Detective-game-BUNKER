@@ -78,6 +78,9 @@ interface GameStore {
   /** Компьютер следователя открыт крупно (щелчок по монитору на столе). */
   computerOpen: boolean;
   setComputerOpen(open: boolean): void;
+  /** Компьютер следователя открыт на этом материале (поиск, 4c-3). */
+  pcMaterial: string | null;
+  openPc(material: string | null): void;
   /** Вскрыть конверт архива или коробку (A-260): содержимое — на стену группой. */
   openContainer(id: ContainerId): void;
   /** Окно корзины у стола открыто (TR-A). */
@@ -210,6 +213,7 @@ export const useGame = create<GameStore>((set, get) => {
     loadFailed: false,
     arrival: null,
     computerOpen: false,
+    pcMaterial: null,
     trashOpen: false,
     held: null,
     laptop: null,
@@ -230,7 +234,11 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     setComputerOpen(open) {
-      set({ computerOpen: open });
+      set({ computerOpen: open, pcMaterial: null });
+    },
+
+    openPc(material) {
+      set({ computerOpen: true, pcMaterial: material, held: null, viewerId: null });
     },
 
     openContainer(id) {
@@ -377,6 +385,10 @@ export const useGame = create<GameStore>((set, get) => {
       }
       if (deviceOf(materialId) === '48') {
         get().openPhone(materialId);
+        return;
+      }
+      if (deviceOf(materialId) === 'pc') {
+        get().openPc(materialId);
         return;
       }
       // Устройство берут в руки (этап 4a); из поиска — сразу текст.

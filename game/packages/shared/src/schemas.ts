@@ -130,6 +130,16 @@ export const LaptopDeskSchema = z.object({
 });
 export type LaptopDesk = z.infer<typeof LaptopDeskSchema>;
 
+/** Окно компьютера следователя (4c-3): те же поля; path — материал (документ, вкладка терминала). */
+export const PcWindowSchema = LapWindowSchema.extend({
+  kind: z.enum(['incoming', 'terminal', 'browser', 'doc', 'mbx', 'enc']),
+});
+export type PcWindow = z.infer<typeof PcWindowSchema>;
+export const PcDeskSchema = z.object({
+  icons: z.record(z.string().max(120), z.object({ x: z.number(), y: z.number() })).optional(),
+  windows: z.array(PcWindowSchema).max(30).optional(),
+});
+
 export const STATE_VERSION = 5;
 
 export const PlayerStateSchema = z.object({
@@ -196,6 +206,8 @@ export const PlayerStateSchema = z.object({
   laptop: LaptopDeskSchema.optional(),
   /** Телефон Габриэля (4c-2): какой экран открыт — после выхода телефон там же. */
   phone: z.object({ screen: z.string().max(80) }).optional(),
+  /** Компьютер следователя (4c-3): значки и окна рабочего стола — после выхода всё на месте. */
+  pc: PcDeskSchema.optional(),
   /** Совмещённые на стене листы (WL-A, MG-A): «L990» — висит вместо своих половин. */
   joined: z
     .array(z.string().regex(/^L\d{3}$/))

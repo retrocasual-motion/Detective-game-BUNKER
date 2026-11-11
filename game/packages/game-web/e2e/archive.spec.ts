@@ -122,7 +122,7 @@ test('газета на столе — бумажный номер; сайт г�
   await expect(page.getByTestId('viewer')).toContainText('Вчера, 15 ноября, ему исполнилось бы 35');
   await page.keyboard.press('Escape');
   await page.getByTestId('computer-monitor').click();
-  await page.getByTestId('computer-tab-Закладки').click();
-  await page.getByTestId('bookmark-17').click();
-  await expect(page.getByTestId('viewer')).toContainText('Выпуск открывается по дате');
+  await page.getByTestId('lap-icon-Браузер').dblclick();
+  await page.getByTestId('pc-fav-17').click();
+  await expect(page.getByTestId('pc-web')).toContainText('Выпуск открывается по дате');
 });
