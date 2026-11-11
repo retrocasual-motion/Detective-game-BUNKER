@@ -53,7 +53,7 @@ test('рабочее место бюро: значки, служебная по�
   await expect(page.getByTestId('computer')).toHaveCount(0);
 });
 
-test('ответы бюро — в «Поступлениях»; терминал — вкладки по F-клавишам; на стене и во «Входящих» их нет', async ({
+test('«Поступления» — только письма; вложение — свой файл с замком; терминал — документы, выделение щелчком', async ({
   page,
 }) => {
   await grant(page, BUREAU);
@@ -61,29 +61,44 @@ test('ответы бюро — в «Поступлениях»; термина�
   await expect(sheet(page, 'L214')).toHaveCount(0);
   await pcUp(page);
   await icon(page, 'Поступления').dblclick();
-  for (const id of ['L452', 'mbx', 'L214', 'L387', 'L388'])
-    await expect(page.getByTestId(`pc-in-${id}`)).toBeVisible();
-  await page.getByTestId('pc-in-L214').dblclick();
+  await expect(page.getByTestId('pc-in-L452')).toContainText('Ответ Mailbridge');
+  await expect(page.getByTestId('pc-in-L452')).toContainText('на рабочем столе');
+  await expect(page.getByTestId('pc-in-L214')).toHaveCount(0);
+  await expect(icon(page, 'mailbox_export_e.pierce.uk.mbx')).toBeVisible();
+  await page.getByTestId('pc-in-L452').dblclick();
+  await expect(page.getByTestId('pc-doc')).not.toContainText('Ввод:');
+  // Терминал: три документа (журнал, пользователь 05, копии), журнал — на ленте событий.
+  await icon(page, 'Экспорт сервера VL-31').dblclick();
   const term = page.getByTestId('pc-terminal');
   await expect(term).toBeVisible();
-  await expect(page.getByTestId('pc-term-F1')).toContainText('Приложение № 7');
-  await expect(page.getByTestId('pc-term-body')).toHaveAttribute('data-material', 'L214');
-  // L214 — четыре вкладки (A-264), затем L387 и копии экспортов.
-  await expect(page.getByTestId('pc-term-F5')).toContainText('Материалы сеансов');
-  await page.getByTestId('pc-term-F2').click();
-  await expect(page.getByTestId('pc-term-body')).toContainText('F2');
+  await expect(page.getByTestId('pc-term-F1')).toContainText('Журнал сервера 13.10');
+  await expect(page.getByTestId('pc-term-F2')).toContainText('Пользователь 05');
+  await expect(page.getByTestId('pc-term-F3')).toContainText('Копии экспортов');
+  await expect(page.getByTestId('pc-term-F4')).toHaveCount(0);
+  await expect(page.getByTestId('pc-part-1')).toHaveAttribute('aria-pressed', 'true');
+  const body = page.getByTestId('pc-term-body');
+  await expect(body).toContainText('08:43:10');
+  // Щелчок по коду — строки с ним ярче, прочие бледнеют, ничего не пропадает.
+  const rows = await body.locator('tbody tr').count();
+  await body.locator('td', { hasText: /^05$/ }).first().click();
+  await expect(page.getByTestId('pc-mark')).toContainText('05');
+  await expect(body.locator('tr.pc-row-on')).toHaveCount(6);
+  await expect(body.locator('tbody tr')).toHaveCount(rows);
+  await page.getByTestId('pc-part-2').click();
+  await expect(body.locator('tr.pc-row-on').first()).toContainText('05');
+  await page.getByTestId('pc-mark-clear').click();
+  await expect(body.locator('tr.pc-row-off')).toHaveCount(0);
   await term.focus();
-  await page.keyboard.press('F5');
-  await expect(page.getByTestId('pc-term-body')).toHaveAttribute('data-material', 'L387');
+  await page.keyboard.press('F2');
+  await expect(body).toHaveAttribute('data-material', 'L387');
 });
 
-test('экспорт ящика: неверный пароль — «Неверный пароль.»; «тоффи» — почта с письмами', async ({
+test('экспорт ящика: неверный пароль — «Неверный пароль.»; «тоффи» — почта с письмами, замок снят', async ({
   page,
 }) => {
   await grant(page, BUREAU);
   await pcUp(page);
-  await icon(page, 'Поступления').dblclick();
-  await page.getByTestId('pc-in-mbx').dblclick();
+  await icon(page, 'mailbox_export_e.pierce.uk.mbx').dblclick();
   const input = page.getByTestId('pc-password-input');
   await expect(input).toHaveAttribute('type', 'password');
   await input.fill('Bobby');
@@ -95,14 +110,16 @@ test('экспорт ящика: неверный пароль — «Невер�
   await expect(page.getByTestId('pc-letter-10')).toBeVisible();
   await page.getByTestId('pc-letter-2').click();
   await expect(page.getByTestId('pc-mail-read')).toContainText('j.mercer@sentinel-labs.net');
+  await expect(icon(page, 'mailbox_export_e.pierce.uk.mbx').locator('.lap-ico-mail')).toHaveCount(
+    1,
+  );
   await expect(page.getByTestId('inbox-L453')).toHaveCount(0);
 });
 
 test('пароль ящика: пять неверных — поле ждёт (LK-A)', async ({ page }) => {
   await grant(page, BUREAU);
   await pcUp(page);
-  await icon(page, 'Поступления').dblclick();
-  await page.getByTestId('pc-in-mbx').dblclick();
+  await icon(page, 'mailbox_export_e.pierce.uk.mbx').dblclick();
   const msg = page.getByTestId('pc-password-msg');
   for (let k = 0; k < 5; k++) {
     await page.getByTestId('pc-password-input').fill(`нет${k}`);
@@ -150,8 +167,7 @@ test('архив проекта: пароль 0417 — три документа
   await icon(page, 'Поступления').dblclick();
   await page.getByTestId('pc-in-L735').dblclick();
   await expect(page.getByTestId('pc-doc')).toHaveAttribute('data-material', 'L735');
-  await icon(page, 'Поступления').dblclick();
-  await page.getByTestId('pc-in-enc').dblclick();
+  await icon(page, 'VL-31_project_archive.enc').dblclick();
   await page.getByTestId('pc-password-input').fill('0417');
   await page.getByTestId('pc-password-ok').click();
   await expect(page.getByTestId('pc-archive')).toBeVisible();
