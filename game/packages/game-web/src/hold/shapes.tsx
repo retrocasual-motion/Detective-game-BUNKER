@@ -5,6 +5,7 @@ import { useGame } from '../store.ts';
 import { onClickPart, setPartCursor, useSpot } from './Held3D.tsx';
 import { paintLaptopFace } from './laptopFace.ts';
 import { paintPhoneFace } from './phoneFace.ts';
+import { paintReceiverDial, paintRecorderScreen } from './radioFace.ts';
 import { type Painter, paintTexture } from './texture.ts';
 
 /**
@@ -316,6 +317,173 @@ function PhoneScreen({ onUse }: { onUse: () => void }) {
   return <Screen w={0.82} h={1.6} z={0.051} label="Включить телефон" onUse={onUse} face={face} />;
 }
 
+/** Экран регистратора RL-2 на стойке — уже горит: время и шкала отрезка (как на панели). */
+function RecorderScreen({ onUse }: { onUse: () => void }) {
+  const body50 = useGame((g) => g.materials.find((m) => m.id === '50')?.body ?? '');
+  const pos = useGame((g) => g.state?.radio?.pos ?? 35_000);
+  const face = useTexture(
+    () => paintTexture(1.5, 0.42, null, paintRecorderScreen(body50, pos)),
+    [body50, pos],
+  );
+  return (
+    <Screen w={1.5} h={0.42} z={0.081} label="Работать с регистратором" onUse={onUse} face={face} />
+  );
+}
+
+/** Ручка (круглая) на передней панели. */
+function Knob({
+  at,
+  r,
+  color = '#2b2d30',
+}: {
+  at: [number, number, number];
+  r: number;
+  color?: string;
+}) {
+  return (
+    <mesh position={at} rotation={[Math.PI / 2, 0, 0]}>
+      <cylinderGeometry args={[r, r * 1.05, r * 0.9, 28]} />
+      <meshStandardMaterial color={color} roughness={0.45} metalness={0.4} />
+    </mesh>
+  );
+}
+
+/**
+ * Стойка радиопоста (50; A-267 — изъята целиком): сверху приёмник общего покрытия — шкала с
+ * тремя диапазонами и пятью карандашными метками, ручка настройки, переключатель «РУЧН. / ПОИСК»
+ * в положении ПОИСК, выдвижной штырь для УКВ, сзади — отсоединённый антенный кабель (основная
+ * антенна поста — наружная); посередине — регистратор RL-2 с горящим экраном (щелчок — работать);
+ * внизу — блок питания. Без марок, своё оформление.
+ */
+function RadioStand({ tag, onUse }: { tag: string; onUse: () => void }) {
+  const dial = useTexture(() => paintTexture(1.6, 0.55, null, paintReceiverDial()), []);
+  const plate = useTexture(
+    () =>
+      paintTexture(0.9, 0.16, '#d8dadc', ({ ctx, w, h }) => {
+        ctx.fillStyle = '#2a2c2f';
+        ctx.font = `700 ${Math.round(h * 0.34)}px Tahoma, sans-serif`;
+        ctx.fillText('FIELDWORKS RADIO · RL-2', w * 0.04, h * 0.3, w * 0.92);
+      }),
+    [],
+  );
+  const sw = useTexture(
+    () =>
+      paintTexture(0.36, 0.14, null, ({ ctx, w, h }) => {
+        ctx.fillStyle = '#e8e8e2';
+        ctx.font = `700 ${Math.round(h * 0.34)}px Tahoma, sans-serif`;
+        ctx.fillText('РУЧН.', w * 0.02, h * 0.3);
+        ctx.fillText('ПОИСК', w * 0.55, h * 0.3);
+      }),
+    [],
+  );
+  const RACK = '#3d4044';
+  const PANEL = '#8f9398';
+  return (
+    <group rotation={[0.12, -0.4, 0]} scale={0.62} position={[0, -0.15, 0]}>
+      {/* Рама стойки. */}
+      {[-1.12, 1.12].map((x) => (
+        <mesh key={x} position={[x, 0, 0]}>
+          <boxGeometry args={[0.08, 2.5, 0.9]} />
+          <meshStandardMaterial color={RACK} roughness={0.6} metalness={0.3} />
+        </mesh>
+      ))}
+      <mesh position={[0, 1.25, 0]}>
+        <boxGeometry args={[2.32, 0.06, 0.9]} />
+        <meshStandardMaterial color={RACK} roughness={0.6} metalness={0.3} />
+      </mesh>
+      <mesh position={[0, -1.25, 0]}>
+        <boxGeometry args={[2.32, 0.08, 0.9]} />
+        <meshStandardMaterial color={RACK} roughness={0.6} metalness={0.3} />
+      </mesh>
+
+      {/* Приёмник. */}
+      <group position={[0, 0.72, 0]}>
+        <mesh>
+          <boxGeometry args={[2.16, 0.86, 0.8]} />
+          <meshStandardMaterial color={PANEL} roughness={0.45} metalness={0.5} />
+        </mesh>
+        <mesh position={[-0.2, 0.05, 0.401]}>
+          <planeGeometry args={[1.6, 0.55]} />
+          <meshBasicMaterial map={dial} toneMapped={false} />
+        </mesh>
+        <Knob at={[0.82, 0.02, 0.45]} r={0.17} />
+        <Knob at={[0.82, -0.3, 0.43]} r={0.07} color="#444" />
+        {/* Переключатель «РУЧН. / ПОИСК» — в положении ПОИСК (A-267). */}
+        <mesh position={[-0.7, -0.34, 0.401]}>
+          <planeGeometry args={[0.36, 0.14]} />
+          <meshBasicMaterial map={sw} transparent toneMapped={false} />
+        </mesh>
+        <mesh position={[-0.6, -0.34, 0.44]} rotation={[0, 0, -0.5]}>
+          <boxGeometry args={[0.03, 0.12, 0.06]} />
+          <meshStandardMaterial color="#d0d2d4" metalness={0.7} roughness={0.3} />
+        </mesh>
+        {/* Выдвижной штырь (УКВ) на крышке. */}
+        <group position={[0.9, 0.43, -0.25]} rotation={[0, 0, -0.35]}>
+          <mesh position={[0, 0.7, 0]}>
+            <cylinderGeometry args={[0.012, 0.02, 1.4, 10]} />
+            <meshStandardMaterial color="#c9ccd0" metalness={0.9} roughness={0.2} />
+          </mesh>
+          <mesh position={[0, 1.41, 0]}>
+            <sphereGeometry args={[0.025, 10, 10]} />
+            <meshStandardMaterial color="#c9ccd0" metalness={0.9} roughness={0.2} />
+          </mesh>
+        </group>
+        {/* Антенный кабель сзади — отсоединён при изъятии. */}
+        <mesh position={[-0.75, -0.2, -0.55]} rotation={[0.9, 0, 0.2]}>
+          <torusGeometry args={[0.28, 0.025, 8, 24, Math.PI * 1.3]} />
+          <meshStandardMaterial color="#1b1c1e" roughness={0.8} />
+        </mesh>
+      </group>
+
+      {/* Регистратор RL-2. */}
+      <group position={[0, -0.12, 0]}>
+        <mesh>
+          <boxGeometry args={[2.16, 0.62, 0.8]} />
+          <meshStandardMaterial color="#b9bcc0" roughness={0.4} metalness={0.6} />
+        </mesh>
+        <mesh position={[-0.55, 0.22, 0.401]}>
+          <planeGeometry args={[0.9, 0.16]} />
+          <meshBasicMaterial map={plate} toneMapped={false} />
+        </mesh>
+        <group position={[-0.1, -0.06, 0.32]}>
+          <RecorderScreen onUse={onUse} />
+        </group>
+        {[0.78, 0.92].map((x) => (
+          <mesh key={x} position={[x, 0.18, 0.41]}>
+            <sphereGeometry args={[0.03, 10, 10]} />
+            <meshStandardMaterial color="#ff9d2e" emissive="#ff7a10" emissiveIntensity={0.8} />
+          </mesh>
+        ))}
+        {[0.7, 0.84, 0.98].map((x) => (
+          <mesh key={x} position={[x, -0.12, 0.41]}>
+            <boxGeometry args={[0.11, 0.08, 0.04]} />
+            <meshStandardMaterial color="#2e3135" roughness={0.5} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Блок питания: решётка и выключатель. */}
+      <group position={[0, -0.86, 0]}>
+        <mesh>
+          <boxGeometry args={[2.16, 0.62, 0.8]} />
+          <meshStandardMaterial color="#55585d" roughness={0.6} metalness={0.3} />
+        </mesh>
+        {[-0.9, -0.78, -0.66, -0.54, -0.42, -0.3, -0.18, -0.06, 0.06].map((vx) => (
+          <mesh key={vx} position={[vx, 0, 0.401]}>
+            <planeGeometry args={[0.05, 0.36]} />
+            <meshStandardMaterial color="#26282b" />
+          </mesh>
+        ))}
+        <mesh position={[0.85, 0, 0.42]}>
+          <boxGeometry args={[0.16, 0.1, 0.05]} />
+          <meshStandardMaterial color="#a32a22" roughness={0.4} />
+        </mesh>
+      </group>
+      <Tag text={tag} at={[0.95, -1.45, 0.47]} />
+    </group>
+  );
+}
+
 export function Device({ id, tag, onUse }: { id: string; tag: string; onUse: () => void }) {
   if (id === '47')
     return (
@@ -371,15 +539,6 @@ export function Device({ id, tag, onUse }: { id: string; tag: string; onUse: () 
         <Tag text={tag} at={[0.65, -0.65, 0.04]} />
       </group>
     );
-  // 50 — стойка радиопоста.
-  return (
-    <group rotation={[0.15, -0.35, 0]} scale={0.75}>
-      <mesh>
-        <boxGeometry args={[3, 1.5, 1.2]} />
-        <meshStandardMaterial color={DEVICE} roughness={0.7} />
-      </mesh>
-      <Screen w={2.6} h={1.1} z={0.601} label="Включить запись" onUse={onUse} />
-      <Tag text={tag} at={[1.25, -0.85, 0.62]} />
-    </group>
-  );
+  // 50 — стойка радиопоста целиком (A-267).
+  return <RadioStand tag={tag} onUse={onUse} />;
 }
