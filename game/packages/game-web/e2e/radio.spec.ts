@@ -40,9 +40,7 @@ test('пауза — «прослушать» эту точку: в 09:00 в э�
   await expect(page.getByTestId('radio-heard')).toContainText('дикторский');
 });
 
-test('play идёт по записи; метка ставится и сохраняется; Esc — снова в руках', async ({
-  page,
-}) => {
+test('play идёт по записи; метка ставится и сохраняется; Esc — снова в руках', async ({ page }) => {
   await radioUp(page);
   await page.getByTestId('radio-goto-btn').click();
   await page.getByTestId('radio-goto').fill('13.10 08:44:00');
