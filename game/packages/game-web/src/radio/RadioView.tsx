@@ -1,32 +1,36 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
 import { useFreeArea } from '../device/deviceView.tsx';
 import { useGame } from '../store.ts';
 import {
   captionAt,
   clock,
+  clusters,
   fromClock,
-  hourTicks,
   listenLine,
   parseRecord,
   RECORD_LENGTH,
   soundStarts,
+  ticksFor,
   windows,
 } from './record.ts';
 import './radio.css';
 
 /** Панель, логические px; на окне — масштабом. */
 const W = 1060;
-const H = 640;
+const H = 660;
+/** Самая подробная видимая часть шкалы — минута. */
+const MIN_VIEW = 60;
 type Mark = { t: number; label: string };
 
 /**
  * Регистратор радиопоста лицом к игроку (этап 4d-1; решения автора 12.11 — PL-A, ST-A, NV-A с
- * правками «сразу нужный отрезок», «волна», «без лишних дней», «переключаться между звуками»,
- * PM-A, K8). По канону изъят регистратор RL-2 с записью; стойка — только на двух снимках (файл 50).
- * На экране — время и шкала размеченного отрезка 12.10 21:43 — 13.10 11:00 с полосами там, где
- * что-то слышно; клавиши «◂ звук», «пуск», «звук ▸», «перейти», «метка». Звука в сборке пока нет:
- * под панелью — описание той точки, где стоит перемотка; на паузе — ответ движка «прослушать».
+ * правками: «сразу нужный отрезок», «волна», «без лишних дней», «переключаться между звуками»,
+ * «увеличить таймлайн», «кнопку „перейти“ убрать»; PM-A; K8). По канону изъят регистратор RL-2;
+ * стойка — только на двух снимках (файл 50). На экране — время и шкала отрезка 12.10 21:43 —
+ * 13.10 11:00: колесо — масштаб у курсора, зажать — сдвиг, двойной щелчок — весь отрезок; сверху —
+ * обзор всего отрезка с рамкой видимой части. «Звук ⏮ / ⏭» — к соседней видимой полосе. Звука в
+ * сборке нет: под панелью — описание точки; на паузе — ответ движка «прослушать».
  */
 export function RadioView() {
   const open = useGame((g) => g.radio);
@@ -73,17 +77,28 @@ function Recorder() {
   const body = useGame((g) => g.materials.find((m) => m.id === '50')?.body ?? '');
   const events = useMemo(() => parseRecord(body), [body]);
   const sounds = useMemo(() => soundStarts(events), [events]);
-  // Только размеченный отрезок с тревоги (правка автора 12.11: «остальные дни — фон, хлам»).
+  // Только размеченный отрезок с тревоги (правка автора 12.11: «остальные дни — фон»).
   const win = useMemo(() => windows()[0] ?? { key: 'alarm', label: '', from: 0, to: 1 }, []);
   const saved = useGame.getState().state?.radio;
   const [pos, setPos] = useState(saved?.pos ?? fromClock(13, 7 * 3600 + 30 * 60));
   const [marks, setMarks] = useState<Mark[]>(saved?.marks ?? []);
   const [playing, setPlaying] = useState(false);
-  const [goto, setGoto] = useState<string | null>(null);
-  const [gotoMsg, setGotoMsg] = useState('');
+  const [view, setView] = useState({ from: win.from, to: win.to });
   const [heard, setHeard] = useState<{ at: number; text: string } | null>(null);
   const [labeling, setLabeling] = useState<string | null>(null);
   const [photo, setPhoto] = useState<number | null>(null);
+  const strip = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ x: number; from: number; to: number; moved: boolean } | null>(null);
+
+  /** Видимая часть — в пределах отрезка, не короче минуты. */
+  const clamp = useMemo(
+    () => (from: number, to: number) => {
+      const len = Math.max(MIN_VIEW, Math.min(win.to - win.from, to - from));
+      const f = Math.max(win.from, Math.min(win.to - len, from));
+      return { from: f, to: f + len };
+    },
+    [win],
+  );
 
   // Ход записи: виртуальные часы (звука в сборке нет).
   useEffect(() => {
@@ -116,43 +131,54 @@ function Recorder() {
     }, 500);
     return () => clearTimeout(t);
   }, [playing, pos]);
+  // Перемотка ушла за видимую часть — шкала едет за ней.
+  useEffect(() => {
+    setView((v) => {
+      if (pos >= v.from && pos <= v.to) return v;
+      const len = v.to - v.from;
+      return clamp(pos - len * 0.2, pos + len * 0.8);
+    });
+  }, [pos, clamp]);
+  // Колесо над шкалой — масштаб у точки под курсором (слушатель не пассивный — страница стоит).
+  useEffect(() => {
+    const el = strip.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const r = el.getBoundingClientRect();
+      const k = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      setView((v) => {
+        const len = v.to - v.from;
+        const at = v.from + k * len;
+        const next = len * (e.deltaY > 0 ? 1.4 : 1 / 1.4);
+        return clamp(at - k * next, at + (1 - k) * next);
+      });
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [clamp]);
 
   const cap = captionAt(events, pos);
   const active = !!cap && !cap.background;
-  const span = win.to - win.from;
-  const inWin = pos >= win.from && pos <= win.to;
-  const x = (t: number) => `${((t - win.from) / span) * 100}%`;
+  const span = view.to - view.from;
+  const inView = pos >= view.from && pos <= view.to;
+  const x = (t: number) => `${((t - view.from) / span) * 100}%`;
+  const ox = (t: number) => `${((t - win.from) / (win.to - win.from)) * 100}%`;
   const seek = (t: number) => {
     setPhoto(null);
     setPos(Math.max(0, Math.min(RECORD_LENGTH - 1, t)));
   };
-  // «◂ звук» / «звук ▸» — к соседнему месту, где что-то слышно (как «след. фрагмент» у регистраторов).
+  // «Звук ⏮ / ⏭» — к соседней видимой полосе при этом масштабе (полосы ближе 6 px — одна).
+  const visible = () => clusters(sounds, (6 * span) / (strip.current?.offsetWidth || 1000));
   const prevSound = () => {
-    const s = [...sounds].reverse().find((t) => t < pos - 1);
+    const s = [...visible()].reverse().find((t) => t < pos - 1);
     if (s !== undefined) seek(s);
   };
   const nextSound = () => {
-    const s = sounds.find((t) => t > pos + 0.5);
+    const s = visible().find((t) => t > pos + 0.5);
     if (s !== undefined) seek(s);
   };
-  const jump = () => {
-    const m = /^\s*(\d{1,2})[./](\d{1,2})\s+(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?\s*$/.exec(
-      goto ?? '',
-    );
-    if (!m || Number(m[2]) !== 10) {
-      setGotoMsg('Формат: ДД.ММ ЧЧ:ММ — например 13.10 08:44');
-      return;
-    }
-    const t = fromClock(Number(m[1]), Number(m[3]) * 3600 + Number(m[4]) * 60 + Number(m[5] ?? 0));
-    if (t < 0 || t >= RECORD_LENGTH) {
-      setGotoMsg(`Запись — с ${clock(0, false)} до ${clock(RECORD_LENGTH - 60, false)}`);
-      return;
-    }
-    seek(t);
-    setGoto(null);
-    setGotoMsg('');
-  };
-  const ticks = useMemo(() => hourTicks(win.from, win.to, 1), [win]);
+  const ticks = useMemo(() => ticksFor(view.from, view.to), [view]);
   const photos = useMemo(() => {
     const part = body.split(/^## Стойка \(фото\)/m)[1]?.split(/^## /m)[0] ?? '';
     return part
@@ -193,83 +219,92 @@ function Recorder() {
 
         <div className="rl2-screen">
           <div className="rl2-screen-head">
-            {/* biome-ignore lint/a11y/useKeyWithClickEvents: щелчок по времени — «перейти»; клавиша «перейти» делает то же */}
-            {/* biome-ignore lint/a11y/noStaticElementInteractions: время на экране регистратора */}
-            <div
-              className="rl2-lcd"
-              data-testid="radio-counter"
-              title="Перейти к времени"
-              onClick={() => setGoto(clock(pos, false))}
-            >
-              {goto === null ? (
-                clock(pos)
-              ) : (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    jump();
-                  }}
-                >
-                  <input
-                    // biome-ignore lint/a11y/noAutofocus: ввод времени открыт щелчком по времени
-                    autoFocus
-                    aria-label="Перейти к: ДД.ММ ЧЧ:ММ"
-                    data-testid="radio-goto"
-                    value={goto}
-                    onChange={(e) => {
-                      setGoto(e.target.value);
-                      setGotoMsg('');
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') {
-                        e.stopPropagation();
-                        setGoto(null);
-                        setGotoMsg('');
-                      }
-                    }}
-                  />
-                </form>
-              )}
+            <div className="rl2-lcd" data-testid="radio-counter">
+              {clock(pos)}
             </div>
             <span className={`rl2-state${playing ? ' rl2-state-on' : ''}`}>
               {playing ? '▶ ВОСПР.' : '❚❚ СТОП'}
             </span>
-            <span className="rl2-span">{win.label}</span>
+            <span className="rl2-span" data-testid="radio-view-range">
+              {clock(view.from, span < 600)} — {clock(view.to, span < 600)}
+            </span>
           </div>
-          {gotoMsg && (
-            <div className="rl2-msg" role="status" data-testid="radio-goto-msg">
-              {gotoMsg}
-            </div>
-          )}
-          {/* biome-ignore lint/a11y/useKeyWithClickEvents: шкала — щелчок ставит перемотку; с клавиатуры — «◂ звук», «звук ▸», «перейти» */}
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: шкала записи */}
+          {/* biome-ignore lint/a11y/useKeyWithClickEvents: обзор — щелчок показывает это место крупно; с клавиатуры — «звук ⏮ / ⏭» */}
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: обзор всего отрезка записи */}
           <div
-            className="rl2-strip"
-            data-testid="radio-strip"
+            className="rl2-overview"
+            data-testid="radio-overview"
             onClick={(e) => {
               const r = e.currentTarget.getBoundingClientRect();
-              seek(win.from + ((e.clientX - r.left) / r.width) * span);
+              const at = win.from + ((e.clientX - r.left) / r.width) * (win.to - win.from);
+              setView(clamp(at - span / 2, at + span / 2));
             }}
           >
-            {ticks.map((t) => (
+            {events
+              .filter((e) => !e.background)
+              .map((e) => (
+                <span
+                  key={`o${e.start}-${e.text.slice(0, 8)}`}
+                  className="rl2-obar"
+                  style={{ left: ox(e.start) }}
+                />
+              ))}
+            <span
+              className="rl2-oview"
+              style={{ left: ox(view.from), width: `${(span / (win.to - win.from)) * 100}%` }}
+            />
+            <span className="rl2-ohead" style={{ left: ox(pos) }} />
+          </div>
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: шкала — щелчок ставит перемотку, зажать — сдвиг; с клавиатуры — «звук ⏮ / ⏭» */}
+          <div
+            ref={strip}
+            className="rl2-strip"
+            data-testid="radio-strip"
+            data-view-from={Math.round(view.from)}
+            data-view-to={Math.round(view.to)}
+            onPointerDown={(e) => {
+              if (e.button !== 0) return;
+              drag.current = { x: e.clientX, from: view.from, to: view.to, moved: false };
+              e.currentTarget.setPointerCapture(e.pointerId);
+            }}
+            onPointerMove={(e) => {
+              const d = drag.current;
+              if (!d) return;
+              const dx = e.clientX - d.x;
+              if (Math.abs(dx) > 4) d.moved = true;
+              if (!d.moved) return;
+              const r = e.currentTarget.getBoundingClientRect();
+              const dt = (-dx / r.width) * (d.to - d.from);
+              setView(clamp(d.from + dt, d.to + dt));
+            }}
+            onPointerUp={(e) => {
+              const d = drag.current;
+              drag.current = null;
+              if (!d || d.moved) return;
+              const r = e.currentTarget.getBoundingClientRect();
+              seek(view.from + ((e.clientX - r.left) / r.width) * span);
+            }}
+            onDoubleClick={() => setView({ from: win.from, to: win.to })}
+          >
+            {ticks.at.map((t) => (
               <span key={t} className="rl2-tick" style={{ left: x(t) }}>
-                <span>{clock(t, false).slice(6)}</span>
+                <span>{clock(t, ticks.seconds).slice(6)}</span>
               </span>
             ))}
             {events
-              .filter((e) => !e.background && e.end > win.from && e.start < win.to)
+              .filter((e) => !e.background && e.end > view.from && e.start < view.to)
               .map((e) => (
                 <span
                   key={`${e.start}-${e.text.slice(0, 12)}`}
                   className="rl2-bar"
                   style={{
-                    left: x(Math.max(win.from, e.start)),
-                    width: `max(2px, ${((Math.min(win.to, e.end) - Math.max(win.from, e.start)) / span) * 100}%)`,
+                    left: x(Math.max(view.from, e.start)),
+                    width: `max(2px, ${((Math.min(view.to, e.end) - Math.max(view.from, e.start)) / span) * 100}%)`,
                   }}
                 />
               ))}
             {marks
-              .filter((m) => m.t >= win.from && m.t < win.to)
+              .filter((m) => m.t >= view.from && m.t < view.to)
               .map((m) => (
                 <span
                   key={`${m.t}-${m.label}`}
@@ -278,7 +313,10 @@ function Recorder() {
                   title={m.label}
                 />
               ))}
-            {inWin && <span className="rl2-head" style={{ left: x(pos) }} />}
+            {inView && <span className="rl2-head" style={{ left: x(pos) }} />}
+          </div>
+          <div className="rl2-hint">
+            колесо — крупнее / мельче · зажать и тянуть — сдвиг · двойной щелчок — весь отрезок
           </div>
         </div>
 
@@ -302,14 +340,6 @@ function Recorder() {
             <small>звук</small>
           </button>
           <span className="rl2-keys-gap" />
-          <button
-            type="button"
-            data-testid="radio-goto-btn"
-            onClick={() => setGoto(clock(pos, false))}
-          >
-            <span className="rl2-key">⇥</span>
-            <small>перейти</small>
-          </button>
           <button type="button" data-testid="radio-mark-add" onClick={() => setLabeling('')}>
             <span className="rl2-key">✎</span>
             <small>метка</small>

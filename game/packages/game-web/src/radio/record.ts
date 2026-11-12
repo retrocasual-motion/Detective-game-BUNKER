@@ -140,3 +140,40 @@ export function soundStarts(events: readonly RecEvent[]): number[] {
     (a, b) => a - b,
   );
 }
+
+/** Деления шкалы при этом масштабе: шаг — от часа до 10 секунд. */
+export function ticksFor(from: number, to: number): { at: number[]; seconds: boolean } {
+  const span = to - from;
+  const step =
+    span > 6 * 3600
+      ? 3600
+      : span > 2 * 3600
+        ? 1800
+        : span > 40 * 60
+          ? 600
+          : span > 10 * 60
+            ? 120
+            : span > 2 * 60
+              ? 30
+              : 10;
+  const at: number[] = [];
+  const abs = from + START_OF_DAY;
+  for (let a = Math.ceil(abs / step) * step; a - START_OF_DAY <= to; a += step)
+    at.push(a - START_OF_DAY);
+  return { at, seconds: step < 60 };
+}
+
+/**
+ * Полосы, видные на шкале раздельно при этом масштабе: начала звуков, между которыми больше gap
+ * секунд. «Звук ⏭» идёт к следующей видимой полосе — сколько полос видно, столько и нажатий
+ * (правка автора 12.11).
+ */
+export function clusters(starts: readonly number[], gap: number): number[] {
+  const out: number[] = [];
+  let last = Number.NEGATIVE_INFINITY;
+  for (const s of starts) {
+    if (s - last > gap) out.push(s);
+    last = s;
+  }
+  return out;
+}

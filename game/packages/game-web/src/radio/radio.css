@@ -189,12 +189,47 @@
   color: #ffd27a;
   font-size: 12px;
 }
+/* Обзор всего отрезка: тонкие полосы и рамка видимой части. */
+.rl2-overview {
+  position: relative;
+  height: 14px;
+  border: 1px solid #1d3a22;
+  cursor: pointer;
+}
+.rl2-obar {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 1px;
+  background: #3f8a48;
+}
+.rl2-oview {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  min-width: 3px;
+  border: 1px solid #7cff8a;
+  background: rgb(124 255 138 / 12%);
+}
+.rl2-ohead {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  width: 2px;
+  margin-left: -1px;
+  background: #ff5a4a;
+}
+.rl2-hint {
+  color: #3f8a48;
+  font-size: 10px;
+}
 .rl2-strip {
   position: relative;
   height: 74px;
   border-top: 1px solid #1d3a22;
-  cursor: pointer;
+  cursor: grab;
   overflow: hidden;
+  touch-action: none;
 }
 .rl2-tick {
   position: absolute;
