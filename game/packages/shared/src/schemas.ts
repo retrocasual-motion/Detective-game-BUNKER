@@ -208,6 +208,18 @@ export const PlayerStateSchema = z.object({
   phone: z.object({ screen: z.string().max(80) }).optional(),
   /** Компьютер следователя (4c-3): значки и окна рабочего стола — после выхода всё на месте. */
   pc: PcDeskSchema.optional(),
+  /**
+   * Регистратор радиопоста (4d-1): где стоит перемотка (секунды от начала записи) и метки игрока
+   * на шкале (PM-A, автор 12.11 — «пока сделать, потом посмотрю»).
+   */
+  radio: z
+    .object({
+      pos: z.number().min(0).max(2_000_000),
+      marks: z
+        .array(z.object({ t: z.number().min(0).max(2_000_000), label: z.string().max(60) }))
+        .max(50),
+    })
+    .optional(),
   /** Совмещённые на стене листы (WL-A, MG-A): «L990» — висит вместо своих половин. */
   joined: z
     .array(z.string().regex(/^L\d{3}$/))

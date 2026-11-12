@@ -72,6 +72,16 @@ export default function HeldThing({ held }: { held: Held }) {
               useGame.getState().openPhone();
               return;
             }
+            // Ручка-диктофон — назад, play, вперёд (4d-2).
+            if (held.id === '49') {
+              useGame.getState().openPen();
+              return;
+            }
+            // Регистратор радиопоста — лицом к игроку (4d-1, ST-A).
+            if (held.id === '50') {
+              useGame.getState().openRadio();
+              return;
+            }
             close();
             useGame.getState().readMaterial(held.id);
           })
