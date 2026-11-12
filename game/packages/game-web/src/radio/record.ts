@@ -133,3 +133,10 @@ export function hourTicks(from: number, to: number, stepHours: number): number[]
     out.push(a - START_OF_DAY);
   return out;
 }
+
+/** Где начинается что-то слышное (не «Фон»): для «◂ звук» и «звук ▸» — по порядку, без повторов. */
+export function soundStarts(events: readonly RecEvent[]): number[] {
+  return [...new Set(events.filter((e) => !e.background).map((e) => e.start))].sort(
+    (a, b) => a - b,
+  );
+}

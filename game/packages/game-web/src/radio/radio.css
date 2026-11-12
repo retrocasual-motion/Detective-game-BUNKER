@@ -1,5 +1,6 @@
-/* Регистратор радиопоста лицом к игроку (4d-1). Своё оформление: серый блок прибора 2007 года,
-   зелёный счётчик, индикаторы каналов; шкала записи — полосы там, где что-то слышно. */
+/* Регистратор радиопоста лицом к игроку (4d-1). Прибор 2000-х: металлическая панель на винтах,
+   зелёный экран (время и шкала записи с полосами звука), клавиши с подписями под ними;
+   снимки стойки — фотокарточки. Своё оформление, без марок настоящих изделий. */
 
 .radio-view {
   position: fixed;
@@ -28,210 +29,194 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px 20px;
-  border-radius: 8px;
-  background: linear-gradient(#5b5f64, #45484c);
-  box-shadow:
-    inset 0 1px 0 #7a7e83,
-    0 0 0 1px #2c2e31,
-    0 30px 80px rgb(0 0 0 / 60%);
-  color: #e6e8ea;
+  gap: 12px;
   font:
     13px / 1.35 Tahoma,
     Verdana,
     sans-serif;
+  color: #1d1f21;
   user-select: none;
 }
-.rl2-top {
+
+/* Корпус: щёточный металл, винты по углам. */
+.rl2-unit {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 26px 14px;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(90deg, rgb(255 255 255 / 4%) 0 1px, transparent 1px 3px),
+    linear-gradient(#c3c6ca, #9da1a6 60%, #8c9095);
+  box-shadow:
+    inset 0 1px 0 #e4e6e8,
+    inset 0 -2px 0 #6f7378,
+    0 0 0 1px #4a4d51,
+    0 24px 60px rgb(0 0 0 / 55%);
+}
+.rl2-screw {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #e9eaec, #7d8186 70%);
+  box-shadow: inset 0 0 0 1px #5b5f63;
+}
+.rl2-screw::after {
+  content: "";
+  position: absolute;
+  inset: 4px 1px;
+  background: #5b5f63;
+  transform: rotate(35deg);
+}
+.rl2-screw-tl {
+  top: 7px;
+  left: 8px;
+}
+.rl2-screw-tr {
+  top: 7px;
+  right: 8px;
+}
+.rl2-screw-bl {
+  bottom: 7px;
+  left: 8px;
+}
+.rl2-screw-br {
+  bottom: 7px;
+  right: 8px;
+}
+.rl2-plate {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
 }
 .rl2-brand {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  line-height: 1.1;
+  color: #2a2c2f;
 }
 .rl2-brand b {
-  letter-spacing: 0.06em;
+  letter-spacing: 0.18em;
+  font-size: 14px;
+}
+.rl2-brand span {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #45484c;
 }
 .rl2-sticker {
-  padding: 1px 8px;
-  border: 1px solid #c9c9b8;
-  background: #ecebdc;
-  color: #333;
+  padding: 2px 8px;
+  border: 1px solid #b9b5a2;
+  background: #f0eedf;
+  color: #3a3a34;
   font-size: 11px;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 15%);
 }
-.rl2-photos {
+.rl2-leds {
+  display: flex;
+  gap: 14px;
+  margin-left: auto;
+  font-size: 11px;
+  color: #2a2c2f;
+}
+.rl2-led-cell {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #c9ccd0;
+  gap: 5px;
 }
-.rl2-photo {
-  padding: 2px 8px;
-  border: 1px solid #2c2e31;
-  border-radius: 3px;
-  background: #e9e4d6;
-  color: #222;
-  font: inherit;
+/* Канон (L906): оба индикатора горят; ярче — где в точке что-то слышно. */
+.rl2-led {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffcf8a, #c06a16 70%);
+  box-shadow: 0 0 4px rgb(255 150 40 / 60%);
 }
-.rl2-photo-on {
-  outline: 2px solid #e9e4d6;
-  outline-offset: 1px;
+.rl2-led-on {
+  background: radial-gradient(circle at 35% 35%, #fff3d6, #ff9d2e 70%);
+  box-shadow: 0 0 10px #ffb347;
 }
 
-/* Передняя панель: счётчик, индикаторы, клавиши. */
-.rl2-face {
+/* Экран: время, состояние, шкала записи — зелёный по тёмному, с сеткой часов. */
+.rl2-screen {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px 8px;
+  border: 3px solid #55595e;
+  border-radius: 4px;
+  background: #0a140c;
+  box-shadow: inset 0 0 18px rgb(0 0 0 / 85%);
+  color: #7cff8a;
+  font-family: "Lucida Console", "Courier New", monospace;
+}
+.rl2-screen-head {
+  display: flex;
+  align-items: baseline;
   gap: 18px;
-  padding: 12px 14px;
-  border-radius: 6px;
-  background: #34373a;
-  box-shadow: inset 0 2px 6px rgb(0 0 0 / 45%);
 }
 .rl2-lcd {
-  min-width: 250px;
-  padding: 6px 12px;
-  border-radius: 3px;
-  background: #0d1a10;
-  color: #7cff8a;
-  font:
-    700 26px / 1 "Lucida Console",
-    "Courier New",
-    monospace;
+  font-size: 30px;
+  font-weight: 700;
   letter-spacing: 0.04em;
-  text-shadow: 0 0 6px rgb(124 255 138 / 45%);
+  text-shadow: 0 0 6px rgb(124 255 138 / 50%);
   cursor: text;
 }
 .rl2-lcd input {
-  width: 230px;
+  width: 260px;
   border: 0;
+  border-bottom: 1px dashed #7cff8a;
   background: transparent;
   color: inherit;
   font: inherit;
   outline: none;
 }
-.rl2-leds {
-  display: flex;
-  gap: 8px;
+.rl2-state {
+  font-size: 12px;
+  color: #3f8a48;
 }
-.rl2-led {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #4a2a14;
-  color: #c9ccd0;
+.rl2-state-on {
+  color: #7cff8a;
+}
+.rl2-span {
+  margin-left: auto;
   font-size: 11px;
-}
-/* Канон (L906): на месте оба индикатора горят; ярче — когда в точке что-то слышно. */
-.rl2-led {
-  box-shadow: 0 0 4px #d9822b;
-  background: #8a4a1a;
-}
-.rl2-led-on {
-  background: #ffb347;
-  box-shadow: 0 0 10px #ffb347;
-  color: #2a1a08;
-}
-.rl2-keys {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.rl2-keys button,
-.rl2-speed button {
-  min-width: 44px;
-  height: 34px;
-  padding: 0 10px;
-  border: 1px solid #1f2123;
-  border-radius: 4px;
-  background: linear-gradient(#6c7075, #50545a);
-  color: #f0f2f4;
-  font:
-    700 13px Tahoma,
-    sans-serif;
-}
-.rl2-keys .rl2-play {
-  min-width: 56px;
-  background: linear-gradient(#7b8f6c, #5b6e4d);
-}
-.rl2-speed {
-  display: flex;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  gap: 2px;
-  margin-left: 6px;
-}
-.rl2-speed button {
-  min-width: 40px;
-}
-.rl2-speed .rl2-speed-on {
-  background: linear-gradient(#d9a441, #b9832a);
-  color: #241604;
-}
-.rl2-keys .rl2-goto-btn {
-  font-weight: 400;
+  color: #3f8a48;
 }
 .rl2-msg {
   color: #ffd27a;
   font-size: 12px;
 }
-
-/* Отрезок записи и шкала. */
-.rl2-wins {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-}
-.rl2-wins button {
-  padding: 1px 6px;
-  border: 1px solid #2c2e31;
-  border-radius: 3px;
-  background: #3c3f43;
-  color: #c9ccd0;
-  font: inherit;
-  font-size: 11px;
-}
-.rl2-wins .rl2-win-on {
-  background: #d9dde1;
-  color: #1c1e20;
-}
 .rl2-strip {
   position: relative;
-  height: 64px;
-  border-radius: 3px;
-  background: #15181a;
-  box-shadow: inset 0 1px 4px rgb(0 0 0 / 60%);
-  overflow: hidden;
+  height: 74px;
+  border-top: 1px solid #1d3a22;
   cursor: pointer;
-}
-.rl2-bar {
-  position: absolute;
-  top: 14px;
-  bottom: 14px;
-  background: #7cc7ff;
-  opacity: 0.85;
+  overflow: hidden;
 }
 .rl2-tick {
   position: absolute;
-  bottom: 1px;
-  transform: translateX(-50%);
-  color: #8d949b;
-  font:
-    10px "Lucida Console",
-    monospace;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dotted #1d3a22;
   pointer-events: none;
+}
+.rl2-tick span {
+  position: absolute;
+  bottom: 1px;
+  left: 3px;
+  color: #3f8a48;
+  font-size: 10px;
+}
+.rl2-bar {
+  position: absolute;
+  top: 12px;
+  bottom: 18px;
+  background: #7cff8a;
+  box-shadow: 0 0 4px rgb(124 255 138 / 60%);
+  opacity: 0.9;
 }
 .rl2-mark {
   position: absolute;
@@ -240,7 +225,7 @@
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 10px solid #ffd27a;
+  border-top: 9px solid #ffd27a;
   transform: translateX(-50%);
 }
 .rl2-head {
@@ -250,8 +235,59 @@
   width: 2px;
   margin-left: -1px;
   background: #ff5a4a;
+  box-shadow: 0 0 4px #ff5a4a;
   pointer-events: none;
 }
+
+/* Клавиши: значок на клавише, подпись — под ней. */
+.rl2-keys {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.rl2-keys button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #2a2c2f;
+  font: inherit;
+}
+.rl2-keys small {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.rl2-key {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 36px;
+  border-radius: 4px;
+  background: linear-gradient(#4a4e53, #2e3135);
+  box-shadow:
+    inset 0 1px 0 #6a6e73,
+    0 2px 0 #1b1d20;
+  color: #eef0f2;
+  font-size: 16px;
+  font-weight: 700;
+}
+.rl2-keys .rl2-play .rl2-key {
+  width: 74px;
+  background: linear-gradient(#5e7a52, #3e5636);
+}
+.rl2-keys button:active .rl2-key {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 0 #6a6e73;
+}
+.rl2-keys-gap {
+  flex: 1;
+}
+
+/* Метки игрока. */
 .rl2-marks {
   display: flex;
   flex-wrap: wrap;
@@ -259,48 +295,52 @@
   gap: 6px;
   font-size: 12px;
 }
-.rl2-marks > button,
-.rl2-marks form button {
-  padding: 2px 10px;
-  border: 1px solid #1f2123;
-  border-radius: 3px;
-  background: linear-gradient(#6c7075, #50545a);
-  color: #f0f2f4;
-  font: inherit;
-}
 .rl2-marks form {
   display: flex;
   gap: 6px;
 }
 .rl2-marks input {
-  width: 260px;
-  padding: 2px 6px;
-  border: 1px solid #1f2123;
+  width: 280px;
+  padding: 3px 6px;
+  border: 1px solid #6f7378;
+  font: inherit;
+}
+.rl2-marks form button {
+  padding: 2px 10px;
+  border: 1px solid #4a4d51;
+  border-radius: 3px;
+  background: linear-gradient(#eceef0, #c9ccd0);
   font: inherit;
 }
 .rl2-mark-chip {
   display: inline-flex;
   border: 1px solid #8a7a3a;
   border-radius: 3px;
-  background: #3a3420;
+  background: #fff6d8;
 }
 .rl2-marks .rl2-mark-chip button {
   padding: 1px 6px;
   border: 0;
   background: none;
-  color: #ffd27a;
+  color: #5a4a10;
   font: inherit;
 }
 
-/* Описание по месту (серый прототип, K8). */
+/* Низ: лист описания (серый прототип) и фотокарточки стойки. */
+.rl2-bottom {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 14px;
+}
 .rl2-caption {
   flex: 1;
   min-height: 0;
   overflow: auto;
   padding: 10px 14px;
-  border-radius: 4px;
-  background: #ecebe4;
-  color: #1d1f21;
+  border-radius: 2px;
+  background: #f4f1e6;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 40%);
   font-size: 14px;
   user-select: text;
 }
@@ -308,11 +348,11 @@
   margin: 4px 0;
 }
 .rl2-caption-note {
-  color: #6b6f74;
+  color: #7a7568;
   font-size: 11px;
 }
 .rl2-caption-time {
-  color: #555;
+  color: #5a5648;
   font-family: "Lucida Console", monospace;
   font-size: 12px;
 }
@@ -320,4 +360,44 @@
   padding-top: 6px;
   border-top: 1px dashed #b7b2a2;
   color: #3a3d40;
+}
+.rl2-photos {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 210px;
+}
+.rl2-photos-title {
+  color: #c9ccd0;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.rl2-photo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 6px 8px;
+  border: 0;
+  background: #f6f4ee;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 45%);
+  color: #2a2c2f;
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+  transform: rotate(-1.2deg);
+}
+.rl2-photo + .rl2-photo {
+  transform: rotate(1deg);
+}
+.rl2-photo-img {
+  display: block;
+  height: 64px;
+  background:
+    linear-gradient(90deg, transparent 30%, rgb(255 255 255 / 8%) 30% 34%, transparent 34%),
+    linear-gradient(#5b5f64, #33363a);
+}
+.rl2-photo-on {
+  outline: 2px solid #ffd27a;
+  outline-offset: 2px;
 }

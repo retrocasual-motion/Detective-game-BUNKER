@@ -10,24 +10,23 @@ import {
   listenLine,
   parseRecord,
   RECORD_LENGTH,
-  type RecWindow,
+  soundStarts,
   windows,
 } from './record.ts';
 import './radio.css';
 
 /** Панель, логические px; на окне — масштабом. */
 const W = 1060;
-const H = 620;
-const SPEEDS = [1, 16, 60] as const;
+const H = 640;
 type Mark = { t: number; label: string };
 
 /**
  * Регистратор радиопоста лицом к игроку (этап 4d-1; решения автора 12.11 — PL-A, ST-A, NV-A с
- * правкой «сразу нужный отрезок» и «волной», PM-A, K8). По канону изъят регистратор RL-2 с
- * записью; стойка — только на двух снимках (файл 50). Счётчик — часы регистратора; «▶», перемотка,
- * скорость, «перейти к» по дате и времени; шкала — отрезок с тревоги (по умолчанию) или сутки, на
- * ней полосы там, где что-то слышно, и метки игрока. Звука в сборке пока нет: под панелью —
- * описание той точки, где стоит перемотка; на паузе — что ещё слышно (ответ движка «прослушать»).
+ * правками «сразу нужный отрезок», «волна», «без лишних дней», «переключаться между звуками»,
+ * PM-A, K8). По канону изъят регистратор RL-2 с записью; стойка — только на двух снимках (файл 50).
+ * На экране — время и шкала размеченного отрезка 12.10 21:43 — 13.10 11:00 с полосами там, где
+ * что-то слышно; клавиши «◂ звук», «пуск», «звук ▸», «перейти», «метка». Звука в сборке пока нет:
+ * под панелью — описание той точки, где стоит перемотка; на паузе — ответ движка «прослушать».
  */
 export function RadioView() {
   const open = useGame((g) => g.radio);
@@ -38,8 +37,7 @@ export function RadioView() {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
-      const el = e.target as HTMLElement | null;
-      if (el?.closest('input')) return;
+      if ((e.target as HTMLElement | null)?.closest('input')) return;
       useGame.getState().closeRadio();
     };
     window.addEventListener('keydown', onKey);
@@ -74,15 +72,13 @@ export function RadioView() {
 function Recorder() {
   const body = useGame((g) => g.materials.find((m) => m.id === '50')?.body ?? '');
   const events = useMemo(() => parseRecord(body), [body]);
-  const wins = useMemo(() => windows(), []);
+  const sounds = useMemo(() => soundStarts(events), [events]);
+  // Только размеченный отрезок с тревоги (правка автора 12.11: «остальные дни — фон, хлам»).
+  const win = useMemo(() => windows()[0] ?? { key: 'alarm', label: '', from: 0, to: 1 }, []);
   const saved = useGame.getState().state?.radio;
   const [pos, setPos] = useState(saved?.pos ?? fromClock(13, 7 * 3600 + 30 * 60));
   const [marks, setMarks] = useState<Mark[]>(saved?.marks ?? []);
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(1);
-  const [win, setWin] = useState<RecWindow>(
-    () => wins.find((w) => pos >= w.from && pos < w.to) ?? (wins[0] as RecWindow),
-  );
   const [goto, setGoto] = useState<string | null>(null);
   const [gotoMsg, setGotoMsg] = useState('');
   const [heard, setHeard] = useState<{ at: number; text: string } | null>(null);
@@ -94,19 +90,13 @@ function Recorder() {
     if (!playing) return;
     const t = setInterval(() => {
       setPos((p) => {
-        const n = Math.min(RECORD_LENGTH, p + 0.25 * speed);
+        const n = Math.min(RECORD_LENGTH, p + 0.25);
         if (n >= RECORD_LENGTH) setPlaying(false);
         return n;
       });
     }, 250);
     return () => clearInterval(t);
-  }, [playing, speed]);
-  // Шкала идёт за перемоткой: вышли из окна — окно, где сейчас точка.
-  useEffect(() => {
-    if (pos >= win.from && pos < win.to) return;
-    const w = wins.find((x) => pos >= x.from && pos < x.to);
-    if (w) setWin(w);
-  }, [pos, win, wins]);
+  }, [playing]);
   // Сохранение положения и меток.
   useEffect(() => {
     const t = setTimeout(
@@ -128,10 +118,23 @@ function Recorder() {
   }, [playing, pos]);
 
   const cap = captionAt(events, pos);
-  const active = cap && !cap.background;
+  const active = !!cap && !cap.background;
   const span = win.to - win.from;
+  const inWin = pos >= win.from && pos <= win.to;
   const x = (t: number) => `${((t - win.from) / span) * 100}%`;
-  const seek = (t: number) => setPos(Math.max(0, Math.min(RECORD_LENGTH - 1, t)));
+  const seek = (t: number) => {
+    setPhoto(null);
+    setPos(Math.max(0, Math.min(RECORD_LENGTH - 1, t)));
+  };
+  // «◂ звук» / «звук ▸» — к соседнему месту, где что-то слышно (как «след. фрагмент» у регистраторов).
+  const prevSound = () => {
+    const s = [...sounds].reverse().find((t) => t < pos - 1);
+    if (s !== undefined) seek(s);
+  };
+  const nextSound = () => {
+    const s = sounds.find((t) => t > pos + 0.5);
+    if (s !== undefined) seek(s);
+  };
   const jump = () => {
     const m = /^\s*(\d{1,2})[./](\d{1,2})\s+(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?\s*$/.exec(
       goto ?? '',
@@ -149,10 +152,7 @@ function Recorder() {
     setGoto(null);
     setGotoMsg('');
   };
-  const ticks = useMemo(
-    () => hourTicks(win.from, win.to, span > 30 * 3600 ? 6 : span > 16 * 3600 ? 2 : 1),
-    [win, span],
-  );
+  const ticks = useMemo(() => hourTicks(win.from, win.to, 1), [win]);
   const photos = useMemo(() => {
     const part = body.split(/^## Стойка \(фото\)/m)[1]?.split(/^## /m)[0] ?? '';
     return part
@@ -170,13 +170,243 @@ function Recorder() {
 
   return (
     <div className="rl2" data-testid="radio-recorder">
-      <div className="rl2-top">
-        <div className="rl2-brand">
-          <b>Fieldworks Radio · RL-2</b>
-          <span className="rl2-sticker">RL-2 · непрерывная запись · без стирания</span>
+      <div className="rl2-unit">
+        <span className="rl2-screw rl2-screw-tl" />
+        <span className="rl2-screw rl2-screw-tr" />
+        <span className="rl2-screw rl2-screw-bl" />
+        <span className="rl2-screw rl2-screw-br" />
+        <div className="rl2-plate">
+          <div className="rl2-brand">
+            <b>FIELDWORKS RADIO</b>
+            <span>RL-2 · регистратор</span>
+          </div>
+          <span className="rl2-sticker">непрерывная запись · без стирания</span>
+          <div className="rl2-leds" title="Индикаторы каналов">
+            <span className="rl2-led-cell">
+              <span className={`rl2-led${active ? ' rl2-led-on' : ''}`} />1
+            </span>
+            <span className="rl2-led-cell">
+              <span className={`rl2-led${active ? ' rl2-led-on' : ''}`} />2
+            </span>
+          </div>
+        </div>
+
+        <div className="rl2-screen">
+          <div className="rl2-screen-head">
+            {/* biome-ignore lint/a11y/useKeyWithClickEvents: щелчок по времени — «перейти»; клавиша «перейти» делает то же */}
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: время на экране регистратора */}
+            <div
+              className="rl2-lcd"
+              data-testid="radio-counter"
+              title="Перейти к времени"
+              onClick={() => setGoto(clock(pos, false))}
+            >
+              {goto === null ? (
+                clock(pos)
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    jump();
+                  }}
+                >
+                  <input
+                    // biome-ignore lint/a11y/noAutofocus: ввод времени открыт щелчком по времени
+                    autoFocus
+                    aria-label="Перейти к: ДД.ММ ЧЧ:ММ"
+                    data-testid="radio-goto"
+                    value={goto}
+                    onChange={(e) => {
+                      setGoto(e.target.value);
+                      setGotoMsg('');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        e.stopPropagation();
+                        setGoto(null);
+                        setGotoMsg('');
+                      }
+                    }}
+                  />
+                </form>
+              )}
+            </div>
+            <span className={`rl2-state${playing ? ' rl2-state-on' : ''}`}>
+              {playing ? '▶ ВОСПР.' : '❚❚ СТОП'}
+            </span>
+            <span className="rl2-span">{win.label}</span>
+          </div>
+          {gotoMsg && (
+            <div className="rl2-msg" role="status" data-testid="radio-goto-msg">
+              {gotoMsg}
+            </div>
+          )}
+          {/* biome-ignore lint/a11y/useKeyWithClickEvents: шкала — щелчок ставит перемотку; с клавиатуры — «◂ звук», «звук ▸», «перейти» */}
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: шкала записи */}
+          <div
+            className="rl2-strip"
+            data-testid="radio-strip"
+            onClick={(e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              seek(win.from + ((e.clientX - r.left) / r.width) * span);
+            }}
+          >
+            {ticks.map((t) => (
+              <span key={t} className="rl2-tick" style={{ left: x(t) }}>
+                <span>{clock(t, false).slice(6)}</span>
+              </span>
+            ))}
+            {events
+              .filter((e) => !e.background && e.end > win.from && e.start < win.to)
+              .map((e) => (
+                <span
+                  key={`${e.start}-${e.text.slice(0, 12)}`}
+                  className="rl2-bar"
+                  style={{
+                    left: x(Math.max(win.from, e.start)),
+                    width: `max(2px, ${((Math.min(win.to, e.end) - Math.max(win.from, e.start)) / span) * 100}%)`,
+                  }}
+                />
+              ))}
+            {marks
+              .filter((m) => m.t >= win.from && m.t < win.to)
+              .map((m) => (
+                <span
+                  key={`${m.t}-${m.label}`}
+                  className="rl2-mark"
+                  style={{ left: x(m.t) }}
+                  title={m.label}
+                />
+              ))}
+            {inWin && <span className="rl2-head" style={{ left: x(pos) }} />}
+          </div>
+        </div>
+
+        <div className="rl2-keys">
+          <button type="button" data-testid="radio-prev" onClick={prevSound}>
+            <span className="rl2-key">⏮</span>
+            <small>звук</small>
+          </button>
+          <button
+            type="button"
+            className="rl2-play"
+            data-testid="radio-play"
+            aria-label={playing ? 'Пауза' : 'Пуск'}
+            onClick={() => setPlaying((p) => !p)}
+          >
+            <span className="rl2-key">{playing ? '❚❚' : '▶'}</span>
+            <small>{playing ? 'пауза' : 'пуск'}</small>
+          </button>
+          <button type="button" data-testid="radio-next" onClick={nextSound}>
+            <span className="rl2-key">⏭</span>
+            <small>звук</small>
+          </button>
+          <span className="rl2-keys-gap" />
+          <button
+            type="button"
+            data-testid="radio-goto-btn"
+            onClick={() => setGoto(clock(pos, false))}
+          >
+            <span className="rl2-key">⇥</span>
+            <small>перейти</small>
+          </button>
+          <button type="button" data-testid="radio-mark-add" onClick={() => setLabeling('')}>
+            <span className="rl2-key">✎</span>
+            <small>метка</small>
+          </button>
+        </div>
+      </div>
+
+      {(labeling !== null || marks.length > 0) && (
+        <div className="rl2-marks">
+          {labeling !== null && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setMarks((m) =>
+                  [...m, { t: Math.round(pos), label: (labeling ?? '').trim().slice(0, 60) }].sort(
+                    (a, b) => a.t - b.t,
+                  ),
+                );
+                setLabeling(null);
+              }}
+            >
+              <input
+                // biome-ignore lint/a11y/noAutofocus: подпись метки открыта клавишей
+                autoFocus
+                aria-label="Подпись метки"
+                data-testid="radio-mark-label"
+                placeholder={`${clock(pos)} — подпись`}
+                value={labeling}
+                maxLength={60}
+                onChange={(e) => setLabeling(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    e.stopPropagation();
+                    setLabeling(null);
+                  }
+                }}
+              />
+              <button type="submit" data-testid="radio-mark-save">
+                Поставить
+              </button>
+            </form>
+          )}
+          {marks.map((m, k) => (
+            <span
+              key={`${m.t}-${m.label}`}
+              className="rl2-mark-chip"
+              data-testid={`radio-mark-${k}`}
+            >
+              <button type="button" onClick={() => seek(m.t)}>
+                {clock(m.t)}
+                {m.label ? ` · ${m.label}` : ''}
+              </button>
+              <button
+                type="button"
+                aria-label="Убрать метку"
+                onClick={() => setMarks((l) => l.filter((x2) => x2 !== m))}
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="rl2-bottom">
+        <div className="rl2-caption" data-testid="radio-caption" data-material="50">
+          <div className="rl2-caption-note">
+            {photo !== null
+              ? 'Снимка в сборке пока нет — описание того, что на нём видно.'
+              : 'Звука в сборке пока нет — описание того, что слышно в этой точке.'}
+          </div>
+          {photo !== null ? (
+            <p data-testid="radio-photo-text">
+              <b>
+                Снимок {photo + 1}. {photos[photo]?.title}.
+              </b>{' '}
+              {photos[photo]?.text}
+            </p>
+          ) : cap ? (
+            <p>
+              <span className="rl2-caption-time">
+                {clock(cap.start)}
+                {cap.point ? '' : ` — ${clock(cap.end)}`}
+              </span>{' '}
+              {cap.text}
+            </p>
+          ) : (
+            <p>—</p>
+          )}
+          {heard && photo === null && Math.abs(heard.at - pos) < 2 && (
+            <p className="rl2-heard" data-testid="radio-heard">
+              {heard.text}
+            </p>
+          )}
         </div>
         <div className="rl2-photos">
-          <span>Стойка (снимки следствия):</span>
+          <span className="rl2-photos-title">Стойка — снимки следствия</span>
           {photos.map((p, k) => (
             <button
               key={p.title}
@@ -185,244 +415,13 @@ function Recorder() {
               data-testid={`radio-photo-${k + 1}`}
               onClick={() => setPhoto(photo === k ? null : k)}
             >
-              {k + 1}. {p.title}
+              <span className="rl2-photo-img" aria-hidden />
+              <span>
+                {k + 1}. {p.title}
+              </span>
             </button>
           ))}
         </div>
-      </div>
-
-      <div className="rl2-face">
-        {/* biome-ignore lint/a11y/useKeyWithClickEvents: счётчик — щелчок открывает «перейти к»; кнопка рядом делает то же */}
-        {/* biome-ignore lint/a11y/noStaticElementInteractions: счётчик — часть панели регистратора */}
-        <div
-          className="rl2-lcd"
-          data-testid="radio-counter"
-          title="Перейти к времени"
-          onClick={() => setGoto(clock(pos, false))}
-        >
-          {goto === null ? (
-            clock(pos)
-          ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                jump();
-              }}
-            >
-              <input
-                // biome-ignore lint/a11y/noAutofocus: ввод времени открыт щелчком по счётчику
-                autoFocus
-                aria-label="Перейти к: ДД.ММ ЧЧ:ММ"
-                data-testid="radio-goto"
-                value={goto}
-                onChange={(e) => {
-                  setGoto(e.target.value);
-                  setGotoMsg('');
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    e.stopPropagation();
-                    setGoto(null);
-                    setGotoMsg('');
-                  }
-                }}
-              />
-            </form>
-          )}
-        </div>
-        <div className="rl2-leds" title="Индикаторы каналов">
-          <span className={`rl2-led${active ? ' rl2-led-on' : ''}`}>1</span>
-          <span className={`rl2-led${active ? ' rl2-led-on' : ''}`}>2</span>
-        </div>
-        <div className="rl2-keys">
-          <button
-            type="button"
-            aria-label="Назад"
-            data-testid="radio-back"
-            onClick={() => seek(pos - 60 * speed)}
-          >
-            ◀◀
-          </button>
-          <button
-            type="button"
-            className="rl2-play"
-            aria-label={playing ? 'Пауза' : 'Воспроизведение'}
-            data-testid="radio-play"
-            onClick={() => setPlaying((p) => !p)}
-          >
-            {playing ? '❚❚' : '▶'}
-          </button>
-          <button
-            type="button"
-            aria-label="Вперёд"
-            data-testid="radio-fwd"
-            onClick={() => seek(pos + 60 * speed)}
-          >
-            ▶▶
-          </button>
-          <fieldset className="rl2-speed" aria-label="Скорость">
-            {SPEEDS.map((s) => (
-              <button
-                key={s}
-                type="button"
-                aria-pressed={speed === s}
-                className={speed === s ? 'rl2-speed-on' : undefined}
-                data-testid={`radio-speed-${s}`}
-                onClick={() => setSpeed(s)}
-              >
-                ×{s}
-              </button>
-            ))}
-          </fieldset>
-          <button
-            type="button"
-            className="rl2-goto-btn"
-            data-testid="radio-goto-btn"
-            onClick={() => setGoto(clock(pos, false))}
-          >
-            Перейти к…
-          </button>
-        </div>
-      </div>
-      {gotoMsg && (
-        <div className="rl2-msg" role="status" data-testid="radio-goto-msg">
-          {gotoMsg}
-        </div>
-      )}
-
-      <fieldset className="rl2-wins" aria-label="Отрезок записи">
-        {wins.map((w) => (
-          <button
-            key={w.key}
-            type="button"
-            aria-pressed={w.key === win.key}
-            className={w.key === win.key ? 'rl2-win-on' : undefined}
-            data-testid={`radio-win-${w.key}`}
-            onClick={() => {
-              setWin(w);
-              if (pos < w.from || pos >= w.to) seek(w.from);
-            }}
-          >
-            {w.label}
-          </button>
-        ))}
-      </fieldset>
-      {/* biome-ignore lint/a11y/useKeyWithClickEvents: шкала — щелчок ставит перемотку; с клавиатуры — «Перейти к…» */}
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: шкала записи */}
-      <div
-        className="rl2-strip"
-        data-testid="radio-strip"
-        onClick={(e) => {
-          const r = e.currentTarget.getBoundingClientRect();
-          seek(win.from + ((e.clientX - r.left) / r.width) * span);
-        }}
-      >
-        {events
-          .filter((e) => !e.background && e.end > win.from && e.start < win.to)
-          .map((e) => (
-            <span
-              key={`${e.start}-${e.text.slice(0, 12)}`}
-              className="rl2-bar"
-              style={{
-                left: x(Math.max(win.from, e.start)),
-                width: `max(2px, ${((Math.min(win.to, e.end) - Math.max(win.from, e.start)) / span) * 100}%)`,
-              }}
-            />
-          ))}
-        {ticks.map((t) => (
-          <span key={t} className="rl2-tick" style={{ left: x(t) }}>
-            {clock(t, false).slice(6)}
-          </span>
-        ))}
-        {marks
-          .filter((m) => m.t >= win.from && m.t < win.to)
-          .map((m) => (
-            <span
-              key={`${m.t}-${m.label}`}
-              className="rl2-mark"
-              style={{ left: x(m.t) }}
-              title={m.label}
-            />
-          ))}
-        <span className="rl2-head" style={{ left: x(pos) }} />
-      </div>
-
-      <div className="rl2-marks">
-        {labeling === null ? (
-          <button type="button" data-testid="radio-mark-add" onClick={() => setLabeling('')}>
-            Метка здесь
-          </button>
-        ) : (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setMarks((m) =>
-                [...m, { t: Math.round(pos), label: (labeling ?? '').trim().slice(0, 60) }].sort(
-                  (a, b) => a.t - b.t,
-                ),
-              );
-              setLabeling(null);
-            }}
-          >
-            <input
-              // biome-ignore lint/a11y/noAutofocus: подпись метки открыта кнопкой
-              autoFocus
-              aria-label="Подпись метки"
-              data-testid="radio-mark-label"
-              placeholder={`${clock(pos)} — подпись`}
-              value={labeling}
-              maxLength={60}
-              onChange={(e) => setLabeling(e.target.value)}
-            />
-            <button type="submit" data-testid="radio-mark-save">
-              Поставить
-            </button>
-          </form>
-        )}
-        {marks.map((m, k) => (
-          <span key={`${m.t}-${m.label}`} className="rl2-mark-chip" data-testid={`radio-mark-${k}`}>
-            <button type="button" onClick={() => seek(m.t)}>
-              {clock(m.t)}
-              {m.label ? ` · ${m.label}` : ''}
-            </button>
-            <button
-              type="button"
-              aria-label="Убрать метку"
-              onClick={() => setMarks((l) => l.filter((x2) => x2 !== m))}
-            >
-              ✕
-            </button>
-          </span>
-        ))}
-      </div>
-
-      <div className="rl2-caption" data-testid="radio-caption" data-material="50">
-        <div className="rl2-caption-note">
-          Звука в сборке пока нет — описание того, что слышно в этой точке.
-        </div>
-        {photo !== null ? (
-          <p data-testid="radio-photo-text">
-            <b>
-              Снимок {photo + 1}. {photos[photo]?.title}.
-            </b>{' '}
-            {photos[photo]?.text}
-          </p>
-        ) : cap ? (
-          <p>
-            <span className="rl2-caption-time">
-              {clock(cap.start)}
-              {cap.point ? '' : ` — ${clock(cap.end)}`}
-            </span>{' '}
-            {cap.text}
-          </p>
-        ) : (
-          <p>Фон: шум эфира.</p>
-        )}
-        {heard && photo === null && Math.abs(heard.at - pos) < 2 && (
-          <p className="rl2-heard" data-testid="radio-heard">
-            {heard.text}
-          </p>
-        )}
       </div>
     </div>
   );

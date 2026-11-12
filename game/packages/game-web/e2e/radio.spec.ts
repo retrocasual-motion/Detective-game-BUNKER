@@ -17,7 +17,6 @@ test('по умолчанию — отрезок с тревоги; на шка�
   page,
 }) => {
   await radioUp(page);
-  await expect(page.getByTestId('radio-win-alarm')).toHaveAttribute('aria-pressed', 'true');
   expect(await page.locator('.rl2-bar').count()).toBeGreaterThan(10);
   await page.getByTestId('radio-counter').click();
   await page.getByTestId('radio-goto').fill('13.10 08:45:03');
@@ -41,14 +40,13 @@ test('пауза — «прослушать» эту точку: в 09:00 в э�
   await expect(page.getByTestId('radio-heard')).toContainText('дикторский');
 });
 
-test('play идёт по записи; скорость; метка ставится и сохраняется; Esc — снова в руках', async ({
+test('play идёт по записи; метка ставится и сохраняется; Esc — снова в руках', async ({
   page,
 }) => {
   await radioUp(page);
   await page.getByTestId('radio-goto-btn').click();
   await page.getByTestId('radio-goto').fill('13.10 08:44:00');
   await page.keyboard.press('Enter');
-  await page.getByTestId('radio-speed-16').click();
   await page.getByTestId('radio-play').click();
   await expect(page.getByTestId('radio-counter')).not.toHaveText('13.10 08:44:00');
   await page.getByTestId('radio-play').click();
@@ -66,11 +64,22 @@ test('play идёт по записи; скорость; метка ставит
   await expect(page.getByTestId('radio-mark-0')).toContainText('шаги?');
 });
 
-test('снимки стойки — описание по щелчку; другие сутки — шкала дня', async ({ page }) => {
+test('снимки стойки — описание по щелчку; клавиши «звук» — к соседнему месту, где что-то слышно', async ({
+  page,
+}) => {
   await radioUp(page);
   await page.getByTestId('radio-photo-1').click();
   await expect(page.getByTestId('radio-photo-text')).toContainText('приёмник');
-  await page.getByTestId('radio-photo-1').click();
-  await page.getByTestId('radio-win-d20').click();
-  await expect(page.getByTestId('radio-counter')).toHaveText(/^20\.10/);
+  await page.getByTestId('radio-goto-btn').click();
+  await page.getByTestId('radio-goto').fill('13.10 08:44:40');
+  await page.keyboard.press('Enter');
+  await page.getByTestId('radio-next').click();
+  await expect(page.getByTestId('radio-counter')).toHaveText('13.10 08:44:46');
+  await expect(page.getByTestId('radio-caption')).toContainText('шаги');
+  await page.getByTestId('radio-next').click();
+  await expect(page.getByTestId('radio-counter')).toHaveText('13.10 08:44:52');
+  await page.getByTestId('radio-prev').click();
+  await expect(page.getByTestId('radio-counter')).toHaveText('13.10 08:44:46');
+  // Дней 13.10…28.10 кнопками больше нет — только отрезок с тревоги.
+  await expect(page.locator('[data-testid^="radio-win-"]')).toHaveCount(0);
 });
