@@ -102,6 +102,15 @@ interface GameStore {
   openPhone(material?: string | null): void;
   /** Отойти от телефона: снова вещь в руках (или положить, toHands = false). */
   closePhone(toHands?: boolean): void;
+  /** Ручка-диктофон лицом к игроку (4d-2). */
+  pen: boolean;
+  openPen(): void;
+  closePen(toHands?: boolean): void;
+  /** Регистратор радиопоста лицом к игроку (4d-1, ST-A). */
+  radio: boolean;
+  openRadio(): void;
+  /** Отойти от регистратора: снова вещь в руках (или положить). */
+  closeRadio(toHands?: boolean): void;
   /** Отойти от экрана: ноутбук снова вещь в руках (или положить, toHands = false). */
   closeLaptop(toHands?: boolean): void;
   /** Поле ввода не примет значение до этого момента, мс (LK-A): по полю — «ноутбук». */
@@ -218,6 +227,8 @@ export const useGame = create<GameStore>((set, get) => {
     held: null,
     laptop: null,
     phone: null,
+    radio: false,
+    pen: false,
     fieldBlockedUntil: {},
     find: null,
     searchOpen: false,
@@ -258,6 +269,22 @@ export const useGame = create<GameStore>((set, get) => {
 
     closePhone(toHands = true) {
       set({ phone: null, held: toHands ? { type: 'device', id: '48' } : null });
+    },
+
+    openPen() {
+      set({ pen: true, held: null, viewerId: null });
+    },
+
+    closePen(toHands = true) {
+      set({ pen: false, held: toHands ? { type: 'device', id: '49' } : null });
+    },
+
+    openRadio() {
+      set({ radio: true, held: null, viewerId: null });
+    },
+
+    closeRadio(toHands = true) {
+      set({ radio: false, held: toHands ? { type: 'device', id: '50' } : null });
     },
 
     closeLaptop(toHands = true) {

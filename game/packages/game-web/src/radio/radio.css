@@ -1,0 +1,323 @@
+/* Регистратор радиопоста лицом к игроку (4d-1). Своё оформление: серый блок прибора 2007 года,
+   зелёный счётчик, индикаторы каналов; шкала записи — полосы там, где что-то слышно. */
+
+.radio-view {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+}
+.radio-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  transform-origin: center;
+  transition:
+    left 0.3s var(--ease-camera),
+    transform 0.3s var(--ease-camera);
+  animation: lap-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+:root[data-motion="reduce"] .radio-frame {
+  transition: none;
+  animation: none;
+}
+
+.rl2 {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  background: linear-gradient(#5b5f64, #45484c);
+  box-shadow:
+    inset 0 1px 0 #7a7e83,
+    0 0 0 1px #2c2e31,
+    0 30px 80px rgb(0 0 0 / 60%);
+  color: #e6e8ea;
+  font:
+    13px / 1.35 Tahoma,
+    Verdana,
+    sans-serif;
+  user-select: none;
+}
+.rl2-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.rl2-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rl2-brand b {
+  letter-spacing: 0.06em;
+}
+.rl2-sticker {
+  padding: 1px 8px;
+  border: 1px solid #c9c9b8;
+  background: #ecebdc;
+  color: #333;
+  font-size: 11px;
+}
+.rl2-photos {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #c9ccd0;
+}
+.rl2-photo {
+  padding: 2px 8px;
+  border: 1px solid #2c2e31;
+  border-radius: 3px;
+  background: #e9e4d6;
+  color: #222;
+  font: inherit;
+}
+.rl2-photo-on {
+  outline: 2px solid #e9e4d6;
+  outline-offset: 1px;
+}
+
+/* Передняя панель: счётчик, индикаторы, клавиши. */
+.rl2-face {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  background: #34373a;
+  box-shadow: inset 0 2px 6px rgb(0 0 0 / 45%);
+}
+.rl2-lcd {
+  min-width: 250px;
+  padding: 6px 12px;
+  border-radius: 3px;
+  background: #0d1a10;
+  color: #7cff8a;
+  font:
+    700 26px / 1 "Lucida Console",
+    "Courier New",
+    monospace;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 6px rgb(124 255 138 / 45%);
+  cursor: text;
+}
+.rl2-lcd input {
+  width: 230px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+.rl2-leds {
+  display: flex;
+  gap: 8px;
+}
+.rl2-led {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #4a2a14;
+  color: #c9ccd0;
+  font-size: 11px;
+}
+/* Канон (L906): на месте оба индикатора горят; ярче — когда в точке что-то слышно. */
+.rl2-led {
+  box-shadow: 0 0 4px #d9822b;
+  background: #8a4a1a;
+}
+.rl2-led-on {
+  background: #ffb347;
+  box-shadow: 0 0 10px #ffb347;
+  color: #2a1a08;
+}
+.rl2-keys {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rl2-keys button,
+.rl2-speed button {
+  min-width: 44px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #1f2123;
+  border-radius: 4px;
+  background: linear-gradient(#6c7075, #50545a);
+  color: #f0f2f4;
+  font:
+    700 13px Tahoma,
+    sans-serif;
+}
+.rl2-keys .rl2-play {
+  min-width: 56px;
+  background: linear-gradient(#7b8f6c, #5b6e4d);
+}
+.rl2-speed {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  gap: 2px;
+  margin-left: 6px;
+}
+.rl2-speed button {
+  min-width: 40px;
+}
+.rl2-speed .rl2-speed-on {
+  background: linear-gradient(#d9a441, #b9832a);
+  color: #241604;
+}
+.rl2-keys .rl2-goto-btn {
+  font-weight: 400;
+}
+.rl2-msg {
+  color: #ffd27a;
+  font-size: 12px;
+}
+
+/* Отрезок записи и шкала. */
+.rl2-wins {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.rl2-wins button {
+  padding: 1px 6px;
+  border: 1px solid #2c2e31;
+  border-radius: 3px;
+  background: #3c3f43;
+  color: #c9ccd0;
+  font: inherit;
+  font-size: 11px;
+}
+.rl2-wins .rl2-win-on {
+  background: #d9dde1;
+  color: #1c1e20;
+}
+.rl2-strip {
+  position: relative;
+  height: 64px;
+  border-radius: 3px;
+  background: #15181a;
+  box-shadow: inset 0 1px 4px rgb(0 0 0 / 60%);
+  overflow: hidden;
+  cursor: pointer;
+}
+.rl2-bar {
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  background: #7cc7ff;
+  opacity: 0.85;
+}
+.rl2-tick {
+  position: absolute;
+  bottom: 1px;
+  transform: translateX(-50%);
+  color: #8d949b;
+  font:
+    10px "Lucida Console",
+    monospace;
+  pointer-events: none;
+}
+.rl2-mark {
+  position: absolute;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 10px solid #ffd27a;
+  transform: translateX(-50%);
+}
+.rl2-head {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: #ff5a4a;
+  pointer-events: none;
+}
+.rl2-marks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.rl2-marks > button,
+.rl2-marks form button {
+  padding: 2px 10px;
+  border: 1px solid #1f2123;
+  border-radius: 3px;
+  background: linear-gradient(#6c7075, #50545a);
+  color: #f0f2f4;
+  font: inherit;
+}
+.rl2-marks form {
+  display: flex;
+  gap: 6px;
+}
+.rl2-marks input {
+  width: 260px;
+  padding: 2px 6px;
+  border: 1px solid #1f2123;
+  font: inherit;
+}
+.rl2-mark-chip {
+  display: inline-flex;
+  border: 1px solid #8a7a3a;
+  border-radius: 3px;
+  background: #3a3420;
+}
+.rl2-marks .rl2-mark-chip button {
+  padding: 1px 6px;
+  border: 0;
+  background: none;
+  color: #ffd27a;
+  font: inherit;
+}
+
+/* Описание по месту (серый прототип, K8). */
+.rl2-caption {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px 14px;
+  border-radius: 4px;
+  background: #ecebe4;
+  color: #1d1f21;
+  font-size: 14px;
+  user-select: text;
+}
+.rl2-caption p {
+  margin: 4px 0;
+}
+.rl2-caption-note {
+  color: #6b6f74;
+  font-size: 11px;
+}
+.rl2-caption-time {
+  color: #555;
+  font-family: "Lucida Console", monospace;
+  font-size: 12px;
+}
+.rl2-heard {
+  padding-top: 6px;
+  border-top: 1px dashed #b7b2a2;
+  color: #3a3d40;
+}

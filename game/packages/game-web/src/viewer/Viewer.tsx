@@ -14,6 +14,8 @@ import remarkGfm from 'remark-gfm';
 import { trackReading } from '../dev/readingLog.ts';
 import { emailIn, quoteCard, wholeCard } from '../petition/drafts.ts';
 import { usePetition } from '../petition/petition-store.ts';
+import { MediaPlayer } from '../player/MediaPlayer.tsx';
+import { MEDIA_IDS } from '../player/media.ts';
 import { clearFind, highlightFind } from '../search/highlight.ts';
 import { useGame } from '../store.ts';
 import { isLetter, takeOutOfBin } from '../wall/wall-actions.ts';
@@ -197,6 +199,9 @@ export function Viewer({ materialId }: ViewerProps) {
       </Markdown>
     );
     if (!material) return md('');
+    // Записи — плеером там, где лежат (4d, PL-A): фильм, ролики, голосовая почта, кассета.
+    if (MEDIA_IDS.has(material.id) && !excerpt && !piece)
+      return <MediaPlayer materialId={material.id} body={material.body} />;
     if (excerpt?.section !== undefined)
       return md(`# ${excerpt.title}\n\n${splitSection(material.body, excerpt.section).section}`);
     if (excerpt) return md(excerptBody(material.body, excerpt.title, excerpt.from, excerpt.to));

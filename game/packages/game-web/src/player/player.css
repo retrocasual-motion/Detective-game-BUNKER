@@ -1,0 +1,146 @@
+/* Плеер записи (4d): кнопки назад · play · вперёд, шкала файла, расшифровка или подпись по месту. */
+.mp {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font:
+    14px / 1.45 Tahoma,
+    Verdana,
+    sans-serif;
+  color: #1d1f21;
+}
+.mp-intro {
+  color: #444;
+  font-size: 13px;
+}
+.mp-intro p {
+  margin: 0 0 6px;
+}
+.mp-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mp-files button {
+  padding: 2px 8px;
+  border: 1px solid #9a968a;
+  border-radius: 3px;
+  background: #f4f2ea;
+  color: #222;
+  font: inherit;
+  font-size: 12px;
+}
+.mp-files .mp-file-on {
+  border-color: #333;
+  background: #2d3033;
+  color: #f4f2ea;
+}
+.mp-ctl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #2d3033;
+  color: #e6e8ea;
+}
+.mp-ctl button {
+  min-width: 40px;
+  height: 32px;
+  border: 1px solid #1a1c1e;
+  border-radius: 4px;
+  background: linear-gradient(#5e6268, #45494e);
+  color: #f2f3f4;
+  font:
+    700 14px Tahoma,
+    sans-serif;
+}
+.mp-ctl .mp-play {
+  min-width: 52px;
+  background: linear-gradient(#7b8f6c, #5b6e4d);
+}
+.mp-bar {
+  position: relative;
+  flex: 1;
+  height: 10px;
+  border-radius: 5px;
+  background: #16181a;
+  cursor: pointer;
+  overflow: hidden;
+}
+.mp-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: #7cc7ff;
+}
+.mp-time {
+  min-width: 80px;
+  font-family: "Lucida Console", monospace;
+  font-size: 12px;
+  text-align: right;
+}
+.mp-caption {
+  padding: 10px 14px;
+  border-radius: 4px;
+  background: #ecebe4;
+  user-select: text;
+}
+.mp-caption p {
+  margin: 4px 0;
+}
+.mp-note {
+  color: #6b6f74;
+  font-size: 11px;
+}
+.mp-caption-head {
+  margin: 4px 0;
+  font-family: "Lucida Console", monospace;
+  font-size: 12px;
+  color: #444;
+}
+.mp-row {
+  margin: 4px 0;
+}
+.mp-row div {
+  margin: 4px 0;
+}
+.mp-row dt {
+  color: #666;
+  font-size: 12px;
+}
+.mp-row dd {
+  margin: 0;
+}
+
+/* Ручка-диктофон: только кнопки и расшифровка. */
+.pen-view {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+}
+.pen-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 620px;
+  box-sizing: border-box;
+  padding: 18px 20px;
+  border-radius: 10px;
+  background: linear-gradient(#3b3e42, #2a2c2f);
+  box-shadow: 0 30px 80px rgb(0 0 0 / 60%);
+  transform: translate(-50%, -50%);
+  animation: lap-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+:root[data-motion="reduce"] .pen-frame {
+  animation: none;
+}
+.pen-body {
+  height: 18px;
+  margin: 0 0 14px;
+  border-radius: 9px 2px 2px 9px;
+  background: linear-gradient(#c9ccd0, #8a8e93);
+  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 25%);
+}
