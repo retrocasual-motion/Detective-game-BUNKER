@@ -37,13 +37,14 @@ test('щелчок по устройству — вещь в руках (эта�
   await expect(held).toHaveAttribute('data-focus', '');
   await expect(held).toBeVisible();
   await page.keyboard.press('Escape');
-  // Карта камеры (24) пока — листом.
+  // Камера инженера (24, A-268) — как телефон: щелчок по экрану — вплотную; Esc — снова в руках.
   await page.getByTestId('device-24').click();
   await page.getByTestId('device-use').click();
-  const viewer = page.getByTestId('viewer');
-  await expect(viewer).toBeVisible();
+  await expect(held).toHaveAttribute('data-focus', 'camera');
   await page.keyboard.press('Escape');
-  await expect(viewer).toBeHidden();
+  await expect(held).toHaveAttribute('data-focus', '');
+  await page.keyboard.press('Escape');
+  await expect(held).toHaveCount(0);
 });
 
 test('монитор: щелчок — компьютер следователя крупно; Esc и щелчок мимо закрывают', async ({

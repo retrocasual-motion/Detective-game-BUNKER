@@ -7,7 +7,7 @@
 телефона — на общем плеере; карта камеры 24 — по решению автора (канон: изъята только карта).
 
 ## Next Step
-Ждём выбора автора по карте 24 (KC-A…KC-D); PR с WM-B и L163 — на проверке.
+PR #81 (WM-B, L163, KC-C) — проверка автором и «мержим?»; после — этап 5.
 
 ## Phases
 
@@ -32,12 +32,14 @@
 
 ### Phase 4: Карта камеры 24
 - [x] Варианты автору (канон: карта, без камеры): KC-A … KC-D
-- [ ] После выбора — сделать
-- **Status:** in_progress
+- [x] Автор 17.11 — KC-C: изъята сама камера; A-268 в канон (24, 28, 04, 45, 02, 04-свод, PACK, LOG); walk/lint зелёные
+- [x] Модель камеры 2009 года (референсы SD1200/IXUS 95, W290), режим просмотра: ◀ ▶, DISP (L973), T (L905), W (таблица), MENU; e2e
+- **Status:** complete
 
 ### Phase 5: Документы и сдача
-- [ ] DECISIONS, ARCHITECTURE, DEVELOPMENT, TECH_PLAN (статус этапа 4); архив планов; PR
-- **Status:** pending
+- [x] DECISIONS, ARCHITECTURE, DEVELOPMENT, TECH_PLAN (статус этапа 4); PR
+- [ ] После «мержим» — архив планов этапа 4 в planning-archive/
+- **Status:** in_progress
 
 ## Errors Encountered
 | Error | Attempt | Resolution |

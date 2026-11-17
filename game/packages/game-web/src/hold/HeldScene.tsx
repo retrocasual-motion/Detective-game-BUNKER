@@ -1,6 +1,8 @@
 import { CONTAINERS, type ContainerId, containerContents, folderItemId } from '@bunker/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
+import { CAMERA_PX, CameraScreen, CameraSheet } from '../camera/CameraScreen.tsx';
+import { stopCamera, useCamera } from '../camera/camera.ts';
 import { LAPTOP_PX, LaptopLive } from '../laptop/LaptopView.tsx';
 import { PHONE_PX, PhoneLive } from '../phone/PhoneView.tsx';
 import { RadioSheet, RecorderLcd } from '../radio/RecorderParts.tsx';
@@ -18,6 +20,7 @@ import {
   remaining,
   sheetPages,
 } from '../viewer/bundles.ts';
+import { CAMERA_FOCUS, CameraDevice } from './cameraModel.tsx';
 import Held3D, { afterLeaving, type Focus } from './Held3D.tsx';
 import { Folder, PaperStack, PapersBox } from './papers.tsx';
 import { RADIO_FOCUS, type RadioPart, RadioStand, SCREEN_PX } from './radioStand.tsx';
@@ -63,6 +66,7 @@ export default function HeldThing({ held }: { held: Held }) {
 
   const title = titles.get(held.id) ?? held.id;
   if (held.id === '47' || held.id === '48') return <ScreenDevice id={held.id} title={title} />;
+  if (held.id === '24') return <CameraHeld title={title} />;
   return (
     <Held3D mode="free" half={[1.6, 1.2]} label={title} onClose={close}>
       <Device
@@ -280,6 +284,56 @@ function ScreenDevice({ id, title }: { id: '47' | '48'; title: string }) {
     </Held3D>
   );
 }
+/**
+ * Камера инженера (24, A-268) — как телефон: вертят в руках, щелчок по экрану — вплотную, экран
+ * живой, кнопки на корпусе; стрелки и Enter — те же кнопки с клавиатуры. Отложили — просмотр с
+ * начала (кадр остаётся).
+ */
+function CameraHeld({ title }: { title: string }) {
+  const on = useGame((g) => g.camera);
+  const g = useGame.getState;
+  useEffect(() => stopCamera, []);
+  useEffect(() => {
+    if (!on) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement | null)?.closest?.('input, textarea')) return;
+      const c = useCamera.getState();
+      const act: Record<string, () => void> = {
+        ArrowLeft: c.left,
+        ArrowRight: c.right,
+        ArrowUp: c.up,
+        ArrowDown: c.down,
+        Enter: c.set,
+      };
+      const fn = act[e.key];
+      if (!fn) return;
+      e.preventDefault();
+      fn();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [on]);
+  return (
+    <Held3D
+      mode="free"
+      half={[1.6, 1.2]}
+      label={title}
+      onClose={() => g().hold(null)}
+      focus={on ? CAMERA_FOCUS : null}
+      onUnfocus={() => {
+        stopCamera();
+        g().closeCamera();
+      }}
+      screen={on ? <CameraScreen /> : null}
+      screenW={CAMERA_PX[0]}
+      screenMenu
+      extra={on ? <CameraSheet /> : null}
+    >
+      <CameraDevice tag="Изъято · 24" on={on} onUse={() => g().openCamera()} />
+    </Held3D>
+  );
+}
+
 /** Ноутбук: экран почти во весь кадр. */
 const LAPTOP_FOCUS: Focus = { name: 'laptop', track: true, fill: [0.95, 0.92] };
 /** Телефон: виден целиком, с кнопкой «домой» (экран — 1,2 из 1,9 высоты корпуса). */

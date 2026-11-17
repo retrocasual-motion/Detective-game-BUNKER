@@ -1,0 +1,205 @@
+/* Экран камеры инженера в режиме просмотра (A-268): по референсам компактных камер 2009 года —
+   чёрный ЖК, белые значки и счёт кадров поверх снимка, оранжевая рамка выбора в таблице и меню,
+   вкладки меню значками. Своё оформление, без марок. */
+
+.cm-lcd {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: #000;
+  color: #fff;
+  font:
+    600 16px / 1.2 Tahoma,
+    Verdana,
+    sans-serif;
+  user-select: none;
+}
+.cm-ico {
+  width: 22px;
+  height: 16px;
+}
+.cm-photo {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(ellipse at 40% 45%, rgb(255 255 255 / 9%), transparent 60%),
+    linear-gradient(160deg, #4a4d52, #2a2c30 60%, #1d1e21);
+  transition: transform 0.15s;
+}
+.cm-photo-n {
+  color: rgb(255 255 255 / 14%);
+  font-size: 96px;
+  font-weight: 700;
+}
+.cm-top {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-shadow: 0 1px 2px #000;
+}
+.cm-count {
+  margin-left: auto;
+}
+.cm-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 6px 12px;
+  background: rgb(0 0 0 / 55%);
+  font-size: 15px;
+  user-select: text;
+}
+.cm-map {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 48px;
+  border: 1px solid #fff;
+  background: rgb(0 0 0 / 40%);
+}
+.cm-map span {
+  display: block;
+  border: 2px solid #ff9a1f;
+}
+.cm-show {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  translate: -50% 0;
+  font-size: 13px;
+  opacity: 0.8;
+}
+.cm-index {
+  position: absolute;
+  inset: 34px 14px 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 8px;
+}
+.cm-thumb {
+  display: grid;
+  place-items: center;
+  border: 3px solid transparent;
+  background: linear-gradient(160deg, #4a4d52, #222428);
+  color: rgb(255 255 255 / 45%);
+  font-size: 20px;
+}
+.cm-thumb-on {
+  border-color: #ff9a1f;
+  color: #fff;
+}
+.cm-menu {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(#1b1c20, #0d0e10);
+}
+.cm-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 10px 0;
+  border-bottom: 2px solid #ff9a1f;
+}
+.cm-tabs span {
+  display: grid;
+  place-items: center;
+  min-width: 64px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 4px 4px 0 0;
+  background: #2c2e33;
+  color: #9a9ca0;
+}
+.cm-tabs .cm-tab-on {
+  background: #ff9a1f;
+  color: #000;
+}
+.cm-menu ul {
+  flex: 1;
+  margin: 0;
+  padding: 8px 10px;
+  list-style: none;
+}
+.cm-menu li {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: 3px;
+}
+.cm-menu .cm-item-on {
+  background: #ff9a1f;
+  color: #000;
+}
+.cm-val {
+  color: #c9cbcf;
+}
+.cm-item-on .cm-val {
+  color: #000;
+}
+.cm-menu-foot {
+  padding: 6px 12px;
+  border-top: 1px solid #333;
+  color: #9a9ca0;
+  font-size: 13px;
+}
+.cm-msg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  padding: 10px 18px;
+  border: 1px solid #fff;
+  background: rgb(0 0 0 / 80%);
+}
+
+/* Лист под камерой вплотную. */
+.cm-sheet {
+  position: absolute;
+  left: 50%;
+  bottom: 66px;
+  translate: -50% 0;
+  box-sizing: border-box;
+  width: min(820px, calc(100% - 32px));
+  max-height: 30%;
+  overflow: auto;
+  padding: 10px 14px;
+  border-radius: 2px;
+  background: #f4f1e6;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 40%);
+  color: #1d1f21;
+  font:
+    14px / 1.4 Tahoma,
+    Verdana,
+    sans-serif;
+  cursor: default;
+}
+.cm-sheet p {
+  margin: 4px 0;
+}
+.cm-sheet ul {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+.cm-sheet-note {
+  color: #7a7568;
+  font-size: 11px;
+}
+.cm-detail {
+  padding-top: 6px;
+  border-top: 1px dashed #b7b2a2;
+}
+:root[data-motion="reduce"] .cm-photo {
+  transition: none;
+}

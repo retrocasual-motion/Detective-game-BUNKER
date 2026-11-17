@@ -255,7 +255,7 @@ export function Tag({ text: label, at }: { text: string; at: [number, number, nu
 }
 
 /** Экран (или окошко, кнопка) — щелчок включает. */
-function Screen({
+export function Screen({
   w,
   h,
   z,
@@ -364,7 +364,7 @@ function Laptop({ tag, onUse, on }: { tag: string; onUse: () => void; on: boolea
 }
 
 /** Скруглённый прямоугольник по центру — контур корпуса телефона. */
-function rounded(w: number, h: number, r: number) {
+export function rounded(w: number, h: number, r: number) {
   const p = new Shape();
   const x = -w / 2;
   const y = -h / 2;
@@ -485,17 +485,7 @@ export function Device({
         <Tag text={tag} at={[0.75, -0.32, 0.05]} />
       </group>
     );
-  if (id === '24')
-    return (
-      <group>
-        <mesh>
-          <boxGeometry args={[0.9, 1.25, 0.05]} />
-          <meshStandardMaterial color="#3a3c40" roughness={0.5} />
-        </mesh>
-        <Screen w={0.7} h={0.5} z={0.026} label="Посмотреть кадры" onUse={onUse} />
-        <Tag text={tag} at={[0.65, -0.65, 0.04]} />
-      </group>
-    );
+  // 24 — камера инженера (A-268): своя сцена, cameraModel.tsx.
   // 50 — стойка радиопоста целиком (A-267): своя сцена, radioStand.tsx.
   return null;
 }
