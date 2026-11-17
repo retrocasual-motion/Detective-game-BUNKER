@@ -5,7 +5,7 @@ import { type Group, Vector3 } from 'three';
 import { reducedMotion } from '../motion.ts';
 import { captionNow, useRecorder } from '../radio/recorder.ts';
 import { useGame } from '../store.ts';
-import { type Focus, holdPart, useScreenAnchor } from './Held3D.tsx';
+import { type Focus, holdPart, onClickPart, useScreenAnchor } from './Held3D.tsx';
 import { paintReceiverDial, paintRecorderScreen } from './radioFace.ts';
 import { Tag, useActive, useTexture } from './shapes.tsx';
 import { paintTexture } from './texture.ts';
@@ -75,10 +75,13 @@ export function RadioStand({
   tag,
   focus,
   onFocus,
+  onUnfocus,
 }: {
   tag: string;
   focus: RadioPart | null;
   onFocus: (part: RadioPart) => void;
+  /** Вплотную: щелчок по стойке мимо этой части — снова стойка в руках (правка автора 17.11). */
+  onUnfocus: () => void;
 }) {
   const stand = useRef<Group>(null);
   useFrame((_, dt) => {
@@ -90,7 +93,13 @@ export function RadioStand({
     g.rotation.y += (ty - g.rotation.y) * k;
   });
   return (
-    <group ref={stand} rotation={[TILT[0], TILT[1], 0]} scale={S} position={[0, OY, 0]}>
+    <group
+      ref={stand}
+      rotation={[TILT[0], TILT[1], 0]}
+      scale={S}
+      position={[0, OY, 0]}
+      {...(focus ? { onClick: onClickPart(onUnfocus) } : {})}
+    >
       {/* Рама стойки. */}
       {[-1.12, 1.12].map((x) => (
         <mesh key={x} position={[x, 0, 0]}>
@@ -107,8 +116,8 @@ export function RadioStand({
         <meshStandardMaterial color={RACK} roughness={0.6} metalness={0.3} />
       </mesh>
 
-      <Receiver on={focus === 'receiver'} onFocus={() => onFocus('receiver')} />
-      <Recorder on={focus === 'recorder'} onFocus={() => onFocus('recorder')} />
+      <Receiver on={focus === 'receiver'} busy={!!focus} onFocus={() => onFocus('receiver')} />
+      <Recorder on={focus === 'recorder'} busy={!!focus} onFocus={() => onFocus('recorder')} />
 
       {/* Блок питания: решётка и выключатель. */}
       <group position={[0, -0.86, 0]}>
@@ -132,8 +141,25 @@ export function RadioStand({
   );
 }
 
+interface UnitProps {
+  /** Вплотную к этой части. */
+  on: boolean;
+  /** Вплотную к какой-то части. */
+  busy: boolean;
+  onFocus: () => void;
+}
+
+/**
+ * Щелчки по части стойки. В руках — «вплотную к ней». Вплотную к ней — щелчок по её панели
+ * остаётся (камера на месте); вплотную к другой — щелчок уходит выше, к стойке: снова в руках.
+ */
+function unitHandlers(on: boolean, busy: boolean, handlers: object) {
+  if (on) return { onClick: (e: ThreeEvent<MouseEvent>) => e.stopPropagation() };
+  return busy ? {} : handlers;
+}
+
 /** Приёмник: щелчок — вплотную; вплотную — ручка, стрелка, переключатель. */
-function Receiver({ on, onFocus }: { on: boolean; onFocus: () => void }) {
+function Receiver({ on, busy, onFocus }: UnitProps) {
   const dial = useTexture(() => paintTexture(DIAL_W, DIAL_H, null, paintReceiverDial()), []);
   const sw = useTexture(
     () =>
@@ -150,7 +176,7 @@ function Receiver({ on, onFocus }: { on: boolean; onFocus: () => void }) {
   const needle = useRecorder((r) => r.needle);
   const unit = useActive('radio-receiver', 'Работать с приёмником', 'radio-receiver', onFocus);
   return (
-    <group position={[0, RECEIVER_Y, 0]} {...(on ? {} : unit.handlers)}>
+    <group position={[0, RECEIVER_Y, 0]} {...unitHandlers(on, busy, unit.handlers)}>
       <mesh>
         <boxGeometry args={[UNIT_W, 0.86, 0.8]} />
         <meshStandardMaterial
@@ -158,10 +184,10 @@ function Receiver({ on, onFocus }: { on: boolean; onFocus: () => void }) {
           roughness={0.45}
           metalness={0.5}
           emissive="#2a3440"
-          emissiveIntensity={!on && unit.hover ? 0.5 : 0}
+          emissiveIntensity={!busy && unit.hover ? 0.5 : 0}
         />
       </mesh>
-      <group position={[DIAL_X, 0.05, 0.401]} ref={on ? undefined : unit.anchor}>
+      <group position={[DIAL_X, 0.05, 0.401]} ref={busy ? undefined : unit.anchor}>
         <mesh>
           <planeGeometry args={[DIAL_W, DIAL_H]} />
           <meshBasicMaterial map={dial} toneMapped={false} />
@@ -272,14 +298,38 @@ function TuningKnob({ on, needle }: { on: boolean; needle: number }) {
   );
 }
 
-/** Переключатель «РУЧН. / ПОИСК»: рычажок наклоняется к надписи; щелчок — в другое положение. */
+/**
+ * Переключатель «РУЧН. / ПОИСК»: рычажок наклоняется к надписи. Щелчок по кружку или по рычажку —
+ * в другое положение; зажать и потянуть вбок — туда, куда тянут (правка автора 17.11).
+ */
 function ModeSwitch({ on }: { on: boolean }) {
   const mode = useRecorder((r) => r.mode);
   const flip = useRecorder((r) => r.flip);
-  const s = useActive('radio-switch', 'Переключатель «РУЧН. / ПОИСК»', 'radio-switch', flip);
+  const s = useActive('radio-switch', 'Переключатель «РУЧН. / ПОИСК»', 'radio-switch', flip, true);
+  const handlers = on
+    ? {
+        ...s.handlers,
+        onPointerDown: (e: ThreeEvent<PointerEvent>) => {
+          if (e.button !== 0) return;
+          e.stopPropagation();
+          holdPart();
+          const x0 = e.clientX;
+          const move = (ev: PointerEvent) => {
+            const dx = ev.clientX - x0;
+            if (Math.abs(dx) > 10) useRecorder.getState().setMode(dx > 0 ? 'ПОИСК' : 'РУЧН.');
+          };
+          const up = () => {
+            window.removeEventListener('pointermove', move);
+            window.removeEventListener('pointerup', up);
+          };
+          window.addEventListener('pointermove', move);
+          window.addEventListener('pointerup', up);
+        },
+      }
+    : {};
   return (
-    <group position={[-0.68, -0.33, 0.401]} ref={on ? s.anchor : undefined}>
-      <mesh rotation={[Math.PI / 2, 0, 0]} {...(on ? s.handlers : {})}>
+    <group position={[-0.68, -0.33, 0.401]} ref={on ? s.anchor : undefined} {...handlers}>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.065, 0.07, 0.03, 24]} />
         <meshStandardMaterial
           color={on && s.hover ? '#e2e4e6' : '#b8bbbf'}
@@ -302,7 +352,7 @@ function ModeSwitch({ on }: { on: boolean }) {
 }
 
 /** Регистратор RL-2: щелчок — вплотную; вплотную — живой экран и клавиши на корпусе. */
-function Recorder({ on, onFocus }: { on: boolean; onFocus: () => void }) {
+function Recorder({ on, busy, onFocus }: UnitProps) {
   const plate = useTexture(
     () =>
       paintTexture(0.9, 0.16, '#d8dadc', ({ ctx, w, h }) => {
@@ -359,7 +409,7 @@ function Recorder({ on, onFocus }: { on: boolean; onFocus: () => void }) {
   const r = useRecorder.getState;
   const unit = useActive('radio-recorder', 'Работать с регистратором', 'device-use', onFocus);
   return (
-    <group position={[0, RECORDER_Y, 0]} {...(on ? {} : unit.handlers)}>
+    <group position={[0, RECORDER_Y, 0]} {...unitHandlers(on, busy, unit.handlers)}>
       <mesh>
         <boxGeometry args={[UNIT_W, 0.62, 0.8]} />
         <meshStandardMaterial
@@ -367,14 +417,14 @@ function Recorder({ on, onFocus }: { on: boolean; onFocus: () => void }) {
           roughness={0.4}
           metalness={0.6}
           emissive="#2a3440"
-          emissiveIntensity={!on && unit.hover ? 0.4 : 0}
+          emissiveIntensity={!busy && unit.hover ? 0.4 : 0}
         />
       </mesh>
       <mesh position={[-0.55, 0.22, 0.401]}>
         <planeGeometry args={[0.9, 0.16]} />
         <meshBasicMaterial map={plate} toneMapped={false} />
       </mesh>
-      <group position={[-0.1, -0.06, 0.401]} ref={on ? undefined : unit.anchor}>
+      <group position={[-0.1, -0.06, 0.401]} ref={busy ? undefined : unit.anchor}>
         <RecorderScreen on={on} />
       </group>
       <mesh position={[0.32, 0.22, 0.401]} rotation={[0, 0, 0.015]}>

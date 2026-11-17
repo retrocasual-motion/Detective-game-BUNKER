@@ -424,10 +424,12 @@ export default function Held3D({
   // Протяжку ведём по окну: кнопка может уйти за край вещи и даже экрана.
   const onPointerDown = (e: ReactPointerEvent) => {
     const g = gesture.current;
-    // Правая кнопка — вернуть как было (правка автора 10.11; прежде — средняя).
+    // Правая кнопка — вернуть как было (правка автора 10.11; прежде — средняя); вплотную —
+    // отойти: снова вещь в руках (правка автора 17.11).
     if (e.button === 2) {
       e.preventDefault();
-      g.reset = true;
+      if (focus && onUnfocus) onUnfocus();
+      else g.reset = true;
       return;
     }
     // Зажатое колесо — сдвинуть вещь (правка автора 10.11).
@@ -524,7 +526,10 @@ export default function Held3D({
           ref={screenEl}
           className="held-screen"
           style={{ width: screenW }}
-          onPointerDown={(e) => e.stopPropagation()}
+          // Экран — интерфейс: щелчок по нему не «мимо»; правая кнопка — отойти (как везде вплотную).
+          onPointerDown={(e) => {
+            if (e.button !== 2) e.stopPropagation();
+          }}
           onWheel={(e) => e.stopPropagation()}
         >
           {screen}

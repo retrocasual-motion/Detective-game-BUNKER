@@ -53,6 +53,7 @@ interface Recorder {
   setPhoto(k: number | null): void;
   turnKnob(d: number): void;
   flip(): void;
+  setMode(m: 'ПОИСК' | 'РУЧН.'): void;
 }
 
 const clampView = (win: View, from: number, to: number): View => {
@@ -202,6 +203,9 @@ export const useRecorder = create<Recorder>((set, get) => {
     },
     flip() {
       set({ mode: get().mode === 'ПОИСК' ? 'РУЧН.' : 'ПОИСК' });
+    },
+    setMode(mode) {
+      set({ mode });
     },
   };
 });

@@ -262,6 +262,10 @@ function Papers() {
  */
 function RadioHeld({ title, close }: { title: string; close: () => void }) {
   const [focus, setFocus] = useState<RadioPart | null>(null);
+  const unfocus = () => {
+    useRecorder.getState().setLabeling(null);
+    setFocus(null);
+  };
   const body = useGame((g) => g.materials.find((m) => m.id === '50')?.body ?? '');
   useEffect(() => {
     useRecorder.getState().init(body);
@@ -286,15 +290,12 @@ function RadioHeld({ title, close }: { title: string; close: () => void }) {
       label={title}
       onClose={close}
       focus={focus ? RADIO_FOCUS[focus] : null}
-      onUnfocus={() => {
-        useRecorder.getState().setLabeling(null);
-        setFocus(null);
-      }}
+      onUnfocus={unfocus}
       screen={focus === 'recorder' ? <RecorderLcd /> : null}
       screenW={SCREEN_PX}
       extra={focus ? <RadioSheet part={focus} /> : null}
     >
-      <RadioStand tag="Изъято · 50" focus={focus} onFocus={setFocus} />
+      <RadioStand tag="Изъято · 50" focus={focus} onFocus={setFocus} onUnfocus={unfocus} />
     </Held3D>
   );
 }
