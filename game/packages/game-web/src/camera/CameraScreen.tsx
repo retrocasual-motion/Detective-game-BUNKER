@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelectionPetition } from '../device/deviceView.tsx';
 import { useGame } from '../store.ts';
-import { LOCKED_MSG, MENU, useCamera, zoomOf } from './camera.ts';
+import { LOCKED_MSG, MENU, say, useCamera, zoomOf } from './camera.ts';
 import { FRAME_COUNT, frameDetails, frameTime, parseFrames } from './frames.ts';
 import './camera.css';
 
@@ -41,7 +41,7 @@ export function CameraScreen() {
       data-testid="camera-view"
       data-frame={c.frame}
       data-mode={c.mode}
-      style={{ width: w, height: h }}
+      style={{ width: w, height: h, filter: `brightness(${0.6 + c.bright * 0.13})` }}
       onMouseUp={onUp}
       onContextMenu={(e) => e.preventDefault()}
     >
@@ -85,38 +85,61 @@ export function CameraScreen() {
           <span style={{ width: `${100 / z}%`, height: `${100 / z}%` }} />
         </span>
       )}
-      {c.slideshow && <span className="cm-show">Slideshow</span>}
+      {c.slideshow && <span className="cm-show">{say(c.lang, 'Slideshow')}</span>}
 
       {c.mode === 'menu' && (
         <div className="cm-menu" data-testid="camera-menu-screen">
+          {/* Мышью — как стрелками: вкладка, пункт (щелчок — выбрать и нажать SET). */}
           <div className="cm-tabs">
-            <span className={c.tab === 0 ? 'cm-tab-on' : undefined}>
+            <button
+              type="button"
+              className={c.tab === 0 ? 'cm-tab-on' : undefined}
+              data-testid="camera-tab-play"
+              aria-label="Просмотр"
+              onClick={() => c.pickTab(0)}
+            >
               <PlayIcon />
-            </span>
-            <span className={c.tab === 1 ? 'cm-tab-on' : undefined}>Set up</span>
+            </button>
+            <button
+              type="button"
+              className={c.tab === 1 ? 'cm-tab-on' : undefined}
+              data-testid="camera-tab-setup"
+              onClick={() => c.pickTab(1)}
+            >
+              {say(c.lang, 'Set up')}
+            </button>
           </div>
           <ul>
             {MENU[c.tab].items.map((it, k) => (
-              <li key={it} className={k === c.item ? 'cm-item-on' : undefined}>
-                <span>{it}</span>
-                <span className="cm-val">
-                  {it === 'Mute'
-                    ? 'On'
-                    : it === 'Language'
-                      ? 'English'
-                      : it === 'LCD Brightness'
-                        ? '●●●○○'
-                        : ''}
-                </span>
+              <li key={it}>
+                <button
+                  type="button"
+                  className={k === c.item ? 'cm-item-on' : undefined}
+                  data-testid={`camera-item-${it}`}
+                  onClick={() => c.pick(k)}
+                >
+                  <span>{say(c.lang, it)}</span>
+                  <span className="cm-val">
+                    {it === 'Mute'
+                      ? say(c.lang, c.mute ? 'On' : 'Off')
+                      : it === 'Language'
+                        ? c.lang === 'en'
+                          ? 'English'
+                          : 'Русский'
+                        : it === 'LCD Brightness'
+                          ? '●'.repeat(c.bright) + '○'.repeat(5 - c.bright)
+                          : ''}
+                  </span>
+                </button>
               </li>
             ))}
           </ul>
-          <div className="cm-menu-foot">MENU Exit</div>
+          <div className="cm-menu-foot">{say(c.lang, 'MENU Exit')}</div>
         </div>
       )}
       {c.msg && (
         <div className="cm-msg" data-testid="camera-msg">
-          {c.msg === LOCKED_MSG ? 'Card locked!' : c.msg}
+          {c.msg === LOCKED_MSG ? say(c.lang, 'Card locked!') : c.msg}
         </div>
       )}
       {button && createPortal(button, document.body)}

@@ -25,6 +25,26 @@ const ZOOMS = [1, 2, 4, 6, 8, 10];
 /** Карта защищена от записи (вещдок): стереть, защитить, повернуть нельзя. */
 export const LOCKED_MSG = 'Card locked';
 
+/** Язык экрана камеры (Set up → Language): как у камер того времени — английский или русский. */
+export type Lang = 'en' | 'ru';
+const WORDS: Record<string, string> = {
+  Slideshow: 'Слайд-шоу',
+  Erase: 'Стереть',
+  Protect: 'Защита',
+  Rotate: 'Поворот',
+  Mute: 'Без звука',
+  'LCD Brightness': 'Яркость экрана',
+  Language: 'Язык',
+  'Set up': 'Настройка',
+  'MENU Exit': 'MENU Выход',
+  'Card locked!': 'Карта защищена!',
+  On: 'Вкл.',
+  Off: 'Выкл.',
+  English: 'English',
+};
+/** Надпись на экране камеры на выбранном языке. */
+export const say = (lang: Lang, s: string) => (lang === 'ru' ? (WORDS[s] ?? s) : s);
+
 interface Cam {
   frame: number;
   mode: CamMode;
@@ -35,7 +55,14 @@ interface Cam {
   item: number;
   msg: string | null;
   slideshow: boolean;
+  /** Set up: без звука, яркость экрана (1…5), язык. */
+  mute: boolean;
+  bright: number;
+  lang: Lang;
   reset(): void;
+  /** Мышью по меню: вкладка или пункт (пункт — выбрать и нажать SET). */
+  pickTab(t: 0 | 1): void;
+  pick(item: number): void;
   left(): void;
   right(): void;
   up(): void;
@@ -83,6 +110,16 @@ export const useCamera = create<Cam>((set, get) => {
     item: 0,
     msg: null,
     slideshow: false,
+    mute: true,
+    bright: 3,
+    lang: 'en',
+    pickTab(t) {
+      set({ tab: t, item: 0 });
+    },
+    pick(item) {
+      set({ item });
+      get().set();
+    },
     reset() {
       stopShow();
       set({ mode: 'single', zoom: 0, msg: null, tab: 0, item: 0 });
@@ -127,6 +164,9 @@ export const useCamera = create<Cam>((set, get) => {
         set({ mode: 'single', zoom: 0, slideshow: true });
         showT = setInterval(() => step(1), 3000);
       } else if (name === 'Erase' || name === 'Protect' || name === 'Rotate') flash(LOCKED_MSG);
+      else if (name === 'Mute') set({ mute: !get().mute });
+      else if (name === 'LCD Brightness') set({ bright: (get().bright % 5) + 1 });
+      else if (name === 'Language') set({ lang: get().lang === 'en' ? 'ru' : 'en' });
     },
     display() {
       stopShow();

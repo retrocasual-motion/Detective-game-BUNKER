@@ -75,3 +75,20 @@ test('DISP — время съёмки (свойства L973); MENU — мен�
   await page.getByTestId('device-use').click();
   await expect(frame(page)).toHaveAttribute('data-frame', '15');
 });
+
+test('меню — и мышью: вкладка, пункт; Set up меняется — без звука, яркость, язык', async ({
+  page,
+}) => {
+  await cameraUp(page);
+  await page.getByTestId('camera-menu').click();
+  await page.getByTestId('camera-tab-setup').click();
+  const mute = page.getByTestId('camera-item-Mute');
+  await expect(mute).toContainText('On');
+  await mute.click();
+  await expect(mute).toContainText('Off');
+  await page.getByTestId('camera-item-Language').click();
+  await expect(page.getByTestId('camera-item-Language')).toContainText('Язык');
+  await expect(page.getByTestId('camera-item-Language')).toContainText('Русский');
+  await page.getByTestId('camera-tab-play').click();
+  await expect(page.getByTestId('camera-item-Slideshow')).toContainText('Слайд-шоу');
+});

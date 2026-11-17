@@ -112,7 +112,10 @@
   padding: 8px 10px 0;
   border-bottom: 2px solid #ff9a1f;
 }
-.cm-tabs span {
+.cm-tabs button {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
   display: grid;
   place-items: center;
   min-width: 64px;
@@ -132,13 +135,23 @@
   padding: 8px 10px;
   list-style: none;
 }
-.cm-menu li {
+.cm-menu li button {
   display: flex;
   justify-content: space-between;
+  width: 100%;
   padding: 7px 10px;
+  border: 0;
   border-radius: 3px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
-.cm-menu .cm-item-on {
+.cm-menu li button:hover {
+  background: rgb(255 154 31 / 25%);
+}
+.cm-menu li button.cm-item-on {
   background: #ff9a1f;
   color: #000;
 }
