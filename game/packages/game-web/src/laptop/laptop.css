@@ -1,12 +1,6 @@
 /* Ноутбук руководителя экраном к игроку (4c-1). Вид эпохи (2008): окна с заголовком, серые
    панели, панель задач; своё оформление — без логотипов и шкур настоящих систем. */
 
-/* Ниже папки запроса и блокнота (слой 50): они лежат поверх экрана (правка автора 11.11). */
-.laptop-view {
-  position: fixed;
-  inset: 0;
-  z-index: 39;
-}
 .laptop-backdrop {
   position: absolute;
   inset: 0;
@@ -14,34 +8,6 @@
   background: rgb(10 10 12 / 62%);
   cursor: default;
   animation: lap-fade 0.25s ease-out;
-}
-.laptop-frame {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  box-sizing: border-box;
-  padding: 34px;
-  border-radius: 14px;
-  background: linear-gradient(#2b2d31, #1d1e21);
-  box-shadow:
-    0 0 0 1px #444,
-    0 30px 80px rgb(0 0 0 / 60%);
-  transform-origin: center;
-  transition:
-    left 0.3s var(--ease-camera),
-    transform 0.3s var(--ease-camera);
-  animation: lap-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.laptop-cam {
-  position: absolute;
-  left: 50%;
-  top: 14px;
-  width: 7px;
-  height: 7px;
-  margin-left: -3px;
-  border-radius: 50%;
-  background: #0d0e10;
-  box-shadow: inset 0 0 0 1px #3a3c40;
 }
 @keyframes lap-in {
   from {
@@ -54,7 +20,6 @@
     opacity: 0;
   }
 }
-:root[data-motion="reduce"] .laptop-frame,
 :root[data-motion="reduce"] .laptop-backdrop {
   transition: none;
   animation: none;

@@ -143,3 +143,16 @@ test('выделил номер — «В запрос»: карточка из �
   await expect(page.getByTestId('phone-view')).toBeVisible();
   await expect(page.getByTestId('petition-card').first()).toContainText('+7 926 555-01-90');
 });
+
+test('вплотную — та же вещь (WM-B): щелчок мимо телефона — снова в руках; кнопка «домой» — на корпусе', async ({
+  page,
+}) => {
+  await phoneUp(page);
+  const held = page.getByTestId('held');
+  await expect(held).toHaveAttribute('data-focus', 'phone');
+  await expect(page.getByTestId('phone-home-btn')).toBeVisible();
+  await page.mouse.click(150, 400);
+  await expect(held).toHaveAttribute('data-focus', '');
+  await expect(page.getByTestId('phone-view')).toHaveCount(0);
+  await expect(held).toBeVisible();
+});

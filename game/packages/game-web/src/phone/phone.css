@@ -3,78 +3,6 @@
    значков, навигационная полоса с «‹ назад», вкладки внизу, пузыри сообщений); оформление своё,
    без копирования марок. */
 
-.phone-view {
-  position: fixed;
-  inset: 0;
-  /* Ниже папки запроса и блокнота (слой 50) — как ноутбук. */
-  z-index: 39;
-}
-.phone-backdrop {
-  position: absolute;
-  inset: 0;
-  border: 0;
-  background: rgb(10 10 12 / 62%);
-  cursor: default;
-  animation: ph-fade 0.25s ease-out;
-}
-.phone-body {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  box-sizing: border-box;
-  padding: 70px 14px 80px;
-  border-radius: 46px;
-  background: linear-gradient(160deg, #2c2d30, #141518);
-  box-shadow:
-    0 0 0 2px #4a4b4f,
-    0 30px 80px rgb(0 0 0 / 60%);
-  transition:
-    left 0.3s var(--ease-camera),
-    transform 0.3s var(--ease-camera);
-  animation: ph-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.phone-speaker {
-  position: absolute;
-  left: 50%;
-  top: 32px;
-  width: 54px;
-  height: 6px;
-  margin-left: -27px;
-  border-radius: 3px;
-  background: #0b0b0d;
-  box-shadow: inset 0 0 0 1px #3a3b3f;
-}
-.phone-home-btn {
-  position: absolute;
-  left: 50%;
-  bottom: 14px;
-  width: 52px;
-  height: 52px;
-  margin-left: -26px;
-  border: 2px solid #3a3b3f;
-  border-radius: 50%;
-  background: radial-gradient(circle, #1e1f22 55%, #111 100%);
-  cursor: pointer;
-}
-.phone-home-btn::after {
-  content: "";
-  position: absolute;
-  inset: 16px;
-  border: 2px solid #6a6b70;
-  border-radius: 4px;
-}
-@keyframes ph-in {
-  from {
-    opacity: 0;
-    scale: 0.82;
-  }
-}
-@keyframes ph-fade {
-  from {
-    opacity: 0;
-  }
-}
-
 .ph-screen {
   position: relative;
   overflow: hidden;
@@ -683,17 +611,6 @@
   }
 }
 :root[data-motion="reduce"]
-  :is(
-    .phone-body,
-    .phone-backdrop,
-    .ph-anim-open,
-    .ph-anim-push,
-    .ph-anim-back,
-    .ph-slide-text,
-    .ph-dots-wrong
-  ) {
+  :is(.ph-anim-open, .ph-anim-push, .ph-anim-back, .ph-slide-text, .ph-dots-wrong) {
   animation: none;
-}
-:root[data-motion="reduce"] .phone-body {
-  transition: none;
 }

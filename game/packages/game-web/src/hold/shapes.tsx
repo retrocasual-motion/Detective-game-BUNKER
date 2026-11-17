@@ -1,8 +1,11 @@
+import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CanvasTexture, Group } from 'three';
+import { type CanvasTexture, type Group, Shape } from 'three';
 import { gameNow, hhmm } from '../clock.ts';
+import { reducedMotion } from '../motion.ts';
+import { phoneHome } from '../phone/phoneHome.ts';
 import { useGame } from '../store.ts';
-import { onClickPart, setPartCursor, useSpot } from './Held3D.tsx';
+import { onClickPart, setPartCursor, useScreenAnchor, useSpot } from './Held3D.tsx';
 import { paintLaptopFace } from './laptopFace.ts';
 import { paintPhoneFace } from './phoneFace.ts';
 import { type Painter, paintTexture } from './texture.ts';
@@ -17,7 +20,6 @@ import { type Painter, paintTexture } from './texture.ts';
 const KRAFT = '#b58f5a';
 const BOX = '#8a7656';
 const DEVICE = '#5f6267';
-const DARK = '#2a2b2e';
 const INK = '#1d1d1d';
 const SEAL = '#8e2b25';
 
@@ -260,6 +262,7 @@ function Screen({
   label,
   onUse,
   face,
+  on = false,
 }: {
   w: number;
   h: number;
@@ -268,11 +271,16 @@ function Screen({
   onUse: () => void;
   /** Что горит на экране (включённое устройство): картинка светится сама. */
   face?: CanvasTexture;
+  /** Вплотную (WM-B): поверх экрана — живая разметка, невидимой кнопки нет. */
+  on?: boolean;
 }) {
   const s = useActive('screen', label, 'device-use', onUse);
+  const live = useRef<Group>(null);
+  useScreenAnchor(on ? live : NO_ANCHOR, w, h);
   return (
-    <group position={[0, 0, z]} ref={s.anchor}>
-      <mesh {...s.handlers}>
+    <group position={[0, 0, z]} ref={on ? undefined : s.anchor}>
+      <group ref={live} />
+      <mesh {...(on ? {} : s.handlers)}>
         <planeGeometry args={[w, h]} />
         {face ? (
           <meshBasicMaterial
@@ -293,60 +301,177 @@ function Screen({
   );
 }
 
+const NO_ANCHOR = { current: null };
+
+/** Экран ноутбука — плоскость под 1280 × 800 (WXGA), размер в сцене. */
+export const LAPTOP_SCREEN: [number, number] = [2.5, 1.5625];
+/** Экран телефона — под 320 × 480. */
+export const PHONE_SCREEN: [number, number] = [0.8, 1.2];
+
 /** Экран ноутбука в руках — уже включён: вход или рабочий стол (правка автора 10.11). */
-function LaptopScreen({ onUse }: { onUse: () => void }) {
+function LaptopScreen({ onUse, on }: { onUse: () => void; on: boolean }) {
   const unlocked = useGame((g) => g.materials.some((m) => m.id === 'L560'));
-  const face = useTexture(
-    () => paintTexture(2.5, 1.55, null, paintLaptopFace(unlocked)),
-    [unlocked],
-  );
-  return <Screen w={2.5} h={1.55} z={0.041} label="Открыть ноутбук" onUse={onUse} face={face} />;
+  const [w, h] = LAPTOP_SCREEN;
+  const face = useTexture(() => paintTexture(w, h, null, paintLaptopFace(unlocked)), [unlocked]);
+  return <Screen w={w} h={h} z={0.041} label="Открыть ноутбук" onUse={onUse} face={face} on={on} />;
 }
 
 /** Экран телефона в руках — уже горит: экран блокировки с уведомлениями (как на живом экране). */
-function PhoneScreen({ onUse }: { onUse: () => void }) {
+function PhoneScreen({ onUse, on, z }: { onUse: () => void; on: boolean; z: number }) {
   const unlocked = useGame((g) => g.materials.some((m) => m.id === 'L540'));
   const body48 = useGame((g) => g.materials.find((m) => m.id === '48')?.body ?? '');
   const started = useGame((g) => g.state?.started);
   const time = hhmm(gameNow(started));
+  const [w, h] = PHONE_SCREEN;
   const face = useTexture(
-    () => paintTexture(0.82, 1.6, null, paintPhoneFace(unlocked, body48, time)),
+    () => paintTexture(w, h, null, paintPhoneFace(unlocked, body48, time)),
     [unlocked, body48, time],
   );
-  return <Screen w={0.82} h={1.6} z={0.051} label="Включить телефон" onUse={onUse} face={face} />;
+  return <Screen w={w} h={h} z={z} label="Включить телефон" onUse={onUse} face={face} on={on} />;
 }
 
-export function Device({ id, tag, onUse }: { id: string; tag: string; onUse: () => void }) {
-  if (id === '47')
-    return (
-      <group rotation={[0.28, 0, 0]} scale={0.8}>
-        <mesh position={[0, -0.75, 0.55]}>
-          <boxGeometry args={[2.8, 0.1, 1.9]} />
+/**
+ * Ноутбук в руках (4c-1; WM-B — автор 17.11): вертят как вещь; вплотную крышка встаёт экраном
+ * прямо к камере, экран живой — разметка на плоскости экрана.
+ */
+function Laptop({ tag, onUse, on }: { tag: string; onUse: () => void; on: boolean }) {
+  const body = useRef<Group>(null);
+  useFrame((_, dt) => {
+    const g = body.current;
+    if (!g) return;
+    // Вплотную — наклон, при котором крышка (−0,12) стоит прямо.
+    const k = reducedMotion() ? 1 : 1 - Math.exp(-dt * 10);
+    g.rotation.x += ((on ? 0.12 : 0.28) - g.rotation.x) * k;
+  });
+  return (
+    <group ref={body} rotation={[0.28, 0, 0]} scale={0.8}>
+      <mesh position={[0, -0.75, 0.55]}>
+        <boxGeometry args={[2.8, 0.1, 1.9]} />
+        <meshStandardMaterial color={DEVICE} roughness={0.6} />
+      </mesh>
+      <group position={[0, 0.2, -0.4]} rotation={[-0.12, 0, 0]}>
+        <mesh>
+          <boxGeometry args={[2.8, 1.85, 0.08]} />
           <meshStandardMaterial color={DEVICE} roughness={0.6} />
         </mesh>
-        <group position={[0, 0.2, -0.4]} rotation={[-0.12, 0, 0]}>
-          <mesh>
-            <boxGeometry args={[2.8, 1.85, 0.08]} />
-            <meshStandardMaterial color={DEVICE} roughness={0.6} />
-          </mesh>
-          <LaptopScreen onUse={onUse} />
-        </group>
-        <group rotation={[-Math.PI / 2, 0, 0]}>
-          <Tag text={tag} at={[0.95, -1.15, -0.69]} />
-        </group>
+        <LaptopScreen onUse={onUse} on={on} />
       </group>
-    );
-  if (id === '48')
-    return (
-      <group>
-        <mesh>
-          <boxGeometry args={[0.95, 1.9, 0.1]} />
-          <meshStandardMaterial color={DARK} roughness={0.4} />
+      <group rotation={[-Math.PI / 2, 0, 0]}>
+        <Tag text={tag} at={[0.95, -1.15, -0.69]} />
+      </group>
+    </group>
+  );
+}
+
+/** Скруглённый прямоугольник по центру — контур корпуса телефона. */
+function rounded(w: number, h: number, r: number) {
+  const p = new Shape();
+  const x = -w / 2;
+  const y = -h / 2;
+  p.moveTo(x + r, y);
+  p.lineTo(x + w - r, y);
+  p.quadraticCurveTo(x + w, y, x + w, y + r);
+  p.lineTo(x + w, y + h - r);
+  p.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  p.lineTo(x + r, y + h);
+  p.quadraticCurveTo(x, y + h, x, y + h - r);
+  p.lineTo(x, y + r);
+  p.quadraticCurveTo(x, y, x + r, y);
+  return p;
+}
+
+const PHONE_W = 1.0;
+const PHONE_H = 1.9;
+const PHONE_D = 0.1;
+
+/**
+ * Телефон Габриэля в руках (4c-2; WM-B — автор 17.11: «условный iPhone»): скруглённый чёрный
+ * корпус со стеклом во всю лицевую сторону, светлый металлический ободок, щель динамика сверху,
+ * круглая кнопка «домой» снизу. Вплотную экран живой; кнопка «домой» на корпусе — на главный
+ * экран. Своё оформление, без марок.
+ */
+function Phone({ tag, onUse, on }: { tag: string; onUse: () => void; on: boolean }) {
+  const shape = useMemo(() => rounded(PHONE_W, PHONE_H, 0.17), []);
+  const rim = useMemo(() => rounded(PHONE_W + 0.03, PHONE_H + 0.03, 0.185), []);
+  const ring = useTexture(
+    () =>
+      paintTexture(0.17, 0.17, '#141416', ({ ctx, w, h }) => {
+        ctx.strokeStyle = '#9a9ca0';
+        ctx.lineWidth = w * 0.06;
+        const r = w * 0.22;
+        ctx.beginPath();
+        ctx.roundRect(w / 2 - r, h / 2 - r, r * 2, r * 2, r * 0.35);
+        ctx.stroke();
+      }),
+    [],
+  );
+  const home = useActive('phone-home', 'Home', 'phone-home-btn', () => phoneHome.go?.());
+  const front = PHONE_D / 2 + 0.017;
+  return (
+    <group>
+      <mesh position={[0, 0, -PHONE_D / 2]}>
+        <extrudeGeometry
+          args={[
+            shape,
+            {
+              depth: PHONE_D,
+              bevelEnabled: true,
+              bevelThickness: 0.015,
+              bevelSize: 0.015,
+              bevelSegments: 3,
+              curveSegments: 16,
+            },
+          ]}
+        />
+        <meshStandardMaterial color="#0d0d0f" roughness={0.15} metalness={0.3} />
+      </mesh>
+      {/* Ободок светлого металла. */}
+      <mesh position={[0, 0, -PHONE_D / 2 + 0.01]}>
+        <extrudeGeometry
+          args={[rim, { depth: PHONE_D * 0.7, bevelEnabled: false, curveSegments: 16 }]}
+        />
+        <meshStandardMaterial color="#b9bcc1" roughness={0.25} metalness={0.9} />
+      </mesh>
+      <PhoneScreen onUse={onUse} on={on} z={front} />
+      {/* Щель динамика. */}
+      <mesh position={[0, 0.78, front]}>
+        <planeGeometry args={[0.2, 0.028]} />
+        <meshStandardMaterial color="#2c2d31" roughness={0.6} />
+      </mesh>
+      {/* Кнопка «домой». */}
+      <group position={[0, -0.79, front]} ref={on ? home.anchor : undefined}>
+        <mesh rotation={[Math.PI / 2, 0, 0]} {...(on ? home.handlers : {})}>
+          <cylinderGeometry args={[0.085, 0.085, 0.006, 32]} />
+          <meshStandardMaterial
+            color={on && home.hover ? '#2a2b30' : '#141416'}
+            roughness={0.3}
+            metalness={0.4}
+          />
         </mesh>
-        <PhoneScreen onUse={onUse} />
-        <Tag text={tag} at={[0.85, -0.9, 0.07]} />
+        <mesh position={[0, 0, 0.004]}>
+          <circleGeometry args={[0.08, 32]} />
+          <meshBasicMaterial map={ring} toneMapped={false} />
+        </mesh>
       </group>
-    );
+      <Tag text={tag} at={[0.85, -0.9, 0.08]} />
+    </group>
+  );
+}
+
+export function Device({
+  id,
+  tag,
+  onUse,
+  focused = false,
+}: {
+  id: string;
+  tag: string;
+  onUse: () => void;
+  /** Вплотную к экрану (ноутбук, телефон — WM-B). */
+  focused?: boolean;
+}) {
+  if (id === '47') return <Laptop tag={tag} onUse={onUse} on={focused} />;
+  if (id === '48') return <Phone tag={tag} onUse={onUse} on={focused} />;
   if (id === '49')
     return (
       <group>

@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 import { type Group, type Object3D, PerspectiveCamera, Quaternion, Vector3 } from 'three';
+import { useFreeArea } from '../device/deviceView.tsx';
 import { reducedMotion } from '../motion.ts';
 import { clampPitch, orient } from './orient.ts';
 import { zoomStep } from './zoom.ts';
@@ -32,12 +33,19 @@ export type HoldMode = 'free' | 'flip';
  */
 export interface Focus {
   name: string;
-  x: number;
-  y: number;
-  z: number;
-  w: number;
-  h: number;
+  x?: number;
+  y?: number;
+  z?: number;
+  w?: number;
+  h?: number;
   lift?: number;
+  /**
+   * Рамка — по живому экрану (useScreenAnchor), а не по числам: камера подъезжает к экрану, пока
+   * вещь разворачивается (телефон, ноутбук — WM-B).
+   */
+  track?: boolean;
+  /** Какую долю кадра занять по ширине и высоте (по умолчанию 0,9 и 0,62). */
+  fill?: [number, number];
 }
 
 /** Что творит мышь — общее для DOM-обёртки и сцены. */
@@ -188,6 +196,7 @@ function Rig({
   onSide,
   buttons,
   focus,
+  area,
   screen,
   screenW,
   children,
@@ -195,6 +204,7 @@ function Rig({
   gesture: RefObject<Gesture>;
   mode: HoldMode;
   focus: Focus | null;
+  area: RefObject<{ center: number; width: number }>;
   screen: RefObject<HTMLDivElement | null>;
   /** Ширина разметки экрана в её px (масштаб — по проекции). */
   screenW: number;
@@ -243,9 +253,29 @@ function Rig({
       yaw.current = Math.round(yaw.current / (2 * Math.PI)) * 2 * Math.PI;
       pitch.current = 0;
       const tan = Math.tan((30 * Math.PI) / 360);
-      const aspect = size.width / Math.max(1, size.height);
-      const d = Math.max(focus.w / (0.9 * 2 * tan * aspect), focus.h / (0.62 * 2 * tan));
-      camTarget.current.set(focus.x, focus.y - (focus.lift ?? 0) * 2 * d * tan, focus.z + d);
+      let { x = 0, y = 0, z = 0, w = 1, h = 1 } = focus;
+      const a = screenNow;
+      if (focus.track && a) {
+        const c = a.obj.getWorldPosition(new Vector3());
+        const tl = a.obj.localToWorld(new Vector3(-a.w / 2, a.h / 2, 0));
+        const br = a.obj.localToWorld(new Vector3(a.w / 2, -a.h / 2, 0));
+        x = c.x;
+        y = c.y;
+        z = c.z;
+        w = Math.abs(br.x - tl.x);
+        h = Math.abs(tl.y - br.y);
+      }
+      // Свободное место между папкой запроса и блокнотом (они лежат сверху).
+      const free = area.current;
+      const aspect = free.width / Math.max(1, size.height);
+      const [fw, fh] = focus.fill ?? [0.9, 0.62];
+      const d = Math.max(w / (fw * 2 * tan * aspect), h / (fh * 2 * tan));
+      const perPx = (2 * d * tan) / Math.max(1, size.height);
+      camTarget.current.set(
+        x - (free.center - size.width / 2) * perPx,
+        y - (focus.lift ?? 0) * 2 * d * tan,
+        z + d,
+      );
     }
     if (g.part) {
       g.dx = 0;
@@ -351,6 +381,8 @@ export interface Held3DProps {
   /** Разметка живого экрана (useScreenAnchor) и её ширина в px. */
   screen?: ReactNode;
   screenW?: number;
+  /** Правая кнопка на экране — его (меню файла на ноутбуке), а не «отойти». */
+  screenMenu?: boolean;
   /** Что ещё лежит поверх сцены вплотную (лист описания). */
   extra?: ReactNode;
   children: ReactNode;
@@ -367,10 +399,14 @@ export default function Held3D({
   onUnfocus,
   screen,
   screenW = 1000,
+  screenMenu = false,
   extra,
   children,
 }: Held3DProps) {
   const screenEl = useRef<HTMLDivElement>(null);
+  const free = useFreeArea();
+  const area = useRef(free);
+  area.current = free;
   const gesture = useRef<Gesture>({
     dx: 0,
     dy: 0,
@@ -499,7 +535,9 @@ export default function Held3D({
       <Canvas
         camera={{ position: [0, 0, CAM_Z], fov: 30 }}
         dpr={[1, 2]}
-        onPointerMissed={() => {
+        onPointerMissed={(e) => {
+          // Только щелчок левой: правая — «как было» или «отойти» (её «мимо» — не «положить»).
+          if (e.type !== 'click') return;
           if (gesture.current.moved < CLICK_PX) onClose();
         }}
       >
@@ -512,6 +550,7 @@ export default function Held3D({
           half={half}
           buttons={buttons}
           focus={focus}
+          area={area}
           screen={screenEl}
           screenW={screenW}
           onSide={(back) => {
@@ -528,7 +567,7 @@ export default function Held3D({
           style={{ width: screenW }}
           // Экран — интерфейс: щелчок по нему не «мимо»; правая кнопка — отойти (как везде вплотную).
           onPointerDown={(e) => {
-            if (e.button !== 2) e.stopPropagation();
+            if (e.button !== 2 || screenMenu) e.stopPropagation();
           }}
           onWheel={(e) => e.stopPropagation()}
         >

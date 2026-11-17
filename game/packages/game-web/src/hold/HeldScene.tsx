@@ -1,6 +1,8 @@
 import { CONTAINERS, type ContainerId, containerContents, folderItemId } from '@bunker/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
+import { LAPTOP_PX, LaptopLive } from '../laptop/LaptopView.tsx';
+import { PHONE_PX, PhoneLive } from '../phone/PhoneView.tsx';
 import { RadioSheet, RecorderLcd } from '../radio/RecorderParts.tsx';
 import { stopRecorder, useRecorder } from '../radio/recorder.ts';
 import { type Held, useGame } from '../store.ts';
@@ -16,7 +18,7 @@ import {
   remaining,
   sheetPages,
 } from '../viewer/bundles.ts';
-import Held3D, { afterLeaving } from './Held3D.tsx';
+import Held3D, { afterLeaving, type Focus } from './Held3D.tsx';
 import { Folder, PaperStack, PapersBox } from './papers.tsx';
 import { RADIO_FOCUS, type RadioPart, RadioStand, SCREEN_PX } from './radioStand.tsx';
 import { Box, Device, Envelope } from './shapes.tsx';
@@ -60,6 +62,7 @@ export default function HeldThing({ held }: { held: Held }) {
   if (held.id === '50') return <RadioHeld title={titles.get('50') ?? '50'} close={close} />;
 
   const title = titles.get(held.id) ?? held.id;
+  if (held.id === '47' || held.id === '48') return <ScreenDevice id={held.id} title={title} />;
   return (
     <Held3D mode="free" half={[1.6, 1.2]} label={title} onClose={close}>
       <Device
@@ -67,15 +70,6 @@ export default function HeldThing({ held }: { held: Held }) {
         tag={`Изъято · ${held.id}`}
         onUse={() =>
           afterLeaving(() => {
-            // Ноутбук — живым экраном (4c-1, SCR-C); прочие устройства — пока листом (4c-2…).
-            if (held.id === '47') {
-              useGame.getState().openLaptop();
-              return;
-            }
-            if (held.id === '48') {
-              useGame.getState().openPhone();
-              return;
-            }
             // Ручка-диктофон — назад, play, вперёд (4d-2).
             if (held.id === '49') {
               useGame.getState().openPen();
@@ -255,6 +249,41 @@ function Papers() {
     </Held3D>
   );
 }
+
+/**
+ * Ноутбук (47) и телефон (48) — работа прямо на модели (WM-B, автор 17.11): щелчок по экрану —
+ * вещь встаёт экраном к игроку, камера подъезжает, экран живой (разметка на плоскости экрана).
+ * Esc, щелчок мимо или правая кнопка мимо экрана — снова вещь в руках.
+ */
+function ScreenDevice({ id, title }: { id: '47' | '48'; title: string }) {
+  const laptop = id === '47';
+  const on = useGame((g) => (laptop ? !!g.laptop : !!g.phone));
+  const g = useGame.getState;
+  return (
+    <Held3D
+      mode="free"
+      half={[1.6, 1.2]}
+      label={title}
+      onClose={() => g().hold(null)}
+      focus={on ? (laptop ? LAPTOP_FOCUS : PHONE_FOCUS) : null}
+      onUnfocus={() => (laptop ? g().closeLaptop() : g().closePhone())}
+      screen={on ? laptop ? <LaptopLive /> : <PhoneLive /> : null}
+      screenW={laptop ? LAPTOP_PX[0] : PHONE_PX[0]}
+      screenMenu
+    >
+      <Device
+        id={id}
+        tag={`Изъято · ${id}`}
+        focused={on}
+        onUse={() => (laptop ? g().openLaptop() : g().openPhone())}
+      />
+    </Held3D>
+  );
+}
+/** Ноутбук: экран почти во весь кадр. */
+const LAPTOP_FOCUS: Focus = { name: 'laptop', track: true, fill: [0.95, 0.92] };
+/** Телефон: виден целиком, с кнопкой «домой» (экран — 1,2 из 1,9 высоты корпуса). */
+const PHONE_FOCUS: Focus = { name: 'phone', track: true, fill: [0.9, (1.2 / 1.9) * 0.92] };
 
 /**
  * Стойка радиопоста (50, A-267) — работа прямо на модели (автор 12.11): щелчок по регистратору

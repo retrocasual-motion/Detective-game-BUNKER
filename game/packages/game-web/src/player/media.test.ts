@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { parseMedia, rowAt } from './media.ts';
+import { EMBEDDED_MEDIA, parseMedia, rowAt, splitEmbedded } from './media.ts';
 
 const pack = '../../../playtest/packs/v3.3-2026-10-29';
 const read = (dir: string, id: string) => {
@@ -45,5 +45,21 @@ describe('записи дела для плеера', () => {
     if (c?.kind !== 'timed') throw new Error('не по времени');
     expect(c.dur).toBe(36);
     expect(rowAt(c.rows, 0)?.cells[0]).toBe('голос 1');
+  });
+});
+
+describe('запись внутри страницы', () => {
+  it('L163: фильм в «Архив и медиа» — 0:24 по строкам; страница до и после — как есть', () => {
+    const body = read('locked', 'L163');
+    const heading = EMBEDDED_MEDIA.L163 ?? '';
+    const parts = splitEmbedded(body, heading);
+    expect(parts?.before).toContain('## Руководство');
+    expect(parts?.after).toContain('## Контакты');
+    const m = parseMedia(parts?.section ?? '');
+    expect(m?.kind).toBe('timed');
+    if (m?.kind !== 'timed') return;
+    expect(m.dur).toBe(24);
+    expect(m.head).toEqual(['Кадр', 'Звук']);
+    expect(rowAt(m.rows, 10)?.cells[0]).toContain('Р. Хейл');
   });
 });

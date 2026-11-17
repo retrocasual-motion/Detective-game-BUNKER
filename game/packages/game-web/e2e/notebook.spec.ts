@@ -129,7 +129,7 @@ test('поверх ноутбука: цифры и Enter в блокноте н�
   page,
 }) => {
   await laptopUp(page);
-  const frame = page.locator('.laptop-frame');
+  const frame = page.locator('.held-screen');
   const before = await frame.boundingBox();
   await page.getByTestId('notebook-tab').click();
   await expect(text(page)).toBeVisible();
@@ -178,7 +178,7 @@ test('папка запроса — поверх ноутбука: карточ�
   await expect(card).toContainText('Ноутбук · Доклад_Р.txt');
   await expect(card).not.toContainText('L563');
   expect(await isOnTop(page, 'petition-card')).toBe(true);
-  const frame = await page.locator('.laptop-frame').boundingBox();
+  const frame = await page.locator('.held-screen').boundingBox();
   const folder = await page.getByTestId('petition-folder').boundingBox();
   if (!frame || !folder) throw new Error('нет рамки');
   expect(frame.x).toBeGreaterThanOrEqual(folder.x + folder.width - 1);
