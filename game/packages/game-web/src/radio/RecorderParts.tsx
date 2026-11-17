@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
+import { useInputMode, wheelIntent } from '../input.ts';
 import { useGame } from '../store.ts';
 import { clock, ticksFor } from './record.ts';
 import { captionNow, useRecorder } from './recorder.ts';
@@ -17,6 +18,7 @@ import './radio.css';
 export const SCREEN_PX_H = 280;
 
 export function RecorderLcd() {
+  const trackpad = useInputMode() === 'trackpad';
   const pos = useRecorder((r) => r.pos);
   const playing = useRecorder((r) => r.playing);
   const view = useRecorder((r) => r.view);
@@ -35,7 +37,16 @@ export function RecorderLcd() {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const r = el.getBoundingClientRect();
-      rec().zoom(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), e.deltaY);
+      // Тачпад (TP-C): два пальца — сдвинуть шкалу по времени, щипок — крупнее / мельче.
+      const intent = wheelIntent(e);
+      if ('pan' in intent) {
+        const { view } = useRecorder.getState();
+        const d = intent.pan[0] || intent.pan[1];
+        const dt = (d / r.width) * (view.to - view.from);
+        rec().setView({ from: view.from + dt, to: view.to + dt });
+        return;
+      }
+      rec().zoom(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), intent.zoom);
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
@@ -146,7 +157,9 @@ export function RecorderLcd() {
         {inView && <span className="rl2-head" style={{ left: x(pos) }} />}
       </div>
       <div className="rl2-hint">
-        колесо — крупнее / мельче · зажать и тянуть — сдвиг · двойной щелчок — весь отрезок
+        {trackpad
+          ? 'щипок — крупнее / мельче · два пальца или зажать и тянуть — сдвиг · двойной щелчок — весь отрезок'
+          : 'колесо — крупнее / мельче · зажать и тянуть — сдвиг · двойной щелчок — весь отрезок'}
       </div>
     </div>
   );

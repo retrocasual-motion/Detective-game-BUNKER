@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { postAction } from '../api.ts';
+import { zoomFactor } from '../input.ts';
 import { useGame } from '../store.ts';
 import {
   captionAt,
@@ -46,7 +47,8 @@ interface Recorder {
   prevSound(): void;
   nextSound(): void;
   setView(v: View): void;
-  zoom(k: number, deltaY: number): void;
+  /** `zoom` — сила прокрутки в пикселях (> 0 — мельче). */
+  zoom(k: number, zoom: number): void;
   setLabeling(s: string | null): void;
   saveMark(): void;
   removeMark(m: Mark): void;
@@ -170,11 +172,11 @@ export const useRecorder = create<Recorder>((set, get) => {
     setView(v) {
       set({ view: clampView(get().win, v.from, v.to) });
     },
-    zoom(k, deltaY) {
+    zoom(k, zoom) {
       const { view, win } = get();
       const len = view.to - view.from;
       const at = view.from + k * len;
-      const next = len * (deltaY > 0 ? 1.4 : 1 / 1.4);
+      const next = len / zoomFactor(zoom, 1.4);
       set({ view: clampView(win, at - k * next, at + (1 - k) * next) });
     },
     setLabeling(s) {

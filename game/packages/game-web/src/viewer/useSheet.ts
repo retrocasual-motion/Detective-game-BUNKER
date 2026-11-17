@@ -1,5 +1,6 @@
 import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
+import { zoomFactor } from '../input.ts';
 import { reducedMotion } from '../motion.ts';
 import { useGame } from '../store.ts';
 
@@ -152,12 +153,13 @@ export function useSheet(
 
   /** Где приближают — крупный план того, что под курсором (4b-2a). */
   const zoomPoint = useRef<{ x: number; y: number } | null>(null);
-  const onWheel = (clientX: number, clientY: number, deltaY: number) => {
+  /** `zoom` — сила прокрутки в пикселях (> 0 — отдалить): приближение плавное (TP-C). */
+  const onWheel = (clientX: number, clientY: number, zoom: number) => {
     const el = refs.zoom.current;
     if (!el) return;
     zoomPoint.current = { x: clientX, y: clientY };
     setZoom((z) => {
-      const s2 = Math.max(1, Math.min(ZOOM_MAX, z.s * (deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP)));
+      const s2 = Math.max(1, Math.min(ZOOM_MAX, z.s * zoomFactor(zoom, ZOOM_STEP)));
       if (s2 === 1) return { s: 1, tx: 0, ty: 0 };
       const r = el.getBoundingClientRect();
       // Точка под курсором остаётся под курсором (масштаб от левого верхнего угла листа).

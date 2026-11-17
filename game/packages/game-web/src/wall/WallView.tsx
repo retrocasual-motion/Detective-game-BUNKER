@@ -26,6 +26,7 @@ import { createPortal } from 'react-dom';
 import { Canvas, type Marquee } from '../canvas/Canvas.tsx';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
+import { useInputMode } from '../input.ts';
 import { reducedMotion } from '../motion.ts';
 import { wholeCard } from '../petition/drafts.ts';
 import { overFolder, petitionFieldAt } from '../petition/fieldAt.ts';
@@ -158,6 +159,7 @@ const JOIN_PAUSE_MS = 450;
 
 export function WallView() {
   const wall = useGame((g) => g.state?.wall);
+  const trackpad = useInputMode() === 'trackpad';
   // Со стола доска видна целиком (правка автора 09.11); у стены — камера игрока.
   const atDesk = useGame((g) => g.state?.view === 'desk');
   const vp = useViewport();
@@ -794,7 +796,9 @@ export function WallView() {
       {/* Чистые карточки — стопкой у края доски: взять записку или ярлык. */}
       <div className="wall-blanks">
         <span className="wall-hint" data-testid="wall-hint">
-          Правая кнопка — выделить несколько
+          {trackpad
+            ? 'Shift + протяжка — выделить несколько'
+            : 'Правая кнопка — выделить несколько'}
         </span>
         <button
           type="button"

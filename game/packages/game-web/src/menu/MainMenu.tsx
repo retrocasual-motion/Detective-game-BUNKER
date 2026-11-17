@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { newCase } from '../api.ts';
+import { type InputMode, setInputMode, useInputMode } from '../input.ts';
 import { reducedMotion, setReducedMotion } from '../motion.ts';
 import { useGame } from '../store.ts';
 import { useVerdict } from '../verdict/verdict-store.ts';
@@ -19,6 +20,7 @@ export function MainMenu() {
   const [calm, setCalm] = useState(reducedMotion);
   const [busy, setBusy] = useState(false);
   const email = useEmail();
+  const input = useInputMode();
   const channel = useAccount((a) => (a.me?.auth === 'link' && a.me.email ? a.me.channel : null));
   if (screen !== 'menu') return null;
 
@@ -106,6 +108,26 @@ export function MainMenu() {
               />
               Уменьшить движение (без полёта камеры и наклона листов)
             </label>
+            <fieldset className="main-menu-group" data-testid="menu-input">
+              Управление:
+              {(
+                [
+                  ['mouse', 'мышь — колесо приближает, зажатое колесо сдвигает'],
+                  ['trackpad', 'тачпад — щипок приближает, два пальца сдвигают'],
+                ] as [InputMode, string][]
+              ).map(([mode, label]) => (
+                <label key={mode} className="main-menu-check">
+                  <input
+                    type="radio"
+                    name="input-mode"
+                    data-testid={`menu-input-${mode}`}
+                    checked={input === mode}
+                    onChange={() => setInputMode(mode)}
+                  />
+                  {label}
+                </label>
+              ))}
+            </fieldset>
             {channel && (
               <fieldset className="main-menu-group" data-testid="menu-mail">
                 Ответы на запросы приходят:
