@@ -24,6 +24,22 @@ import { zoomStep } from './zoom.ts';
 
 export type HoldMode = 'free' | 'flip';
 
+/**
+ * Работа с частью вещи вплотную (стойка радиопоста, автор 12.11): вещь встаёт лицом, камера
+ * подъезжает к этой части, вращение и приближение колесом выключены. Мировые координаты части
+ * лицом к камере: центр, ширина, высота, z — где её лицевая плоскость; lift — насколько поднять её
+ * над серединой (доля кадра), чтобы снизу осталось место для листа описания.
+ */
+export interface Focus {
+  name: string;
+  x: number;
+  y: number;
+  z: number;
+  w: number;
+  h: number;
+  lift?: number;
+}
+
 /** Что творит мышь — общее для DOM-обёртки и сцены. */
 interface Gesture {
   /** Сдвиг с прошлого кадра, px. */
@@ -66,6 +82,23 @@ export function setPartCursor(cursor: string) {
   if (wrapNow) wrapNow.style.cursor = cursor;
 }
 let leaveNow: ((then: () => void) => void) | null = null;
+
+/**
+ * Живой экран на вещи (регистратор): обычная разметка страницы «приклеена» к плоскости экрана —
+ * каждый кадр она ставится и масштабируется по проекции плоскости. w, h — размер плоскости в её
+ * координатах.
+ */
+let screenNow: { obj: Object3D; w: number; h: number } | null = null;
+export function useScreenAnchor(ref: RefObject<Object3D | null>, w: number, h: number) {
+  useEffect(() => {
+    const obj = ref.current;
+    if (!obj) return;
+    screenNow = { obj, w, h };
+    return () => {
+      if (screenNow?.obj === obj) screenNow = null;
+    };
+  });
+}
 
 /** Щелчок по части вещи — только если мышь почти не двигалась (иначе вещь вращали). */
 export function onClickPart(fn: () => void) {
@@ -154,10 +187,17 @@ function Rig({
   half,
   onSide,
   buttons,
+  focus,
+  screen,
+  screenW,
   children,
 }: {
   gesture: RefObject<Gesture>;
   mode: HoldMode;
+  focus: Focus | null;
+  screen: RefObject<HTMLDivElement | null>;
+  /** Ширина разметки экрана в её px (масштаб — по проекции). */
+  screenW: number;
   /** Половина размера вещи — дальше камеру не уводим. */
   half: [number, number];
   onSide: (back: boolean) => void;
@@ -186,8 +226,27 @@ function Rig({
     camTarget.current.copy(next);
   };
 
+  const wasFocused = useRef(false);
   useFrame((_, dt) => {
     const g = gesture.current;
+    // Отошли от части — камера обратно, вещь снова в руках целиком.
+    if (!focus && wasFocused.current) camTarget.current.set(0, 0, CAM_Z);
+    wasFocused.current = !!focus;
+    if (focus) {
+      // Вплотную: вещь лицом, камера у части; мышь крутит ручки, а не вещь.
+      g.dx = 0;
+      g.dy = 0;
+      g.panX = 0;
+      g.panY = 0;
+      g.wheel.length = 0;
+      g.reset = false;
+      yaw.current = Math.round(yaw.current / (2 * Math.PI)) * 2 * Math.PI;
+      pitch.current = 0;
+      const tan = Math.tan((30 * Math.PI) / 360);
+      const aspect = size.width / Math.max(1, size.height);
+      const d = Math.max(focus.w / (0.9 * 2 * tan * aspect), focus.h / (0.62 * 2 * tan));
+      camTarget.current.set(focus.x, focus.y - (focus.lift ?? 0) * 2 * d * tan, focus.z + d);
+    }
     if (g.part) {
       g.dx = 0;
       g.dy = 0;
@@ -238,6 +297,28 @@ function Rig({
         onSide(back);
       }
     }
+    // Живой экран — по проекции плоскости, когда она встала лицом к камере.
+    const el = screen.current;
+    if (el) {
+      const a = screenNow;
+      let shown = false;
+      if (focus && a) {
+        const q = a.obj.getWorldQuaternion(new Quaternion());
+        const n = new Vector3(0, 0, 1).applyQuaternion(q);
+        if (n.z > 0.999) {
+          const tl = a.obj.localToWorld(new Vector3(-a.w / 2, a.h / 2, 0)).project(camera);
+          const br = a.obj.localToWorld(new Vector3(a.w / 2, -a.h / 2, 0)).project(camera);
+          const left = ((tl.x + 1) / 2) * size.width;
+          const right = ((br.x + 1) / 2) * size.width;
+          const top = ((1 - tl.y) / 2) * size.height;
+          el.style.left = `${left}px`;
+          el.style.top = `${top}px`;
+          el.style.transform = `scale(${(right - left) / screenW})`;
+          shown = true;
+        }
+      }
+      el.style.visibility = shown ? 'visible' : 'hidden';
+    }
     // Кнопки активных частей — за частями; у отвёрнутой от камеры части кнопки нет.
     for (const s of spots.values()) {
       const b = buttons.current.get(s.id);
@@ -264,6 +345,14 @@ export interface Held3DProps {
   /** Подпись внизу (лист пачки «18 из 41»). */
   caption?: string;
   onClose: () => void;
+  /** Работа с частью вещи вплотную; Esc, щелчок мимо или ✕ — onUnfocus (снова вещь в руках). */
+  focus?: Focus | null;
+  onUnfocus?: () => void;
+  /** Разметка живого экрана (useScreenAnchor) и её ширина в px. */
+  screen?: ReactNode;
+  screenW?: number;
+  /** Что ещё лежит поверх сцены вплотную (лист описания). */
+  extra?: ReactNode;
   children: ReactNode;
 }
 
@@ -274,8 +363,14 @@ export default function Held3D({
   label,
   caption,
   onClose: close,
+  focus = null,
+  onUnfocus,
+  screen,
+  screenW = 1000,
+  extra,
   children,
 }: Held3DProps) {
+  const screenEl = useRef<HTMLDivElement>(null);
   const gesture = useRef<Gesture>({
     dx: 0,
     dy: 0,
@@ -306,6 +401,10 @@ export default function Held3D({
   leaveNow = leave;
   wrapNow = wrap.current;
   const onClose = () => {
+    if (focus && onUnfocus) {
+      onUnfocus();
+      return;
+    }
     if (!leaving) leave(close);
   };
   const closeNow = useRef(onClose);
@@ -313,7 +412,10 @@ export default function Held3D({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeNow.current();
+      if (e.key !== 'Escape') return;
+      // В поле ввода (подпись метки) Esc — его, не вещи.
+      if ((e.target as HTMLElement | null)?.closest?.('input, textarea')) return;
+      closeNow.current();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -322,10 +424,12 @@ export default function Held3D({
   // Протяжку ведём по окну: кнопка может уйти за край вещи и даже экрана.
   const onPointerDown = (e: ReactPointerEvent) => {
     const g = gesture.current;
-    // Правая кнопка — вернуть как было (правка автора 10.11; прежде — средняя).
+    // Правая кнопка — вернуть как было (правка автора 10.11; прежде — средняя); вплотную —
+    // отойти: снова вещь в руках (правка автора 17.11).
     if (e.button === 2) {
       e.preventDefault();
-      g.reset = true;
+      if (focus && onUnfocus) onUnfocus();
+      else g.reset = true;
       return;
     }
     // Зажатое колесо — сдвинуть вещь (правка автора 10.11).
@@ -374,6 +478,7 @@ export default function Held3D({
       className="held"
       data-testid="held"
       data-side="front"
+      data-focus={focus?.name ?? ''}
       aria-label={label}
       onPointerDown={onPointerDown}
       onWheel={(e) => {
@@ -406,6 +511,9 @@ export default function Held3D({
           mode={mode}
           half={half}
           buttons={buttons}
+          focus={focus}
+          screen={screenEl}
+          screenW={screenW}
           onSide={(back) => {
             if (wrap.current) wrap.current.dataset.side = back ? 'back' : 'front';
           }}
@@ -413,6 +521,20 @@ export default function Held3D({
           {leaving ? null : children}
         </Rig>
       </Canvas>
+      {screen && (
+        <div
+          ref={screenEl}
+          className="held-screen"
+          style={{ width: screenW }}
+          // Экран — интерфейс: щелчок по нему не «мимо»; правая кнопка — отойти (как везде вплотную).
+          onPointerDown={(e) => {
+            if (e.button !== 2) e.stopPropagation();
+          }}
+          onWheel={(e) => e.stopPropagation()}
+        >
+          {screen}
+        </div>
+      )}
       {list.map((s) => (
         <button
           key={s.id}
@@ -434,11 +556,12 @@ export default function Held3D({
           {caption}
         </p>
       )}
+      {focus && extra}
       <button
         type="button"
         className="tool tool-close held-close"
-        aria-label="Положить"
-        title="Положить (Esc)"
+        aria-label={focus ? 'Отойти' : 'Положить'}
+        title={focus ? 'Отойти (Esc)' : 'Положить (Esc)'}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={onClose}
       >

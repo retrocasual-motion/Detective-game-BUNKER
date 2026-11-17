@@ -2,8 +2,10 @@ import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures.ts';
 
 /**
- * Регистратор радиопоста (этап 4d-1; решения автора 12.11 — PL-A, ST-A, NV-A с правками, PM-A,
- * K8): отрезок с тревоги, полосы звука, масштаб и сдвиг шкалы, «звук ⏮ / ⏭» по видимым полосам.
+ * Стойка радиопоста (этап 4d-1; решения автора 12.11 — PL-A, ST-A, NV-A с правками, PM-A, K8,
+ * A-267, «работать прямо на модели»): щелчок по регистратору — вплотную; живой экран — отрезок с
+ * тревоги, полосы звука, масштаб и сдвиг шкалы; клавиши на корпусе — «звук ⏮ / ⏭» по видимым
+ * полосам; приёмник — ручка со стрелкой и переключатель.
  */
 
 /** Секунды записи для времени регистратора: запись началась 12.10 21:43:12. */
@@ -14,7 +16,8 @@ async function radioUp(page: Page) {
   await page.getByTestId('device-50').click();
   await expect(page.getByTestId('held')).toBeVisible();
   await page.getByTestId('device-use').click();
-  await expect(page.getByTestId('radio-view')).toBeVisible();
+  await expect(page.getByTestId('held')).toHaveAttribute('data-focus', 'recorder');
+  await expect(page.getByTestId('radio-strip')).toBeVisible();
 }
 
 const range = async (page: Page) => {
@@ -113,9 +116,96 @@ test('пуск идёт по записи; метка сохраняется; с
   await expect(page.getByTestId('radio-photo-text')).toContainText('приёмник');
   await page.waitForTimeout(700);
   await page.keyboard.press('Escape');
-  await expect(page.getByTestId('radio-view')).toHaveCount(0);
-  await expect(page.getByTestId('held')).toBeVisible();
+  await expect(page.getByTestId('held')).toHaveAttribute('data-focus', '');
+  await expect(page.getByTestId('radio-strip')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('held')).toHaveCount(0);
   await page.reload();
   await radioUp(page);
   await expect(page.getByTestId('radio-mark-0')).toContainText('шаги?');
+});
+
+test('приёмник вплотную: ручка ведёт стрелку, переключатель щёлкается; отложили — как при изъятии', async ({
+  page,
+}) => {
+  await page.getByTestId('device-50').click();
+  await page.getByTestId('radio-receiver').click();
+  const held = page.getByTestId('held');
+  await expect(held).toHaveAttribute('data-focus', 'receiver');
+  const hint = page.getByTestId('radio-receiver-hint');
+  await expect(hint).toHaveAttribute('data-needle', '0.380');
+  await expect(hint).toHaveAttribute('data-mode', 'ПОИСК');
+  // Ручка: с клавиатуры — стрелки, мышью — щелчок по краю (кнопка поверх ручки — для клавиатуры).
+  await page.keyboard.press('ArrowRight');
+  await expect(hint).toHaveAttribute('data-needle', '0.384');
+  await page.getByTestId('radio-knob').dispatchEvent('click');
+  await expect(hint).toHaveAttribute('data-needle', '0.394');
+  // Колесо над ручкой — тоже поворот.
+  const knob = await page.getByTestId('radio-knob').boundingBox();
+  if (!knob) throw new Error('нет ручки');
+  await page.mouse.move(knob.x + knob.width / 2, knob.y + knob.height / 2);
+  await page.mouse.wheel(0, -100);
+  await expect(hint).toHaveAttribute('data-needle', '0.404');
+  await page.getByTestId('radio-switch').dispatchEvent('click');
+  await expect(hint).toHaveAttribute('data-mode', 'РУЧН.');
+  // Esc — снова стойка в руках; оттуда — к регистратору.
+  await page.keyboard.press('Escape');
+  await expect(held).toHaveAttribute('data-focus', '');
+  await page.getByTestId('device-use').click();
+  await expect(held).toHaveAttribute('data-focus', 'recorder');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await expect(held).toHaveCount(0);
+  await page.getByTestId('device-50').click();
+  await page.getByTestId('radio-receiver').click();
+  await expect(hint).toHaveAttribute('data-needle', '0.380');
+  await expect(hint).toHaveAttribute('data-mode', 'ПОИСК');
+});
+
+test('щелчок мимо стойки вплотную — снова стойка в руках, не положить', async ({ page }) => {
+  await radioUp(page);
+  await page.mouse.click(30, 300);
+  await expect(page.getByTestId('held')).toHaveAttribute('data-focus', '');
+  await expect(page.getByTestId('held')).toBeVisible();
+});
+
+test('вплотную: щелчок по панели регистратора — на месте; по стойке ниже или правой кнопкой — снова в руках', async ({
+  page,
+}) => {
+  const held = page.getByTestId('held');
+  await radioUp(page);
+  const play = await page.getByTestId('radio-play').boundingBox();
+  if (!play) throw new Error('нет клавиши');
+  // Серая панель регистратора между клавишами и «меткой» — камера остаётся.
+  await page.mouse.click(play.x + play.width / 2 - 80, play.y + play.height / 2 + 65);
+  await expect(held).toHaveAttribute('data-focus', 'recorder');
+  // Блок питания под регистратором — мимо панели: назад.
+  await page.mouse.click(100, 500);
+  await expect(held).toHaveAttribute('data-focus', '');
+  await page.getByTestId('device-use').click();
+  await expect(held).toHaveAttribute('data-focus', 'recorder');
+  // Правая кнопка — назад, даже поверх экрана.
+  await page.mouse.click(683, 300, { button: 'right' });
+  await expect(held).toHaveAttribute('data-focus', '');
+  await expect(held).toBeVisible();
+});
+
+test('переключатель: щелчок по кружку — в другое положение, зажать и потянуть вбок — туда', async ({
+  page,
+}) => {
+  await page.getByTestId('device-50').click();
+  await page.getByTestId('radio-receiver').click();
+  const hint = page.getByTestId('radio-receiver-hint');
+  const sw = await page.getByTestId('radio-switch').boundingBox();
+  if (!sw) throw new Error('нет переключателя');
+  const cx = sw.x + sw.width / 2;
+  const cy = sw.y + sw.height / 2;
+  await page.mouse.click(cx, cy);
+  await expect(hint).toHaveAttribute('data-mode', 'РУЧН.');
+  await page.mouse.move(cx - 20, cy);
+  await page.mouse.down();
+  await page.mouse.move(cx + 30, cy, { steps: 5 });
+  await page.mouse.up();
+  await expect(hint).toHaveAttribute('data-mode', 'ПОИСК');
+  await expect(page.getByTestId('held')).toHaveAttribute('data-focus', 'receiver');
 });

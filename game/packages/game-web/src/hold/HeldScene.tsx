@@ -1,6 +1,8 @@
 import { CONTAINERS, type ContainerId, containerContents, folderItemId } from '@bunker/shared';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
+import { RadioSheet, RecorderLcd } from '../radio/RecorderParts.tsx';
+import { stopRecorder, useRecorder } from '../radio/recorder.ts';
 import { type Held, useGame } from '../store.ts';
 import {
   type Bundle,
@@ -16,6 +18,7 @@ import {
 } from '../viewer/bundles.ts';
 import Held3D, { afterLeaving } from './Held3D.tsx';
 import { Folder, PaperStack, PapersBox } from './papers.tsx';
+import { RADIO_FOCUS, type RadioPart, RadioStand, SCREEN_PX } from './radioStand.tsx';
 import { Box, Device, Envelope } from './shapes.tsx';
 
 /** Вещь в руках со сценой three.js — отдельный кусок сборки (грузится, когда вещь взяли). */
@@ -54,6 +57,7 @@ export default function HeldThing({ held }: { held: Held }) {
   }
 
   if (held.id === PAPERS_ID) return <Papers />;
+  if (held.id === '50') return <RadioHeld title={titles.get('50') ?? '50'} close={close} />;
 
   const title = titles.get(held.id) ?? held.id;
   return (
@@ -75,11 +79,6 @@ export default function HeldThing({ held }: { held: Held }) {
             // Ручка-диктофон — назад, play, вперёд (4d-2).
             if (held.id === '49') {
               useGame.getState().openPen();
-              return;
-            }
-            // Регистратор радиопоста — лицом к игроку (4d-1, ST-A).
-            if (held.id === '50') {
-              useGame.getState().openRadio();
               return;
             }
             close();
@@ -253,6 +252,50 @@ function Papers() {
         })}
         onPick={(b) => afterLeaving(() => take(b))}
       />
+    </Held3D>
+  );
+}
+
+/**
+ * Стойка радиопоста (50, A-267) — работа прямо на модели (автор 12.11): щелчок по регистратору
+ * или приёмнику — вплотную к нему; Esc или щелчок мимо — снова стойка в руках; ещё раз — положить.
+ */
+function RadioHeld({ title, close }: { title: string; close: () => void }) {
+  const [focus, setFocus] = useState<RadioPart | null>(null);
+  const unfocus = () => {
+    useRecorder.getState().setLabeling(null);
+    setFocus(null);
+  };
+  const body = useGame((g) => g.materials.find((m) => m.id === '50')?.body ?? '');
+  useEffect(() => {
+    useRecorder.getState().init(body);
+    return stopRecorder;
+  }, [body]);
+  // Стрелки клавиатуры у приёмника — ручка настройки (без мыши, DA-2).
+  useEffect(() => {
+    if (focus !== 'receiver') return;
+    const onKey = (e: KeyboardEvent) => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      useRecorder.getState().turnKnob(d * (e.shiftKey ? 0.02 : 0.004));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [focus]);
+  return (
+    <Held3D
+      mode="free"
+      half={[1.6, 1.2]}
+      label={title}
+      onClose={close}
+      focus={focus ? RADIO_FOCUS[focus] : null}
+      onUnfocus={unfocus}
+      screen={focus === 'recorder' ? <RecorderLcd /> : null}
+      screenW={SCREEN_PX}
+      extra={focus ? <RadioSheet part={focus} /> : null}
+    >
+      <RadioStand tag="Изъято · 50" focus={focus} onFocus={setFocus} onUnfocus={unfocus} />
     </Held3D>
   );
 }

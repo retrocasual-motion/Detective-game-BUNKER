@@ -12,7 +12,6 @@ import { PcView } from './pc/PcView.tsx';
 import { PetitionCorner } from './petition/PetitionCorner.tsx';
 import { PhoneView } from './phone/PhoneView.tsx';
 import { PenView } from './player/PenView.tsx';
-import { RadioView } from './radio/RadioView.tsx';
 import { RoomScene } from './room/RoomScene.tsx';
 import { KEY_DIR, NAV } from './room/views.ts';
 import { SearchPanel } from './search/SearchPanel.tsx';
@@ -92,7 +91,6 @@ export function App() {
       <PcView />
       <LaptopView />
       <PhoneView />
-      <RadioView />
       <PenView />
       <TrashView />
       <HeldView />

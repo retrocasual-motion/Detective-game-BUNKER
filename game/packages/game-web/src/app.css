@@ -2030,6 +2030,18 @@ button {
 .held-spot-passive {
   pointer-events: none;
 }
+/* Вплотную к части вещи — мышь крутит ручки, а не вещь. */
+.held:not([data-focus=""]),
+.held:not([data-focus=""]):active {
+  cursor: default;
+}
+/* Живой экран на вещи: разметка приклеена к плоскости экрана (Held3D, useScreenAnchor). */
+.held-screen {
+  position: absolute;
+  transform-origin: 0 0;
+  visibility: hidden;
+  cursor: default;
+}
 .held-spot:focus-visible {
   outline: 2px solid var(--color-accent);
 }

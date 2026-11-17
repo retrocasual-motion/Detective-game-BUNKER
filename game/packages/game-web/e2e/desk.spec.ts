@@ -29,12 +29,12 @@ test('щелчок по устройству — вещь в руках (эта�
   await expect(held).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(held).toBeHidden();
-  // С 4d радиопост — регистратор лицом к игроку; Esc — снова в руках.
+  // С 4d радиопост — работа прямо на модели: вплотную к регистратору; Esc — снова в руках.
   await page.getByTestId('device-50').click();
   await page.getByTestId('device-use').click();
-  await expect(page.getByTestId('radio-view')).toBeVisible();
+  await expect(held).toHaveAttribute('data-focus', 'recorder');
   await page.keyboard.press('Escape');
-  await expect(page.getByTestId('radio-view')).toHaveCount(0);
+  await expect(held).toHaveAttribute('data-focus', '');
   await expect(held).toBeVisible();
   await page.keyboard.press('Escape');
   // Карта камеры (24) пока — листом.
