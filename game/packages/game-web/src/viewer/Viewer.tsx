@@ -18,6 +18,7 @@ import { MediaPlayer } from '../player/MediaPlayer.tsx';
 import { EMBEDDED_MEDIA, MEDIA_IDS, splitEmbedded } from '../player/media.ts';
 import { clearFind, highlightFind } from '../search/highlight.ts';
 import { useGame } from '../store.ts';
+import { useToFolderLabel } from '../verdict/verdict-store.ts';
 import { isLetter, takeOutOfBin } from '../wall/wall-actions.ts';
 import { excerptBody, isBundleListing, rowTarget } from './bundles.ts';
 import { splitSection } from './pieces.ts';
@@ -58,6 +59,7 @@ export function Viewer({ materialId }: ViewerProps) {
   const person = PERSONS.find((p) => p.id === materialId);
   const close = useGame((g) => g.closeViewer);
   const folderOpen = useGame((g) => g.petitionOpen);
+  const wholeLabel = useToFolderLabel();
   const notebookOpen = useGame((g) => g.notebookOpen);
   // Поиск открыт — панель справа поверх затемнения, лист левее (SR-D).
   const searchOpen = useGame((g) => g.searchOpen);
@@ -99,6 +101,7 @@ export function Viewer({ materialId }: ViewerProps) {
   const [sel, setSel] = useState<{ text: string; x: number; y: number } | null>(null);
   const toAddress = usePetition((p) => p.field === 'to');
   const folderShown = useGame((g) => g.petitionOpen);
+  const toFolder = useToFolderLabel();
 
   // Выделение «для запроса» (SEL-C): щелчок отмечает строку целиком, протягивание — слова.
   const downAt = useRef<{ x: number; y: number } | null>(null);
@@ -449,7 +452,7 @@ export function Viewer({ materialId }: ViewerProps) {
               title="Материал целиком — карточкой в запрос (для фото, аудио, видео, писем)"
               onClick={() => usePetition.getState().addCard(wholeCard(material))}
             >
-              В запрос целиком
+              {wholeLabel} целиком
             </button>
           )}
           {petition && (
@@ -523,7 +526,7 @@ export function Viewer({ materialId }: ViewerProps) {
           onMouseDown={(e) => e.preventDefault()}
           onClick={toPetition}
         >
-          {folderShown && toAddress && emailIn(sel.text) ? 'В «Кому»' : 'В запрос'}
+          {folderShown && toAddress && emailIn(sel.text) ? 'В «Кому»' : toFolder}
         </button>
       )}
     </div>

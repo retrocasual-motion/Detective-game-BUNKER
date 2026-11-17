@@ -1,4 +1,4 @@
-import type { Card, Material, PlayerState } from '@bunker/shared';
+import type { Card, Material, PlayerState, VerdictAnswer, VerdictResult } from '@bunker/shared';
 
 async function check(res: Response): Promise<Response> {
   if (!res.ok) throw new Error(`${res.status} ${res.url}`);
@@ -46,7 +46,7 @@ export interface ActionResult {
 
 /** Действие игрока над материалом (этап 4b): осмотр — перевернуть, увеличить, листать. */
 export const postAction = async (
-  action: 'ОСМОТР' | 'ПАРОЛЬ' | 'АДРЕС',
+  action: 'ОСМОТР' | 'ПАРОЛЬ' | 'АДРЕС' | 'РЕШИТЬ',
   target: string,
   value: string,
 ): Promise<ActionResult> => {
@@ -103,3 +103,27 @@ export const postPetition = async (to: string, ask: Card, basis: Card): Promise<
 /** Письма в пути: через сколько мс каждое ляжет во «Входящие». */
 export const getPendingMail = async (): Promise<number[]> =>
   ((await (await check(await fetch('/api/mail/pending'))).json()) as { inMs: number[] }).inMs;
+
+/** Где дело (A-270): открыта ли форма заключения, отправлено ли заключение. */
+export interface CaseStatus {
+  form: boolean;
+  sent: boolean;
+  /** Итог отправленного заключения — ответ бюро на экране. */
+  result: VerdictResult | null;
+}
+
+export const getCase = async (): Promise<CaseStatus> =>
+  (await check(await fetch('/api/case'))).json();
+
+/** Отправить заключение: бюро отвечает сразу — итогом по вопросам (автор 17.11). */
+export const postVerdict = async (
+  answers: VerdictAnswer[],
+): Promise<{ result: VerdictResult } | { error: string }> => {
+  const res = await fetch('/api/verdict', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ answers }),
+  });
+  if (res.status === 422) return res.json();
+  return (await check(res)).json();
+};

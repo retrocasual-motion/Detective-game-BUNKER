@@ -1,17 +1,23 @@
 import {
   type ActionInput,
   act,
+  answerFits,
   type Content,
+  type VerdictAnswer as EngineAnswer,
   emptyProgress,
   fieldWait,
   GENERAL_REFUSAL_IDS,
+  NOBODY,
   type Progress,
   parseActionLine,
   petitionFormError,
+  scoreVerdict,
+  type VerdictRubric,
 } from '@bunker/engine';
 import {
   type Card,
   defaultState,
+  EPILOGUE_ID,
   folderItemId,
   letterBody,
   type Material,
@@ -22,6 +28,9 @@ import {
   pieceItemId,
   reconcile,
   upgradeState,
+  type VerdictAnswer,
+  type VerdictResult,
+  VerdictSchema,
 } from '@bunker/shared';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { asc, eq, sql } from 'drizzle-orm';
@@ -45,7 +54,7 @@ export interface AppDeps {
    * Движок правил (этап 2): правила и тексты всех материалов, закрытые материалы.
    * Только на сервере — в браузер уходят лишь открытые игроком (P-10).
    */
-  engine?: { content: Content; locked: Material[] };
+  engine?: { content: Content; locked: Material[]; verdict?: VerdictRubric };
   /** Часы (для лимитов попыток); в тестах — свои. */
   now?: () => number;
   /** Через сколько ответ на запрос ложится во «Входящие», мс (T-11-A; DELAY-A). */
@@ -60,6 +69,29 @@ interface Letter {
   released: string[];
   deliverAt: Date;
 }
+
+/** После «Решить дело» новых запросов нет (P-9). */
+const CLOSED = 'Расследование закрыто: открыта форма заключения. Новые запросы не принимаются.';
+
+/**
+ * Эпилог (Ф-3; автор 17.11 — «газетная вырезка или письмо, приходит сам»): материал L997 на
+ * столе конвертом после заключения. Текст — по слову автора (A6-D), пока заглушка.
+ */
+const EPILOGUE: Material = {
+  id: EPILOGUE_ID,
+  title: 'Эпилог',
+  placement: 'desk',
+  kind: 'sheet',
+  body: [
+    '# Эпилог',
+    '',
+    'Здесь будет эпилог дела — газетная вырезка: материал С. Грей в The Signal. Текст появится позже.',
+  ].join('\n'),
+  sourceFile: 'epilogue',
+};
+
+/** Строка с итогом заключения в таблице писем: игроку письмом не показывается (A-270). */
+const VERDICT_ROW = '__verdict';
 
 const letterId = (n: number) => `M${String(n).padStart(3, '0')}`;
 
@@ -172,7 +204,7 @@ export function createApp({
     const t = now();
     const byLetter = new Set(letters.flatMap((l) => l.released));
     const loose = progress.released.filter((id) => !byLetter.has(id));
-    const delivered = letters.filter((l) => l.deliverAt.getTime() <= t);
+    const delivered = letters.filter((l) => l.deliverAt.getTime() <= t && l.title !== VERDICT_ROW);
     return [
       ...materials,
       ...loose.flatMap((id) => lockedById.get(id) ?? []),
@@ -187,6 +219,8 @@ export function createApp({
           sourceFile: 'letter',
         },
       ]),
+      // Заключение отправлено — эпилог конвертом на столе (автор 17.11).
+      ...(progress.ended ? [EPILOGUE] : []),
     ];
   };
   const mine = async () => playerMaterials(await loadProgress(), await loadLetters());
@@ -289,6 +323,8 @@ export function createApp({
     const { to, ask, basis } = parsed.data;
     const run = queue.then(async () => {
       const before = await loadProgress();
+      // После «Решить дело» запросов нет (P-9): папка запроса уступает место форме.
+      if (caseOf(before).form || before.ended) return { form: CLOSED };
       const letters = await loadLetters();
       const own = new Set(playerMaterials(before, letters).map((m) => m.id));
       if (!own.has(ask.file) || !own.has(basis.file)) {
@@ -337,6 +373,81 @@ export function createApp({
     queue = run.catch(() => undefined);
     const r = await run;
     if ('form' in r) return c.json({ error: r.form }, 422);
+    return c.json(r);
+  });
+
+  /** Где дело: открыта ли форма заключения (после «Решить дело» → «Продолжить»), отправлено ли. */
+  const caseOf = (p: Progress) => {
+    const release = engine?.content.rules.final_form?.release ?? 'L999';
+    return { form: p.released.includes(release) && !p.ended, sent: p.ended };
+  };
+
+  /** Итог отправленного заключения (по вопросам и по частям) — для ответа бюро на экране. */
+  const verdictOf = (letters: Letter[]) => {
+    const row = letters.find((l) => l.title === VERDICT_ROW);
+    return row ? (JSON.parse(row.body) as VerdictResult) : null;
+  };
+
+  app.get('/api/case', async (c) =>
+    c.json({ ...caseOf(await loadProgress()), result: verdictOf(await loadLetters()) }),
+  );
+
+  /**
+   * Отправить заключение (A-270; FM-A, BA-A): пять ответов — человек, карточка материала или
+   * вариант. Сервер сверяет с рубрикой пакета (P-10), закрывает дело (ФИНАЛ) и сразу отвечает
+   * итогом — ответ бюро на экране (автор 17.11: «не нужно ждать»); эпилог — конвертом на столе.
+   */
+  app.post('/api/verdict', bodyLimit({ maxSize: 64 * 1024 }), async (c) => {
+    const rubric = engine?.verdict;
+    if (!engine || !rubric) return c.notFound();
+    const parsed = VerdictSchema.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: 'Заключение не оформлено.' }, 400);
+    const answers = parsed.data.answers;
+    const run = queue.then(async () => {
+      const before = await loadProgress();
+      const st = caseOf(before);
+      if (st.sent) return { error: 'Заключение уже отправлено.' };
+      if (!st.form) return { error: 'Сначала откройте форму: «Решить дело».' };
+      const letters = await loadLetters();
+      const own = new Set(playerMaterials(before, letters).map((m) => m.id));
+      const people = new Set([NOBODY, ...PERSONS.map((p) => p.id)]);
+      const toEngine = (a: VerdictAnswer): EngineAnswer =>
+        a === null ? null : 'card' in a ? { material: a.card.file } : a;
+      for (const a of answers) {
+        if (a && 'card' in a && !own.has(a.card.file))
+          return { error: 'Карточка не из материалов дела.' };
+        if (a && 'person' in a && !people.has(a.person))
+          return { error: 'Такого человека в деле нет.' };
+      }
+      const given = answers.map(toEngine);
+      if (given.some((a, i) => !rubric.questions[i] || !answerFits(rubric.questions[i], a)))
+        return { error: 'Ответ не к тому вопросу.' };
+      const t = now();
+      const { progress, outcome } = act(
+        engine.content,
+        before,
+        { action: 'ФИНАЛ', target: 'заключение' },
+        t,
+      );
+      if (outcome.result !== 'конец') return { error: outcome.reply };
+      await saveProgress(progress);
+      const score = scoreVerdict(rubric, given);
+      const result: VerdictResult = { answers, marks: score.marks, groups: score.groups };
+      // Итог хранится строкой писем (игроку не письмом): после перезагрузки ответ бюро тот же.
+      await db.insert(playerLetters).values({
+        playerId: PLAYER_ID,
+        n: (letters.at(-1)?.n ?? 0) + 1,
+        title: VERDICT_ROW,
+        body: JSON.stringify(result),
+        released: [],
+        sentAt: new Date(t),
+        deliverAt: new Date(t),
+      });
+      return { result };
+    });
+    queue = run.catch(() => undefined);
+    const r = await run;
+    if ('error' in r) return c.json({ error: r.error }, 422);
     return c.json(r);
   });
 

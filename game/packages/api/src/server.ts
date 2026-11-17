@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import type { AccessRules } from '@bunker/engine';
+import type { AccessRules, VerdictRubric } from '@bunker/engine';
 import { MaterialSchema } from '@bunker/shared';
 import { serve } from '@hono/node-server';
 import { createApp } from './app.ts';
@@ -12,10 +12,12 @@ const materials = MaterialSchema.array().parse(JSON.parse(readFileSync(env.conte
 const server = JSON.parse(readFileSync(env.serverContentFile, 'utf8')) as {
   rules: AccessRules;
   locked: unknown;
+  verdict: VerdictRubric;
 };
 const locked = MaterialSchema.array().parse(server.locked);
 const engine = {
   locked,
+  verdict: server.verdict,
   content: {
     rules: server.rules,
     starting: new Map(materials.map((m) => [m.id, m.body])),

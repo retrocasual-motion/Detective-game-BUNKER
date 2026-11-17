@@ -2,6 +2,7 @@ import { type MouseEvent, useEffect, useState } from 'react';
 import { emailIn, quoteCard } from '../petition/drafts.ts';
 import { usePetition } from '../petition/petition-store.ts';
 import { useGame } from '../store.ts';
+import { useToFolderLabel } from '../verdict/verdict-store.ts';
 
 /**
  * Общее у экранов устройств (ноутбук 4c-1, телефон 4c-2): устройство стоит в свободном месте
@@ -41,6 +42,7 @@ export function useSelectionPetition(testId: string) {
   );
   const folderShown = useGame((g) => g.petitionOpen);
   const toAddress = usePetition((p) => p.field === 'to');
+  const toFolder = useToFolderLabel();
 
   useEffect(() => {
     const onChange = () => {
@@ -89,7 +91,7 @@ export function useSelectionPetition(testId: string) {
       onMouseDown={(e) => e.preventDefault()}
       onClick={toPetition}
     >
-      {folderShown && toAddress && emailIn(sel.text) ? 'В «Кому»' : 'В запрос'}
+      {folderShown && toAddress && emailIn(sel.text) ? 'В «Кому»' : toFolder}
     </button>
   );
   return { onUp, button };
