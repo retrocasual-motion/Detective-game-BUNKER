@@ -19,7 +19,8 @@ export const test = base.extend<{ sealed: boolean }>({
       .toBe(200);
     const res = await request.delete('/api/state');
     expect(res.status()).toBe(204);
-    await page.goto(sealed ? '/' : '/?opened=all');
+    // `play` — сразу в дело, без главного меню (MM-A); меню проверяет menu.spec.
+    await page.goto(sealed ? '/?play' : '/?opened=all&play');
     await expect(page.getByTestId('room')).toBeVisible();
     await use(page);
   },

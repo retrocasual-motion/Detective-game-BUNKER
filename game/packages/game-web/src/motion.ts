@@ -22,6 +22,17 @@ export function initMotion(): void {
   if (on) document.documentElement.dataset.motion = 'reduce';
 }
 
+/** Переключатель в настройках главного меню (RM-A): сохраняется между заходами. */
+export function setReducedMotion(on: boolean): void {
+  try {
+    localStorage.setItem(KEY, on ? '1' : '0');
+  } catch {
+    // Хранилище недоступно — настройка действует до перезагрузки.
+  }
+  if (on) document.documentElement.dataset.motion = 'reduce';
+  else delete document.documentElement.dataset.motion;
+}
+
 /** Включено ли в игре «уменьшить движение». */
 export function reducedMotion(): boolean {
   return typeof document !== 'undefined' && document.documentElement.dataset.motion === 'reduce';

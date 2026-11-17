@@ -7,6 +7,7 @@ import { PlacedNote } from './desk/PlacedNote.tsx';
 import { ThrowToast, TrashView } from './desk/TrashBin.tsx';
 import { DevActionLine } from './dev/DevActionLine.tsx';
 import { HeldView } from './hold/HeldView.tsx';
+import { Credits, MainMenu, MenuTab } from './menu/MainMenu.tsx';
 import { PcView } from './pc/PcView.tsx';
 import { PetitionCorner } from './petition/PetitionCorner.tsx';
 import { PenView } from './player/PenView.tsx';
@@ -111,11 +112,14 @@ export function App() {
       <ThrowToast />
       {viewerId && <Viewer key={viewerId} materialId={viewerId} />}
       {closed ? <VerdictCorner /> : <PetitionCorner />}
+      <MenuTab />
       <SolveCase />
       <EpilogueNote />
       <VerdictResult />
       <Notebook />
       {import.meta.env.DEV && <DevActionLine />}
+      <MainMenu />
+      <Credits />
     </div>
   );
 }

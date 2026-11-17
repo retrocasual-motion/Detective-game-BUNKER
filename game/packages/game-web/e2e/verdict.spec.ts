@@ -141,3 +141,18 @@ test('карточку человека можно перетащить со с�
   await page.mouse.up();
   await expect(page.getByTestId('verdict-person-p:moreau')).toHaveAttribute('aria-pressed', 'true');
 });
+
+test('конец игры: эпилог → «Закончить дело» → титры → главное меню', async ({ page }) => {
+  await openForm(page);
+  for (let k = 0; k < 5; k++) await page.getByTestId('verdict-next').click();
+  await page.getByTestId('verdict-send').click();
+  await page.getByTestId('verdict-result-next').click();
+  await page.getByTestId('epilogue-envelope').click();
+  await expect(page.getByTestId('viewer')).toContainText('Голосовое сообщение');
+  await expect(page.getByTestId('viewer')).toContainText('The Signal');
+  await page.getByTestId('finish-case').click();
+  await expect(page.getByTestId('credits')).toContainText('Дело № 09-1128 закрыто');
+  await page.getByTestId('credits-menu').click();
+  await expect(page.getByTestId('main-menu')).toBeVisible();
+  await expect(page.getByTestId('menu-continue')).toHaveText('Вернуться к делу');
+});

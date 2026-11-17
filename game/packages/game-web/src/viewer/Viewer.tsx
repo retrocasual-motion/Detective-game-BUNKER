@@ -1,4 +1,4 @@
-import { inboxIds, letterPetition, PERSONS, PIECES } from '@bunker/shared';
+import { EPILOGUE_ID, inboxIds, letterPetition, PERSONS, PIECES } from '@bunker/shared';
 import {
   type CSSProperties,
   type MouseEvent,
@@ -8,10 +8,12 @@ import {
   useRef,
   useState,
 } from 'react';
+import { createPortal } from 'react-dom';
 import Markdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { trackReading } from '../dev/readingLog.ts';
+import { useMenu } from '../menu/menu-store.ts';
 import { emailIn, quoteCard, wholeCard } from '../petition/drafts.ts';
 import { usePetition } from '../petition/petition-store.ts';
 import { MediaPlayer } from '../player/MediaPlayer.tsx';
@@ -403,6 +405,25 @@ export function Viewer({ materialId }: ViewerProps) {
                 )}
               </article>
             )}
+            {/* Эпилог (A-271): прочитали — «Закончить дело» → титры → главное меню (MM-A). */}
+            {materialId === EPILOGUE_ID &&
+              createPortal(
+                <button
+                  type="button"
+                  className="finish-case"
+                  data-testid="finish-case"
+                  // Щелчок «мимо листа» закрывает просмотрщик — кнопка его не пропускает.
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    close();
+                    useMenu.getState().go('credits');
+                  }}
+                >
+                  Закончить дело
+                </button>,
+                document.body,
+              )}
             {/* Уголки — вне листа: их зона щелчка выходит за край на торчащую стопку. */}
             {!person && (
               <>
@@ -444,7 +465,7 @@ export function Viewer({ materialId }: ViewerProps) {
           >
             ✕
           </button>
-          {material && (
+          {material && materialId !== EPILOGUE_ID && (
             <button
               type="button"
               className="tool"

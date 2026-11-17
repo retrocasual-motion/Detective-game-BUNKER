@@ -187,4 +187,13 @@ describe('заключение (A-270): форма, оценка, ответ б�
       expect((await post('/api/verdict', { answers })).status).toBe(422);
     expect(await caseNow()).toMatchObject({ form: true, sent: false });
   });
+
+  it('«Новое дело» (меню) — всё с начала: дело открыто, эпилога нет', async () => {
+    await solve();
+    await post('/api/verdict', { answers: RIGHT });
+    const res = await app().request('/api/new-case', { method: 'POST' });
+    expect(res.status).toBe(204);
+    expect(await caseNow()).toEqual({ form: false, sent: false, result: null });
+    expect((await list()).some((m) => m.id === 'L997')).toBe(false);
+  });
 });
