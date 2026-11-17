@@ -92,16 +92,20 @@ interface GameStore {
    */
   held: Held | null;
   /**
-   * Ноутбук руководителя крупно, экраном к игроку (4c-1, SCR-C): живой экран. material — открыть
-   * файл из этого материала (поиск).
+   * Ноутбук руководителя вплотную, экраном к игроку (4c-1, SCR-C; WM-B — та же вещь в руках, камера
+   * у экрана): живой экран. material — открыть файл из этого материала (поиск).
    */
   laptop: { material: string | null } | null;
   openLaptop(material?: string | null): void;
-  /** Телефон Габриэля экраном к игроку (4c-2, SCR-C). */
+  /** Телефон Габриэля вплотную, экраном к игроку (4c-2, SCR-C; WM-B). */
   phone: { material: string | null } | null;
   openPhone(material?: string | null): void;
   /** Отойти от телефона: снова вещь в руках (или положить, toHands = false). */
   closePhone(toHands?: boolean): void;
+  /** Камера инженера вплотную, экраном к игроку (A-268, как телефон — WM-B). */
+  camera: boolean;
+  openCamera(): void;
+  closeCamera(toHands?: boolean): void;
   /** Ручка-диктофон лицом к игроку (4d-2). */
   pen: boolean;
   openPen(): void;
@@ -222,6 +226,7 @@ export const useGame = create<GameStore>((set, get) => {
     held: null,
     laptop: null,
     phone: null,
+    camera: false,
     pen: false,
     fieldBlockedUntil: {},
     find: null,
@@ -254,11 +259,19 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     openLaptop(material = null) {
-      set({ laptop: { material }, held: null, viewerId: null });
+      set({ laptop: { material }, held: { type: 'device', id: '47' }, viewerId: null });
     },
 
     openPhone(material = null) {
-      set({ phone: { material }, held: null, viewerId: null });
+      set({ phone: { material }, held: { type: 'device', id: '48' }, viewerId: null });
+    },
+
+    openCamera() {
+      set({ camera: true, held: { type: 'device', id: '24' }, viewerId: null });
+    },
+
+    closeCamera(toHands = true) {
+      set({ camera: false, held: toHands ? { type: 'device', id: '24' } : null });
     },
 
     closePhone(toHands = true) {
@@ -282,7 +295,13 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     hold(h) {
-      set({ held: h });
+      // Вплотную к экрану — только пока эта вещь в руках (WM-B).
+      set((g) => ({
+        held: h,
+        laptop: h?.id === '47' ? g.laptop : null,
+        phone: h?.id === '48' ? g.phone : null,
+        camera: h?.id === '24' ? g.camera : false,
+      }));
     },
 
     readMaterial(materialId) {
@@ -398,6 +417,10 @@ export const useGame = create<GameStore>((set, get) => {
       }
       if (deviceOf(materialId) === '48') {
         get().openPhone(materialId);
+        return;
+      }
+      if (deviceOf(materialId) === '24') {
+        get().openCamera();
         return;
       }
       if (deviceOf(materialId) === 'pc') {

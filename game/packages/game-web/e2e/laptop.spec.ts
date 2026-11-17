@@ -254,3 +254,19 @@ test('сетка равномерная: в правом нижнем углу �
   const bottom = bar.y - (b.y + 76 * k);
   expect(Math.abs(top - bottom)).toBeLessThan(2);
 });
+
+test('вплотную — та же вещь (WM-B): правая кнопка на экране — его; мимо ноутбука — снова в руках', async ({
+  page,
+}) => {
+  await laptopUp(page);
+  const held = page.getByTestId('held');
+  await expect(held).toHaveAttribute('data-focus', 'laptop');
+  // Правая кнопка по экрану — меню экрана, не «отойти».
+  await page.mouse.click(683, 400, { button: 'right' });
+  await expect(page.getByTestId('laptop-view')).toBeVisible();
+  // Правая кнопка мимо ноутбука — снова вещь в руках.
+  await page.mouse.click(1345, 420, { button: 'right' });
+  await expect(held).toHaveAttribute('data-focus', '');
+  await expect(page.getByTestId('laptop-view')).toHaveCount(0);
+  await expect(held).toBeVisible();
+});

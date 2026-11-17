@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { postAction } from '../api.ts';
 import { gameNow, hhmm } from '../clock.ts';
-import { useFreeArea, useSelectionPetition } from '../device/deviceView.tsx';
+import { useSelectionPetition } from '../device/deviceView.tsx';
 import { useGame } from '../store.ts';
 import { lockContent, phoneContent } from './content.ts';
 import {
@@ -14,13 +15,12 @@ import {
   VoicemailList,
 } from './PhoneApps.tsx';
 import { Passcode, Slider } from './PhoneLock.tsx';
+import { phoneHome } from './phoneHome.ts';
 import './phone.css';
 
-/** Экран телефона, логические px (как у смартфонов 2009 года, 320 × 480); на окне — масштабом. */
-const SCREEN_W = 320;
-const SCREEN_H = 480;
-const BODY_W = SCREEN_W + 28;
-const BODY_H = SCREEN_H + 150;
+/** Экран телефона, логические px (как у смартфонов 2009 года, 320 × 480); на модели — масштабом. */
+export const PHONE_PX: [number, number] = [320, 480];
+const [SCREEN_W, SCREEN_H] = PHONE_PX;
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS = [
@@ -83,23 +83,21 @@ const parentOf = (s: Screen): Screen =>
 const tabsOf = (s: Screen) => s === 'recents' || s === 'voicemail' || s === 'contacts';
 
 /**
- * Телефон Габриэля экраном к игроку (4c-2; решения автора 11.11 — PH-A, PN-A, CALL-A, EM-A;
- * SCR-C): вертикально перед игроком, экран живой. Первый раз — код (Passcode), дальше — «slide to
- * unlock» (Slider). Домашний экран — значки только из канона; приложение раскрывается из значка,
- * экраны въезжают сбоку, «назад» и кнопка «домой» на корпусе. Что открыто — сохраняется
- * (`state.phone`). Esc или щелчок мимо — снова вещь в руках.
+ * Живой экран телефона Габриэля (4c-2; решения автора 11.11 — PH-A, PN-A, CALL-A, EM-A; WM-B —
+ * автор 17.11): разметка приклеена к экрану 3D-телефона в руках (Held3D, useScreenAnchor) —
+ * щелчок по экрану, камера подъезжает, телефон остаётся той же вещью. Первый раз — код
+ * (Passcode), дальше — «slide to unlock» (Slider). Домашний экран — значки только из канона;
+ * приложение раскрывается из значка, экраны въезжают сбоку, «назад»; кнопка «домой» — на корпусе
+ * модели (phoneHome). Что открыто — сохраняется (`state.phone`). Esc, правая кнопка мимо экрана
+ * или щелчок мимо — снова вещь в руках; сеанс живёт, пока экран вплотную.
  */
-export function PhoneView() {
-  const phone = useGame((g) => g.phone);
+export function PhoneLive() {
   const materials = useGame((g) => g.materials);
   const body540 = materials.find((m) => m.id === 'L540')?.body ?? null;
   const body48 = materials.find((m) => m.id === '48')?.body ?? '';
   const content = useMemo(() => (body540 ? phoneContent(body540) : null), [body540]);
   const lock = useMemo(() => lockContent(body48), [body48]);
   const [session, setSession] = useState(false);
-  useEffect(() => {
-    if (!phone) setSession(false);
-  }, [phone]);
   const saved = useGame((g) => g.state?.phone?.screen) as Screen | undefined;
   const [screen, setScreen] = useState<Screen>(saved ?? 'home');
   const [dir, setDir] = useState<'open' | 'push' | 'back' | 'none'>('none');
@@ -110,19 +108,14 @@ export function PhoneView() {
     const t = setInterval(() => setNow(gameNow(started)), 10_000);
     return () => clearInterval(t);
   }, [started]);
-  const area = useFreeArea();
-  const scale = Math.min((area.width - 40) / BODY_W, (area.height - 30) / BODY_H, 1.45);
   const { onUp, button } = useSelectionPetition('phone-to-petition');
   const zoomed = useRef(false);
-
-  useEffect(() => {
-    if (!phone) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') useGame.getState().closePhone();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [phone]);
+  useEffect(
+    () => () => {
+      phoneHome.go = null;
+    },
+    [],
+  );
 
   // Что открыто — в сохранение.
   useEffect(() => {
@@ -130,11 +123,13 @@ export function PhoneView() {
     useGame.getState().updateState((s) => ({ ...s, phone: { screen } }));
   }, [screen, content]);
 
-  if (!phone) return null;
   const go = (s: Screen, how: 'open' | 'push' | 'back' = 'push') => {
     setDir(how);
     setScreen(s);
   };
+  const unlocked = !!content && session;
+  // Кнопка «домой» на корпусе (3D) — на главный экран.
+  phoneHome.go = () => unlocked && screen !== 'home' && go('home', 'back');
   const date = `${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}`;
 
   // Крупный план обоев экрана блокировки (L949) — на самом телефоне (DV-A).
@@ -146,7 +141,6 @@ export function PhoneView() {
       .catch(() => undefined);
   };
 
-  const unlocked = !!content && session;
   let inner: React.ReactNode;
   if (!unlocked) {
     inner = (
@@ -261,54 +255,29 @@ export function PhoneView() {
   }
 
   return (
-    <div className="phone-view" data-testid="phone-view">
-      <button
-        type="button"
-        className="phone-backdrop"
-        aria-label="Отвести взгляд от телефона"
-        data-testid="phone-away"
-        onClick={() => useGame.getState().closePhone()}
-      />
-      <div
-        className="phone-body"
-        style={{
-          width: BODY_W,
-          height: BODY_H,
-          left: area.center || undefined,
-          transform: `translate(-50%, -50%) scale(${scale})`,
-        }}
-      >
-        <div className="phone-speaker" aria-hidden />
-        {/* biome-ignore lint/a11y/noStaticElementInteractions: выделение текста мышью на экране телефона */}
-        <div
-          className="ph-screen"
-          style={{ width: SCREEN_W, height: SCREEN_H }}
-          onMouseUp={onUp}
-          onContextMenu={(e) => e.preventDefault()}
-        >
-          <div className="ph-status" aria-hidden>
-            <span className="ph-signal">
-              <i />
-              <i />
-              <i />
-              <i />
-            </span>
-            <span className="ph-status-time" data-testid="phone-clock">
-              {hhmm(now)}
-            </span>
-            <span className="ph-battery" />
-          </div>
-          <div className="ph-stage">{inner}</div>
-        </div>
-        <button
-          type="button"
-          className="phone-home-btn"
-          data-testid="phone-home-btn"
-          aria-label="Home"
-          onClick={() => unlocked && screen !== 'home' && go('home', 'back')}
-        />
+    // biome-ignore lint/a11y/noStaticElementInteractions: выделение текста мышью на экране телефона
+    <div
+      className="ph-screen"
+      data-testid="phone-view"
+      style={{ width: SCREEN_W, height: SCREEN_H }}
+      onMouseUp={onUp}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <div className="ph-status" aria-hidden>
+        <span className="ph-signal">
+          <i />
+          <i />
+          <i />
+          <i />
+        </span>
+        <span className="ph-status-time" data-testid="phone-clock">
+          {hhmm(now)}
+        </span>
+        <span className="ph-battery" />
       </div>
-      {button}
+      <div className="ph-stage">{inner}</div>
+      {/* Кнопка «В запрос» — поверх страницы: внутри экрана её бы масштабировало. */}
+      {button && createPortal(button, document.body)}
     </div>
   );
 }

@@ -188,6 +188,13 @@ test('вплотную: щелчок по панели регистратора 
   await page.mouse.click(683, 300, { button: 'right' });
   await expect(held).toHaveAttribute('data-focus', '');
   await expect(held).toBeVisible();
+  // Правая кнопка по сцене мимо панели — тоже назад, а не «положить».
+  await page.getByTestId('device-use').click();
+  await expect(held).toHaveAttribute('data-focus', 'recorder');
+  await page.mouse.click(100, 500, { button: 'right' });
+  await expect(held).toHaveAttribute('data-focus', '');
+  await page.waitForTimeout(300);
+  await expect(held).toBeVisible();
 });
 
 test('переключатель: щелчок по кружку — в другое положение, зажать и потянуть вбок — туда', async ({

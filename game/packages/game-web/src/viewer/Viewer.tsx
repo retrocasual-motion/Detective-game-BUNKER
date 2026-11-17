@@ -15,7 +15,7 @@ import { trackReading } from '../dev/readingLog.ts';
 import { emailIn, quoteCard, wholeCard } from '../petition/drafts.ts';
 import { usePetition } from '../petition/petition-store.ts';
 import { MediaPlayer } from '../player/MediaPlayer.tsx';
-import { MEDIA_IDS } from '../player/media.ts';
+import { EMBEDDED_MEDIA, MEDIA_IDS, splitEmbedded } from '../player/media.ts';
 import { clearFind, highlightFind } from '../search/highlight.ts';
 import { useGame } from '../store.ts';
 import { isLetter, takeOutOfBin } from '../wall/wall-actions.ts';
@@ -202,6 +202,17 @@ export function Viewer({ materialId }: ViewerProps) {
     // Записи — плеером там, где лежат (4d, PL-A): фильм, ролики, голосовая почта, кассета.
     if (MEDIA_IDS.has(material.id) && !excerpt && !piece)
       return <MediaPlayer materialId={material.id} body={material.body} />;
+    // Запись внутри страницы (L163 — фильм на сайте): страница как есть, раздел — плеером.
+    const embedded = EMBEDDED_MEDIA[material.id];
+    const parts = embedded && !excerpt && !piece ? splitEmbedded(material.body, embedded) : null;
+    if (parts)
+      return (
+        <>
+          {md(parts.before)}
+          <MediaPlayer materialId={material.id} body={parts.section} />
+          {md(parts.after)}
+        </>
+      );
     if (excerpt?.section !== undefined)
       return md(`# ${excerpt.title}\n\n${splitSection(material.body, excerpt.section).section}`);
     if (excerpt) return md(excerptBody(material.body, excerpt.title, excerpt.from, excerpt.to));

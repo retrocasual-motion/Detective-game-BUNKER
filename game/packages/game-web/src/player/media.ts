@@ -24,6 +24,32 @@ export type Media =
 /** Записи, которые в просмотрщике открываются плеером. */
 export const MEDIA_IDS: ReadonlySet<string> = new Set(['13', '14', '21', 'L462']);
 
+/**
+ * Записи внутри страницы: материал — страница, а в одном её разделе — запись (старый фильм HEXON на
+ * сайте hexon-bio.com, L163). Страница читается как есть, раздел — плеером на своём месте.
+ */
+export const EMBEDDED_MEDIA: Readonly<Record<string, string>> = { L163: 'Архив и медиа' };
+
+/** Страница до раздела, сам раздел (без заголовка) и после него; нет раздела — null. */
+export function splitEmbedded(
+  body: string,
+  heading: string,
+): { before: string; section: string; after: string } | null {
+  const lines = body.replace(/\r\n?/g, '\n').split('\n');
+  const start = lines.findIndex((l) => l.trim() === `## ${heading}`);
+  if (start < 0) return null;
+  let end = lines.findIndex((l, k) => k > start && /^#{1,2}\s/.test(l));
+  if (end < 0) end = lines.length;
+  return {
+    before: lines.slice(0, start + 1).join('\n'),
+    section: lines
+      .slice(start + 1, end)
+      .join('\n')
+      .trim(),
+    after: lines.slice(end).join('\n'),
+  };
+}
+
 const sec = (m: string, s: string) => Number(m) * 60 + Number(s);
 const stripTitle = (body: string) => body.replace(/^#\s[^\n]*\n+/, '');
 
