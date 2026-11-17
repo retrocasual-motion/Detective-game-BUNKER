@@ -30,7 +30,9 @@ function PersonAnswer({ i, q, a }: { i: number; q: FormQuestion; a: VerdictAnswe
           data-testid={`verdict-person-${p.id}`}
           onClick={() => answer(i, chosen === p.id ? null : { person: p.id })}
         >
-          {p.name}
+          {/* Карточка человека, как на стене: место фото и имя (автор 17.11). */}
+          {p.id !== NOBODY_ID && <span className="verdict-person-photo" aria-hidden />}
+          <span className="verdict-person-name">{p.name}</span>
         </button>
       ))}
     </div>
@@ -176,7 +178,8 @@ export function VerdictCorner() {
   const open = useVerdict((v) => v.open);
   const error = useVerdict((v) => v.error);
   const sending = useVerdict((v) => v.sending);
-  const { toggle, close, go, send } = useVerdict.getState();
+  const stamped = useVerdict((v) => v.stamped);
+  const { toggle, close, go, send, openResult } = useVerdict.getState();
   const l999 = useGame((g) => g.materials.find((m) => m.id === 'L999')?.body ?? '');
   // biome-ignore lint/correctness/useExhaustiveDependencies: вопросы — из текста L999
   const questions = useMemo(formQuestions, [l999]);
@@ -220,10 +223,22 @@ export function VerdictCorner() {
             {status.sent ? (
               <>
                 <Answers questions={questions} answers={answers} />
-                <p className="verdict-note" data-testid="verdict-sent">
-                  Заключение отправлено. Ответ бюро придёт письмом во «Входящие» на столе.
-                </p>
-                <div className="petition-stamp verdict-stamp">Отправлено</div>
+                {stamped ? (
+                  <div className="petition-stamp verdict-stamp" data-testid="verdict-stamp">
+                    Отправлено
+                  </div>
+                ) : (
+                  <div className="petition-actions">
+                    <button
+                      type="button"
+                      className="petition-send"
+                      data-testid="verdict-open-result"
+                      onClick={openResult}
+                    >
+                      Ответ бюро
+                    </button>
+                  </div>
+                )}
               </>
             ) : step === REVIEW || !q ? (
               <>

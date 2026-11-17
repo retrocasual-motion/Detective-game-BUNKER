@@ -24,6 +24,4 @@ export const env = {
   webDist: e.WEB_DIST ? fromRoot(e.WEB_DIST) : undefined,
   /** Задержка ответа на запрос, мс (DELAY-A; пока 12 с — для проверки автором). */
   mailDelayMs: Number(e.MAIL_DELAY_MS ?? 12_000),
-  /** Задержка ответа бюро на заключение, мс (BA-A, автор 17.11: 20–30 с). */
-  verdictDelayMs: Number(e.VERDICT_DELAY_MS ?? 25_000),
 };

@@ -23,9 +23,8 @@ test('«Решить дело»: предупреждение ни к чему �
   await expect(page.getByTestId('solve-case')).toBeVisible();
 });
 
-test('форма: пять вопросов по одному, проверка, исправить, отправить — ответ бюро письмом', async ({
+test('форма: пять вопросов по одному, проверка, исправить, отправить — ответ бюро сразу, эпилог на столе', async ({
   page,
-  request,
 }) => {
   await openForm(page);
   // Папка запроса и кнопка ушли: расследование закрыто (P-9).
@@ -75,27 +74,37 @@ test('форма: пять вопросов по одному, проверка,
   await expect(page.getByTestId('verdict-answer-2')).toHaveText('убили не специально, без умысла');
 
   await page.getByTestId('verdict-send').click();
-  await expect(page.getByTestId('verdict-sent')).toBeVisible();
-  await expect(page.getByTestId('verdict-edit-0')).toHaveCount(0);
 
-  // Ответ бюро — письмом через задержку; гибель Адама раскрыта, программа — нет.
-  await expect
-    .poll(async () => {
-      const all = (await (await request.get('/api/materials')).json()) as {
-        title: string;
-        body: string;
-      }[];
-      return all.find((m) => m.title === 'Ответ бюро на заключение')?.body ?? '';
-    })
-    .toContain('**Гибель Адама Коула:** раскрыто.');
-  const all = (await (await request.get('/api/materials')).json()) as {
-    title: string;
-    body: string;
-  }[];
-  const letter = all.find((m) => m.title === 'Ответ бюро на заключение')?.body ?? '';
-  expect(letter).toContain('Ваш ответ: Лея Моро — подтверждается.');
-  expect(letter).toContain('**Программа:** не раскрыто.');
-  expect(all.some((m) => m.title === 'Эпилог')).toBe(true);
+  // Ответ бюро — сразу на экране (автор 17.11): гибель Адама раскрыта, программа — нет.
+  const result = page.getByTestId('verdict-result');
+  await expect(result).toBeVisible();
+  await expect(result).toContainText('Лея Моро — подтверждается');
+  await expect(result).toContainText('убили не специально, без умысла — подтверждается');
+  await expect(page.getByTestId('verdict-result-total')).toContainText(
+    'Гибель Адама Коула: раскрыто',
+  );
+  await expect(page.getByTestId('verdict-result-total')).toContainText('Программа: не раскрыто');
+  // Писем нет: «Входящие» не пополнились.
+  await expect(page.getByTestId('arrival-note')).toHaveCount(0);
+
+  // «Дальше» — стол: конверт с эпилогом светится, записка зовёт открыть.
+  await page.getByTestId('verdict-result-next').click();
+  await expect(result).toHaveCount(0);
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'desk');
+  const envelope = page.getByTestId('epilogue-envelope');
+  await expect(envelope).toHaveClass(/desk-spot-fresh/);
+  await expect(page.getByTestId('epilogue-note')).toBeVisible();
+  await envelope.click();
+  await expect(page.getByTestId('viewer')).toContainText('Эпилог');
+  await page.keyboard.press('Escape');
+  await expect(envelope).not.toHaveClass(/desk-spot-fresh/);
+  await expect(page.getByTestId('epilogue-note')).toHaveCount(0);
+
+  // В папке «Заключение» — ответы и «Ответ бюро» снова.
+  await page.getByTestId('verdict-corner').click();
+  await expect(page.getByTestId('verdict-edit-0')).toHaveCount(0);
+  await page.getByTestId('verdict-open-result').click();
+  await expect(result).toBeVisible();
 });
 
 test('ответы формы сохраняются: после перезагрузки — тот же вопрос и ответ', async ({ page }) => {

@@ -12,7 +12,7 @@ import {
   toCss,
 } from './camera.ts';
 import { DeskHotspots } from './DeskHotspots.tsx';
-import { drawObjects, drawRoom } from './decor.ts';
+import { drawObjects, drawRoom, type Epilogue } from './decor.ts';
 import { NavArrows } from './NavArrows.tsx';
 import { useViewport } from './useViewport.ts';
 import { VIEW_LABELS } from './views.ts';
@@ -37,6 +37,8 @@ interface RoomSceneProps {
   trash: number;
   /** Вскрытые конверты архива (A-260). */
   opened: readonly ContainerId[];
+  /** Эпилог после заключения — конвертом на столе. */
+  epilogue?: Epilogue;
 }
 
 /**
@@ -46,7 +48,16 @@ interface RoomSceneProps {
  * доску). Камера в движении ведётся кадрами из JS, чтобы холсты и доска не расходились.
  * В покое на виде «Стена» доска лежит плоско (без 3D), холсты скрыты.
  */
-export function RoomScene({ view, onGo, hideNav, wall, inbox, trash, opened }: RoomSceneProps) {
+export function RoomScene({
+  view,
+  onGo,
+  hideNav,
+  wall,
+  inbox,
+  trash,
+  opened,
+  epilogue = 'none',
+}: RoomSceneProps) {
   const vp = useViewport();
   const room = useMemo(() => roomFor(vp), [vp]);
   const [ph, setPh] = useState<Phase>({ from: room.poses[view], to: view, moving: false });
@@ -60,7 +71,8 @@ export function RoomScene({ view, onGo, hideNav, wall, inbox, trash, opened }: R
     if (pose) live.current = pose;
     if (world.current) world.current.style.transform = pose ? toCss(poseOps(pose, room.p)) : 'none';
     if (pose && back.current) drawRoom(back.current, pose, room);
-    if (pose && front.current) drawObjects(front.current, pose, room, inbox, trash, opened);
+    if (pose && front.current)
+      drawObjects(front.current, pose, room, inbox, trash, opened, epilogue);
   };
 
   useLayoutEffect(() => {
@@ -139,7 +151,9 @@ export function RoomScene({ view, onGo, hideNav, wall, inbox, trash, opened }: R
         </div>
       </div>
       <canvas ref={front} className="scene-decor scene-front" hidden={flat} />
-      {atDesk && <DeskHotspots room={room} inbox={inbox} trash={trash} opened={opened} />}
+      {atDesk && (
+        <DeskHotspots room={room} inbox={inbox} trash={trash} opened={opened} epilogue={epilogue} />
+      )}
       {/* Стрелки видны и во время перехода: щелчок сразу ведёт к новой цели (MOVE-A). */}
       {!hideNav && <NavArrows view={ph.to} onGo={onGo} />}
     </div>

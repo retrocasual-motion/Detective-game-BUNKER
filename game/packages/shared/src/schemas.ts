@@ -246,6 +246,8 @@ export const PlayerStateSchema = z.object({
     .object({
       answers: z.array(VerdictAnswerSchema).max(VERDICT_QUESTIONS),
       step: z.number().int().min(0).max(VERDICT_QUESTIONS),
+      /** Эпилог на столе открыт — конверт больше не подсвечен. */
+      epilogueRead: z.boolean().optional(),
     })
     .optional(),
   /** Совмещённые на стене листы (WL-A, MG-A): «L990» — висит вместо своих половин. */

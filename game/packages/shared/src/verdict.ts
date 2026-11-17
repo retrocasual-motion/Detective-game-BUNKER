@@ -52,36 +52,19 @@ export function answerLabel(q: FormQuestion | undefined, a: VerdictAnswer): stri
 
 export type VerdictMark = 'верно' | 'неверно' | 'пусто';
 
-const MARK: Record<VerdictMark, string> = {
+/** Как бюро отвечает по вопросу (BA-A): «подтверждается / не подтверждается». */
+export const MARK_LABEL: Record<VerdictMark, string> = {
   верно: 'подтверждается',
   неверно: 'не подтверждается',
   пусто: 'ответа нет',
 };
 
-/** Ответ бюро на заключение (A-270; BA-A): по каждому вопросу и итог по частям. */
-export function verdictLetterBody(p: {
-  questions: FormQuestion[];
-  answers: readonly VerdictAnswer[];
-  marks: readonly VerdictMark[];
-  groups: readonly { title: string; solved: boolean }[];
-}): string {
-  return [
-    '# Ответ бюро на заключение специалиста',
-    '',
-    '**От:** Окружное бюро расследований округа Сильвер-Ридж',
-    '**Кому:** вам',
-    '',
-    'Дело № 09-1128. Бюро рассмотрело ваше заключение.',
-    '',
-    ...p.questions.flatMap((q, i) => [
-      `${q.n}. ${q.text}`,
-      (p.answers[i] ?? null) === null
-        ? 'Ответа нет.'
-        : `Ваш ответ: ${answerLabel(q, p.answers[i] ?? null)} — ${MARK[p.marks[i] ?? 'пусто']}.`,
-      '',
-    ]),
-    '---',
-    '',
-    ...p.groups.map((g) => `**${g.title}:** ${g.solved ? 'раскрыто' : 'не раскрыто'}.`),
-  ].join('\n');
+/** Итог заключения: ответы, пометки по вопросам и части — «гибель Адама», «программа». */
+export interface VerdictResult {
+  answers: VerdictAnswer[];
+  marks: VerdictMark[];
+  groups: { id: string; title: string; solved: boolean }[];
 }
+
+/** Эпилог (Ф-3): приходит конвертом на стол после заключения; текст — автора (A6-D). */
+export const EPILOGUE_ID = 'L997';

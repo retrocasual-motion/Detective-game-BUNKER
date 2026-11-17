@@ -6,9 +6,10 @@ import { wholeCard } from '../petition/drafts.ts';
 import { petitionFieldAt } from '../petition/fieldAt.ts';
 import { usePetition } from '../petition/petition-store.ts';
 import { shownCamera, useGame } from '../store.ts';
+import { markEpilogueRead } from '../verdict/verdict-store.ts';
 import { isLetter, moveItem } from '../wall/wall-actions.ts';
 import { type Room, screenToBoard } from './camera.ts';
-import { deskObjects, screenRect } from './decor.ts';
+import { deskObjects, type Epilogue, screenRect } from './decor.ts';
 
 const noColor = () => '#000000';
 
@@ -23,22 +24,24 @@ export function DeskHotspots({
   inbox,
   trash,
   opened,
+  epilogue = 'none',
 }: {
   room: Room;
   inbox: string[];
   trash: number;
   opened: readonly ContainerId[];
+  epilogue?: Epilogue;
 }) {
   const openViewer = useGame((g) => g.openViewer);
   const setComputerOpen = useGame((g) => g.setComputerOpen);
   const updateState = useGame((g) => g.updateState);
   const spots = useMemo(
     () =>
-      deskObjects(room, noColor, inbox, trash, opened).map((o) => ({
+      deskObjects(room, noColor, inbox, trash, opened, epilogue).map((o) => ({
         o,
         r: screenRect(o, room.poses.desk, room),
       })),
-    [room, inbox, trash, opened],
+    [room, inbox, trash, opened, epilogue],
   );
   // Письмо-ответ из лотка можно бросить прямо в корзину (TR-A).
   const bin = spots.find((s) => s.o.key === 'trash')?.r;
@@ -55,7 +58,7 @@ export function DeskHotspots({
           <button
             key={o.key}
             type="button"
-            className="desk-spot"
+            className={`desk-spot${o.fresh ? ' desk-spot-fresh' : ''}`}
             data-testid={o.hotspot.kind === 'computer' ? 'computer-monitor' : o.testId}
             aria-label={o.label}
             title={o.label}
@@ -111,7 +114,11 @@ export function DeskHotspots({
               else if (h?.kind === 'trash') useGame.getState().setTrashOpen(true);
               else if (h?.kind === 'container')
                 useGame.getState().hold({ type: 'container', id: h.id });
-              else if (h) openViewer(h.id);
+              else if (h) {
+                // Эпилог открыт — подсветка снята.
+                if (o.key === 'epilogue') markEpilogueRead();
+                openViewer(h.id);
+              }
             }}
           >
             {o.tag && (

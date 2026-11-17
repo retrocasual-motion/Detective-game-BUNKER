@@ -35,7 +35,6 @@ const app = createApp({
   webDist: env.webDist,
   engine,
   mailDelayMs: env.mailDelayMs,
-  verdictDelayMs: env.verdictDelayMs,
 });
 serve({ fetch: app.fetch, port: env.apiPort }, (info) => {
   console.log(

@@ -1,4 +1,4 @@
-import type { Card, Material, PlayerState, VerdictAnswer } from '@bunker/shared';
+import type { Card, Material, PlayerState, VerdictAnswer, VerdictResult } from '@bunker/shared';
 
 async function check(res: Response): Promise<Response> {
   if (!res.ok) throw new Error(`${res.status} ${res.url}`);
@@ -108,15 +108,17 @@ export const getPendingMail = async (): Promise<number[]> =>
 export interface CaseStatus {
   form: boolean;
   sent: boolean;
+  /** Итог отправленного заключения — ответ бюро на экране. */
+  result: VerdictResult | null;
 }
 
 export const getCase = async (): Promise<CaseStatus> =>
   (await check(await fetch('/api/case'))).json();
 
-/** Отправить заключение: ответ бюро придёт письмом через `delayMs` (BA-A). */
+/** Отправить заключение: бюро отвечает сразу — итогом по вопросам (автор 17.11). */
 export const postVerdict = async (
   answers: VerdictAnswer[],
-): Promise<{ delayMs: number } | { error: string }> => {
+): Promise<{ result: VerdictResult } | { error: string }> => {
   const res = await fetch('/api/verdict', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

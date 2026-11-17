@@ -1,4 +1,4 @@
-import { CONTAINER_IDS, CONTAINERS, type ContainerId } from '@bunker/shared';
+import { CONTAINER_IDS, CONTAINERS, type ContainerId, EPILOGUE_ID } from '@bunker/shared';
 import { type Pose, type Room, toCamera, toScreen, type Vec3 } from './camera.ts';
 
 /**
@@ -28,6 +28,9 @@ interface Box {
   screen?: string;
 }
 
+/** Эпилог на столе: нет, пришёл и не открыт (подсвечен), открыт. */
+export type Epilogue = 'none' | 'fresh' | 'read';
+
 export interface DeskObject {
   key: string;
   label: string;
@@ -39,6 +42,8 @@ export interface DeskObject {
   tagInside?: boolean;
   /** Для автотестов. */
   testId?: string;
+  /** Только что пришло и ещё не открыто — подсвечено (эпилог). */
+  fresh?: boolean;
 }
 
 /** Сколько писем лотка видно стоящими (остальные — за ними). */
@@ -201,6 +206,8 @@ export function deskObjects(
   inbox: string[] = [],
   trash = 0,
   opened: readonly ContainerId[] = CONTAINER_IDS,
+  /** Эпилог после заключения: «fresh» — конверт пришёл и не открыт (подсвечен). */
+  epilogue: Epilogue = 'none',
 ): DeskObject[] {
   const { p, deskY } = r;
   const box = (
@@ -362,6 +369,25 @@ export function deskObjects(
         box(0.52, 0.42, 0.05, 0.17, 0.025, col('--color-phone'), 0.05),
       ],
     },
+    // Эпилог (автор 17.11): после заключения — конверт посередине стола, ближе к игроку; пока не
+    // открыт — подсвечен. Внутри — газетная вырезка (L997, текст автора — A6-D).
+    ...(epilogue === 'none'
+      ? []
+      : [
+          {
+            key: 'epilogue',
+            label: 'Конверт: эпилог дела — открыть',
+            boxes: [
+              box(0.04, 0.6, 0.24, 0.15, 0.009, col('--color-archive-envelope'), 0.012),
+              box(0.04, 0.6, 0.14, 0.03, 0.003, col('--color-newspaper'), 0.021),
+            ],
+            hotspot: { kind: 'material' as const, id: EPILOGUE_ID },
+            tag: 'Эпилог',
+            tagInside: true,
+            testId: 'epilogue-envelope',
+            fresh: epilogue === 'fresh',
+          },
+        ]),
   ];
   // Устройства лежат на столе, когда вскрыт конверт «Осмотр места происшествия и изъятое» (A-260);
   // коробка с пачками — когда вскрыт «Документация объекта и программы».
@@ -567,11 +593,12 @@ export function drawObjects(
   inbox: string[] = [],
   trash = 0,
   opened: readonly ContainerId[] = CONTAINER_IDS,
+  epilogue: Epilogue = 'none',
 ): void {
   const ctx = prepare(canvas, r);
   if (!ctx) return;
   const col = colors(canvas);
-  for (const o of sortObjects(deskObjects(r, col, inbox, trash, opened), pose.eye)) {
+  for (const o of sortObjects(deskObjects(r, col, inbox, trash, opened, epilogue), pose.eye)) {
     const boxes = [...o.boxes].sort(
       (a, b) => dist(center(b), pose.eye) - dist(center(a), pose.eye),
     );

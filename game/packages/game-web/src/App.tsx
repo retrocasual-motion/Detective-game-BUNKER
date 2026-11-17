@@ -1,4 +1,4 @@
-import { type ContainerId, inboxIds, openedOf } from '@bunker/shared';
+import { type ContainerId, EPILOGUE_ID, inboxIds, openedOf } from '@bunker/shared';
 import { useEffect, useMemo } from 'react';
 
 import { ArrivalNote } from './desk/ArrivalNote.tsx';
@@ -16,6 +16,7 @@ import { SearchPanel } from './search/SearchPanel.tsx';
 import { useGame } from './store.ts';
 import { SolveCase } from './verdict/SolveCase.tsx';
 import { VerdictCorner } from './verdict/VerdictCorner.tsx';
+import { EpilogueNote, VerdictResult } from './verdict/VerdictResult.tsx';
 import { useVerdict } from './verdict/verdict-store.ts';
 import { Viewer } from './viewer/Viewer.tsx';
 import { WallView } from './wall/WallView.tsx';
@@ -34,6 +35,14 @@ export function App() {
   const saveStatus = useGame((g) => g.saveStatus);
   // После «Решить дело» папка запроса уступает место форме заключения (P-9).
   const closed = useVerdict((v) => v.status.form || v.status.sent);
+  // Эпилог после заключения — конвертом на столе; пока не открыт — подсвечен (автор 17.11).
+  const epilogue = useGame((g) =>
+    !g.materials.some((m) => m.id === EPILOGUE_ID)
+      ? 'none'
+      : g.state?.verdict?.epilogueRead
+        ? 'read'
+        : 'fresh',
+  );
 
   useEffect(() => {
     load();
@@ -85,6 +94,7 @@ export function App() {
         inbox={inbox}
         trash={trash}
         opened={opened}
+        epilogue={epilogue}
       />
       {saveStatus === 'error' && (
         <div className="save-error" data-testid="save-error">
@@ -102,6 +112,8 @@ export function App() {
       {viewerId && <Viewer key={viewerId} materialId={viewerId} />}
       {closed ? <VerdictCorner /> : <PetitionCorner />}
       <SolveCase />
+      <EpilogueNote />
+      <VerdictResult />
       <Notebook />
       {import.meta.env.DEV && <DevActionLine />}
     </div>

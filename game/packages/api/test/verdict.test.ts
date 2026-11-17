@@ -103,8 +103,7 @@ beforeEach(async () => {
   clock = 1_000_000;
 });
 
-const app = () =>
-  createApp({ db, materials, production: false, engine, now: () => clock, verdictDelayMs: 25_000 });
+const app = () => createApp({ db, materials, production: false, engine, now: () => clock });
 const post = (path: string, body: unknown) =>
   app().request(path, {
     method: 'POST',
@@ -127,14 +126,15 @@ const list = async () => (await (await app().request('/api/materials')).json()) 
 
 describe('заключение (A-270): форма, оценка, ответ бюро', () => {
   it('до «Решить дело» форма закрыта, заключение не принимается', async () => {
-    expect(await caseNow()).toEqual({ form: false, sent: false });
+    expect(await caseNow()).toEqual({ form: false, sent: false, result: null });
+    expect((await list()).some((m) => m.id === 'L997')).toBe(false);
     const res = await post('/api/verdict', { answers: RIGHT });
     expect(res.status).toBe(422);
   });
 
   it('предупреждение → «продолжить» → форма открыта; запросы больше не принимаются (P-9)', async () => {
     await solve();
-    expect(await caseNow()).toEqual({ form: true, sent: false });
+    expect(await caseNow()).toMatchObject({ form: true, sent: false });
     const res = await post('/api/petition', {
       to: 'zapros@bureau.org',
       ask: { file: '01', quote: 'Материал 01' },
@@ -144,34 +144,34 @@ describe('заключение (A-270): форма, оценка, ответ б�
     expect(((await res.json()) as { error: string }).error).toMatch(/Расследование закрыто/);
   });
 
-  it('всё верно: дело закрыто, через задержку — ответ бюро и эпилог', async () => {
+  it('всё верно: дело закрыто, итог — сразу; эпилог — на столе, писем нет', async () => {
     await solve();
     const res = await post('/api/verdict', { answers: RIGHT });
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ delayMs: 25_000 });
-    expect(await caseNow()).toEqual({ form: false, sent: true });
-    expect((await list()).some((m) => m.kind === 'letter')).toBe(false);
-
-    clock += 25_000;
-    const letters = (await list()).filter((m) => m.kind === 'letter');
-    expect(letters.map((m) => m.title)).toEqual(['Ответ бюро на заключение', 'Эпилог']);
-    const body = letters[0]?.body ?? '';
-    expect(body).toContain('Ваш ответ: Лея Моро — подтверждается.');
-    expect(body).toContain('Ваш ответ: без умысла — подтверждается.');
-    expect(body).toContain('**Гибель Адама Коула:** раскрыто.');
-    expect(body).toContain('**Программа:** раскрыто.');
+    const { result } = (await res.json()) as { result: { marks: string[]; groups: object[] } };
+    expect(result.marks).toEqual(['верно', 'верно', 'верно', 'верно', 'верно']);
+    expect(result.groups).toMatchObject([
+      { id: 'death', solved: true },
+      { id: 'program', solved: true },
+    ]);
+    // После перезагрузки — тот же итог.
+    expect(await caseNow()).toMatchObject({
+      form: false,
+      sent: true,
+      result: { marks: result.marks },
+    });
+    const got = await list();
+    expect(got.some((m) => m.kind === 'letter')).toBe(false);
+    expect(got.find((m) => m.id === 'L997')?.title).toBe('Эпилог');
   });
 
-  it('неверное и пустое — «не подтверждается» и «ответа нет»; второй раз не отправить', async () => {
+  it('неверное и пустое — пометки; второй раз не отправить', async () => {
     await solve();
     const answers = [{ person: 'p:pierce' }, null, { choice: 1 }, null, { person: 'p:hale' }];
-    expect((await post('/api/verdict', { answers })).status).toBe(200);
-    clock += 25_000;
-    const body = (await list()).find((m) => m.title === 'Ответ бюро на заключение')?.body ?? '';
-    expect(body).toContain('Ваш ответ: Эмма Пирс — не подтверждается.');
-    expect(body).toContain('Ответа нет.');
-    expect(body).toContain('**Гибель Адама Коула:** не раскрыто.');
-    expect(body).toContain('**Программа:** не раскрыто.');
+    const res = await post('/api/verdict', { answers });
+    const { result } = (await res.json()) as { result: { marks: string[]; groups: object[] } };
+    expect(result.marks).toEqual(['неверно', 'пусто', 'неверно', 'пусто', 'верно']);
+    expect(result.groups).toMatchObject([{ solved: false }, { solved: false }]);
     expect((await post('/api/verdict', { answers: RIGHT })).status).toBe(422);
   });
 
@@ -185,6 +185,6 @@ describe('заключение (A-270): форма, оценка, ответ б�
       bad(2, { person: 'p:moreau' }),
     ])
       expect((await post('/api/verdict', { answers })).status).toBe(422);
-    expect(await caseNow()).toEqual({ form: true, sent: false });
+    expect(await caseNow()).toMatchObject({ form: true, sent: false });
   });
 });
