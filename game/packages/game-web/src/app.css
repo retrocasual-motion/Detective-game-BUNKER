@@ -2392,18 +2392,19 @@ button {
   cursor: pointer;
 }
 
-/* «Решить дело» (TECH_PLAN 4.16; A-243): доступна всегда, пока дело открыто — внизу, левее
-   блокнота (угол справа — его язычок); предупреждение бюро — поверх всего. */
+/* «Решить дело» (TECH_PLAN 4.16; A-243): доступна всегда, пока дело открыто — язычком сверху
+   справа, левее «Поиска» (внизу — папки, записки и блокнот); предупреждение — поверх всего. */
 .solve-case {
   position: absolute;
-  right: calc(var(--space-4) + var(--notebook-width) + var(--space-3));
-  bottom: var(--space-2);
-  z-index: 50;
-  padding: var(--space-2) var(--space-4);
+  top: 0;
+  right: calc(var(--space-4) + 96px);
+  z-index: 30;
+  padding: var(--space-1) var(--space-3);
   background: var(--color-folder);
   color: var(--color-card-text);
   border: 2px solid var(--color-stamp);
-  border-radius: var(--radius);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
   box-shadow: var(--shadow);
   font: bold 16px var(--font-paper);
   letter-spacing: 0.04em;
