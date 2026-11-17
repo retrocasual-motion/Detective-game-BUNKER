@@ -12,6 +12,12 @@ export const CAMERA_PX: [number, number] = [400, 300];
 const body = (id: string) => (g: ReturnType<typeof useGame.getState>) =>
   g.materials.find((m) => m.id === id)?.body ?? '';
 
+/** «Кадры 8–11 (13.10): кабинет руководителя…» → «13.10, кабинет руководителя…». */
+const seriesTitle = (series: string) => {
+  const m = /^Кадры?\s+[\d–-]+\s*\(([^)]*)\):\s*(.*)$/.exec(series);
+  return m ? `${m[1]}, ${m[2]}` : series;
+};
+
 /** Значок «просмотр» (треугольник в рамке), как на экранах камер того времени. */
 const PlayIcon = () => (
   <svg viewBox="0 0 20 14" className="cm-ico" aria-hidden>
@@ -172,9 +178,10 @@ export function CameraSheet() {
       {mode !== 'menu' && f && (
         <p data-material="24" data-testid="camera-caption">
           <b>
-            Кадр {f.n}. {f.series.replace(/\s*\(\d+ кадров\)/, '')}.
+            Кадр {f.n} из {FRAME_COUNT}
+            {seriesTitle(f.series) ? ` · ${seriesTitle(f.series)}` : ''}.
           </b>{' '}
-          {f.text}
+          {f.text || 'Описания кадра нет.'}
         </p>
       )}
       {zoom > 0 && mode === 'single' && (
