@@ -1526,7 +1526,8 @@ button {
 .dev-line {
   position: absolute;
   top: 0;
-  left: var(--space-4);
+  /* Правее «Меню» и «Решить дело» (MM-A). */
+  left: 260px;
   z-index: 60;
   width: min(720px, 60vw);
   display: flex;
@@ -2393,12 +2394,11 @@ button {
 }
 
 /* «Решить дело» (TECH_PLAN 4.16; A-243): доступна всегда, пока дело открыто — язычком сверху
-   слева (автор 17.11; в разработке там же служебная строка — правее неё); предупреждение —
-   поверх всего. */
+   слева, после «Меню» (автор 17.11); предупреждение — поверх всего. */
 .solve-case {
   position: absolute;
   top: 0;
-  left: var(--space-4);
+  left: calc(var(--space-4) + 84px);
   z-index: 30;
   padding: var(--space-1) var(--space-3);
   background: var(--color-folder);
@@ -2524,9 +2524,6 @@ button {
 .verdict-stamp {
   pointer-events: none;
 }
-.solve-case-dev {
-  left: 170px;
-}
 
 /* Форма заключения — конец игры (автор 17.11): папка крупнее и правее, читать легче; справа
    остаётся стена — из неё берут карточки. */
@@ -2641,4 +2638,108 @@ button {
   color: var(--color-card-text);
   box-shadow: var(--shadow);
   font: 15px var(--font-paper);
+}
+
+/* Главное меню и титры (MM-A, автор 17.11): поверх всего; оформление — этап дизайна. */
+.main-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgb(14 16 19 / 94%);
+  color: var(--color-text);
+}
+.main-menu-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: min(420px, 90vw);
+  text-align: center;
+}
+.main-menu-title {
+  margin: 0;
+  font: bold 56px var(--font-paper);
+  letter-spacing: 0.18em;
+}
+.main-menu-sub {
+  margin: 0;
+  font: 18px var(--font-paper);
+  opacity: 0.8;
+}
+.main-menu-list,
+.main-menu-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  margin-top: var(--space-4);
+}
+.main-menu button {
+  padding: var(--space-2) var(--space-4);
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font: 18px var(--font-paper);
+}
+.main-menu button:hover {
+  background: rgb(255 255 255 / 8%);
+}
+.main-menu .main-menu-main {
+  background: var(--color-folder);
+  color: var(--color-card-text);
+  border-color: var(--color-folder);
+}
+.main-menu-row {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+}
+.main-menu-check {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  text-align: left;
+  font: 16px var(--font-paper);
+}
+.credits-text {
+  margin: 0;
+  font: 18px var(--font-paper);
+}
+.menu-tab {
+  position: absolute;
+  top: 0;
+  left: var(--space-4);
+  z-index: 30;
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-nav-bg);
+  color: var(--color-text);
+  border: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  opacity: 0.85;
+}
+/* Эпилог (автор 17.11): закрыть нельзя — поверх всего, кроме главного меню; кнопка «Завершить
+   дело» — прямо под статьёй. */
+.viewer-final {
+  z-index: 95;
+}
+.viewer-final .viewer-tools {
+  display: none;
+}
+.finish-case {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + var(--space-3));
+  translate: -50% 0;
+  padding: var(--space-2) var(--space-5, 24px);
+  background: var(--color-card-text);
+  color: var(--color-folder);
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font: bold 18px var(--font-paper);
+  white-space: nowrap;
 }

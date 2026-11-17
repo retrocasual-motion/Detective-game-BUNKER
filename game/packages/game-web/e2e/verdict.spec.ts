@@ -96,7 +96,10 @@ test('форма: пять вопросов по одному, проверка,
   await expect(page.getByTestId('epilogue-note')).toBeVisible();
   await envelope.click();
   await expect(page.getByTestId('viewer')).toContainText('Эпилог');
-  await page.keyboard.press('Escape');
+  // Эпилог не закрыть — «Завершить дело» → титры → «Вернуться к делу».
+  await page.getByTestId('finish-case').click();
+  await page.getByTestId('credits-menu').click();
+  await page.getByTestId('menu-continue').click();
   await expect(envelope).not.toHaveClass(/desk-spot-fresh/);
   await expect(page.getByTestId('epilogue-note')).toHaveCount(0);
 
@@ -140,4 +143,29 @@ test('карточку человека можно перетащить со с�
   await page.mouse.move(to.x + 40, to.y + 10, { steps: 12 });
   await page.mouse.up();
   await expect(page.getByTestId('verdict-person-p:moreau')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('конец игры: эпилог → «Завершить дело» → титры → главное меню', async ({ page }) => {
+  await openForm(page);
+  for (let k = 0; k < 5; k++) await page.getByTestId('verdict-next').click();
+  await page.getByTestId('verdict-send').click();
+  await page.getByTestId('verdict-result-next').click();
+  await page.getByTestId('epilogue-envelope').click();
+  await expect(page.getByTestId('viewer')).toContainText('Голосовое сообщение');
+  await expect(page.getByTestId('viewer')).toContainText('The Signal');
+  // Закрыть эпилог нельзя (автор 17.11): ни Esc, ни ✕, ни щелчок мимо — только «Завершить дело».
+  await page.keyboard.press('Escape');
+  await page.mouse.click(20, 400);
+  await expect(page.getByTestId('viewer')).toBeVisible();
+  await expect(page.getByTestId('viewer-tools')).toBeHidden();
+  // Кнопка — прямо под статьёй.
+  const paper = await page.getByTestId('viewer-paper').boundingBox();
+  const btn = await page.getByTestId('finish-case').boundingBox();
+  expect((btn?.y ?? 0) - ((paper?.y ?? 0) + (paper?.height ?? 0))).toBeGreaterThanOrEqual(0);
+  expect((btn?.y ?? 0) - ((paper?.y ?? 0) + (paper?.height ?? 0))).toBeLessThan(60);
+  await page.getByTestId('finish-case').click();
+  await expect(page.getByTestId('credits')).toContainText('Дело № 09-1128 закрыто');
+  await page.getByTestId('credits-menu').click();
+  await expect(page.getByTestId('main-menu')).toBeVisible();
+  await expect(page.getByTestId('menu-continue')).toHaveText('Вернуться к делу');
 });

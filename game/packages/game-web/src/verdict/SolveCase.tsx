@@ -25,7 +25,7 @@ export function SolveCase() {
     <>
       <button
         type="button"
-        className={`solve-case${import.meta.env.DEV ? ' solve-case-dev' : ''}`}
+        className="solve-case"
         data-testid="solve-case"
         disabled={busy}
         onClick={run(ask)}

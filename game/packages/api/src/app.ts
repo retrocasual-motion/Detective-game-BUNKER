@@ -85,7 +85,13 @@ const EPILOGUE: Material = {
   body: [
     '# Эпилог',
     '',
-    'Здесь будет эпилог дела — газетная вырезка: материал С. Грей в The Signal. Текст появится позже.',
+    '## Голосовое сообщение',
+    '',
+    'Запись будет позже: С. Грей благодарит специалиста за правду и говорит, что статья вышла.',
+    '',
+    '## The Signal',
+    '',
+    'Газетная страница со статьёй С. Грей — текст появится позже.',
   ].join('\n'),
   sourceFile: 'epilogue',
 };
@@ -470,11 +476,25 @@ export function createApp({
     return c.body(null, 204);
   });
 
-  app.delete('/api/state', async (c) => {
-    if (production) return c.notFound();
+  const resetCase = async () => {
     await db.delete(playerState).where(eq(playerState.playerId, PLAYER_ID));
     await db.delete(playerProgress).where(eq(playerProgress.playerId, PLAYER_ID));
     await db.delete(playerLetters).where(eq(playerLetters.playerId, PLAYER_ID));
+  };
+
+  app.delete('/api/state', async (c) => {
+    if (production) return c.notFound();
+    await resetCase();
+    return c.body(null, 204);
+  });
+
+  /**
+   * «Новое дело» из главного меню (MM-A): прогресс, раскладка и письма — с начала. Работает и в
+   * production: игрок подтверждает в меню. Пока игрок один (этап 1); с входом (этап 6) — свой.
+   */
+  app.post('/api/new-case', async (c) => {
+    await queue;
+    await resetCase();
     return c.body(null, 204);
   });
 

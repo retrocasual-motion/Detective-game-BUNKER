@@ -72,6 +72,11 @@ export const postActionLine = async (line: string): Promise<ActionResult> => {
   return (await check(res)).json();
 };
 
+/** «Новое дело» из главного меню: всё с начала (работает и у игрока). */
+export const newCase = async (): Promise<void> => {
+  await check(await fetch('/api/new-case', { method: 'POST' }));
+};
+
 export const resetState = async (): Promise<void> => {
   await check(await fetch('/api/state', { method: 'DELETE' }));
 };

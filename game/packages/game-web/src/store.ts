@@ -153,6 +153,8 @@ interface GameStore {
   /** Через ms заглянуть, не пришёл ли ответ на запрос (MAIL-B: письмо во «Входящие»). */
   checkMailIn(ms: number): void;
   load(): Promise<void>;
+  /** Дослать сохранение сейчас (перед «Новым делом»: иначе уход со страницы вернёт старое). */
+  flushSave(): Promise<void>;
   setPetitionOpen(open: boolean): void;
   /** Открыть материал; из поиска — с найденным словом (k — какое совпадение показать). */
   openViewer(materialId: string, find?: { q: string; k: number }, excerpt?: Excerpt): void;
@@ -526,6 +528,10 @@ export const useGame = create<GameStore>((set, get) => {
           get().checkMailIn(3000);
         }
       }, Math.max(0, ms) + 300);
+    },
+
+    flushSave() {
+      return saver.flush();
     },
 
     async load() {

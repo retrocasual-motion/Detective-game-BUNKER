@@ -1,4 +1,4 @@
-import { inboxIds, letterPetition, PERSONS, PIECES } from '@bunker/shared';
+import { EPILOGUE_ID, inboxIds, letterPetition, PERSONS, PIECES } from '@bunker/shared';
 import {
   type CSSProperties,
   type MouseEvent,
@@ -12,6 +12,7 @@ import Markdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { trackReading } from '../dev/readingLog.ts';
+import { useMenu } from '../menu/menu-store.ts';
 import { emailIn, quoteCard, wholeCard } from '../petition/drafts.ts';
 import { usePetition } from '../petition/petition-store.ts';
 import { MediaPlayer } from '../player/MediaPlayer.tsx';
@@ -250,20 +251,23 @@ export function Viewer({ materialId }: ViewerProps) {
   }, [material, excerpt, piece, pieceTaken]);
 
   const { goTo, page } = sheet;
+  // Эпилог (автор 17.11): закрыть нельзя — только «Завершить дело»; вернуться к делу — из меню.
+  const final = materialId === EPILOGUE_ID;
+  const dismiss = useMemo(() => (final ? () => undefined : close), [final, close]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // Печатают в поле поиска рядом с листом — стрелки двигают курсор, а не страницы.
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        if (e.key === 'Escape') close();
+        if (e.key === 'Escape') dismiss();
         return;
       }
-      if (e.key === 'Escape') close();
+      if (e.key === 'Escape') dismiss();
       else if (e.key === 'ArrowRight' || e.key === 'PageDown') goTo(page + 1);
       else if (e.key === 'ArrowLeft' || e.key === 'PageUp') goTo(page - 1);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [close, goTo, page]);
+  }, [dismiss, goTo, page]);
 
   if (!material && !person) return null;
 
@@ -272,7 +276,7 @@ export function Viewer({ materialId }: ViewerProps) {
 
   return (
     <div
-      className={`viewer${folderOpen ? ' viewer-with-folder' : ''}${searchOpen ? ' viewer-with-search' : ''}${notebookOpen ? ' viewer-with-notebook' : ''}`}
+      className={`viewer${final ? ' viewer-final' : ''}${folderOpen ? ' viewer-with-folder' : ''}${searchOpen ? ' viewer-with-search' : ''}${notebookOpen ? ' viewer-with-notebook' : ''}`}
       data-testid="viewer"
       role="dialog"
       aria-label={excerpt?.title ?? material?.title ?? person?.name}
@@ -308,7 +312,7 @@ export function Viewer({ materialId }: ViewerProps) {
       onPointerUp={(e) => {
         // Выделение текста, начатое на листе и законченное снаружи, — не «закрыть».
         if (downOutside.current && isOutside(e) && Date.now() - openedAt.current > OPEN_GUARD_MS)
-          close();
+          dismiss();
         downOutside.current = false;
       }}
       onWheel={(e) => sheet.onWheel(e.clientX, e.clientY, e.deltaY)}
@@ -403,6 +407,21 @@ export function Viewer({ materialId }: ViewerProps) {
                 )}
               </article>
             )}
+            {/* Эпилог (A-271): прочитали — «Завершить дело» прямо под статьёй → титры → меню. */}
+            {final && (
+              <button
+                type="button"
+                className="finish-case"
+                data-testid="finish-case"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  close();
+                  useMenu.getState().go('credits');
+                }}
+              >
+                Завершить дело
+              </button>
+            )}
             {/* Уголки — вне листа: их зона щелчка выходит за край на торчащую стопку. */}
             {!person && (
               <>
@@ -434,7 +453,7 @@ export function Viewer({ materialId }: ViewerProps) {
             )}
           </div>
         </div>
-        <div className="viewer-tools" data-testid="viewer-tools">
+        <div className="viewer-tools" data-testid="viewer-tools" hidden={final}>
           <button
             type="button"
             className="tool tool-close"
@@ -444,7 +463,7 @@ export function Viewer({ materialId }: ViewerProps) {
           >
             ✕
           </button>
-          {material && (
+          {material && materialId !== EPILOGUE_ID && (
             <button
               type="button"
               className="tool"
