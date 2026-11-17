@@ -2721,13 +2721,19 @@ button {
   border-radius: 0 0 var(--radius) var(--radius);
   opacity: 0.85;
 }
-/* Под эпилогом: прочитали — закончить дело. */
+/* Эпилог (автор 17.11): закрыть нельзя — поверх всего, кроме главного меню; кнопка «Завершить
+   дело» — прямо под статьёй. */
+.viewer-final {
+  z-index: 95;
+}
+.viewer-final .viewer-tools {
+  display: none;
+}
 .finish-case {
-  position: fixed;
+  position: absolute;
   left: 50%;
-  bottom: var(--space-4);
+  top: calc(100% + var(--space-3));
   translate: -50% 0;
-  z-index: 75;
   padding: var(--space-2) var(--space-5, 24px);
   background: var(--color-card-text);
   color: var(--color-folder);
@@ -2735,4 +2741,5 @@ button {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   font: bold 18px var(--font-paper);
+  white-space: nowrap;
 }
