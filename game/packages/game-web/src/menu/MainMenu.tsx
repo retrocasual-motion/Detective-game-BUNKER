@@ -3,6 +3,7 @@ import { newCase } from '../api.ts';
 import { reducedMotion, setReducedMotion } from '../motion.ts';
 import { useGame } from '../store.ts';
 import { useVerdict } from '../verdict/verdict-store.ts';
+import { useAccount, useEmail } from './account.ts';
 import { useMenu } from './menu-store.ts';
 
 /**
@@ -17,6 +18,8 @@ export function MainMenu() {
   const [panel, setPanel] = useState<'none' | 'settings' | 'confirm'>('none');
   const [calm, setCalm] = useState(reducedMotion);
   const [busy, setBusy] = useState(false);
+  const email = useEmail();
+  const channel = useAccount((a) => (a.me?.auth === 'link' && a.me.email ? a.me.channel : null));
   if (screen !== 'menu') return null;
 
   const startOver = async () => {
@@ -58,8 +61,18 @@ export function MainMenu() {
             <button type="button" data-testid="menu-credits" onClick={() => go('credits')}>
               Титры
             </button>
+            {email && (
+              <button
+                type="button"
+                data-testid="menu-logout"
+                onClick={() => void useAccount.getState().logout()}
+              >
+                Выйти
+              </button>
+            )}
           </nav>
         )}
+        {email && panel === 'none' && <p className="main-menu-email">{email}</p>}
         {panel === 'confirm' && (
           <div className="main-menu-panel" role="alertdialog" aria-label="Новое дело">
             <p>Начать дело заново? Всё, что найдено и разложено, пропадёт.</p>
@@ -93,6 +106,31 @@ export function MainMenu() {
               />
               Уменьшить движение (без полёта камеры и наклона листов)
             </label>
+            {channel && (
+              <fieldset className="main-menu-group" data-testid="menu-mail">
+                Ответы на запросы приходят:
+                <label className="main-menu-check">
+                  <input
+                    type="radio"
+                    name="mail-channel"
+                    data-testid="menu-mail-real"
+                    checked={channel === 'real'}
+                    onChange={() => void useAccount.getState().setChannel('real')}
+                  />
+                  на почту ({email}) — «Добавить в дело» в письме кладёт их на стол
+                </label>
+                <label className="main-menu-check">
+                  <input
+                    type="radio"
+                    name="mail-channel"
+                    data-testid="menu-mail-internal"
+                    checked={channel === 'internal'}
+                    onChange={() => void useAccount.getState().setChannel('internal')}
+                  />
+                  сразу во «Входящие» на столе (если письма не приходят)
+                </label>
+              </fieldset>
+            )}
             <div className="main-menu-row">
               <button type="button" data-testid="menu-back" onClick={() => setPanel('none')}>
                 Назад

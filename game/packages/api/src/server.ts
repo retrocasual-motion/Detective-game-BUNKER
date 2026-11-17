@@ -5,6 +5,7 @@ import { serve } from '@hono/node-server';
 import { createApp } from './app.ts';
 import { connectDb, migrateDb } from './db/client.ts';
 import { env } from './env.ts';
+import { createMailer } from './mail/mailer.ts';
 import { waitForDatabase } from './startup.ts';
 
 const materials = MaterialSchema.array().parse(JSON.parse(readFileSync(env.contentFile, 'utf8')));
@@ -25,6 +26,14 @@ const engine = {
   },
 };
 const { db } = connectDb(env.databaseUrl);
+const mailer =
+  env.mailTransport === 'none'
+    ? undefined
+    : createMailer({
+        transport: env.mailTransport,
+        mailpitUrl: env.mailpitUrl,
+        from: { email: env.mailFrom, name: env.mailFromName },
+      });
 
 let ready = false;
 const app = createApp({
@@ -35,6 +44,9 @@ const app = createApp({
   webDist: env.webDist,
   engine,
   mailDelayMs: env.mailDelayMs,
+  auth: env.auth,
+  mailer,
+  publicUrl: env.publicUrl,
 });
 serve({ fetch: app.fetch, port: env.apiPort }, (info) => {
   console.log(
@@ -46,3 +58,10 @@ serve({ fetch: app.fetch, port: env.apiPort }, (info) => {
 await waitForDatabase(() => migrateDb(db));
 ready = true;
 console.log('api: база готова');
+if (env.auth === 'link' && mailer) {
+  console.log(
+    `api: вход по ссылке; письма — ${env.mailTransport === 'mailpit' ? `Mailpit ${env.mailpitUrl}` : 'в памяти'}`,
+  );
+  // Ответы на запросы, чей срок доставки наступил, — на почту игрока (и после перезапуска).
+  setInterval(() => void app.sweepMail(), 5000).unref();
+}

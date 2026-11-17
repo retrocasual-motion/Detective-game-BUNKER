@@ -1,0 +1,49 @@
+import { create } from 'zustand';
+import { getMe, logout, type Me, setMailChannel } from '../api.ts';
+
+/**
+ * Кто играет (6a-1): вход по ссылке на почту. Пока сервер не сказал «вошёл» — экран входа,
+ * игра не грузится. `auth: 'off'` — сервер без входа (один игрок, автотесты).
+ */
+interface AccountStore {
+  status: 'checking' | 'in' | 'out' | 'offline';
+  me: Me | null;
+  check(): Promise<void>;
+  setChannel(channel: 'real' | 'internal'): Promise<void>;
+  logout(): Promise<void>;
+}
+
+export const useAccount = create<AccountStore>((set, get) => ({
+  status: 'checking',
+  me: null,
+
+  async check() {
+    // Сервер мог ещё не подняться — повторяем раз в секунду.
+    for (;;) {
+      const me = await getMe();
+      if (me) {
+        set({ me, status: me.auth === 'off' || me.email ? 'in' : 'out' });
+        return;
+      }
+      set({ status: get().status === 'checking' ? 'offline' : get().status });
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  },
+
+  async setChannel(channel) {
+    const me = get().me;
+    if (me?.auth !== 'link' || !me.email) return;
+    // Сразу на экране; сервер не принял — вернуть как было.
+    set({ me: { ...me, channel } });
+    await setMailChannel(channel).catch(() => set({ me }));
+  },
+
+  async logout() {
+    await logout();
+    // Всё дело — от сервера: проще всего загрузить страницу заново (будет экран входа).
+    window.location.replace(window.location.pathname);
+  },
+}));
+
+/** Почта игрока, если он вошёл по ссылке (для меню и настроек). */
+export const useEmail = () => useAccount((a) => (a.me?.auth === 'link' ? a.me.email : undefined));

@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { App } from './App.tsx';
+import { Gate } from './menu/Login.tsx';
 import { initMotion } from './motion.ts';
 import './theme/tokens.css';
 import './app.css';
@@ -11,7 +11,7 @@ const root = document.getElementById('root');
 if (root) {
   createRoot(root).render(
     <StrictMode>
-      <App />
+      <Gate />
     </StrictMode>,
   );
 }

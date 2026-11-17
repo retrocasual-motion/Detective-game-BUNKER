@@ -152,6 +152,11 @@ interface GameStore {
   freshWall: string[];
   /** Через ms заглянуть, не пришёл ли ответ на запрос (MAIL-B: письмо во «Входящие»). */
   checkMailIn(ms: number): void;
+  /**
+   * Настоящая почта (6a-1): ответы ждут «Добавить в дело» в письме — заглядывать на сервер,
+   * пока ждут (и сразу, когда игрок вернулся к окну игры).
+   */
+  watchMail(): void;
   load(): Promise<void>;
   /** Дослать сохранение сейчас (перед «Новым делом»: иначе уход со страницы вернёт старое). */
   flushSave(): Promise<void>;
@@ -196,6 +201,10 @@ interface GameStore {
 export type Excerpt = { title: string; from: number; to: number; section?: string };
 
 const onWallNow = (s: PlayerState | null) => new Set((s?.wall.items ?? []).map((i) => i.id));
+
+/** Как часто заглядывать, пока ответ ждёт «Добавить в дело» в письме, мс. */
+const MAIL_WATCH_MS = 4000;
+let mailWatch: ReturnType<typeof setInterval> | null = null;
 
 export const useGame = create<GameStore>((set, get) => {
   const saver = createSaver(putState, 500, (saveStatus) => set({ saveStatus }));
@@ -530,6 +539,25 @@ export const useGame = create<GameStore>((set, get) => {
       }, Math.max(0, ms) + 300);
     },
 
+    watchMail() {
+      if (mailWatch) return;
+      const look = async () => {
+        try {
+          get().addReleased(await getMaterials());
+          const { waiting } = await getPendingMail();
+          if (waiting) return;
+        } catch {
+          return;
+        }
+        if (mailWatch) clearInterval(mailWatch);
+        mailWatch = null;
+        window.removeEventListener('focus', onFocus);
+      };
+      const onFocus = () => void look();
+      mailWatch = setInterval(() => void look(), MAIL_WATCH_MS);
+      window.addEventListener('focus', onFocus);
+    },
+
     flushSave() {
       return saver.flush();
     },
@@ -550,8 +578,9 @@ export const useGame = create<GameStore>((set, get) => {
             get().updateState((s) => openAll(s, materials));
           // Письма, которые ещё в пути (запрос отправили до перезагрузки).
           getPendingMail()
-            .then((inMs) => {
+            .then(({ inMs, waiting }) => {
               for (const ms of inMs) get().checkMailIn(ms);
+              if (waiting) get().watchMail();
             })
             .catch(() => undefined);
           return;

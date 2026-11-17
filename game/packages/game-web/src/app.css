@@ -2709,6 +2709,50 @@ button {
   margin: 0;
   font: 18px var(--font-paper);
 }
+/* Вход по ссылке (6a-1) и настройки почты — тот же тёмный экран. */
+.login .main-menu-panel {
+  max-width: 460px;
+}
+.login .main-menu-panel p {
+  margin: 0;
+  font: 17px var(--font-paper);
+}
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  text-align: left;
+  font: 16px var(--font-paper);
+}
+.login-field input {
+  padding: var(--space-2);
+  font: 18px var(--font-paper);
+}
+.login-hint,
+.login-dev,
+.main-menu-email {
+  margin: 0;
+  font: 15px var(--font-paper);
+  opacity: 0.75;
+}
+.login-dev a {
+  color: inherit;
+}
+.login-error {
+  margin: 0;
+  color: var(--color-marker);
+  font: 15px var(--font-paper);
+}
+.main-menu-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  border: none;
+  text-align: left;
+  font: 16px var(--font-paper);
+}
 .menu-tab {
   position: absolute;
   top: 0;

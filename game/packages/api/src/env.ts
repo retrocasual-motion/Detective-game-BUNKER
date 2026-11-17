@@ -24,4 +24,18 @@ export const env = {
   webDist: e.WEB_DIST ? fromRoot(e.WEB_DIST) : undefined,
   /** Задержка ответа на запрос, мс (DELAY-A; пока 12 с — для проверки автором). */
   mailDelayMs: Number(e.MAIL_DELAY_MS ?? 12_000),
+  /** Вход (6a-1): `link` — по ссылке на почту; `off` — один игрок без входа, как раньше. */
+  auth: (e.AUTH === 'off' ? 'off' : 'link') as 'off' | 'link',
+  /**
+   * Исходящая почта (ML-A): `mailpit` — ловушка писем на компьютере; `memory` — только в
+   * памяти (автотесты); `none` — почты нет (ответы во «Входящие» на столе).
+   */
+  mailTransport: (['mailpit', 'memory', 'none'].includes(e.MAIL_TRANSPORT ?? '')
+    ? e.MAIL_TRANSPORT
+    : 'mailpit') as 'mailpit' | 'memory' | 'none',
+  mailpitUrl: e.MAILPIT_URL ?? 'http://127.0.0.1:8025',
+  mailFrom: e.MAIL_FROM ?? 'zapros@okrug-bureau.org',
+  mailFromName: e.MAIL_FROM_NAME ?? 'Окружное бюро расследований',
+  /** Адрес игры для ссылок в письмах: в разработке — Vite, в Docker — сам сервер. */
+  publicUrl: (e.PUBLIC_URL ?? 'http://localhost:5173').replace(/\/$/, ''),
 };

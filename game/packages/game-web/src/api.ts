@@ -81,9 +81,54 @@ export const resetState = async (): Promise<void> => {
   await check(await fetch('/api/state', { method: 'DELETE' }));
 };
 
+/** Кто вошёл (6a-1): без входа (`off`) или по ссылке — почта и куда идут ответы. */
+export type Me =
+  | { auth: 'off' }
+  | { auth: 'link'; email: string; channel: 'real' | 'internal' }
+  | { auth: 'link'; email?: undefined };
+
+/** null — сервер не ответил; `{auth:'link'}` без почты — нужен вход. */
+export const getMe = async (): Promise<Me | null> => {
+  const res = await fetch('/api/me').catch(() => null);
+  if (!res || (res.status !== 200 && res.status !== 401)) return null;
+  return res.json();
+};
+
+/** Письмо со ссылкой для входа. */
+export const requestLogin = async (
+  email: string,
+): Promise<{ sent: true; again?: boolean } | { error: string }> => {
+  const res = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email }),
+  }).catch(() => null);
+  if (!res) return { error: 'Нет связи с сервером. Попробуйте ещё раз.' };
+  const body = (await res.json().catch(() => ({}))) as { error?: string; sent?: true };
+  return res.ok && body.sent
+    ? { sent: true, again: (body as { again?: boolean }).again }
+    : { error: body.error ?? 'Письмо не отправлено.' };
+};
+
+export const logout = async (): Promise<void> => {
+  await fetch('/api/logout', { method: 'POST' });
+};
+
+/** Куда идут ответы на запросы: на почту или сразу во «Входящие» (P-14). */
+export const setMailChannel = async (channel: 'real' | 'internal'): Promise<void> => {
+  await check(
+    await fetch('/api/me/channel', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ channel }),
+    }),
+  );
+};
+
 /** Итог отправки запроса: номер и задержка ответа — или ошибка оформления (FORM-B). */
 export type PetitionResult =
-  | { ok: true; n: number; delayMs: number }
+  /** `toMail` — ответ придёт на почту игрока (настоящая почта), а не во «Входящие». */
+  | { ok: true; n: number; delayMs: number; toMail?: boolean }
   /** Общий отказ адресата (PRE-B): ответ сразу, письма нет, попытка засчитана. */
   | { ok: true; refused: string }
   | { ok: false; error: string };
@@ -100,14 +145,17 @@ export const postPetition = async (to: string, ask: Card, basis: Card): Promise<
     return { ok: false, error };
   }
   const r = (await check(res).then((x) => x.json())) as
-    | { n: number; delayMs: number }
+    | { n: number; delayMs: number; toMail?: boolean }
     | { refused: string };
   return 'refused' in r ? { ok: true, refused: r.refused } : { ok: true, ...r };
 };
 
-/** Письма в пути: через сколько мс каждое ляжет во «Входящие». */
-export const getPendingMail = async (): Promise<number[]> =>
-  ((await (await check(await fetch('/api/mail/pending'))).json()) as { inMs: number[] }).inMs;
+/**
+ * Письма в пути: через сколько мс каждое ляжет во «Входящие»; `waiting` — ответы, которые
+ * ждут «Добавить в дело» на почте игрока.
+ */
+export const getPendingMail = async (): Promise<{ inMs: number[]; waiting: number }> =>
+  (await check(await fetch('/api/mail/pending'))).json();
 
 /** Где дело (A-270): открыта ли форма заключения, отправлено ли заключение. */
 export interface CaseStatus {

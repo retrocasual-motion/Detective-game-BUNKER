@@ -108,7 +108,10 @@ describe('запрос из папки (этап 3)', () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ n: 1, delayMs: 60_000 });
     expect((await list()).map((m) => m.id)).toEqual(['01', '02']);
-    expect(await (await app().request('/api/mail/pending')).json()).toEqual({ inMs: [60_000] });
+    expect(await (await app().request('/api/mail/pending')).json()).toEqual({
+      inMs: [60_000],
+      waiting: 0,
+    });
 
     clock += 60_000;
     const got = await list();

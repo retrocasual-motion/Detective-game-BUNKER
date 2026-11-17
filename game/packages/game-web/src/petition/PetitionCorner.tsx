@@ -155,6 +155,7 @@ export function PetitionCorner() {
   const stamp = usePetition((p) => p.stamp);
   const sending = usePetition((p) => p.sending);
   const sentNote = usePetition((p) => p.sentNote);
+  const toMail = usePetition((p) => p.toMail);
   const discarded = usePetition((p) => p.discarded);
   const { toggle, close, create, send, deleteDraft, restoreDraft } = usePetition.getState();
   const draft = drafts.find((d) => d.id === activeId) ?? null;
@@ -300,7 +301,9 @@ export function PetitionCorner() {
       )}
       {sentNote && (
         <div className="petition-sent-note" data-testid="petition-sent-note" role="status">
-          Запрос отправлен. Ответ придёт письмом во «Входящие» на столе.
+          {toMail
+            ? 'Запрос отправлен. Ответ придёт на вашу почту — «Добавить в дело» в письме кладёт его на стол.'
+            : 'Запрос отправлен. Ответ придёт письмом во «Входящие» на столе.'}
         </div>
       )}
     </>
