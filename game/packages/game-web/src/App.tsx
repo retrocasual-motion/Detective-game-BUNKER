@@ -14,6 +14,9 @@ import { RoomScene } from './room/RoomScene.tsx';
 import { KEY_DIR, NAV } from './room/views.ts';
 import { SearchPanel } from './search/SearchPanel.tsx';
 import { useGame } from './store.ts';
+import { SolveCase } from './verdict/SolveCase.tsx';
+import { VerdictCorner } from './verdict/VerdictCorner.tsx';
+import { useVerdict } from './verdict/verdict-store.ts';
 import { Viewer } from './viewer/Viewer.tsx';
 import { WallView } from './wall/WallView.tsx';
 
@@ -29,9 +32,13 @@ export function App() {
   const computerOpen = useGame((g) => g.computerOpen);
   const loadFailed = useGame((g) => g.loadFailed);
   const saveStatus = useGame((g) => g.saveStatus);
+  // После «Решить дело» папка запроса уступает место форме заключения (P-9).
+  const closed = useVerdict((v) => v.status.form || v.status.sent);
 
   useEffect(() => {
     load();
+    // Где дело (A-270): форма заключения открыта или заключение отправлено.
+    void useVerdict.getState().load();
   }, [load]);
 
   // Клавиши дублируют стрелки на экране (основной способ — мышь).
@@ -93,7 +100,8 @@ export function App() {
       <SearchPanel />
       <ThrowToast />
       {viewerId && <Viewer key={viewerId} materialId={viewerId} />}
-      <PetitionCorner />
+      {closed ? <VerdictCorner /> : <PetitionCorner />}
+      <SolveCase />
       <Notebook />
       {import.meta.env.DEV && <DevActionLine />}
     </div>

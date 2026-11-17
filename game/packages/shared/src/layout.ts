@@ -126,6 +126,8 @@ export function inboxIds(state: PlayerState, materials: Material[]): string[] {
     ...(state.taken ?? []).flatMap((t) => FOLDER_DOCS[t] ?? []),
     // Файлы устройств — на устройстве (LW-A).
     ...Object.values(DEVICE_MATERIALS).flat(),
+    // Предупреждение и форма заключения — окна «Решить дело», не материалы дела (A-270).
+    ...FORM_MATERIALS,
   ]);
   return materials
     .filter((m) => isReleased(m) && !hidden.has(m.id))
@@ -316,6 +318,9 @@ export const FOLDER_DOCS: Readonly<Record<string, string>> = { 'П-02/18': 'L991
  * устройстве; во «Входящих» и на стене их нет, открывают их на устройстве. В деле они есть
  * (поиск, карточки запроса).
  */
+/** Предупреждение бюро и форма заключения (L998, L999): открываются кнопкой «Решить дело». */
+export const FORM_MATERIALS: readonly string[] = ['L998', 'L999'];
+
 export const DEVICE_MATERIALS: Readonly<Record<string, readonly string[]>> = {
   // L947 — крупный план картинки учётной записи на экране входа.
   '47': ['L560', 'L561', 'L562', 'L563', 'L564', 'L565', 'L947'],

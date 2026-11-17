@@ -2,6 +2,7 @@ import { type Card, type Draft, type DraftField, MAX_DRAFTS } from '@bunker/shar
 import { create } from 'zustand';
 import { postPetition } from '../api.ts';
 import { useGame } from '../store.ts';
+import { useVerdict, verdictActive } from '../verdict/verdict-store.ts';
 import {
   addDraft,
   dropEmptyDrafts,
@@ -148,6 +149,11 @@ export const usePetition = create<PetitionStore>((set, get) => {
     },
 
     addCard(card) {
+      // Форма заключения открыта (A-270): те же жесты кладут карточку в её вопрос.
+      if (verdictActive()) {
+        useVerdict.getState().addCard(card);
+        return;
+      }
       if (!game().petitionOpen || !draft()) get().open();
       const id = get().activeId;
       if (!id) return;

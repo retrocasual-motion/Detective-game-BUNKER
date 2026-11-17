@@ -98,6 +98,24 @@ export const DraftSchema = z.object({
 export type Draft = z.infer<typeof DraftSchema>;
 export type DraftField = 'to' | 'ask' | 'basis';
 
+/**
+ * Ответ на вопрос формы заключения (A-270; FM-A): человек (id карточки или «nobody»), карточка
+ * материала (как в запросе) или номер варианта. Своего текста нет. null — пусто.
+ */
+export const VerdictAnswerSchema = z
+  .union([
+    z.object({ person: z.string().min(1).max(40) }),
+    z.object({ card: CardSchema }),
+    z.object({ choice: z.number().int().min(0).max(9) }),
+  ])
+  .nullable();
+export type VerdictAnswer = z.infer<typeof VerdictAnswerSchema>;
+/** Сколько вопросов в форме L999 (A-270). */
+export const VERDICT_QUESTIONS = 5;
+export const VerdictSchema = z.object({
+  answers: z.array(VerdictAnswerSchema).length(VERDICT_QUESTIONS),
+});
+
 /** Сколько черновиков сразу (уголков папки рядом). */
 export const MAX_DRAFTS = 4;
 
@@ -218,6 +236,16 @@ export const PlayerStateSchema = z.object({
       marks: z
         .array(z.object({ t: z.number().min(0).max(2_000_000), label: z.string().max(60) }))
         .max(50),
+    })
+    .optional(),
+  /**
+   * Черновик заключения (A-270; RT-B): ответы по вопросам и вопрос, открытый в форме (5 —
+   * «Проверьте заключение»). Отправленное заключение хранит сервер.
+   */
+  verdict: z
+    .object({
+      answers: z.array(VerdictAnswerSchema).max(VERDICT_QUESTIONS),
+      step: z.number().int().min(0).max(VERDICT_QUESTIONS),
     })
     .optional(),
   /** Совмещённые на стене листы (WL-A, MG-A): «L990» — висит вместо своих половин. */

@@ -2391,3 +2391,134 @@ button {
   background: none;
   cursor: pointer;
 }
+
+/* «Решить дело» (TECH_PLAN 4.16; A-243): доступна всегда, пока дело открыто — внизу, левее
+   блокнота (угол справа — его язычок); предупреждение бюро — поверх всего. */
+.solve-case {
+  position: absolute;
+  right: calc(var(--space-4) + var(--notebook-width) + var(--space-3));
+  bottom: var(--space-2);
+  z-index: 50;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-folder);
+  color: var(--color-card-text);
+  border: 2px solid var(--color-stamp);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font: bold 16px var(--font-paper);
+  letter-spacing: 0.04em;
+}
+.solve-case:hover {
+  background: var(--color-folder-active);
+}
+.solve-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgb(0 0 0 / 55%);
+}
+.solve-dialog {
+  max-width: 520px;
+  padding: var(--space-4) var(--space-5, 24px);
+  background: var(--color-paper-sheet);
+  color: var(--color-card-text);
+  box-shadow: var(--shadow-paper-lifted);
+  font: 16px / 1.45 var(--font-paper);
+}
+.solve-dialog h2 {
+  margin: 0 0 var(--space-2);
+  font-size: 20px;
+}
+.solve-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.solve-actions button {
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: 1px solid var(--color-card-text);
+  border-radius: var(--radius);
+  font: inherit;
+}
+.solve-actions .solve-go {
+  background: var(--color-card-text);
+  color: var(--color-paper-sheet);
+}
+
+/* Форма заключения (A-270): та же папка, что у запроса; вопрос по одному, в конце — проверка. */
+.verdict-count {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.75;
+}
+.verdict-question {
+  margin: 0;
+  font: bold 18px / 1.3 var(--font-paper);
+}
+.verdict-people,
+.verdict-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.verdict-options {
+  flex-direction: column;
+}
+.verdict-person,
+.verdict-option {
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-paper-sheet);
+  border: 1px solid var(--color-folder-slot);
+  border-radius: var(--radius);
+  text-align: left;
+  font: 15px var(--font-paper);
+  box-shadow: var(--shadow-paper);
+}
+.verdict-person:hover,
+.verdict-option:hover {
+  background: var(--color-folder-active);
+}
+.verdict-chosen {
+  border-color: var(--color-card-text);
+  outline: 2px solid var(--color-card-text);
+}
+.verdict-review {
+  margin: 0;
+  padding-left: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font: 14px / 1.35 var(--font-paper);
+}
+.verdict-review li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+}
+.verdict-review-q {
+  flex-basis: 100%;
+  opacity: 0.8;
+}
+.verdict-review-a {
+  font-weight: bold;
+}
+.verdict-edit {
+  padding: 0 var(--space-1);
+  background: transparent;
+  border: none;
+  text-decoration: underline;
+  font: inherit;
+}
+.verdict-note {
+  margin: 0;
+  font-size: 13px;
+}
+.verdict-stamp {
+  pointer-events: none;
+}

@@ -34,6 +34,7 @@ export default defineConfig({
         NODE_ENV: 'development',
         // Ответ на запрос в автотестах — почти сразу.
         MAIL_DELAY_MS: '1500',
+        VERDICT_DELAY_MS: '1500',
       },
     },
     {

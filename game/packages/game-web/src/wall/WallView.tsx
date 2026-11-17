@@ -32,6 +32,7 @@ import { overFolder, petitionFieldAt } from '../petition/fieldAt.ts';
 import { usePetition } from '../petition/petition-store.ts';
 import { useViewport } from '../room/useViewport.ts';
 import { shownCamera, useGame } from '../store.ts';
+import { useVerdict, verdictActive } from '../verdict/verdict-store.ts';
 import { FOLDER_SHEETS, folderOnWall } from '../viewer/bundles.ts';
 import { useCameraTween } from './useCameraTween.ts';
 import { isItemCard, type PinHandlers, WallCard } from './WallCard.tsx';
@@ -369,6 +370,11 @@ export function WallView() {
       // Лист отпустили на поле открытой папки — карточка «материал целиком» (K-A), лист
       // остаётся на стене, где висел.
       const f = petitionFieldAt(at.x, at.y);
+      // Карточку человека отпустили на форму заключения (A-270): ответ «кто», карточка — на стене.
+      if (f && id.startsWith('p:') && verdictActive()) {
+        useVerdict.getState().addPerson(id);
+        return;
+      }
       const m = useGame.getState().materials.find((mm) => mm.id === id);
       if (f && f !== 'to' && m) {
         usePetition.getState().setActiveField(f);
@@ -387,7 +393,8 @@ export function WallView() {
     (id: string, dx: number, dy: number, at?: { x: number; y: number }) => {
       setLive(dx === 0 && dy === 0 ? null : { id, dx, dy });
       const pet = usePetition.getState();
-      const material = !id.includes(':');
+      // Над формой заключения тянут и карточку человека (A-270).
+      const material = !id.includes(':') || (id.startsWith('p:') && verdictActive());
       const group = selectedRef.current.size > 1 && selectedRef.current.has(id);
       if (!at || !useGame.getState().petitionOpen || !material || group || (dx === 0 && dy === 0)) {
         pet.setDrag(false, null);
@@ -820,7 +827,9 @@ export function WallView() {
             data-testid="drag-ghost"
             style={{ translate: `${ghost.x}px ${ghost.y}px` }}
           >
-            {byId.get(ghost.id)?.id} · {byId.get(ghost.id)?.title}
+            {byId.get(ghost.id)
+              ? `${ghost.id} · ${byId.get(ghost.id)?.title}`
+              : personById.get(ghost.id)?.name}
           </div>,
           document.body,
         )}

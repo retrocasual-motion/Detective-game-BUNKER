@@ -115,12 +115,15 @@ export function buildLockedMaterials(lockedDir: string): Material[] {
 export interface ServerContent {
   rules: unknown;
   locked: Material[];
+  /** Ответы формы заключения (A-270, `gm/verdict.json`) — только для сервера. */
+  verdict: unknown;
 }
 
 export function buildServerContent(packDir: string): ServerContent {
   return {
     rules: JSON.parse(readText(join(packDir, 'gm', 'access.json'))),
     locked: buildLockedMaterials(join(packDir, 'locked')),
+    verdict: JSON.parse(readText(join(packDir, 'gm', 'verdict.json'))),
   };
 }
 
