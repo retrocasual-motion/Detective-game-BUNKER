@@ -4,7 +4,7 @@ import { expect, test } from './fixtures.ts';
 /**
  * Камера инженера (24; A-268 — изъята сама камера с картой; автор 17.11: «как телефон»): в руках
  * вертят, щелчок по экрану — вплотную, экран живой; кнопки на корпусе — ◀ ▶, DISP (время —
- * свойства L973), T (крупно — L905), W (таблица по девять), MENU.
+ * свойства L973), T (крупно — L905), W (таблица по девять), MENU; 11 кадров (A-269).
  */
 
 async function cameraUp(page: Page) {
@@ -19,30 +19,29 @@ const frame = (page: Page) => page.getByTestId('camera-view');
 
 test('просмотр: последний кадр, ◀ ▶ листают, подпись — что на кадре', async ({ page }) => {
   await cameraUp(page);
-  await expect(frame(page)).toHaveAttribute('data-frame', '61');
-  await expect(page.getByTestId('camera-count')).toHaveText('61/61');
+  await expect(frame(page)).toHaveAttribute('data-frame', '11');
+  await expect(page.getByTestId('camera-count')).toHaveText('11/11');
   await expect(page.getByTestId('camera-caption')).toContainText('Дверь кабинета снаружи');
   await page.getByTestId('camera-right').click();
   await expect(frame(page)).toHaveAttribute('data-frame', '1');
   await page.getByTestId('camera-left').click();
   await page.getByTestId('camera-left').click();
-  await expect(frame(page)).toHaveAttribute('data-frame', '60');
+  await expect(frame(page)).toHaveAttribute('data-frame', '10');
   // Стрелки клавиатуры — те же кнопки.
   await page.keyboard.press('ArrowRight');
-  await expect(frame(page)).toHaveAttribute('data-frame', '61');
+  await expect(frame(page)).toHaveAttribute('data-frame', '11');
 });
 
 test('W — таблица по девять, стрелки выбирают, SET — кадр; T — крупно (L905)', async ({ page }) => {
   await cameraUp(page);
   await page.getByTestId('camera-w').click();
   await expect(page.getByTestId('camera-index')).toBeVisible();
-  for (let k = 0; k < 15; k++) await page.getByTestId('camera-up').click();
-  await expect(frame(page)).toHaveAttribute('data-frame', '16');
-  await page.getByTestId('camera-left').click();
-  await page.getByTestId('camera-left').click();
+  for (let k = 0; k < 3; k++) await page.getByTestId('camera-up').click();
+  await expect(frame(page)).toHaveAttribute('data-frame', '2');
+  await page.getByTestId('camera-right').click();
   await page.getByTestId('camera-set').click();
   await expect(frame(page)).toHaveAttribute('data-mode', 'single');
-  await expect(frame(page)).toHaveAttribute('data-frame', '14');
+  await expect(frame(page)).toHaveAttribute('data-frame', '3');
   await expect(page.getByTestId('camera-caption')).toContainText('Подножие сверху');
   await page.getByTestId('camera-t').click();
   await expect(page.getByTestId('camera-zoom')).toHaveText('×2');
@@ -51,29 +50,23 @@ test('W — таблица по девять, стрелки выбирают, S
   await expect(page.getByTestId('camera-detail')).toHaveCount(0);
 });
 
-test('DISP — время съёмки (свойства L973); MENU — меню; стереть нельзя: карта защищена', async ({
-  page,
-}) => {
+test('DISP — время съёмки (свойства L973); в меню — только то, что работает', async ({ page }) => {
   await cameraUp(page);
-  await page.keyboard.press('ArrowLeft');
-  await page.getByTestId('camera-w').click();
-  for (let k = 0; k < 15; k++) await page.getByTestId('camera-up').click();
-  await page.getByTestId('camera-set').click();
-  await expect(frame(page)).toHaveAttribute('data-frame', '15');
+  for (let k = 0; k < 7; k++) await page.keyboard.press('ArrowLeft');
+  await expect(frame(page)).toHaveAttribute('data-frame', '4');
   await page.getByTestId('camera-disp').click();
   await expect(page.getByTestId('camera-info')).toHaveText('13.10.2009, 08:56:40');
   await page.getByTestId('camera-disp').click();
   await expect(page.getByTestId('camera-count')).toHaveCount(0);
   await page.getByTestId('camera-menu').click();
   await expect(page.getByTestId('camera-menu-screen')).toBeVisible();
-  await page.getByTestId('camera-down').click();
-  await page.getByTestId('camera-set').click();
-  await expect(page.getByTestId('camera-msg')).toContainText('Card locked');
+  await expect(page.locator('[data-testid^="camera-item-"]')).toHaveCount(1);
+  await expect(page.getByTestId('camera-item-Erase')).toHaveCount(0);
   // Отошли и взяли снова — время уже открыто, кадр тот же.
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('held')).toHaveAttribute('data-focus', '');
   await page.getByTestId('device-use').click();
-  await expect(frame(page)).toHaveAttribute('data-frame', '15');
+  await expect(frame(page)).toHaveAttribute('data-frame', '4');
 });
 
 test('меню — и мышью: вкладка, пункт; Set up меняется — без звука, яркость, язык', async ({

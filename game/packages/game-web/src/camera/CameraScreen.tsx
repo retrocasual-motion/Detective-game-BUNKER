@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelectionPetition } from '../device/deviceView.tsx';
 import { useGame } from '../store.ts';
-import { LOCKED_MSG, MENU, say, useCamera, zoomOf } from './camera.ts';
+import { MENU, say, useCamera, zoomOf } from './camera.ts';
 import { FRAME_COUNT, frameDetails, frameTime, parseFrames } from './frames.ts';
 import './camera.css';
 
@@ -135,11 +135,6 @@ export function CameraScreen() {
             ))}
           </ul>
           <div className="cm-menu-foot">{say(c.lang, 'MENU Exit')}</div>
-        </div>
-      )}
-      {c.msg && (
-        <div className="cm-msg" data-testid="camera-msg">
-          {c.msg === LOCKED_MSG ? say(c.lang, 'Card locked!') : c.msg}
         </div>
       )}
       {button && createPortal(button, document.body)}

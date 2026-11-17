@@ -8,7 +8,7 @@ import { FRAME_COUNT } from './frames.ts';
  * экран живой, кнопки на корпусе). Устроена по референсам компактных камер 2009 года (Canon
  * PowerShot SD1200 / IXUS 95, Sony W290): ◀ ▶ — кадр, DISP — информация (простая → подробная с
  * датой и временем → без информации), рычажок T — увеличить (×2…×10), W — уменьшить и таблица по
- * девять кадров, MENU — меню просмотра (Slideshow, Erase, Protect, Rotate) и настройки.
+ * девять кадров, MENU — меню: «Slideshow» и настройки (только то, что работает — A-269).
  * «Подробная» — это «свойства» (ОСМОТР 24 свойства → L973), увеличение — «увеличить»
  * (ОСМОТР 24 увеличить → L905): движок открывает их при первом нажатии.
  */
@@ -18,26 +18,21 @@ export type CamMode = 'single' | 'index' | 'menu';
 export type Disp = 0 | 1 | 2;
 
 export const MENU = [
-  { tab: 'play', items: ['Slideshow', 'Erase', 'Protect', 'Rotate'] },
+  // Только то, что работает (автор 17.11: «всё остальное можно убрать»).
+  { tab: 'play', items: ['Slideshow'] },
   { tab: 'setup', items: ['Mute', 'LCD Brightness', 'Language'] },
 ] as const;
 const ZOOMS = [1, 2, 4, 6, 8, 10];
-/** Карта защищена от записи (вещдок): стереть, защитить, повернуть нельзя. */
-export const LOCKED_MSG = 'Card locked';
 
 /** Язык экрана камеры (Set up → Language): как у камер того времени — английский или русский. */
 export type Lang = 'en' | 'ru';
 const WORDS: Record<string, string> = {
   Slideshow: 'Слайд-шоу',
-  Erase: 'Стереть',
-  Protect: 'Защита',
-  Rotate: 'Поворот',
   Mute: 'Без звука',
   'LCD Brightness': 'Яркость экрана',
   Language: 'Язык',
   'Set up': 'Настройка',
   'MENU Exit': 'MENU Выход',
-  'Card locked!': 'Карта защищена!',
   On: 'Вкл.',
   Off: 'Выкл.',
   English: 'English',
@@ -53,7 +48,6 @@ interface Cam {
   disp: Disp;
   tab: 0 | 1;
   item: number;
-  msg: string | null;
   slideshow: boolean;
   /** Set up: без звука, яркость экрана (1…5), язык. */
   mute: boolean;
@@ -74,7 +68,6 @@ interface Cam {
   wide(): void;
 }
 
-let msgT: ReturnType<typeof setTimeout> | null = null;
 let showT: ReturnType<typeof setInterval> | null = null;
 
 const has = (id: string) => useGame.getState().materials.some((m) => m.id === id);
@@ -88,11 +81,6 @@ async function ask(value: string, id: string) {
 export const zoomOf = (k: number) => ZOOMS[k] ?? 1;
 
 export const useCamera = create<Cam>((set, get) => {
-  const flash = (msg: string) => {
-    if (msgT) clearTimeout(msgT);
-    set({ msg });
-    msgT = setTimeout(() => set({ msg: null }), 1800);
-  };
   const stopShow = () => {
     if (showT) clearInterval(showT);
     showT = null;
@@ -108,7 +96,6 @@ export const useCamera = create<Cam>((set, get) => {
     disp: 0,
     tab: 0,
     item: 0,
-    msg: null,
     slideshow: false,
     mute: true,
     bright: 3,
@@ -122,7 +109,7 @@ export const useCamera = create<Cam>((set, get) => {
     },
     reset() {
       stopShow();
-      set({ mode: 'single', zoom: 0, msg: null, tab: 0, item: 0 });
+      set({ mode: 'single', zoom: 0, tab: 0, item: 0 });
     },
     left() {
       stopShow();
@@ -163,8 +150,7 @@ export const useCamera = create<Cam>((set, get) => {
       if (name === 'Slideshow') {
         set({ mode: 'single', zoom: 0, slideshow: true });
         showT = setInterval(() => step(1), 3000);
-      } else if (name === 'Erase' || name === 'Protect' || name === 'Rotate') flash(LOCKED_MSG);
-      else if (name === 'Mute') set({ mute: !get().mute });
+      } else if (name === 'Mute') set({ mute: !get().mute });
       else if (name === 'LCD Brightness') set({ bright: (get().bright % 5) + 1 });
       else if (name === 'Language') set({ lang: get().lang === 'en' ? 'ru' : 'en' });
     },
