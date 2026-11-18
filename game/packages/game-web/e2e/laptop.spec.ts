@@ -16,19 +16,33 @@ async function laptopUp(page: Page) {
   await expect(page.getByTestId('laptop-view')).toBeVisible();
 }
 
-/** Нарисовать ключ мышью через точки. */
+/**
+ * Нарисовать ключ мышью через точки. Места всех точек — одним запросом, мышь — в два шага
+ * (R4-10: по запросу на точку и шесть шагов ключ из шести попыток не укладывался в 30 с в CI).
+ */
 async function draw(page: Page, dots: number[]) {
-  const at = async (n: number) => {
-    const b = await page.getByTestId(`laptop-dot-${n}`).boundingBox();
-    if (!b) throw new Error(`нет точки ${n}`);
-    return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+  const places = await page.evaluate(() =>
+    Object.fromEntries(
+      [...document.querySelectorAll<SVGElement>('[data-testid^="laptop-dot-"]')].map((el) => {
+        const b = el.getBoundingClientRect();
+        return [
+          el.dataset.testid?.slice('laptop-dot-'.length),
+          { x: b.x + b.width / 2, y: b.y + b.height / 2 },
+        ];
+      }),
+    ),
+  );
+  const at = (n: number) => {
+    const p = places[String(n)];
+    if (!p) throw new Error(`нет точки ${n}`);
+    return p;
   };
-  const first = await at(dots[0] ?? 1);
+  const first = at(dots[0] ?? 1);
   await page.mouse.move(first.x, first.y);
   await page.mouse.down();
   for (const n of dots.slice(1)) {
-    const p = await at(n);
-    await page.mouse.move(p.x, p.y, { steps: 6 });
+    const p = at(n);
+    await page.mouse.move(p.x, p.y, { steps: 2 });
   }
   await page.mouse.up();
 }

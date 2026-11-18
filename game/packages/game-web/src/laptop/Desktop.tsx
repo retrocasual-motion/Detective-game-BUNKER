@@ -188,16 +188,22 @@ export function Desktop({
   const [selIcon, setSelIcon] = useState<string | null>(null);
   const [startOpen, setStartOpen] = useState(false);
   const z = useRef(wins.reduce((m, p) => Math.max(m, p.z), 1));
-  // В сохранение — не на каждом шаге перетаскивания, а когда всё замерло.
+  // В сохранение — не на каждом шаге перетаскивания, а когда всё замерло; отошли от ноутбука
+  // раньше — дописываем сразу (как у компьютера, R2-06).
+  const pending = useRef<(() => void) | null>(null);
   useEffect(() => {
-    const t = setTimeout(() => {
+    const save = () => {
+      pending.current = null;
       useGame.getState().updateState((st) => ({
         ...st,
         laptop: { icons: iconPos, windows: wins.map(toSaved) },
       }));
-    }, 400);
+    };
+    pending.current = save;
+    const t = setTimeout(save, 400);
     return () => clearTimeout(t);
   }, [wins, iconPos]);
+  useEffect(() => () => pending.current?.(), []);
   const started = useGame((g) => g.state?.started);
   const [now, setNow] = useState(() => gameNow(started));
   useEffect(() => {

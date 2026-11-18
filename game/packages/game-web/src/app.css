@@ -2800,3 +2800,90 @@ button {
 .room-holding :is(.search-tab, .solve-case, .menu-tab) {
   display: none;
 }
+
+/* Сервер отказал в сохранении (R2-03): плашка с «Обновить» — нажимается. */
+.save-error-hard {
+  pointer-events: auto;
+  max-width: min(420px, 80vw);
+}
+.save-error-hard button {
+  margin-left: var(--space-1);
+}
+
+/* Дело открыто в другой вкладке (R2-02): здесь не сохраняется — поверх всего. */
+.elsewhere {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgb(14 16 19 / 94%);
+  color: var(--color-text);
+}
+.elsewhere-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: min(420px, 90vw);
+  text-align: center;
+}
+
+/* Нет связи при загрузке (R5-11): по центру, крупно. */
+.placeholder-center {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  font-size: 18px;
+}
+.placeholder-note {
+  font-size: 14px;
+}
+
+/* «Решить дело» не дошло до сервера (R2-05): под кнопкой / в диалоге. */
+.solve-error {
+  position: absolute;
+  top: 40px;
+  left: calc(var(--space-4) + 84px);
+  z-index: 30;
+  max-width: 320px;
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-surface);
+  color: var(--color-danger);
+  border-radius: var(--radius);
+}
+.solve-error-inline {
+  color: var(--color-danger);
+}
+
+/* Лист на стене при наведении растёт до читаемого (W8-A, автор 18.11; MS-4, HI-3): вокруг своей
+   кнопки (нити остаются на месте), поверх соседей, соседи не двигаются. На общем виде — до 2,5
+   раза; когда доска уже приближена и лист читается — не растёт. Только у мыши/тачпада. */
+@media (hover: hover) {
+  .wall-card > .paper {
+    transform-origin: 50% var(--pin-y);
+  }
+  .wall-card:not(.wall-card-dragging):hover {
+    /* biome-ignore lint/complexity/noImportantStyles: поверх порядка листов из inline-стиля */
+    z-index: 99999 !important;
+  }
+  .wall-card:not(.wall-card-dragging):hover > .paper:not(.card-dragging) {
+    scale: clamp(1, calc(0.75 / var(--zoom, 1)), 2.5);
+    box-shadow: var(--shadow-paper-lifted);
+    transition:
+      rotate var(--paper-settle),
+      scale 0.16s ease-out 0.06s,
+      box-shadow 0.16s;
+  }
+}
+
+/* Ошибка «Нового дела» или выхода в главном меню (R2-04). */
+.main-menu-error {
+  max-width: min(420px, 90vw);
+  margin: 0;
+  color: var(--color-danger);
+}

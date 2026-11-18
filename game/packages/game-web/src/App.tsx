@@ -35,7 +35,11 @@ export function App() {
   // Вещь в руках, компьютер или ручка вплотную — их слой закрывает верхние кнопки.
   const holding = useGame((g) => g.held !== null || g.computerOpen || !!g.pen);
   const loadFailed = useGame((g) => g.loadFailed);
-  const saveStatus = useGame((g) => g.saveStatus);
+  // Только то, что видно игроку: каждое «сохраняю → сохранено» не перерисовывает комнату (R3-06).
+  const saveProblem = useGame((g) =>
+    g.saveStatus === 'error' || g.saveStatus === 'rejected' ? g.saveStatus : null,
+  );
+  const elsewhere = useGame((g) => g.elsewhere);
   // После «Решить дело» папка запроса уступает место форме заключения (P-9).
   const closed = useVerdict((v) => v.status.form || v.status.sent);
   // Эпилог после заключения — конвертом на столе; пока не открыт — подсвечен (автор 17.11).
@@ -81,9 +85,19 @@ export function App() {
   );
 
   if (!view) {
+    // По центру и прямо: что случилось и что игра делает сама (R5-11).
     return (
-      <div className="placeholder">
-        {loadFailed ? 'Сервер пока не отвечает, пробуем ещё…' : 'Загрузка…'}
+      <div className="placeholder placeholder-center" role="status" data-testid="loading">
+        {loadFailed ? (
+          <>
+            <p>Нет связи с сервером игры.</p>
+            <p className="placeholder-note">
+              Пробуем снова каждую секунду — дело не потеряно. Проверьте интернет.
+            </p>
+          </>
+        ) : (
+          'Загрузка…'
+        )}
       </div>
     );
   }
@@ -102,9 +116,36 @@ export function App() {
         opened={opened}
         epilogue={epilogue}
       />
-      {saveStatus === 'error' && (
+      {saveProblem === 'error' && (
         <div className="save-error" data-testid="save-error" role="status">
           Не сохранено — пробуем ещё раз
+        </div>
+      )}
+      {saveProblem === 'rejected' && !elsewhere && (
+        <div className="save-error save-error-hard" data-testid="save-rejected" role="alert">
+          Сервер не принял сохранение: дело изменилось в другом месте.{' '}
+          <button type="button" onClick={() => window.location.reload()}>
+            Обновить
+          </button>
+        </div>
+      )}
+      {elsewhere && (
+        <div
+          className="elsewhere"
+          data-testid="elsewhere"
+          role="alertdialog"
+          aria-label="Дело открыто в другой вкладке"
+        >
+          <div className="elsewhere-card">
+            <p>Дело открыто в другой вкладке. Здесь изменения не сохраняются.</p>
+            <button
+              type="button"
+              className="main-menu-main"
+              onClick={() => window.location.reload()}
+            >
+              Играть здесь
+            </button>
+          </div>
         </div>
       )}
       <ArrivalNote />

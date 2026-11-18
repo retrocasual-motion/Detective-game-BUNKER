@@ -123,4 +123,36 @@ describe('createSaver', () => {
     expect(seqs).toHaveLength(2);
     expect(seqs[1] ?? 0).toBeGreaterThan(seqs[0] ?? 0);
   });
+
+  it('отказ сервера по существу (4xx) — «rejected» и без повторов (R2-03)', async () => {
+    let n = 0;
+    const saver = createSaver(
+      async () => {
+        n++;
+        throw Object.assign(new Error('400'), { status: 400 });
+      },
+      500,
+      (s) => statuses.push(s),
+    );
+    saver.schedule(state('wall'));
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(n).toBe(1);
+    expect(statuses.at(-1)).toBe('rejected');
+  });
+
+  it('stop — отложенное выброшено, новое не уходит, и при уходе со страницы тоже (R2-04)', async () => {
+    const { put, calls } = manualPut();
+    const saver = createSaver(put, 500, (s) => statuses.push(s));
+    saver.schedule(state('wall'));
+    saver.stop();
+    saver.schedule(state('desk'));
+    await saver.flush();
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(calls).toHaveLength(0);
+    saver.resume();
+    saver.schedule(state('desk'));
+    await vi.advanceTimersByTimeAsync(500);
+    expect(calls.map((c) => c.s.view)).toEqual(['desk']);
+  });
 });

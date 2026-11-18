@@ -26,7 +26,9 @@ base(
     expect(letter?.subject).toBe('Вход в дело № 09-1128');
     const link = /http:\/\/\S+\/api\/login\/verify\?token=\S+/.exec(letter?.text ?? '')?.[0];
     if (!link) throw new Error('нет ссылки');
+    // Ссылка — страница с кнопкой «Войти» (R1-01: сканеры почты открывают ссылки сами).
     await page.goto(link);
+    await page.getByRole('button', { name: 'Войти' }).click();
     await expect(page.getByTestId('main-menu')).toBeVisible();
     await page.getByTestId('menu-continue').click();
     await expect(page.getByTestId('room')).toBeVisible();
@@ -100,6 +102,8 @@ test('настоящая почта: ответ — письмом; «Добав
   if (!add) throw new Error('нет ссылки «Добавить в дело»');
   const phone = await page.context().newPage();
   await phone.goto(add);
+  await expect(phone.locator('body')).toContainText('Добавить в дело?');
+  await phone.getByRole('button', { name: 'Добавить в дело' }).click();
   await expect(phone.locator('body')).toContainText('Добавлено в дело');
   await phone.close();
 

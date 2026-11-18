@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { OFFLINE } from '../lock.ts';
 import { useVerdict } from './verdict-store.ts';
 
 /**
@@ -11,12 +12,17 @@ export function SolveCase() {
   const warning = useVerdict((v) => v.warning);
   const { ask, back, proceed } = useVerdict.getState();
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   if (status.form || status.sent) return null;
+  // Сбой сети — сказать прямо, а не молча вернуть кнопку (R2-05).
   const run = (fn: () => Promise<void>) => async () => {
     if (busy) return;
     setBusy(true);
+    setError('');
     try {
       await fn();
+    } catch {
+      setError(`${OFFLINE}.`);
     } finally {
       setBusy(false);
     }
@@ -32,6 +38,11 @@ export function SolveCase() {
       >
         Решить дело
       </button>
+      {error && !warning && (
+        <p className="solve-error" role="alert" data-testid="solve-error">
+          {error}
+        </p>
+      )}
       {warning && (
         <div className="solve-backdrop">
           <div
@@ -50,6 +61,11 @@ export function SolveCase() {
               Если вы расследовали всё, что могли, — продолжайте. Если нет — вернитесь к делу:
               предупреждение ни к чему не обязывает.
             </p>
+            {error && (
+              <p className="solve-error-inline" role="alert" data-testid="solve-error">
+                {error}
+              </p>
+            )}
             <div className="solve-actions">
               <button type="button" data-testid="solve-back" onClick={back}>
                 Вернуться к делу

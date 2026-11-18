@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getMe, logout, type Me, setMailChannel } from '../api.ts';
+import { getMe, logout, type Me, setMailChannel, setOnSignedOut } from '../api.ts';
 
 /**
  * Кто играет (6a-1): вход по ссылке на почту. Пока сервер не сказал «вошёл» — экран входа,
@@ -44,6 +44,11 @@ export const useAccount = create<AccountStore>((set, get) => ({
     window.location.replace(window.location.pathname);
   },
 }));
+
+// Сессии больше нет (вышли в другой вкладке) — экран входа, а не бесконечные повторы (R2-03).
+setOnSignedOut(() => {
+  if (useAccount.getState().me?.auth === 'link') useAccount.setState({ status: 'out', me: null });
+});
 
 /** Почта игрока, если он вошёл по ссылке (для меню и настроек). */
 export const useEmail = () => useAccount((a) => (a.me?.auth === 'link' ? a.me.email : undefined));

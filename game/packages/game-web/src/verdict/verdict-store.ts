@@ -103,10 +103,15 @@ export const useVerdict = create<VerdictStore>((set, get) => {
     error: null,
 
     async load() {
-      try {
-        set({ status: await getCase() });
-      } catch {
-        // Сервер ещё поднимается — дело считаем открытым; следующая загрузка уточнит.
+      // Сервер ещё поднимается или связь пропала — повторять, пока не ответит: иначе игрок с уже
+      // отправленным заключением видел бы «Решить дело» и папку запроса (R2-05).
+      for (let wait = 1000; ; wait = Math.min(wait * 2, 30_000)) {
+        try {
+          set({ status: await getCase() });
+          return;
+        } catch {
+          await new Promise((r) => setTimeout(r, wait));
+        }
       }
     },
 
