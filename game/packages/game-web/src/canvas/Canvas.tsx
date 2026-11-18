@@ -1,5 +1,6 @@
 import type { Camera } from '@bunker/shared';
 import { type PointerEvent, type ReactNode, useEffect, useRef, type WheelEvent } from 'react';
+import { wheelIntent } from '../input.ts';
 import { type Bounds, clampToBounds, minZoomFor, zoomAt } from './math.ts';
 
 interface CanvasProps {
@@ -121,9 +122,16 @@ export function Canvas({
   };
 
   const onWheel = (e: WheelEvent<HTMLDivElement>) => {
+    const intent = wheelIntent(e);
+    // Тачпад (TP-C): два пальца — сдвинуть поверхность, щипок — приблизить.
+    if ('pan' in intent) {
+      const [dx, dy] = intent.pan;
+      change({ ...camera, x: camera.x - dx, y: camera.y - dy });
+      return;
+    }
     const rect = e.currentTarget.getBoundingClientRect();
     const point = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    let factor = Math.exp(-e.deltaY * WHEEL_SPEED);
+    let factor = Math.exp(-intent.zoom * WHEEL_SPEED);
     // У предела масштаб не уходит ниже, иначе ограничение вернуло бы его вокруг центра и стол
     // «пополз» бы от курсора.
     if (bounds) factor = Math.max(factor, minZoomFor(bounds, rect) / camera.zoom);

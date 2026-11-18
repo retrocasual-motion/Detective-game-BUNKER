@@ -12,6 +12,7 @@ import Markdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { trackReading } from '../dev/readingLog.ts';
+import { wheelIntent } from '../input.ts';
 import { useMenu } from '../menu/menu-store.ts';
 import { emailIn, quoteCard, wholeCard } from '../petition/drafts.ts';
 import { usePetition } from '../petition/petition-store.ts';
@@ -315,7 +316,12 @@ export function Viewer({ materialId }: ViewerProps) {
           dismiss();
         downOutside.current = false;
       }}
-      onWheel={(e) => sheet.onWheel(e.clientX, e.clientY, e.deltaY)}
+      onWheel={(e) => {
+        // Тачпад (TP-C): два пальца — сдвинуть приближённый лист, щипок — приблизить.
+        const intent = wheelIntent(e);
+        if ('pan' in intent) sheet.pan(-intent.pan[0], -intent.pan[1]);
+        else sheet.onWheel(e.clientX, e.clientY, intent.zoom);
+      }}
     >
       <div className="viewer-stage">
         <div

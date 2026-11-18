@@ -8,9 +8,12 @@ import { test as base, expect, type Page } from '@playwright/test';
 /** Игрок автотестов: вход без письма через служебный маршрут. */
 export const E2E_EMAIL = 'e2e@bunker.test';
 
-export const test = base.extend<{ sealed: boolean }>({
+export const test = base.extend<{ sealed: boolean; input: 'mouse' | 'trackpad' }>({
   sealed: [false, { option: true }],
-  page: async ({ page, sealed, reducedMotion }, use) => {
+  // Управление (TP-C): по умолчанию — мышь (колесо приближает), на любой системе.
+  input: ['mouse', { option: true }],
+  page: async ({ page, sealed, reducedMotion, input }, use) => {
+    await page.addInitScript((m) => localStorage.setItem('bunker.input', m), input);
     // Игра не слушает системное «уменьшить движение» (RM-A) — включаем её собственную
     // настройку, когда тест просит без анимаций (по умолчанию в конфиге).
     if (reducedMotion === 'reduce') {

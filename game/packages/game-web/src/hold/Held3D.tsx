@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { type Group, type Object3D, PerspectiveCamera, Quaternion, Vector3 } from 'three';
 import { useFreeArea } from '../device/deviceView.tsx';
+import { wheelIntent, zoomFactor } from '../input.ts';
 import { reducedMotion } from '../motion.ts';
 import { clampPitch, orient } from './orient.ts';
 import { zoomStep } from './zoom.ts';
@@ -57,7 +58,8 @@ interface Gesture {
   moved: number;
   /** Отпустили — лист ложится к ближайшей стороне. */
   released: boolean;
-  wheel: { x: number; y: number; deltaY: number }[];
+  /** Прокрутки за кадр: точка и сила (> 0 — отдалить). */
+  wheel: { x: number; y: number; zoom: number }[];
   reset: boolean;
   /** Сдвиг зажатым колесом с прошлого кадра, px. */
   panX: number;
@@ -224,8 +226,8 @@ function Rig({
   const tmp = useRef(new PerspectiveCamera());
 
   // Приблизить к точке под курсором: камера едет по лучу через курсор, точка остаётся под ним.
-  const zoomAt = (x: number, y: number, deltaY: number) => {
-    const factor = deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
+  const zoomAt = (x: number, y: number, zoom: number) => {
+    const factor = zoomFactor(zoom, ZOOM_STEP);
     const cam = tmp.current;
     cam.copy(camera as PerspectiveCamera);
     cam.position.copy(camTarget.current);
@@ -305,7 +307,7 @@ function Rig({
       // Лист ложится ровно: лицом или оборотом, как ближе.
       if (mode === 'flip') yaw.current = Math.round(yaw.current / Math.PI) * Math.PI;
     }
-    for (const w of g.wheel.splice(0)) zoomAt(w.x, w.y, w.deltaY);
+    for (const w of g.wheel.splice(0)) zoomAt(w.x, w.y, w.zoom);
     if (g.reset) {
       g.reset = false;
       pitch.current = 0;
@@ -520,10 +522,17 @@ export default function Held3D({
       onWheel={(e) => {
         const r = wrap.current?.getBoundingClientRect();
         if (!r) return;
+        // Тачпад (TP-C): два пальца — сдвинуть вещь (как зажатое колесо), щипок — приблизить.
+        const intent = wheelIntent(e);
+        if ('pan' in intent) {
+          gesture.current.panX -= intent.pan[0];
+          gesture.current.panY -= intent.pan[1];
+          return;
+        }
         gesture.current.wheel.push({
           x: ((e.clientX - r.left) / r.width) * 2 - 1,
           y: -((e.clientY - r.top) / r.height) * 2 + 1,
-          deltaY: e.deltaY,
+          zoom: intent.zoom,
         });
       }}
       // Колесо-кнопка в браузере включает автопрокрутку — здесь она не нужна.
