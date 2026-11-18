@@ -1,11 +1,19 @@
 name: game
 
+# Минуты Actions на Free ограничены (R4-02): правка только документации CI не запускает; новый
+# пуш в ту же ветку отменяет прошлый прогон; e2e — только на PR (в main приходит уже проверенное).
 on:
   pull_request:
-    paths: ['game/**', '.github/workflows/game.yml', 'playtest/packs/**']
+    paths:
+      ['game/**', '.github/workflows/game.yml', 'playtest/packs/**', '!game/docs/**', '!**/*.md']
   push:
     branches: [main]
-    paths: ['game/**', '.github/workflows/game.yml']
+    paths:
+      ['game/**', '.github/workflows/game.yml', 'playtest/packs/**', '!game/docs/**', '!**/*.md']
+
+concurrency:
+  group: game-${{ github.ref }}
+  cancel-in-progress: true
 
 defaults:
   run:
@@ -30,6 +38,7 @@ jobs:
       - run: pnpm test
 
   e2e:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +58,7 @@ jobs:
         with:
           name: playwright-report
           path: game/packages/game-web/test-results
+          retention-days: 7
 
   docker:
     runs-on: ubuntu-latest

@@ -9,7 +9,8 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI ? 'github' : 'list',
+  // В CI — ещё и список с длительностью каждого теста (видно медленные).
+  reporter: process.env.CI ? [['github'], ['list']] : 'list',
   // Без анимаций: фикстура включает игровую настройку «уменьшить движение» (RM-A), когда
   // reducedMotion = 'reduce'; анимацию проверяют тесты с 'no-preference'.
   use: {
