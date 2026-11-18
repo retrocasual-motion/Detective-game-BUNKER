@@ -202,6 +202,7 @@ function Rig({
   half,
   onSide,
   buttons,
+  onBody,
   focus,
   area,
   screen,
@@ -219,6 +220,8 @@ function Rig({
   half: [number, number];
   onSide: (back: boolean) => void;
   buttons: RefObject<Map<string, HTMLButtonElement>>;
+  /** Щелчок по самой вещи (не по части с обработчиком). */
+  onBody: () => void;
   children: ReactNode;
 }) {
   const group = useRef<Group>(null);
@@ -405,7 +408,21 @@ function Rig({
     }
   });
 
-  return <group ref={group}>{children}</group>;
+  // Вся вещь — попадание: щелчок по бумаге или корпусу не «мимо» и вещь не кладёт; кладёт только
+  // щелчок по пустому месту (ST4-NOMENU; R3-02 — R3F ловит лучом лишь меши с обработчиками).
+  // Вплотную щелчок по корпусу мимо части — как прежде, снова вещь в руках (onBody).
+  return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: 3D-группа, не DOM; с клавиатуры — кнопки частей и ✕
+    <group
+      ref={group}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (gesture.current.moved < CLICK_PX) onBody();
+      }}
+    >
+      {children}
+    </group>
+  );
 }
 
 export interface Held3DProps {
@@ -597,6 +614,9 @@ export default function Held3D({
           mode={mode}
           half={half}
           buttons={buttons}
+          onBody={() => {
+            if (focus && onUnfocus) onUnfocus();
+          }}
           focus={focus}
           area={area}
           screen={screenEl}
