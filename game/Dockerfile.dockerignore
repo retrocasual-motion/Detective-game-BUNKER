@@ -3,9 +3,11 @@
 !playtest/packs/v3.3-2026-10-29/player/
 !playtest/packs/v3.3-2026-10-29/locked/
 !playtest/packs/v3.3-2026-10-29/gm/access.json
+!playtest/packs/v3.3-2026-10-29/gm/verdict.json
 game/**/node_modules
 game/**/dist
 game/.data
+game/.tools
 game/.env
 game/**/test-results
 game/**/playwright-report
