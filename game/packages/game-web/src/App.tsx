@@ -32,6 +32,8 @@ export function App() {
   const setView = useGame((g) => g.setView);
   const viewerId = useGame((g) => g.viewerId);
   const computerOpen = useGame((g) => g.computerOpen);
+  // Вещь в руках, компьютер или ручка вплотную — их слой закрывает верхние кнопки.
+  const holding = useGame((g) => g.held !== null || g.computerOpen || !!g.pen);
   const loadFailed = useGame((g) => g.loadFailed);
   const saveStatus = useGame((g) => g.saveStatus);
   // После «Решить дело» папка запроса уступает место форме заключения (P-9).
@@ -57,7 +59,8 @@ export function App() {
       const dir = KEY_DIR[e.key];
       if (!dir || isTyping(e.target)) return;
       const g = useGame.getState();
-      if (g.viewerId || g.computerOpen || !g.state) return;
+      // Вещь в руках — стрелки её (меню фотоаппарата), не комнаты (R3-01).
+      if (g.viewerId || g.computerOpen || g.held || !g.state) return;
       const to = NAV[g.state.view][dir];
       if (to) setView(to);
     };
@@ -86,11 +89,13 @@ export function App() {
   }
 
   return (
-    <div className="room" data-testid="room">
+    // Вещь в руках — верхние кнопки и стрелки комнаты прячутся, как у компьютера: слой вещи их
+    // закрывает, щелчок по ним молчал или только клал вещь (R5-03, R5-04).
+    <div className={holding ? 'room room-holding' : 'room'} data-testid="room">
       <RoomScene
         view={view}
         onGo={setView}
-        hideNav={viewerId !== null || computerOpen}
+        hideNav={viewerId !== null || computerOpen || holding}
         wall={wall}
         inbox={inbox}
         trash={trash}
@@ -98,8 +103,8 @@ export function App() {
         epilogue={epilogue}
       />
       {saveStatus === 'error' && (
-        <div className="save-error" data-testid="save-error">
-          Не сохранено
+        <div className="save-error" data-testid="save-error" role="status">
+          Не сохранено — пробуем ещё раз
         </div>
       )}
       <ArrivalNote />

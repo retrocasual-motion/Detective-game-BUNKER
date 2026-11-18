@@ -200,11 +200,13 @@ button {
   bottom: 0;
   border-radius: var(--radius) var(--radius) 0 0;
 }
+/* Под вкладкой «Поиск», а не на ней (R5-05): вкладка остаётся нажимаемой. */
 .save-error {
   position: absolute;
-  top: var(--space-2);
-  right: var(--space-2);
+  top: 44px;
+  right: var(--space-4);
   z-index: 60;
+  pointer-events: none;
   padding: var(--space-1) var(--space-2);
   background: var(--color-surface);
   color: var(--color-danger);
@@ -2791,4 +2793,10 @@ button {
   box-shadow: var(--shadow);
   font: bold 18px var(--font-paper);
   white-space: nowrap;
+}
+
+/* Вещь в руках — верхние кнопки прячутся (R5-03): их закрывает слой вещи, а ✕ вещи наезжал на
+   «Поиск» (R5-04). Положить вещь — Esc, ✕ или щелчок мимо; кнопки появятся снова. */
+.room-holding :is(.search-tab, .solve-case, .menu-tab) {
+  display: none;
 }

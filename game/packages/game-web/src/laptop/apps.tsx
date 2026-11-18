@@ -3,6 +3,8 @@ import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { postAction } from '../api.ts';
+import { OFFLINE } from '../lock.ts';
+import { NO_LINKS } from '../paperLinks.tsx';
 import { useGame } from '../store.ts';
 import type { LapFile, Laptop } from './files.ts';
 
@@ -12,7 +14,11 @@ import type { LapFile, Laptop } from './files.ts';
  * у содержимого — материал дела (data-material).
  */
 
-const md = (text: string) => <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{text}</Markdown>;
+const md = (text: string) => (
+  <Markdown remarkPlugins={[remarkGfm, remarkBreaks]} components={NO_LINKS}>
+    {text}
+  </Markdown>
+);
 
 /** Значок файла или папки (рисованный, своего вида). */
 export function FileIcon({ type, size = 32 }: { type: string; size?: number }) {
@@ -518,7 +524,7 @@ export function Browser({
     if (m) setPage({ body: m.body, material: m.id });
     else
       setPage({
-        body: r?.reply && !r.quiet ? r.reply : 'Не удаётся открыть страницу.',
+        body: !r ? `${OFFLINE}.` : r.reply && !r.quiet ? r.reply : 'Не удаётся открыть страницу.',
         material: null,
       });
   };

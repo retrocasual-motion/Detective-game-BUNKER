@@ -1,5 +1,6 @@
 import { type PointerEvent, useEffect, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
+import { formatWait, OFFLINE, useFieldWait } from '../lock.ts';
 import { useGame } from '../store.ts';
 
 /**
@@ -37,19 +38,11 @@ function between(a: number, b: number): number | null {
 export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
   const [path, setPath] = useState<number[]>([]);
   const [pen, setPen] = useState<{ x: number; y: number } | null>(null);
-  const [state, setState] = useState<'idle' | 'wrong' | 'short' | 'check'>('idle');
+  const [state, setState] = useState<'idle' | 'wrong' | 'short' | 'check' | 'offline'>('idle');
   const [hint, setHint] = useState(false);
   const [avatarBig, setAvatarBig] = useState(false);
-  const blockedUntil = useGame((g) => g.fieldBlockedUntil[FIELD] ?? 0);
-  const [now, setNow] = useState(Date.now());
   const svg = useRef<SVGSVGElement>(null);
-  const wait = Math.max(0, blockedUntil - now);
-
-  useEffect(() => {
-    if (blockedUntil <= Date.now()) return;
-    const t = setInterval(() => setNow(Date.now()), 500);
-    return () => clearInterval(t);
-  }, [blockedUntil]);
+  const wait = useFieldWait(FIELD);
 
   // Отложенная очистка после попытки. Начали рисовать раньше — она отменяется (правка автора
   // 10.11: очистка срабатывала посреди нового ключа — линия «пропадала»).
@@ -88,15 +81,20 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
     }
     setState('check');
     const r = await postAction('ПАРОЛЬ', FIELD, p.join('-')).catch(() => null);
+    // Сервер не ответил — ключ не проверен: не «неверно» (R2-01).
+    if (!r) {
+      setState('offline');
+      reset(2500);
+      return;
+    }
     const g = useGame.getState();
-    if (r?.released.length) g.addFound(r.released, '47', []);
+    if (r.released.length) g.addFound(r.released, '47', []);
     // Верный ключ: ответ не «тихий» (успех или повтор), рабочий стол в деле.
-    if (r && !r.quiet && useGame.getState().materials.some((m) => m.id === 'L560')) {
+    if (!r.quiet && useGame.getState().materials.some((m) => m.id === 'L560')) {
       onUnlock();
       return;
     }
-    if (r?.wait) g.blockField(FIELD, r.wait);
-    setNow(Date.now());
+    if (r.wait) g.blockField(FIELD, r.wait);
     setState('wrong');
     reset(900);
   };
@@ -163,7 +161,6 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
 
   const line = path.map((n) => at(n));
   const color = state === 'wrong' ? '#e0574f' : '#9fc4ff';
-  const mmss = `${Math.floor(wait / 60000)}:${String(Math.ceil((wait % 60000) / 1000) % 60).padStart(2, '0')}`;
 
   return (
     <div className="lap-lock" data-testid="laptop-lock">
@@ -220,12 +217,14 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
       </svg>
       <div className="lap-lock-msg" data-testid="laptop-lock-msg" role="status">
         {wait > 0
-          ? `Слишком много попыток. Повторите через ${mmss}`
-          : state === 'wrong'
-            ? 'Неверный ключ'
-            : state === 'short'
-              ? 'Соедините не меньше четырёх точек'
-              : 'Нарисуйте ключ'}
+          ? `Слишком много попыток. Повторите через ${formatWait(wait)}`
+          : state === 'offline'
+            ? OFFLINE
+            : state === 'wrong'
+              ? 'Неверный ключ'
+              : state === 'short'
+                ? 'Соедините не меньше четырёх точек'
+                : 'Нарисуйте ключ'}
       </div>
       <button
         type="button"

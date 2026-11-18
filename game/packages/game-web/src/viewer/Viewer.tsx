@@ -14,6 +14,7 @@ import remarkGfm from 'remark-gfm';
 import { trackReading } from '../dev/readingLog.ts';
 import { wheelIntent } from '../input.ts';
 import { useMenu } from '../menu/menu-store.ts';
+import { NO_LINKS } from '../paperLinks.tsx';
 import { emailIn, quoteCard, wholeCard } from '../petition/drafts.ts';
 import { usePetition } from '../petition/petition-store.ts';
 import { MediaPlayer } from '../player/MediaPlayer.tsx';
@@ -186,9 +187,10 @@ export function Viewer({ materialId }: ViewerProps) {
   // Разбор Markdown — один раз на материал, а не на каждое движение мыши (инструменты двигаются).
   const doc = useMemo(() => {
     // У описи пачки строка — своя цель крупного плана: «L985 лист 19–24» (FV-A).
-    const components: Components | undefined =
+    const components: Components =
       material && isBundleListing(material.id)
         ? {
+            ...NO_LINKS,
             tr: ({ node, ...props }) => {
               const first = node?.children.find(
                 (c): c is Extract<typeof c, { type: 'element' }> => c.type === 'element',
@@ -197,7 +199,7 @@ export function Viewer({ materialId }: ViewerProps) {
               return <tr {...props} data-osmotr-target={rowTarget(material.id, textOf(first))} />;
             },
           }
-        : undefined;
+        : NO_LINKS;
     const md = (text: string) => (
       <Markdown remarkPlugins={[remarkGfm, remarkBreaks]} components={components}>
         {unwrapLines(text)}

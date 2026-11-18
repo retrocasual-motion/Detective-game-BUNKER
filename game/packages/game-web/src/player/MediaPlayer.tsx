@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { NO_LINKS } from '../paperLinks.tsx';
 import { type Media, mmss, parseMedia, rowAt } from './media.ts';
 import './player.css';
 
@@ -54,7 +55,11 @@ export function MediaPlayer({
   const fwd = () => (file + 1 < count ? go(file + 1) : setT(dur));
   const row = media.kind === 'timed' ? rowAt(media.rows, t) : null;
   // Переносы строк исходника — не переносы фразы: абзацы текут по ширине.
-  const md = (s: string) => <Markdown remarkPlugins={[remarkGfm]}>{s}</Markdown>;
+  const md = (s: string) => (
+    <Markdown remarkPlugins={[remarkGfm]} components={NO_LINKS}>
+      {s}
+    </Markdown>
+  );
 
   return (
     <div className={`mp${pen ? ' mp-pen' : ''}`} data-testid="media-player">

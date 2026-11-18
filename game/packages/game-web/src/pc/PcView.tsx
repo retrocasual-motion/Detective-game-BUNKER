@@ -118,6 +118,17 @@ export function PcView() {
         </div>
       </div>
       {button}
+      {/* Видимый ✕, как у вещи в руках (R5-09, R5-10; CORNER/PC-A: «закрыть — ✕, щелчок мимо, Esc»). */}
+      <button
+        type="button"
+        className="tool tool-close held-close"
+        data-testid="computer-x"
+        aria-label="Отойти"
+        title="Отойти (Esc)"
+        onClick={() => useGame.getState().setComputerOpen(false)}
+      >
+        ✕
+      </button>
     </section>
   );
 }
