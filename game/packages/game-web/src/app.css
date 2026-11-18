@@ -2626,12 +2626,25 @@ button {
 
 /* Эпилог пришёл и не открыт — конверт на столе светится, как найденное на стене. */
 .desk-spot-fresh {
-  box-shadow:
-    0 0 0 3px var(--color-marker),
-    0 0 30px 9px rgb(243 226 107 / 55%);
-  animation: found-glow 1.4s ease-in-out infinite;
+  box-shadow: 0 0 0 3px var(--color-marker);
 }
-:root[data-motion="reduce"] .desk-spot-fresh {
+/* Свечение — готовой тенью на слое, мигает только прозрачность: браузер не пересчитывает
+   размытую тень каждый кадр, пока эпилог не открыт (R3-11). */
+.desk-spot-fresh::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 30px 9px rgb(243 226 107 / 65%);
+  pointer-events: none;
+  animation: fresh-pulse 1.4s ease-in-out infinite;
+}
+@keyframes fresh-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+:root[data-motion="reduce"] .desk-spot-fresh::after {
   animation: none;
 }
 .epilogue-note {
@@ -2868,8 +2881,9 @@ button {
     transform-origin: 50% var(--pin-y);
   }
   .wall-card:not(.wall-card-dragging):hover {
+    /* Над соседями, но под нитями (.board-threads — 9000): связи листа видны, пока его читают. */
     /* biome-ignore lint/complexity/noImportantStyles: поверх порядка листов из inline-стиля */
-    z-index: 99999 !important;
+    z-index: 8999 !important;
   }
   .wall-card:not(.wall-card-dragging):hover > .paper:not(.card-dragging) {
     scale: clamp(1, calc(0.75 / var(--zoom, 1)), 2.5);

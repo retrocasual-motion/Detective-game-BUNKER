@@ -1,8 +1,14 @@
 import { lazy, Suspense } from 'react';
 import { useGame } from '../store.ts';
 
-// Сцена 3D (three.js) грузится, только когда вещь взяли в руки: стол открывается быстро.
-const HeldScene = lazy(() => import('./HeldScene.tsx'));
+// Сцена 3D (three.js) — отдельным куском: стол открывается быстро. Кусок подгружается заранее,
+// когда браузер свободен, — первая вещь в руках без ожидания ~1 МБ кода (R3-09).
+const loadScene = () => import('./HeldScene.tsx');
+const HeldScene = lazy(loadScene);
+if (typeof window !== 'undefined') {
+  const idle = window.requestIdleCallback ?? ((fn: () => void) => setTimeout(fn, 2000));
+  idle(() => void loadScene());
+}
 
 /**
  * Вещь в руках (этап 4a): конверт и коробка архива (A-260), изъятые устройства. Вещь вертят и

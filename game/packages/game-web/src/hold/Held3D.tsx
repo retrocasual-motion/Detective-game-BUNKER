@@ -530,6 +530,8 @@ export default function Held3D({
       e.preventDefault();
       let at = { x: e.clientX, y: e.clientY };
       const pan = (ev: PointerEvent) => {
+        // Кнопку отпустили вне окна (Alt+Tab) — протяжка кончилась (R3-08).
+        if (ev.buttons === 0) return stop();
         g.panX += ev.clientX - at.x;
         g.panY += ev.clientY - at.y;
         at = { x: ev.clientX, y: ev.clientY };
@@ -537,15 +539,21 @@ export default function Held3D({
       const stop = () => {
         window.removeEventListener('pointermove', pan);
         window.removeEventListener('pointerup', stop);
+        window.removeEventListener('pointercancel', stop);
+        window.removeEventListener('blur', stop);
       };
       window.addEventListener('pointermove', pan);
       window.addEventListener('pointerup', stop);
+      window.addEventListener('pointercancel', stop);
+      window.addEventListener('blur', stop);
       return;
     }
     if (e.button !== 0) return;
     g.moved = 0;
     let last = { x: e.clientX, y: e.clientY };
     const move = (ev: PointerEvent) => {
+      // Кнопку отпустили вне окна (Alt+Tab) — вещь не крутится дальше за мышью (R3-08).
+      if (ev.buttons === 0) return up();
       g.dx += ev.clientX - last.x;
       g.dy += ev.clientY - last.y;
       g.moved += Math.abs(ev.clientX - last.x) + Math.abs(ev.clientY - last.y);
@@ -556,9 +564,13 @@ export default function Held3D({
       g.part = false;
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      window.removeEventListener('blur', up);
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+    window.addEventListener('blur', up);
   };
 
   return (

@@ -139,6 +139,16 @@ function faceTexture(s: Sheet, slip: string | null = null): CanvasTexture {
   return tex;
 }
 
+/**
+ * Положили пачку — лица листов не нужны: кэш освобождается (R3-05). Полный кэш — 24 холста по
+ * ~4 МБ, и он жил до перезагрузки страницы. Если лицо ещё где-то на экране, three.js загрузит его
+ * снова при следующем кадре.
+ */
+function dropFaces() {
+  for (const t of faces.values()) t.dispose();
+  faces.clear();
+}
+
 function useFace(s: Sheet, slip: string | null = null) {
   const key = faceKey(s, slip);
   // biome-ignore lint/correctness/useExhaustiveDependencies: лицо меняется только с ключом листа
@@ -215,20 +225,34 @@ function CardLayer({ n, z, onPull }: { n: number; z: number; onPull: () => void 
     const sl = slide.current;
     sl.dragging = true;
     const move = (ev: PointerEvent) => {
+      // Кнопку отпустили вне окна — как «отпустили» (R3-08).
+      if (ev.buttons === 0) return up();
       sl.to = Math.min(1, Math.hypot(ev.clientX - x0, ev.clientY - y0) / PULL_PX);
     };
-    const up = () => {
+    const end = () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', cancel);
+      window.removeEventListener('blur', cancel);
       setPartCursor('');
       sl.dragging = false;
+    };
+    const up = () => {
+      end();
       if (sl.to >= 0.5) {
         sl.to = 1;
         onPull();
       } else sl.to = 0;
     };
+    // Ушли из окна (Alt+Tab) посреди протяжки — картон плавно вернулся, не вытащен.
+    const cancel = () => {
+      end();
+      sl.to = 0;
+    };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', cancel);
+    window.addEventListener('blur', cancel);
   };
   return (
     <group position={[0, 0, z]}>
@@ -359,6 +383,7 @@ export function PaperStack({
 }) {
   const sheetAt = (i: number): Sheet => (i === 0 ? topOf(b) : (sheets?.[i] ?? BLANK));
   const slipAt = (i: number) => (i === 0 ? slipOf(b) : null);
+  useEffect(() => dropFaces, []);
   const [flip, setFlip] = useState<Flip | null>(null);
   const d0 = stackDepth(b.sheets);
   // Обе стопки лежат на одной плоскости (низ исходной пачки): правая убывает, левая растёт.
