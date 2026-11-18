@@ -19,6 +19,14 @@ const noColor = () => '#000000';
  * У устройств — бирка «Изъято» с номером описи. Остальное (лампа, телефон, коробка) — пока
  * только вид; звонки — этап 6.
  */
+/** Цель щелчка не тоньше MIN_HIT px: ручка 49 на столе была 105×16 — мала для тачпада (R5-14). */
+const MIN_HIT = 28;
+function grow(r: { left: number; top: number; width: number; height: number }) {
+  const h = Math.max(r.height, MIN_HIT);
+  const w = Math.max(r.width, MIN_HIT);
+  return { left: r.left - (w - r.width) / 2, top: r.top - (h - r.height) / 2, width: w, height: h };
+}
+
 export function DeskHotspots({
   room,
   inbox,
@@ -62,7 +70,7 @@ export function DeskHotspots({
             data-testid={o.hotspot.kind === 'computer' ? 'computer-monitor' : o.testId}
             aria-label={o.label}
             title={o.label}
-            style={{ left: r.left, top: r.top, width: r.width, height: r.height }}
+            style={grow(r)}
             onPointerDown={(e) => {
               const h = o.hotspot;
               // Письмо из «Входящих» можно утащить прямо на доску (правка автора 09.11).

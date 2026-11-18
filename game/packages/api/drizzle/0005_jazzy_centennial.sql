@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "player_letters_token" ON "player_letters" USING btree ("token");

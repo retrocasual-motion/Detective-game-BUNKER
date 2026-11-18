@@ -33,14 +33,23 @@ import {
   VerdictSchema,
 } from '@bunker/shared';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { and, asc, eq, isNotNull, isNull, lte, ne, sql } from 'drizzle-orm';
+import { and, asc, eq, isNotNull, isNull, lt, lte, ne, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { getCookie } from 'hono/cookie';
+import { secureHeaders } from 'hono/secure-headers';
 import { z } from 'zod';
-import { type Db, playerLetters, playerProgress, playerState, players } from './db/client.ts';
+import {
+  type Db,
+  loginTokens,
+  playerLetters,
+  playerProgress,
+  playerState,
+  players,
+  sessions,
+} from './db/client.ts';
 import { authRoutes, LOCAL_PLAYER, newKey, SESSION_COOKIE, sessionPlayer } from './login.ts';
-import { notePage, replyLetter } from './mail/letters.ts';
+import { formPage, notePage, replyLetter } from './mail/letters.ts';
 import type { Mailer } from './mail/mailer.ts';
 
 /** Переменные запроса: игрок из сессии (6a-1). */
@@ -167,7 +176,18 @@ function invalidReference(s: PlayerState, materials: Material[]): string | null 
  * Лимит попыток в игре (LK-A, решение автора 09.11): во всех полях ввода — 5 неверных, потом поле
  * не принимает значение 2 минуты. Заменяет T-11-A пакета (3 → 10 мин; газета — 10 дат).
  */
-const GAME_CONFIG = { pauseMs: 2 * 60 * 1000, limits: { ПАРОЛЬ: 5 } };
+/**
+ * Лимит попыток (LK-A): 5 неверных → 2 минуты. Запросы в бюро — та же пауза (L6-B, автор 18.11):
+ * прежде у них были свои 3 отказа / 10 минут из пакета, и любое другое действие через 2 минуты
+ * стирало их счётчик (R1-06). Пакет (access.json) — при пересборке, как у LK-A.
+ */
+const GAME_CONFIG = { pauseMs: 2 * 60 * 1000, limits: { ПАРОЛЬ: 5, ХОДАТАЙСТВО: 5 } };
+
+/** «м:сс» до конца паузы (секунды — вверх). */
+const mmss = (ms: number) => {
+  const s = Math.ceil(Math.max(0, ms) / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
 
 export function createApp({
   db,
@@ -184,6 +204,13 @@ export function createApp({
 }: AppDeps): Hono<Env> & { sweepMail: () => Promise<number> } {
   const app = new Hono<Env>();
 
+  // Заголовки безопасности (R1-11): страницу нельзя встроить в чужой сайт (clickjacking на
+  // «Новое дело»), браузер не угадывает тип файла и т. п. Политика содержимого (CSP) — при
+  // переезде на сервер, вместе с проверкой собранной игры.
+  app.use('*', secureHeaders());
+  // Предел тела запроса для всех маршрутов (R1-12); у отдельных — свой, меньше.
+  app.use('/api/*', bodyLimit({ maxSize: 1024 * 1024 }));
+
   app.get('/api/health', (c) => (isReady() ? c.json({ ok: true }) : c.json({ ok: false }, 503)));
 
   // Пока миграции не применены, данные недоступны — клиент повторит запрос.
@@ -194,7 +221,12 @@ export function createApp({
 
   // Вход по ссылке и «Добавить в дело» из письма — без сессии (6a-1).
   authRoutes(app, { db, auth, mailer, publicUrl, production, materials, now });
-  app.get('/api/case/add', (c) => addToCase(c.req.query('l') ?? ''));
+  // Ссылка из письма — страница с кнопкой; в дело — только по нажатию (R1-01, M-C).
+  app.get('/api/case/add', (c) => addToCase(c.req.query('l') ?? '', false));
+  app.post('/api/case/add', bodyLimit({ maxSize: 4096 }), async (c) => {
+    const form = await c.req.parseBody().catch(() => ({}) as Record<string, unknown>);
+    return addToCase(typeof form.l === 'string' ? form.l : '', true);
+  });
 
   // Остальное — дело игрока из сессии; без входа — 401 (клиент покажет экран входа).
   app.use('/api/*', async (c, next) => {
@@ -208,6 +240,7 @@ export function createApp({
     return next();
   });
 
+  type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
   const lockedById = new Map((engine?.locked ?? []).map((m) => [m.id, m]));
 
   async function loadProgress(pid: string): Promise<Progress> {
@@ -215,8 +248,8 @@ export function createApp({
     return row?.progress ?? emptyProgress();
   }
 
-  async function saveProgress(pid: string, progress: Progress) {
-    await db
+  async function saveProgress(pid: string, progress: Progress, q: Db | Tx = db) {
+    await q
       .insert(playerProgress)
       .values({ playerId: pid, progress })
       .onConflictDoUpdate({
@@ -313,9 +346,8 @@ export function createApp({
   /** Одно действие через движок: ответ правила и материалы, которые оно открыло. */
   async function runAction(pid: string, input: ActionInput) {
     if (!engine) return null;
-    // Действия идут по очереди: иначе два запроса подряд затёрли бы прогресс. Очередь — в
-    // одном процессе; несколько процессов сервера (этап 6) — транзакция с блокировкой строки.
-    const run = queue.then(async () => {
+    // Действия игрока идут по очереди: иначе два запроса подряд затёрли бы прогресс.
+    const run = serial(pid, async () => {
       const before = await loadProgress(pid);
       const t = now();
       const { progress, outcome } = act(engine.content, before, input, t, GAME_CONFIG);
@@ -344,10 +376,23 @@ export function createApp({
           : {}),
       };
     });
-    queue = run.catch(() => undefined);
     return run;
   }
-  let queue: Promise<unknown> = Promise.resolve();
+  /**
+   * Действия одного игрока — по очереди, разных игроков — параллельно (R1-08): прежде одна
+   * очередь на весь процесс задерживала всех из-за одного. Несколько процессов сервера — нужна
+   * блокировка строки в базе (при переезде, если понадобится).
+   */
+  const chains = new Map<string, Promise<unknown>>();
+  function serial<T>(pid: string, fn: () => Promise<T>): Promise<T> {
+    const run = (chains.get(pid) ?? Promise.resolve()).then(fn);
+    const tail = run.catch(() => undefined);
+    chains.set(pid, tail);
+    void tail.then(() => {
+      if (chains.get(pid) === tail) chains.delete(pid);
+    });
+    return run;
+  }
 
   app.post('/api/action', bodyLimit({ maxSize: 64 * 1024 }), async (c) => {
     if (!engine) return c.notFound();
@@ -387,7 +432,7 @@ export function createApp({
     if (!parsed.success) return c.json({ error: 'Запрос не оформлен.' }, 400);
     const { to, ask, basis } = parsed.data;
     const pid = c.get('player');
-    const run = queue.then(async () => {
+    const run = serial(pid, async () => {
       const before = await loadProgress(pid);
       // После «Решить дело» запросов нет (P-9): папка запроса уступает место форме.
       if (caseOf(before).form || before.ended) return { form: CLOSED };
@@ -411,11 +456,19 @@ export function createApp({
         before,
         { action: 'ХОДАТАЙСТВО', target: to, cards },
         t,
+        GAME_CONFIG,
       );
-      if (outcome.result === 'лимит') return { form: outcome.reply };
-      await saveProgress(pid, progress);
+      if (outcome.result === 'лимит') {
+        const wait = fieldWait(engine.content, before, 'ХОДАТАЙСТВО', to, t, GAME_CONFIG);
+        return {
+          form: `Адресат ответил отказом на ${GAME_CONFIG.limits.ХОДАТАЙСТВО} запросов подряд. Новый запрос он рассмотрит через ${mmss(wait)}.`,
+        };
+      }
       // Общий отказ адресата (PRE-B): ответ сразу в папке, письма нет, попытка засчитана.
-      if (GENERAL_REFUSAL_IDS.has(outcome.rule)) return { refused: outcome.reply };
+      if (GENERAL_REFUSAL_IDS.has(outcome.rule)) {
+        await saveProgress(pid, progress);
+        return { refused: outcome.reply };
+      }
       const n = (letters.at(-1)?.n ?? 0) + 1;
       const titled = (id: string) => `${id} — ${lockedById.get(id)?.title ?? ''}`;
       const body = letterBody({
@@ -426,21 +479,27 @@ export function createApp({
         ask,
         basis,
       });
-      await db.insert(playerLetters).values({
-        playerId: pid,
-        n,
-        title: `Ответ на запрос № ${n}`,
-        body,
-        released: outcome.released,
-        sentAt: new Date(t),
-        deliverAt: new Date(t + mailDelayMs),
-        token: channel === 'real' ? newKey() : null,
+      // Прогресс и письмо — одной транзакцией (R1-07): иначе между ними вложения на миг (а при
+      // сбое — навсегда) уходили игроку без письма, мимо задержки доставки (P-10).
+      await db.transaction(async (tx) => {
+        await saveProgress(pid, progress, tx);
+        await tx.insert(playerLetters).values({
+          playerId: pid,
+          n,
+          title: `Ответ на запрос № ${n}`,
+          body,
+          released: outcome.released,
+          sentAt: new Date(t),
+          deliverAt: new Date(t + mailDelayMs),
+          // Ссылка «Добавить в дело» — у каждого письма: игрок мог переключить канал на почту, пока
+          // письмо в пути, — тогда оно уйдёт на почту в срок, а не пропадёт (R1-05).
+          token: newKey(),
+        });
       });
       // Настоящая почта: письмо уйдёт в срок доставки (sweepMail); в игре — «направлен на почту».
       if (channel === 'real') setTimeout(() => void sweepMail(), mailDelayMs + 50).unref();
       return { n, delayMs: mailDelayMs, ...(channel === 'real' ? { toMail: true } : {}) };
     });
-    queue = run.catch(() => undefined);
     const r = await run;
     if ('form' in r) return c.json({ error: r.form }, 422);
     return c.json(r);
@@ -478,7 +537,7 @@ export function createApp({
     if (!parsed.success) return c.json({ error: 'Заключение не оформлено.' }, 400);
     const answers = parsed.data.answers;
     const pid = c.get('player');
-    const run = queue.then(async () => {
+    const run = serial(pid, async () => {
       const before = await loadProgress(pid);
       const st = caseOf(before);
       if (st.sent) return { error: 'Заключение уже отправлено.' };
@@ -505,22 +564,24 @@ export function createApp({
         t,
       );
       if (outcome.result !== 'конец') return { error: outcome.reply };
-      await saveProgress(pid, progress);
       const score = scoreVerdict(rubric, given);
       const result: VerdictResult = { answers, marks: score.marks, groups: score.groups };
       // Итог хранится строкой писем (игроку не письмом): после перезагрузки ответ бюро тот же.
-      await db.insert(playerLetters).values({
-        playerId: pid,
-        n: (letters.at(-1)?.n ?? 0) + 1,
-        title: VERDICT_ROW,
-        body: JSON.stringify(result),
-        released: [],
-        sentAt: new Date(t),
-        deliverAt: new Date(t),
+      // Конец дела и итог — одной транзакцией (R1-07): иначе «отправлено, ответа нет».
+      await db.transaction(async (tx) => {
+        await saveProgress(pid, progress, tx);
+        await tx.insert(playerLetters).values({
+          playerId: pid,
+          n: (letters.at(-1)?.n ?? 0) + 1,
+          title: VERDICT_ROW,
+          body: JSON.stringify(result),
+          released: [],
+          sentAt: new Date(t),
+          deliverAt: new Date(t),
+        });
       });
       return { result };
     });
-    queue = run.catch(() => undefined);
     const r = await run;
     if ('error' in r) return c.json({ error: r.error }, 422);
     return c.json(r);
@@ -546,11 +607,13 @@ export function createApp({
     return c.body(null, 204);
   });
 
-  const resetCase = async (pid: string) => {
-    await db.delete(playerState).where(eq(playerState.playerId, pid));
-    await db.delete(playerProgress).where(eq(playerProgress.playerId, pid));
-    await db.delete(playerLetters).where(eq(playerLetters.playerId, pid));
-  };
+  // Одной транзакцией: сбой посередине не оставит дело наполовину сброшенным (R1-07).
+  const resetCase = (pid: string) =>
+    db.transaction(async (tx) => {
+      await tx.delete(playerState).where(eq(playerState.playerId, pid));
+      await tx.delete(playerProgress).where(eq(playerProgress.playerId, pid));
+      await tx.delete(playerLetters).where(eq(playerLetters.playerId, pid));
+    });
 
   app.delete('/api/state', async (c) => {
     if (production) return c.notFound();
@@ -563,8 +626,9 @@ export function createApp({
    * production: игрок подтверждает в меню. Пока игрок один (этап 1); с входом (этап 6) — свой.
    */
   app.post('/api/new-case', async (c) => {
-    await queue;
-    await resetCase(c.get('player'));
+    // В очереди игрока: действие, начатое раньше, не запишет старый прогресс поверх сброса (R1-08).
+    const pid = c.get('player');
+    await serial(pid, () => resetCase(pid));
     return c.body(null, 204);
   });
 
@@ -599,12 +663,11 @@ export function createApp({
    * «Добавить в дело» из письма (M-C): ключ письма — сам пропуск, вход не нужен (ссылку
    * открывают и с телефона). Письмо и вложения ложатся во «Входящие» на столе.
    */
-  async function addToCase(token: string): Promise<Response> {
+  async function addToCase(token: string, confirmed: boolean): Promise<Response> {
+    const html = (body: string, status = 200) =>
+      new Response(body, { status, headers: { 'content-type': 'text/html; charset=utf-8' } });
     const page = (title: string, text: string, status = 200) =>
-      new Response(notePage(title, text, { label: 'Открыть дело', href: `${publicUrl}/` }), {
-        status,
-        headers: { 'content-type': 'text/html; charset=utf-8' },
-      });
+      html(notePage(title, text, { label: 'Открыть дело', href: `${publicUrl}/` }), status);
     const t = new Date(now());
     const [l] =
       token.length >= 20
@@ -614,6 +677,14 @@ export function createApp({
             .where(and(eq(playerLetters.token, token), lte(playerLetters.deliverAt, t)))
         : [];
     if (!l) return page('Ссылка не работает', 'Письмо не найдено.', 404);
+    if (!confirmed && !l.addedAt)
+      return html(
+        formPage(
+          'Добавить в дело?',
+          `Ответ на запрос № ${l.n}${l.released.length ? ' и вложения' : ''} появится во «Входящих» на столе.`,
+          { action: '/api/case/add', field: 'l', value: token, button: 'Добавить в дело' },
+        ),
+      );
     if (!l.addedAt) {
       await db
         .update(playerLetters)
@@ -631,11 +702,19 @@ export function createApp({
    * «Добавить в дело». Не ушло (почта не ответила) — повтор при следующем проходе.
    */
   let sweeping = false;
+  let purgedAt = 0;
   async function sweepMail(): Promise<number> {
     if (!mailer || auth === 'off' || sweeping) return 0;
     sweeping = true;
     let sent = 0;
     try {
+      // Раз в час — убрать истёкшие сессии и ссылки входа: иначе копятся вечно (R1-14).
+      if (now() - purgedAt > 3_600_000) {
+        purgedAt = now();
+        const t = new Date(now());
+        await db.delete(sessions).where(lt(sessions.expiresAt, t));
+        await db.delete(loginTokens).where(lt(loginTokens.expiresAt, t));
+      }
       const due = await db
         .select({ l: playerLetters, email: players.email })
         .from(playerLetters)
@@ -663,6 +742,10 @@ export function createApp({
           console.error(`почта: ответ № ${l.n} не ушёл — ${(e as Error).message}`);
         }
       }
+    } catch (e) {
+      // База недоступна (перезапуск, сеть): проход пропущен, следующий — через 5 с. Без catch
+      // отказ ронял процесс сервера (R4-03).
+      console.error(`почта: проход не удался — ${(e as Error).message}`);
     } finally {
       sweeping = false;
     }

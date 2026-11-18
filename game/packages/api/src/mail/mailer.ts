@@ -40,6 +40,8 @@ export function createMailer(cfg: MailerConfig): Mailer {
       if (cfg.transport === 'mailpit') {
         const res = await fetch(new URL('/api/v1/send', cfg.mailpitUrl), {
           method: 'POST',
+          // Зависшая почта не держит рассылку всех игроков минутами (R1-13).
+          signal: AbortSignal.timeout(15_000),
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
             From: { Email: cfg.from.email, Name: letter.fromName ?? cfg.from.name },

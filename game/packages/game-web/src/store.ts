@@ -57,7 +57,8 @@ const UNDO_MS = 6000;
 /** Что в руках: конверт или коробка архива — или изъятое устройство (по номеру материала). */
 export type Held = { type: 'container'; id: ContainerId } | { type: 'device'; id: string };
 
-export type SaveStatus = 'saved' | 'saving' | 'error';
+/** 'error' — сбой связи, повторяем; 'rejected' — сервер отказал по существу, нужна перезагрузка. */
+export type SaveStatus = 'saved' | 'saving' | 'error' | 'rejected';
 
 interface GameStore {
   materials: Material[];
@@ -160,6 +161,11 @@ interface GameStore {
   load(): Promise<void>;
   /** Дослать сохранение сейчас (перед «Новым делом»: иначе уход со страницы вернёт старое). */
   flushSave(): Promise<void>;
+  /** Больше не сохранять (после flushSave: «Новое дело», выход); resumeSaving — если не вышло. */
+  stopSaving(): void;
+  resumeSaving(): void;
+  /** Дело открыли в другой вкладке: здесь не сохраняется (R2-02). */
+  elsewhere: boolean;
   setPetitionOpen(open: boolean): void;
   /** Открыть материал; из поиска — с найденным словом (k — какое совпадение показать). */
   openViewer(materialId: string, find?: { q: string; k: number }, excerpt?: Excerpt): void;
@@ -211,6 +217,23 @@ export const useGame = create<GameStore>((set, get) => {
   if (typeof window !== 'undefined') {
     // Закрыли вкладку или перезагрузили раньше, чем истекла задержка, — дошлём сразу.
     window.addEventListener('pagehide', () => void saver.flush());
+    // Не сохранилось — браузер переспросит, закрывать ли (R2-03).
+    window.addEventListener('beforeunload', (e) => {
+      const s = get().saveStatus;
+      if (s === 'error' || s === 'saving') e.preventDefault();
+    });
+    // Одна вкладка с делом (R2-02): новая говорит «я здесь» — прежняя досылает своё и перестаёт
+    // сохранять, иначе её старое состояние (таймер письма и т. п.) затёрло бы работу в новой.
+    if ('BroadcastChannel' in window) {
+      const tab = new BroadcastChannel('bunker-case');
+      const me = `${Date.now()}-${Math.random()}`;
+      tab.onmessage = (e: MessageEvent<{ here?: string }>) => {
+        if (!e.data?.here || e.data.here === me) return;
+        void saver.flush().then(() => saver.stop());
+        set({ elsewhere: true });
+      };
+      tab.postMessage({ here: me });
+    }
   }
   // Что повесили только что: прячется, пока лист или вещь открыты, и светится (правка автора 10.11).
   const markNew = (before: ReadonlySet<string>) => {
@@ -226,6 +249,7 @@ export const useGame = create<GameStore>((set, get) => {
     materials: [],
     state: null,
     saveStatus: 'saved',
+    elsewhere: false,
     viewerId: null,
     petitionOpen: false,
     notebookOpen: false,
@@ -541,13 +565,19 @@ export const useGame = create<GameStore>((set, get) => {
 
     watchMail() {
       if (mailWatch) return;
+      // Не чаще одного опроса сразу и не в скрытой вкладке (R2-08): вернулся к окну — focus.
+      let busy = false;
       const look = async () => {
+        if (busy || document.hidden || get().elsewhere) return;
+        busy = true;
         try {
           get().addReleased(await getMaterials());
           const { waiting } = await getPendingMail();
           if (waiting) return;
         } catch {
           return;
+        } finally {
+          busy = false;
         }
         if (mailWatch) clearInterval(mailWatch);
         mailWatch = null;
@@ -560,6 +590,12 @@ export const useGame = create<GameStore>((set, get) => {
 
     flushSave() {
       return saver.flush();
+    },
+    stopSaving() {
+      saver.stop();
+    },
+    resumeSaving() {
+      saver.resume();
     },
 
     async load() {
@@ -607,6 +643,8 @@ export const useGame = create<GameStore>((set, get) => {
       const current = get().state;
       if (!current) return;
       const next = fn(current);
+      // Ничего не изменилось — не перерисовывать и не сохранять (R2-09).
+      if (next === current) return;
       set({ state: next });
       saver.schedule(next);
     },

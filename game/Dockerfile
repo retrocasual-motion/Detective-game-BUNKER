@@ -18,6 +18,8 @@ COPY game/ ./
 COPY playtest/packs/v3.3-2026-10-29/player /app/playtest/packs/v3.3-2026-10-29/player
 COPY playtest/packs/v3.3-2026-10-29/locked /app/playtest/packs/v3.3-2026-10-29/locked
 COPY playtest/packs/v3.3-2026-10-29/gm/access.json /app/playtest/packs/v3.3-2026-10-29/gm/access.json
+# Ответы формы заключения (A-270) — только в серверный контент, в браузер не попадают.
+COPY playtest/packs/v3.3-2026-10-29/gm/verdict.json /app/playtest/packs/v3.3-2026-10-29/gm/verdict.json
 RUN pnpm content:build && pnpm -F @bunker/game-web build
 
 FROM node:26.13.0-slim

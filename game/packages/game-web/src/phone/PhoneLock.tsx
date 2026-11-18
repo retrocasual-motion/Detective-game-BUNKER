@@ -1,13 +1,12 @@
 import { type PointerEvent, useEffect, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
+import { formatWait, OFFLINE, useFieldWait } from '../lock.ts';
 import { useGame } from '../store.ts';
 
 /** Поле ввода телефона у движка (ПАРОЛЬ | телефон | 4 цифры). */
 const FIELD = 'телефон';
 const typing = (t: EventTarget | null) =>
   t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement;
-const mmss = (ms: number) =>
-  `${Math.floor(ms / 60000)}:${String(Math.ceil((ms % 60000) / 1000) % 60).padStart(2, '0')}`;
 
 /**
  * Ввод кода (канон 48): «Enter passcode», четыре точки, цифровая клавиатура 3 × 4, внизу слева —
@@ -17,17 +16,9 @@ const mmss = (ms: number) =>
  */
 export function Passcode({ onUnlock }: { onUnlock: () => void }) {
   const [code, setCode] = useState('');
-  const [state, setState] = useState<'idle' | 'wrong' | 'check'>('idle');
-  const blockedUntil = useGame((g) => g.fieldBlockedUntil[FIELD] ?? 0);
-  const [now, setNow] = useState(Date.now());
-  const wait = Math.max(0, blockedUntil - now);
+  const [state, setState] = useState<'idle' | 'wrong' | 'check' | 'offline'>('idle');
+  const wait = useFieldWait(FIELD);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (blockedUntil <= Date.now()) return;
-    const t = setInterval(() => setNow(Date.now()), 500);
-    return () => clearInterval(t);
-  }, [blockedUntil]);
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
@@ -38,14 +29,22 @@ export function Passcode({ onUnlock }: { onUnlock: () => void }) {
   const submit = async (c: string) => {
     setState('check');
     const r = await postAction('ПАРОЛЬ', FIELD, c).catch(() => null);
+    // Сервер не ответил — код не проверен: не «неверно» (R2-01).
+    if (!r) {
+      setState('offline');
+      timer.current = setTimeout(() => {
+        setCode('');
+        setState('idle');
+      }, 2500);
+      return;
+    }
     const g = useGame.getState();
-    if (r?.released.length) g.addFound(r.released, '48', []);
-    if (r && !r.quiet && useGame.getState().materials.some((m) => m.id === 'L540')) {
+    if (r.released.length) g.addFound(r.released, '48', []);
+    if (!r.quiet && useGame.getState().materials.some((m) => m.id === 'L540')) {
       onUnlock();
       return;
     }
-    if (r?.wait) g.blockField(FIELD, r.wait);
-    setNow(Date.now());
+    if (r.wait) g.blockField(FIELD, r.wait);
     setState('wrong');
     timer.current = setTimeout(() => {
       setCode('');
@@ -76,10 +75,12 @@ export function Passcode({ onUnlock }: { onUnlock: () => void }) {
     <div className="ph-pass" data-testid="phone-passcode">
       <div className="ph-pass-title" data-testid="phone-pass-msg" role="status">
         {wait > 0
-          ? `Try again in ${mmss(wait)}`
-          : state === 'wrong'
-            ? 'Wrong passcode'
-            : 'Enter passcode'}
+          ? `Try again in ${formatWait(wait)}`
+          : state === 'offline'
+            ? OFFLINE
+            : state === 'wrong'
+              ? 'Wrong passcode'
+              : 'Enter passcode'}
       </div>
       <div className={`ph-dots${state === 'wrong' ? ' ph-dots-wrong' : ''}`} aria-hidden>
         {[0, 1, 2, 3].map((i) => (

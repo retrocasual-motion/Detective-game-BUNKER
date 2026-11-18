@@ -1,7 +1,34 @@
 import type { Card, Material, PlayerState, VerdictAnswer, VerdictResult } from '@bunker/shared';
 
+/**
+ * Запрос с пределом ожидания (R2-07): завис сервер — через 15 с ошибка, как при обрыве связи,
+ * а не «проверяю…» на минуты.
+ */
+const TIMEOUT_MS = 15_000;
+const call = (url: string, init?: RequestInit) =>
+  fetch(url, { ...init, signal: init?.signal ?? AbortSignal.timeout(TIMEOUT_MS) });
+
+/** Сервер ответил отказом (не сбой сети): код ответа — в status. */
+export class HttpError extends Error {
+  constructor(
+    readonly status: number,
+    url: string,
+  ) {
+    super(`${status} ${url}`);
+  }
+}
+
+/** Сессии нет (вышли в другой вкладке, истекла): игра показывает экран входа (R2-03). */
+let onSignedOut: (() => void) | null = null;
+export const setOnSignedOut = (fn: () => void) => {
+  onSignedOut = fn;
+};
+
 async function check(res: Response): Promise<Response> {
-  if (!res.ok) throw new Error(`${res.status} ${res.url}`);
+  if (!res.ok) {
+    if (res.status === 401) onSignedOut?.();
+    throw new HttpError(res.status, res.url);
+  }
   return res;
 }
 
@@ -12,16 +39,16 @@ export const canKeepalive = (body: string): boolean =>
   new TextEncoder().encode(body).length < KEEPALIVE_LIMIT_BYTES;
 
 export const getMaterials = async (): Promise<Material[]> =>
-  (await check(await fetch('/api/materials'))).json();
+  (await check(await call('/api/materials'))).json();
 
 export const getState = async (): Promise<PlayerState> =>
-  (await check(await fetch('/api/state'))).json();
+  (await check(await call('/api/state'))).json();
 
 /** seq — номер версии сохранения: сервер не применит запрос старее уже сохранённого. */
 export const putState = async (s: PlayerState, seq: number): Promise<void> => {
   const body = JSON.stringify(s);
   await check(
-    await fetch('/api/state', {
+    await call('/api/state', {
       method: 'PUT',
       headers: { 'content-type': 'application/json', 'x-state-seq': String(seq) },
       body,
@@ -50,7 +77,7 @@ export const postAction = async (
   target: string,
   value: string,
 ): Promise<ActionResult> => {
-  const res = await fetch('/api/action', {
+  const res = await call('/api/action', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ action, target, value }),
@@ -60,7 +87,7 @@ export const postAction = async (
 
 /** Служебная строка действий — только в разработке (E2-CHECK-A). */
 export const postActionLine = async (line: string): Promise<ActionResult> => {
-  const res = await fetch('/api/dev/action-line', {
+  const res = await call('/api/dev/action-line', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ line }),
@@ -74,11 +101,11 @@ export const postActionLine = async (line: string): Promise<ActionResult> => {
 
 /** «Новое дело» из главного меню: всё с начала (работает и у игрока). */
 export const newCase = async (): Promise<void> => {
-  await check(await fetch('/api/new-case', { method: 'POST' }));
+  await check(await call('/api/new-case', { method: 'POST' }));
 };
 
 export const resetState = async (): Promise<void> => {
-  await check(await fetch('/api/state', { method: 'DELETE' }));
+  await check(await call('/api/state', { method: 'DELETE' }));
 };
 
 /** Кто вошёл (6a-1): без входа (`off`) или по ссылке — почта и куда идут ответы. */
@@ -89,7 +116,7 @@ export type Me =
 
 /** null — сервер не ответил; `{auth:'link'}` без почты — нужен вход. */
 export const getMe = async (): Promise<Me | null> => {
-  const res = await fetch('/api/me').catch(() => null);
+  const res = await call('/api/me').catch(() => null);
   if (!res || (res.status !== 200 && res.status !== 401)) return null;
   return res.json();
 };
@@ -98,7 +125,7 @@ export const getMe = async (): Promise<Me | null> => {
 export const requestLogin = async (
   email: string,
 ): Promise<{ sent: true; again?: boolean } | { error: string }> => {
-  const res = await fetch('/api/login', {
+  const res = await call('/api/login', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ email }),
@@ -111,13 +138,13 @@ export const requestLogin = async (
 };
 
 export const logout = async (): Promise<void> => {
-  await fetch('/api/logout', { method: 'POST' });
+  await call('/api/logout', { method: 'POST' });
 };
 
 /** Куда идут ответы на запросы: на почту или сразу во «Входящие» (P-14). */
 export const setMailChannel = async (channel: 'real' | 'internal'): Promise<void> => {
   await check(
-    await fetch('/api/me/channel', {
+    await call('/api/me/channel', {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ channel }),
@@ -135,7 +162,7 @@ export type PetitionResult =
 
 /** Отправить запрос из папки (этап 3). */
 export const postPetition = async (to: string, ask: Card, basis: Card): Promise<PetitionResult> => {
-  const res = await fetch('/api/petition', {
+  const res = await call('/api/petition', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ to, ask, basis }),
@@ -155,7 +182,7 @@ export const postPetition = async (to: string, ask: Card, basis: Card): Promise<
  * ждут «Добавить в дело» на почте игрока.
  */
 export const getPendingMail = async (): Promise<{ inMs: number[]; waiting: number }> =>
-  (await check(await fetch('/api/mail/pending'))).json();
+  (await check(await call('/api/mail/pending'))).json();
 
 /** Где дело (A-270): открыта ли форма заключения, отправлено ли заключение. */
 export interface CaseStatus {
@@ -166,13 +193,13 @@ export interface CaseStatus {
 }
 
 export const getCase = async (): Promise<CaseStatus> =>
-  (await check(await fetch('/api/case'))).json();
+  (await check(await call('/api/case'))).json();
 
 /** Отправить заключение: бюро отвечает сразу — итогом по вопросам (автор 17.11). */
 export const postVerdict = async (
   answers: VerdictAnswer[],
 ): Promise<{ result: VerdictResult } | { error: string }> => {
-  const res = await fetch('/api/verdict', {
+  const res = await call('/api/verdict', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ answers }),

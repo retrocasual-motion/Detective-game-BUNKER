@@ -1,10 +1,10 @@
-import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { type CanvasTexture, type Group, Shape } from 'three';
 import { gameNow, hhmm } from '../clock.ts';
 import { reducedMotion } from '../motion.ts';
 import { phoneHome } from '../phone/phoneHome.ts';
 import { useGame } from '../store.ts';
+import { SETTLED, useAnimate } from './animate.ts';
 import { onClickPart, setPartCursor, useScreenAnchor, useSpot } from './Held3D.tsx';
 import { paintLaptopFace } from './laptopFace.ts';
 import { paintPhoneFace } from './phoneFace.ts';
@@ -336,12 +336,14 @@ function PhoneScreen({ onUse, on, z }: { onUse: () => void; on: boolean; z: numb
  */
 function Laptop({ tag, onUse, on }: { tag: string; onUse: () => void; on: boolean }) {
   const body = useRef<Group>(null);
-  useFrame((_, dt) => {
+  useAnimate((dt) => {
     const g = body.current;
-    if (!g) return;
+    if (!g) return false;
     // Вплотную — наклон, при котором крышка (−0,12) стоит прямо.
     const k = reducedMotion() ? 1 : 1 - Math.exp(-dt * 10);
-    g.rotation.x += ((on ? 0.12 : 0.28) - g.rotation.x) * k;
+    const to = on ? 0.12 : 0.28;
+    g.rotation.x += (to - g.rotation.x) * k;
+    return Math.abs(to - g.rotation.x) > SETTLED;
   });
   return (
     <group ref={body} rotation={[0.28, 0, 0]} scale={0.8}>

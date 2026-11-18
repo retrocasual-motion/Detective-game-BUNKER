@@ -4,6 +4,8 @@ import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { postAction } from '../api.ts';
 import { FileIcon } from '../laptop/apps.tsx';
+import { formatWait, OFFLINE, useFieldWait } from '../lock.ts';
+import { NO_LINKS } from '../paperLinks.tsx';
 import { useGame } from '../store.ts';
 import {
   forScreen,
@@ -24,9 +26,11 @@ import {
  * газеты (дата выпуска). Всё остаётся на компьютере (DV-A); текст — в запрос (data-material).
  */
 
-const md = (text: string) => <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{text}</Markdown>;
-const mmss = (ms: number) =>
-  `${Math.floor(ms / 60000)}:${String(Math.ceil((ms % 60000) / 1000) % 60).padStart(2, '0')}`;
+const md = (text: string) => (
+  <Markdown remarkPlugins={[remarkGfm, remarkBreaks]} components={NO_LINKS}>
+    {text}
+  </Markdown>
+);
 
 /** Ответ движка на ввод в поле: открыто (released / уже было), отказ с текстом, пауза. */
 async function enter(field: string, value: string) {
@@ -35,18 +39,6 @@ async function enter(field: string, value: string) {
   if (r?.released.length) g.addFound(r.released, 'pc', []);
   if (r?.wait) g.blockField(field, r.wait);
   return r;
-}
-
-/** Ожидание поля (LK-A) — секунды до конца, обновляется. */
-function useWait(field: string) {
-  const until = useGame((g) => g.fieldBlockedUntil[field] ?? 0);
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    if (until <= Date.now()) return;
-    const t = setInterval(() => setNow(Date.now()), 500);
-    return () => clearInterval(t);
-  }, [until]);
-  return Math.max(0, until - now);
 }
 
 /** Окно пароля зашифрованного вложения (канон: «Поле ввода: Пароль ящика / Пароль архива»). */
@@ -66,7 +58,7 @@ export function PasswordBox({
 }) {
   const [value, setValue] = useState('');
   const [msg, setMsg] = useState('');
-  const wait = useWait(field);
+  const wait = useFieldWait(field);
   useEffect(() => {
     if (open) onOpen();
   }, [open, onOpen]);
@@ -74,8 +66,9 @@ export function PasswordBox({
     e.preventDefault();
     if (!value.trim() || wait > 0) return;
     const r = await enter(field, value.trim());
-    if (r && !r.quiet) onOpen();
-    else setMsg(r?.reply && !/^С этим|^Такого/.test(r.reply) ? r.reply : 'Неверный пароль.');
+    if (!r) setMsg(`${OFFLINE}.`);
+    else if (!r.quiet) onOpen();
+    else setMsg(r.reply && !/^С этим|^Такого/.test(r.reply) ? r.reply : 'Неверный пароль.');
   };
   return (
     <form className="pc-pass" onSubmit={(e) => void submit(e)} data-testid="pc-password">
@@ -101,7 +94,7 @@ export function PasswordBox({
         />
       </label>
       <div className="pc-pass-msg" data-testid="pc-password-msg" role="status">
-        {wait > 0 ? `Поле не принимает значение. Повторите через ${mmss(wait)}` : msg}
+        {wait > 0 ? `Поле не принимает значение. Повторите через ${formatWait(wait)}` : msg}
       </div>
       <div className="pc-pass-actions">
         <button type="submit" disabled={wait > 0} data-testid="pc-password-ok">
@@ -333,7 +326,9 @@ export function Terminal({ start }: { start?: string }) {
             >
               {/* Паспорт выгрузки — над первым разделом документа, не над каждым. */}
               {doc.note && pos.part === 0 && <div className="pc-term-note">{doc.note}</div>}
-              <Markdown remarkPlugins={[remarkGfm]}>{part.body}</Markdown>
+              <Markdown remarkPlugins={[remarkGfm]} components={NO_LINKS}>
+                {part.body}
+              </Markdown>
             </section>
           </div>
           {/* Документы — строкой F-клавиш внизу, как в программах DOS (Norton Commander). */}
@@ -418,7 +413,7 @@ export function PcBrowser() {
   const [date, setDate] = useState('');
   const [msg, setMsg] = useState('');
   const field = 'архив номеров газеты';
-  const wait = useWait(field);
+  const wait = useFieldWait(field);
 
   const openDate = async (e: FormEvent) => {
     e.preventDefault();
@@ -433,7 +428,7 @@ export function PcBrowser() {
     if (issue) {
       setPage({ kind: 'doc', id: issue.id });
       setMsg('');
-    } else setMsg(r?.reply ?? 'Выпуск за эту дату не оцифрован.');
+    } else setMsg(!r ? `${OFFLINE}.` : (r.reply ?? 'Выпуск за эту дату не оцифрован.'));
   };
   const go = async (address: string) => {
     if (/silverridge-chronicle\.com/.test(address)) {
@@ -453,7 +448,7 @@ export function PcBrowser() {
     else
       setPage({
         kind: 'text',
-        text: r?.reply && !r.quiet ? r.reply : 'Не удаётся открыть страницу.',
+        text: !r ? `${OFFLINE}.` : r.reply && !r.quiet ? r.reply : 'Не удаётся открыть страницу.',
       });
   };
 
@@ -519,7 +514,7 @@ export function PcBrowser() {
               </button>
             </form>
             <div className="pc-news-msg" data-testid="pc-news-msg" role="status">
-              {wait > 0 ? `Поле не принимает значение. Повторите через ${mmss(wait)}` : msg}
+              {wait > 0 ? `Поле не принимает значение. Повторите через ${formatWait(wait)}` : msg}
             </div>
           </div>
         ) : page.kind === 'doc' ? (

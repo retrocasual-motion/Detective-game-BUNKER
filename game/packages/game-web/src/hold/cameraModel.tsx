@@ -1,8 +1,8 @@
-import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import type { Group } from 'three';
 import { useCamera } from '../camera/camera.ts';
 import { reducedMotion } from '../motion.ts';
+import { SETTLED, useAnimate } from './animate.ts';
 import type { Focus } from './Held3D.tsx';
 import { rounded, Screen, Tag, useActive, useTexture } from './shapes.tsx';
 import { paintTexture } from './texture.ts';
@@ -43,13 +43,14 @@ export const CAMERA_FOCUS: Focus = {
 
 export function CameraDevice({ tag, on, onUse }: { tag: string; on: boolean; onUse: () => void }) {
   const body = useRef<Group>(null);
-  useFrame((_, dt) => {
+  useAnimate((dt) => {
     const g = body.current;
-    if (!g) return;
+    if (!g) return false;
     const k = reducedMotion() ? 1 : 1 - Math.exp(-dt * 10);
     const [tx, ty] = on ? [0, 0] : TILT;
     g.rotation.x += (tx - g.rotation.x) * k;
     g.rotation.y += (ty - g.rotation.y) * k;
+    return Math.abs(tx - g.rotation.x) + Math.abs(ty - g.rotation.y) > SETTLED;
   });
   const shape = useMemo(() => rounded(W, H, 0.14), []);
   const c = useCamera.getState;

@@ -1,4 +1,4 @@
-import { type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
+import { type ThreeEvent, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   BackSide,
@@ -11,6 +11,7 @@ import {
 } from 'three';
 import { reducedMotion } from '../motion.ts';
 import type { Bundle, Sheet } from '../viewer/bundles.ts';
+import { SETTLED, useAnimate } from './animate.ts';
 import { holdPart, setPartCursor, useSpot } from './Held3D.tsx';
 import { Plate, useActive, useTexture } from './shapes.tsx';
 import { paintTexture } from './texture.ts';
@@ -138,6 +139,16 @@ function faceTexture(s: Sheet, slip: string | null = null): CanvasTexture {
   return tex;
 }
 
+/**
+ * Положили пачку — лица листов не нужны: кэш освобождается (R3-05). Полный кэш — 24 холста по
+ * ~4 МБ, и он жил до перезагрузки страницы. Если лицо ещё где-то на экране, three.js загрузит его
+ * снова при следующем кадре.
+ */
+function dropFaces() {
+  for (const t of faces.values()) t.dispose();
+  faces.clear();
+}
+
 function useFace(s: Sheet, slip: string | null = null) {
   const key = faceKey(s, slip);
   // biome-ignore lint/correctness/useExhaustiveDependencies: лицо меняется только с ключом листа
@@ -187,13 +198,15 @@ function CardLayer({ n, z, onPull }: { n: number; z: number; onPull: () => void 
     onClick: onPull,
   });
   useEffect(() => () => setPartCursor(''), []);
-  useFrame((_, dt) => {
+  useAnimate((dt) => {
     const k = ease(dt);
-    out.current += ((hover ? OUT_HOVER : OUT_REST) - out.current) * k;
+    const outTo = hover ? OUT_HOVER : OUT_REST;
+    out.current += (outTo - out.current) * k;
     body.current?.scale.set((W + 2 * out.current) / W, (H + 2 * out.current) / H, 1);
     const sl = slide.current;
     sl.now = sl.dragging ? sl.to : sl.now + (sl.to - sl.now) * k;
     if (group.current) group.current.position.x = sl.now * W * 0.9;
+    return Math.abs(outTo - out.current) + Math.abs(sl.to - sl.now) > SETTLED;
   });
   // Пачку видно сбоку: луч мыши не вдоль её толщины; и зона захвата — ближе всего к мыши.
   const reach = (e: ThreeEvent<PointerEvent>) => {
@@ -212,20 +225,34 @@ function CardLayer({ n, z, onPull }: { n: number; z: number; onPull: () => void 
     const sl = slide.current;
     sl.dragging = true;
     const move = (ev: PointerEvent) => {
+      // Кнопку отпустили вне окна — как «отпустили» (R3-08).
+      if (ev.buttons === 0) return up();
       sl.to = Math.min(1, Math.hypot(ev.clientX - x0, ev.clientY - y0) / PULL_PX);
     };
-    const up = () => {
+    const end = () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', cancel);
+      window.removeEventListener('blur', cancel);
       setPartCursor('');
       sl.dragging = false;
+    };
+    const up = () => {
+      end();
       if (sl.to >= 0.5) {
         sl.to = 1;
         onPull();
       } else sl.to = 0;
     };
+    // Ушли из окна (Alt+Tab) посреди протяжки — картон плавно вернулся, не вытащен.
+    const cancel = () => {
+      end();
+      sl.to = 0;
+    };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', cancel);
+    window.addEventListener('blur', cancel);
   };
   return (
     <group position={[0, 0, z]}>
@@ -287,8 +314,8 @@ function Flying({ flip, onDone }: { flip: Flip; onDone: () => void }) {
   const group = useRef<Group>(null);
   const done = useRef(false);
   useEffect(() => () => geo.dispose(), [geo]);
-  useFrame(() => {
-    if (done.current) return;
+  useAnimate(() => {
+    if (done.current) return false;
     const t = reducedMotion() ? 1 : Math.min(1, (performance.now() - flip.at) / FLIP_MS);
     const e = (1 - Math.cos(Math.PI * t)) / 2;
     const p = flip.dir === 1 ? e : 1 - e;
@@ -312,6 +339,7 @@ function Flying({ flip, onDone }: { flip: Flip; onDone: () => void }) {
       done.current = true;
       onDone();
     }
+    return !done.current;
   });
   return (
     <group ref={group} position={[0, 0, flip.zRight]}>
@@ -355,6 +383,7 @@ export function PaperStack({
 }) {
   const sheetAt = (i: number): Sheet => (i === 0 ? topOf(b) : (sheets?.[i] ?? BLANK));
   const slipAt = (i: number) => (i === 0 ? slipOf(b) : null);
+  useEffect(() => dropFaces, []);
   const [flip, setFlip] = useState<Flip | null>(null);
   const d0 = stackDepth(b.sheets);
   // Обе стопки лежат на одной плоскости (низ исходной пачки): правая убывает, левая растёт.
@@ -415,7 +444,9 @@ export function PaperStack({
   useEffect(() => {
     const was = last.current;
     last.current = page;
-    if (page === was) return;
+    // «Уменьшить движение»: лист ложится сразу, без полёта — и щелчок сразу после смены номера
+    // не попадает в переворот (на обложке он бы пропал).
+    if (page === was || reducedMotion()) return;
     const dir = page > was ? 1 : -1;
     const i = dir === 1 ? page - 1 : page;
     const restNow = b.sheets - page;
@@ -619,7 +650,7 @@ function EnvelopeFile({
     },
     true,
   );
-  useFrame((_, dt) => {
+  useAnimate((dt) => {
     const to = out.current ? LIFT_OUT : pick.hover && !empty ? LIFT_HOVER : 0;
     y.current += (to - y.current) * ease(dt);
     if (lift.current) lift.current.position.y = y.current;
@@ -628,7 +659,9 @@ function EnvelopeFile({
       out.current = false;
       y.current = 0;
       onPick();
+      return true;
     }
+    return out.current || Math.abs(to - y.current) > SETTLED;
   });
   const face = useTexture(
     () =>

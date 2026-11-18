@@ -33,7 +33,11 @@ export function RecorderLcd() {
   useEffect(() => {
     const el = strip.current;
     if (!el) return;
-    useRecorder.setState({ stripPx: el.offsetWidth || 1000 });
+    // Ширина шкалы — и после смены размера окна: по ней группируются звуки «⏭ / ⏮» (R3-12).
+    const measure = () => useRecorder.setState({ stripPx: el.offsetWidth || 1000 });
+    measure();
+    const seen = new ResizeObserver(measure);
+    seen.observe(el);
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const r = el.getBoundingClientRect();
@@ -49,7 +53,10 @@ export function RecorderLcd() {
       rec().zoom(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), intent.zoom);
     };
     el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      seen.disconnect();
+    };
   }, []);
 
   const span = view.to - view.from;

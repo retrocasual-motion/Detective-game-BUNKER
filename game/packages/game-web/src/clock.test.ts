@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ddmmyyyy, gameNow, hhmm } from './clock.ts';
+import { ddmmyyyy, formatWait, gameNow, hhmm } from './clock.ts';
 
 describe('gameNow (CL-D)', () => {
   it('первый день — 16.11.2009, время — настоящее', () => {
@@ -14,5 +14,18 @@ describe('gameNow (CL-D)', () => {
   });
   it('нет дня начала — первый день', () => {
     expect(ddmmyyyy(gameNow(undefined, new Date(2030, 0, 1)))).toBe('16.11.2009');
+  });
+});
+
+describe('formatWait — отсчёт паузы замка (R2-10)', () => {
+  it('секунды вверх, без «1:00» за 0,4 с до двух минут', () => {
+    expect(formatWait(120_000)).toBe('2:00');
+    expect(formatWait(119_600)).toBe('2:00');
+    expect(formatWait(119_000)).toBe('1:59');
+    expect(formatWait(60_000)).toBe('1:00');
+    expect(formatWait(59_600)).toBe('1:00');
+    expect(formatWait(1)).toBe('0:01');
+    expect(formatWait(0)).toBe('0:00');
+    expect(formatWait(-5)).toBe('0:00');
   });
 });

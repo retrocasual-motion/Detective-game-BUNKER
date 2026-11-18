@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { newCase } from '../api.ts';
 import { type InputMode, setInputMode, useInputMode } from '../input.ts';
 import { reducedMotion, setReducedMotion } from '../motion.ts';
@@ -19,23 +19,51 @@ export function MainMenu() {
   const [panel, setPanel] = useState<'none' | 'settings' | 'confirm'>('none');
   const [calm, setCalm] = useState(reducedMotion);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   const email = useEmail();
   const input = useInputMode();
   const channel = useAccount((a) => (a.me?.auth === 'link' && a.me.email ? a.me.channel : null));
+  // Esc в «Настройках» и в подтверждении — назад, как «Назад» / «Отмена» (R5-12).
+  useEffect(() => {
+    if (screen !== 'menu' || panel === 'none') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPanel('none');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [screen, panel]);
   if (screen !== 'menu') return null;
 
   const startOver = async () => {
     setBusy(true);
+    setError('');
     try {
       // Сначала дослать сохранённое: иначе страница при уходе пришлёт старое дело обратно.
       await useGame.getState().flushSave();
+      // Дальше не сохранять: повтор или уход со страницы вернул бы старое дело в новое (R2-04).
+      useGame.getState().stopSaving();
       await newCase();
       // Всё дело — с начала: проще всего загрузить игру заново (сразу в дело).
       const url = new URL(window.location.href);
       url.searchParams.set('play', '');
       window.location.replace(url.toString());
     } catch {
+      useGame.getState().resumeSaving();
+      // Сервер не ответил — дело не тронуто; сказать прямо, а не молча вернуть кнопку (R2-04).
+      setError('Нет связи с сервером игры — дело не сброшено. Попробуйте ещё раз.');
       setBusy(false);
+    }
+  };
+  const signOut = async () => {
+    setError('');
+    try {
+      // Сначала дослать сохранённое (R2-04), потом выйти.
+      await useGame.getState().flushSave();
+      useGame.getState().stopSaving();
+      await useAccount.getState().logout();
+    } catch {
+      useGame.getState().resumeSaving();
+      setError('Нет связи с сервером игры — выйти не удалось. Попробуйте ещё раз.');
     }
   };
 
@@ -64,22 +92,25 @@ export function MainMenu() {
               Титры
             </button>
             {email && (
-              <button
-                type="button"
-                data-testid="menu-logout"
-                onClick={() => void useAccount.getState().logout()}
-              >
+              <button type="button" data-testid="menu-logout" onClick={() => void signOut()}>
                 Выйти
               </button>
             )}
           </nav>
         )}
         {email && panel === 'none' && <p className="main-menu-email">{email}</p>}
+        {error && (
+          <p className="main-menu-error" role="alert" data-testid="menu-error">
+            {error}
+          </p>
+        )}
         {panel === 'confirm' && (
           <div className="main-menu-panel" role="alertdialog" aria-label="Новое дело">
             <p>Начать дело заново? Всё, что найдено и разложено, пропадёт.</p>
             <div className="main-menu-row">
-              <button type="button" onClick={() => setPanel('none')}>
+              {/* Фокус — на безопасной кнопке: Enter не сотрёт дело (R5-12). */}
+              {/* biome-ignore lint/a11y/noAutofocus: диалог подтверждения — фокус на «Отмена» */}
+              <button type="button" autoFocus onClick={() => setPanel('none')}>
                 Отмена
               </button>
               <button

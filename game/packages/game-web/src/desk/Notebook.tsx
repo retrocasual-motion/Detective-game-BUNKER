@@ -12,8 +12,12 @@ import { canNext, LINE_PX, PAGE_LINES, pagesOf, withPage } from './notebookPages
  */
 export function Notebook() {
   const open = useGame((g) => g.notebookOpen);
-  const state = useGame((g) => g.state);
-  const pages = pagesOf(state);
+  // Только записи блокнота: подписка на всё состояние перерисовывала блокнот на каждый сдвиг
+  // стены и каждое сохранение (R2-09, R3-07).
+  const notebook = useGame((g) => g.state?.notebook);
+  const notebookPages = useGame((g) => g.state?.notebookPages);
+  const hasState = useGame((g) => g.state !== null);
+  const pages = pagesOf({ notebook, notebookPages });
   const [page, setPage] = useState<number | null>(null);
   // Открыли — на последней странице с записью.
   const at = Math.min(page ?? lastWritten(pages), pages.length);
@@ -35,7 +39,7 @@ export function Notebook() {
     a?.setSelectionRange(a.value.length, a.value.length);
   }, [at]);
 
-  if (!state) return null;
+  if (!hasState) return null;
   const setOpen = (v: boolean) => useGame.getState().setNotebookOpen(v);
   const save = (t: string, i = at) =>
     useGame.getState().updateState((s) => ({

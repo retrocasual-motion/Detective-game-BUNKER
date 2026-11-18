@@ -6,7 +6,24 @@ export interface Saver {
   schedule(s: PlayerState): void;
   /** Отправить отложенное сразу (закрытие страницы) и дождаться запросов. */
   flush(): Promise<void>;
+  /**
+   * Больше не сохранять (до resume): «Новое дело», выход, дело открыто в другой вкладке. Отложенное
+   * выбрасывается — иначе повтор или уход со страницы вернул бы старое дело на сервер (R2-04).
+   */
+  stop(): void;
+  resume(): void;
 }
+
+/**
+ * Сервер отказал по существу (4xx, кроме «подождите»): повтор того же состояния не поможет —
+ * сохранение останавливается со статусом 'rejected' вместо повторов каждые 3 с (R2-03).
+ */
+const refused = (e: unknown) => {
+  const status = (e as { status?: unknown } | null)?.status;
+  return (
+    typeof status === 'number' && status >= 400 && status < 500 && status !== 408 && status !== 429
+  );
+};
 
 /**
  * Отложенное сохранение (TECH_PLAN 6.4).
@@ -27,6 +44,7 @@ export function createSaver(
   const inFlight = new Set<Promise<void>>();
   let due = false;
   let lastSeq = 0;
+  let stopped = false;
 
   const nextSeq = () => {
     lastSeq = Math.max(Date.now() * 1000, lastSeq + 1);
@@ -42,7 +60,7 @@ export function createSaver(
   };
 
   const sendNow = () => {
-    if (!pending) return;
+    if (!pending || stopped) return;
     const s = pending;
     pending = null;
     onStatus('saving');
@@ -51,7 +69,11 @@ export function createSaver(
         () => {
           if (!pending && inFlight.size === 1) onStatus('saved');
         },
-        () => {
+        (e: unknown) => {
+          if (refused(e)) {
+            onStatus('rejected');
+            return;
+          }
           if (!pending) pending = s;
           onStatus('error');
           arm(retryMs);
@@ -77,6 +99,7 @@ export function createSaver(
 
   return {
     schedule(s) {
+      if (stopped) return;
       pending = s;
       arm(delayMs);
     },
@@ -85,6 +108,15 @@ export function createSaver(
       timer = null;
       sendNow();
       await Promise.allSettled([...inFlight]);
+    },
+    stop() {
+      stopped = true;
+      pending = null;
+      if (timer) clearTimeout(timer);
+      timer = null;
+    },
+    resume() {
+      stopped = false;
     },
   };
 }

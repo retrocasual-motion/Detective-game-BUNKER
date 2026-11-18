@@ -1,4 +1,4 @@
-import { Canvas, type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, invalidate, type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import {
   type ReactNode,
   type PointerEvent as ReactPointerEvent,
@@ -12,6 +12,7 @@ import { type Group, type Object3D, PerspectiveCamera, Quaternion, Vector3 } fro
 import { useFreeArea } from '../device/deviceView.tsx';
 import { wheelIntent, zoomFactor } from '../input.ts';
 import { reducedMotion } from '../motion.ts';
+import { MAX_DT, SETTLED } from './animate.ts';
 import { clampPitch, orient } from './orient.ts';
 import { zoomStep } from './zoom.ts';
 
@@ -104,8 +105,10 @@ export function useScreenAnchor(ref: RefObject<Object3D | null>, w: number, h: n
     const obj = ref.current;
     if (!obj) return;
     screenNow = { obj, w, h };
+    invalidate();
     return () => {
       if (screenNow?.obj === obj) screenNow = null;
+      invalidate();
     };
   });
 }
@@ -150,6 +153,8 @@ const spotListeners = new Set<() => void>();
 const changed = () => {
   spotList = [...spots.values()];
   for (const l of spotListeners) l();
+  // Новой кнопке части нужно место — его ставит кадр сцены.
+  invalidate();
 };
 
 export function useSpot(ref: RefObject<Object3D | null>, spot: Omit<Spot, 'obj'>) {
@@ -197,6 +202,7 @@ function Rig({
   half,
   onSide,
   buttons,
+  onBody,
   focus,
   area,
   screen,
@@ -214,10 +220,26 @@ function Rig({
   half: [number, number];
   onSide: (back: boolean) => void;
   buttons: RefObject<Map<string, HTMLButtonElement>>;
+  /** Щелчок по самой вещи (не по части с обработчиком). */
+  onBody: () => void;
   children: ReactNode;
 }) {
   const group = useRef<Group>(null);
-  const { camera, size } = useThree();
+  const { camera, size, invalidate: redraw } = useThree();
+  // Сцена рисуется по требованию (T-…): кадр — после смены пропсов (вплотную, режим) и на любой
+  // ввод (жесты копятся в gesture и забираются кадром). Захват — до stopPropagation разметки.
+  useEffect(() => {
+    redraw();
+  });
+  useEffect(() => {
+    const kick = () => redraw();
+    const opts = { capture: true, passive: true } as const;
+    const types = ['pointerdown', 'pointermove', 'pointerup', 'wheel', 'keydown'] as const;
+    for (const t of types) window.addEventListener(t, kick, opts);
+    return () => {
+      for (const t of types) window.removeEventListener(t, kick, opts);
+    };
+  }, [redraw]);
   const camTarget = useRef(new Vector3(0, 0, CAM_Z));
   // Свободный поворот: два угла без крена (orient.ts).
   const pitch = useRef(0);
@@ -239,6 +261,8 @@ function Rig({
   };
 
   const wasFocused = useRef(false);
+  /** Что уже записано в стили экрана и кнопок: писать только изменения (иначе — раскладка каждый кадр). */
+  const written = useRef(new WeakMap<HTMLElement, string>());
   useFrame((_, dt) => {
     const g = gesture.current;
     // Отошли от части — камера обратно, вещь снова в руках целиком.
@@ -314,7 +338,7 @@ function Rig({
       yaw.current = Math.round(yaw.current / (2 * Math.PI)) * 2 * Math.PI;
       camTarget.current.set(0, 0, CAM_Z);
     }
-    const k = reducedMotion() ? 1 : 1 - Math.exp(-dt * 12);
+    const k = reducedMotion() ? 1 : 1 - Math.exp(-Math.min(dt, MAX_DT) * 12);
     const target =
       mode === 'flip'
         ? new Quaternion().setFromAxisAngle(Y, yaw.current)
@@ -322,6 +346,13 @@ function Rig({
     group.current?.quaternion.slerp(target, k);
     camera.position.lerp(camTarget.current, k);
     camera.updateMatrixWorld();
+    // Ещё едет — нужен следующий кадр; доехала — сцена стоит, пока что-то не изменится.
+    const q = group.current?.quaternion;
+    if (
+      camera.position.distanceTo(camTarget.current) > SETTLED ||
+      (q && q.angleTo(target) > SETTLED)
+    )
+      redraw();
     if (mode === 'flip') {
       const back = Math.cos(yaw.current) < 0;
       if (back !== side.current) {
@@ -333,7 +364,7 @@ function Rig({
     const el = screen.current;
     if (el) {
       const a = screenNow;
-      let shown = false;
+      let place = '';
       if (focus && a) {
         const q = a.obj.getWorldQuaternion(new Quaternion());
         const n = new Vector3(0, 0, 1).applyQuaternion(q);
@@ -343,13 +374,16 @@ function Rig({
           const left = ((tl.x + 1) / 2) * size.width;
           const right = ((br.x + 1) / 2) * size.width;
           const top = ((1 - tl.y) / 2) * size.height;
-          el.style.left = `${left}px`;
-          el.style.top = `${top}px`;
-          el.style.transform = `scale(${(right - left) / screenW})`;
-          shown = true;
+          // Сдвиг и масштаб одним transform (без left/top — без раскладки); округление — чтобы
+          // камера, подъехавшая почти до места, не двигала экран на доли пикселя каждый кадр.
+          place = `translate(${left.toFixed(1)}px, ${top.toFixed(1)}px) scale(${((right - left) / screenW).toFixed(4)})`;
         }
       }
-      el.style.visibility = shown ? 'visible' : 'hidden';
+      if (written.current.get(el) !== place) {
+        written.current.set(el, place);
+        if (place) el.style.transform = place;
+        el.style.visibility = place ? 'visible' : 'hidden';
+      }
     }
     // Кнопки активных частей — за частями; у отвёрнутой от камеры части кнопки нет.
     for (const s of spots.values()) {
@@ -361,13 +395,34 @@ function Rig({
       );
       const facing = normal.dot(camera.position.clone().sub(pos)) > 0;
       const p = pos.project(camera);
+      const left = (((p.x + 1) / 2) * size.width).toFixed(1);
+      const top = (((1 - p.y) / 2) * size.height).toFixed(1);
+      const place = facing ? `${left} ${top}` : '';
+      if (written.current.get(b) === place) continue;
+      written.current.set(b, place);
       b.style.display = facing ? 'block' : 'none';
-      b.style.left = `${((p.x + 1) / 2) * size.width}px`;
-      b.style.top = `${((1 - p.y) / 2) * size.height}px`;
+      if (facing) {
+        b.style.left = `${left}px`;
+        b.style.top = `${top}px`;
+      }
     }
   });
 
-  return <group ref={group}>{children}</group>;
+  // Вся вещь — попадание: щелчок по бумаге или корпусу не «мимо» и вещь не кладёт; кладёт только
+  // щелчок по пустому месту (ST4-NOMENU; R3-02 — R3F ловит лучом лишь меши с обработчиками).
+  // Вплотную щелчок по корпусу мимо части — как прежде, снова вещь в руках (onBody).
+  return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: 3D-группа, не DOM; с клавиатуры — кнопки частей и ✕
+    <group
+      ref={group}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (gesture.current.moved < CLICK_PX) onBody();
+      }}
+    >
+      {children}
+    </group>
+  );
 }
 
 export interface Held3DProps {
@@ -475,6 +530,8 @@ export default function Held3D({
       e.preventDefault();
       let at = { x: e.clientX, y: e.clientY };
       const pan = (ev: PointerEvent) => {
+        // Кнопку отпустили вне окна (Alt+Tab) — протяжка кончилась (R3-08).
+        if (ev.buttons === 0) return stop();
         g.panX += ev.clientX - at.x;
         g.panY += ev.clientY - at.y;
         at = { x: ev.clientX, y: ev.clientY };
@@ -482,15 +539,21 @@ export default function Held3D({
       const stop = () => {
         window.removeEventListener('pointermove', pan);
         window.removeEventListener('pointerup', stop);
+        window.removeEventListener('pointercancel', stop);
+        window.removeEventListener('blur', stop);
       };
       window.addEventListener('pointermove', pan);
       window.addEventListener('pointerup', stop);
+      window.addEventListener('pointercancel', stop);
+      window.addEventListener('blur', stop);
       return;
     }
     if (e.button !== 0) return;
     g.moved = 0;
     let last = { x: e.clientX, y: e.clientY };
     const move = (ev: PointerEvent) => {
+      // Кнопку отпустили вне окна (Alt+Tab) — вещь не крутится дальше за мышью (R3-08).
+      if (ev.buttons === 0) return up();
       g.dx += ev.clientX - last.x;
       g.dy += ev.clientY - last.y;
       g.moved += Math.abs(ev.clientX - last.x) + Math.abs(ev.clientY - last.y);
@@ -501,9 +564,13 @@ export default function Held3D({
       g.part = false;
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      window.removeEventListener('blur', up);
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+    window.addEventListener('blur', up);
   };
 
   return (
@@ -544,6 +611,7 @@ export default function Held3D({
       <Canvas
         camera={{ position: [0, 0, CAM_Z], fov: 30 }}
         dpr={[1, 2]}
+        frameloop="demand"
         onPointerMissed={(e) => {
           // Только щелчок левой: правая — «как было» или «отойти» (её «мимо» — не «положить»).
           if (e.type !== 'click') return;
@@ -558,6 +626,9 @@ export default function Held3D({
           mode={mode}
           half={half}
           buttons={buttons}
+          onBody={() => {
+            if (focus && onUnfocus) onUnfocus();
+          }}
           focus={focus}
           area={area}
           screen={screenEl}
