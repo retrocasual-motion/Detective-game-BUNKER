@@ -1,6 +1,15 @@
 import type { Progress } from '@bunker/engine';
 import type { PlayerState } from '@bunker/shared';
-import { bigint, integer, jsonb, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core';
+import {
+  bigint,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 
 export const playerState = pgTable('player_state', {
   playerId: text('player_id').primaryKey(),
@@ -46,7 +55,11 @@ export const playerLetters = pgTable(
     mailedAt: timestamp('mailed_at', { withTimezone: true }),
     addedAt: timestamp('added_at', { withTimezone: true }),
   },
-  (t) => [primaryKey({ columns: [t.playerId, t.n] })],
+  (t) => [
+    primaryKey({ columns: [t.playerId, t.n] }),
+    // «Добавить в дело» ищет письмо по ключу — без индекса читалась вся таблица (R1-14).
+    uniqueIndex('player_letters_token').on(t.token),
+  ],
 );
 
 /**

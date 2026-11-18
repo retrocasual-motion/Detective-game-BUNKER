@@ -74,6 +74,20 @@ export function replyLetter(
 }
 
 /** Страница после «Добавить в дело» и других ссылок из письма — простая, без игры. */
+/**
+ * Страница с одной кнопкой-формой (POST). Ссылки из писем открывают её, а действие (вход,
+ * «Добавить в дело») — только по нажатию: почтовые сканеры (Safe Links, антивирусы) открывают
+ * ссылки раньше человека и тратили одноразовый вход или добавляли письмо сами (R1-01).
+ */
+export function formPage(
+  title: string,
+  text: string,
+  form: { action: string; field: string; value: string; button: string },
+) {
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta name="referrer" content="no-referrer"><title>${esc(title)}</title></head><body style="font-family:Georgia,serif;max-width:560px;margin:48px auto;padding:0 16px;color:#222"><h1 style="font-size:22px">${esc(title)}</h1><p>${esc(text)}</p><form method="post" action="${esc(form.action)}"><input type="hidden" name="${esc(form.field)}" value="${esc(form.value)}"><button type="submit" style="font:inherit;font-size:18px;padding:8px 20px;cursor:pointer">${esc(form.button)}</button></form></body></html>`;
+}
+
 export function notePage(title: string, text: string, link?: { label: string; href: string }) {
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
   return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${esc(title)}</title></head><body style="font-family:Georgia,serif;max-width:560px;margin:48px auto;padding:0 16px;color:#222"><h1 style="font-size:22px">${esc(title)}</h1><p>${esc(text)}</p>${link ? `<p><a href="${esc(link.href)}">${esc(link.label)}</a></p>` : ''}</body></html>`;

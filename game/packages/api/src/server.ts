@@ -63,5 +63,11 @@ if (env.auth === 'link' && mailer) {
     `api: вход по ссылке; письма — ${env.mailTransport === 'mailpit' ? `Mailpit ${env.mailpitUrl}` : 'в памяти'}`,
   );
   // Ответы на запросы, чей срок доставки наступил, — на почту игрока (и после перезапуска).
-  setInterval(() => void app.sweepMail(), 5000).unref();
+  setInterval(
+    () =>
+      void app
+        .sweepMail()
+        .catch((e: Error) => console.error(`почта: проход не удался — ${e.message}`)),
+    5000,
+  ).unref();
 }

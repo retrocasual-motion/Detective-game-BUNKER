@@ -157,6 +157,25 @@ describe('запрос из папки (этап 3)', () => {
     expect(JSON.stringify(row?.progress)).toContain('"n":1');
   });
 
+  it('пять отказов — пауза 2 минуты с отсчётом; другое действие её не сбрасывает (L6-B, R1-06)', async () => {
+    const refuse = () =>
+      post('/api/petition', {
+        to: 'zapros@bureau.org',
+        ask: { file: '02', quote: 'Материал 02' },
+        basis: { file: '02', quote: 'Материал 02' },
+      });
+    for (let i = 0; i < 5; i++) expect((await refuse()).status).toBe(200);
+    const sixth = await refuse();
+    expect(sixth.status).toBe(422);
+    expect(((await sixth.json()) as { error: string }).error).toContain('через 2:00');
+    // Через минуту — другое действие (осмотр): пауза запросов остаётся.
+    clock += 60_000;
+    await post('/api/action', { action: 'ОСМОТР', target: '02', value: 'оборот' });
+    expect((await refuse()).status).toBe(422);
+    clock += 61_000;
+    expect((await refuse()).status).toBe(200);
+  });
+
   it('карточка, которой нет в файле, и адрес не из книги — ошибка оформления', async () => {
     const a = await post('/api/petition', {
       to: 'zapros@bureau.org',

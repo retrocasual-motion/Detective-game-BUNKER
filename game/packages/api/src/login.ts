@@ -1,12 +1,14 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import type { Material } from '@bunker/shared';
+import { getConnInfo } from '@hono/node-server/conninfo';
 import { and, desc, eq, gt, isNull } from 'drizzle-orm';
 import type { Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { z } from 'zod';
 import { type Db, loginTokens, players, sessions } from './db/client.ts';
-import { bureauLetter, loginLetter, notePage } from './mail/letters.ts';
+import { windowLimit } from './limit.ts';
+import { bureauLetter, formPage, loginLetter, notePage } from './mail/letters.ts';
 import type { Mailer } from './mail/mailer.ts';
 
 /**
@@ -23,6 +25,18 @@ const LINK_MINUTES = 30;
 const SESSION_DAYS = 90;
 /** Не чаще одного письма со ссылкой в минуту на адрес. */
 const RESEND_MS = 60_000;
+/** Писем входа с одного адреса подключения за час и всего за час (R1-02). */
+const PER_IP_HOUR = 10;
+const ALL_HOUR = 300;
+
+/** Адрес подключения; за обратным прокси (6b) — брать из его заголовка, когда прокси появится. */
+function clientIp(c: Context): string {
+  try {
+    return getConnInfo(c).remote.address ?? 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
 
 /** Случайный ключ для ссылок и cookie (256 бит). */
 export const newKey = () => randomBytes(32).toString('base64url');
@@ -59,6 +73,10 @@ interface AuthDeps {
 export function authRoutes(app: Hono<any>, deps: AuthDeps) {
   const { db, auth, mailer, publicUrl, production, materials, now } = deps;
   const secure = publicUrl.startsWith('https://');
+  const perIp = windowLimit(PER_IP_HOUR, 3_600_000, now);
+  const all = windowLimit(ALL_HOUR, 3_600_000, now);
+  /** Письмо этому адресу уже собирается — второй одновременный запрос его не дублирует. */
+  const sending = new Set<string>();
 
   /** Игрок по почте; новый — создаётся, и ему уходит письмо бюро (01). */
   async function playerFor(email: string): Promise<string> {
@@ -114,6 +132,7 @@ export function authRoutes(app: Hono<any>, deps: AuthDeps) {
     if (!parsed.success) return c.json({ error: 'Проверьте адрес почты.' }, 400);
     const { email } = parsed.data;
     if (!mailer) return c.json({ error: 'Почта не настроена.' }, 503);
+    if (sending.has(email)) return c.json({ sent: true, again: true });
     const t = now();
     const [last] = await db
       .select({ at: loginTokens.createdAt })
@@ -122,6 +141,19 @@ export function authRoutes(app: Hono<any>, deps: AuthDeps) {
       .orderBy(desc(loginTokens.createdAt))
       .limit(1);
     if (last && t - last.at.getTime() < RESEND_MS) return c.json({ sent: true, again: true });
+    if (sending.has(email)) return c.json({ sent: true, again: true });
+    if (!perIp.take(clientIp(c)) || !all.take('all'))
+      return c.json({ error: 'Слишком много писем. Попробуйте через час.' }, 429);
+    sending.add(email);
+    try {
+      return await sendLink(c, email, t);
+    } finally {
+      sending.delete(email);
+    }
+  });
+
+  async function sendLink(c: Context, email: string, t: number) {
+    if (!mailer) return c.json({ error: 'Почта не настроена.' }, 503);
     const key = newKey();
     await db.insert(loginTokens).values({
       hash: hashKey(key),
@@ -145,12 +177,55 @@ export function authRoutes(app: Hono<any>, deps: AuthDeps) {
       );
     }
     return c.json({ sent: true });
-  });
+  }
 
-  /** Ссылка из письма: одноразовая, 30 минут → сессия и дело. */
+  const deadLink = () =>
+    notePage(
+      'Ссылка не работает',
+      'Ссылка для входа устарела или уже открыта. Запросите новую на странице игры.',
+      { label: 'Открыть игру', href: `${publicUrl}/` },
+    );
+
+  /**
+   * Ссылка из письма — страница с кнопкой «Войти»; сама ссылка ничего не тратит (R1-01): её
+   * открывают почтовые сканеры раньше человека.
+   */
   app.get('/api/login/verify', async (c) => {
     if (auth === 'off') return c.redirect(`${publicUrl}/`);
     const key = c.req.query('token') ?? '';
+    const t = new Date(now());
+    const [tok] = key
+      ? await db
+          .select({ email: loginTokens.email })
+          .from(loginTokens)
+          .where(
+            and(
+              eq(loginTokens.hash, hashKey(key)),
+              isNull(loginTokens.usedAt),
+              gt(loginTokens.expiresAt, t),
+            ),
+          )
+      : [];
+    if (!tok) return c.html(deadLink(), 400);
+    return c.html(
+      formPage(
+        'Вход в дело № 09-1128',
+        'Нажмите «Войти», чтобы открыть дело. Ссылка одноразовая.',
+        {
+          action: '/api/login/verify',
+          field: 'token',
+          value: key,
+          button: 'Войти',
+        },
+      ),
+    );
+  });
+
+  /** Кнопка «Войти»: ссылка одноразовая, 30 минут → сессия и дело. */
+  app.post('/api/login/verify', bodyLimit({ maxSize: 4096 }), async (c) => {
+    if (auth === 'off') return c.redirect(`${publicUrl}/`, 303);
+    const form = await c.req.parseBody().catch(() => ({}) as Record<string, unknown>);
+    const key = typeof form.token === 'string' ? form.token : '';
     const t = new Date(now());
     const [tok] = key
       ? await db
@@ -165,18 +240,9 @@ export function authRoutes(app: Hono<any>, deps: AuthDeps) {
           )
           .returning({ email: loginTokens.email })
       : [];
-    if (!tok) {
-      return c.html(
-        notePage(
-          'Ссылка не работает',
-          'Ссылка для входа устарела или уже открыта. Запросите новую на странице игры.',
-          { label: 'Открыть игру', href: `${publicUrl}/` },
-        ),
-        400,
-      );
-    }
+    if (!tok) return c.html(deadLink(), 400);
     await startSession(c, await playerFor(tok.email));
-    return c.redirect(`${publicUrl}/`);
+    return c.redirect(`${publicUrl}/`, 303);
   });
 
   app.post('/api/logout', async (c) => {
