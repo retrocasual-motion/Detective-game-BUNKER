@@ -199,6 +199,7 @@ export function WallView() {
   const [editing, setEditing] = useState<{ id: string; at: Pt } | null>(null);
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [undo, setUndo] = useState<Undo | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pinDown = useRef<Pt | null>(null);
   const pullRef = useRef(pull);
@@ -717,7 +718,19 @@ export function WallView() {
   };
 
   return (
-    <div className="wall" data-testid="view-wall" ref={el}>
+    <div
+      className="wall"
+      data-testid="view-wall"
+      ref={el}
+      // Лист под курсором — для слоёв нитей (W8-A): поверх выросшего листа — только его нити.
+      onPointerOver={(e) => {
+        const id =
+          (e.target as Element).closest?.('[data-wall-item]')?.getAttribute('data-wall-item') ??
+          null;
+        setHovered((h) => (h === id ? h : id));
+      }}
+      onPointerLeave={() => setHovered(null)}
+    >
       <Canvas
         camera={camera}
         onCameraChange={setCamera}
@@ -731,6 +744,7 @@ export function WallView() {
         <WallThreads
           at={at}
           threads={wall.threads}
+          focus={hovered}
           pulling={pullFrom && pull?.to ? { from: pinOf(pullFrom), to: pull.to } : null}
           onThreadClick={(id, e) => {
             const p = toWorld(e, camera);

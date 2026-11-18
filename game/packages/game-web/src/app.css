@@ -1436,6 +1436,10 @@ button {
   overflow: visible;
   pointer-events: none;
 }
+/* Чужие нити выросшего листа — под ним (он 8999), но над остальными листами (W8-A). */
+.board-threads-under {
+  z-index: 8998;
+}
 .board-thread {
   stroke: var(--color-thread);
   stroke-width: 3;
