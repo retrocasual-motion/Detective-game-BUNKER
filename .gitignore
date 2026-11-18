@@ -9,3 +9,4 @@ game/.data/
 game/.env
 game/**/test-results/
 game/**/playwright-report/
+game/.tools/

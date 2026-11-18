@@ -6,6 +6,7 @@
     "dev": "pnpm run \"/^dev:/\"",
     "dev:db": "tsx scripts/dev-db.ts",
     "dev:server": "tsx watch src/server.ts",
+    "dev:mail": "tsx scripts/dev-mail.ts",
     "serve": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
     "db:generate": "drizzle-kit generate",

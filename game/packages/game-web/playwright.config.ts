@@ -34,6 +34,10 @@ export default defineConfig({
         NODE_ENV: 'development',
         // Ответ на запрос в автотестах — почти сразу.
         MAIL_DELAY_MS: '1500',
+        // Вход по ссылке (6a-1); письма — в памяти сервера (служебная «исходящая почта»).
+        AUTH: 'link',
+        MAIL_TRANSPORT: 'memory',
+        PUBLIC_URL: `http://localhost:${E2E.WEB_PORT}`,
       },
     },
     {

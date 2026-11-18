@@ -5,9 +5,12 @@ import { test as base, expect, type Page } from '@playwright/test';
  * (`?opened=all`, A-260) — тесты стены и листов работают со всеми стартовыми материалами;
  * `test.use({ sealed: true })` — новое дело как у игрока: конверты опечатаны.
  */
+/** Игрок автотестов: вход без письма через служебный маршрут. */
+export const E2E_EMAIL = 'e2e@bunker.test';
+
 export const test = base.extend<{ sealed: boolean }>({
   sealed: [false, { option: true }],
-  page: async ({ page, request, sealed, reducedMotion }, use) => {
+  page: async ({ page, sealed, reducedMotion }, use) => {
     // Игра не слушает системное «уменьшить движение» (RM-A) — включаем её собственную
     // настройку, когда тест просит без анимаций (по умолчанию в конфиге).
     if (reducedMotion === 'reduce') {
@@ -15,9 +18,13 @@ export const test = base.extend<{ sealed: boolean }>({
     }
     // Сервер слушает сразу, а база готова чуть позже — ждём готовности.
     await expect
-      .poll(async () => (await request.get('/api/health')).status(), { timeout: 60_000 })
+      .poll(async () => (await page.request.get('/api/health')).status(), { timeout: 60_000 })
       .toBe(200);
-    const res = await request.delete('/api/state');
+    // Вход без письма (6a-1; служебный маршрут разработки): cookie — у страницы теста.
+    await page.request.post('/api/dev/login', { data: { email: E2E_EMAIL } });
+    // Каналом почты по умолчанию тестам — «Входящие» на столе; настоящую почту проверяет login.spec.
+    await page.request.put('/api/me/channel', { data: { channel: 'internal' } });
+    const res = await page.request.delete('/api/state');
     expect(res.status()).toBe(204);
     // `play` — сразу в дело, без главного меню (MM-A); меню проверяет menu.spec.
     await page.goto(sealed ? '/?play' : '/?opened=all&play');

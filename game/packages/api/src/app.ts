@@ -33,14 +33,18 @@ import {
   VerdictSchema,
 } from '@bunker/shared';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, isNotNull, isNull, lte, ne, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
+import { getCookie } from 'hono/cookie';
 import { z } from 'zod';
-import { type Db, playerLetters, playerProgress, playerState } from './db/client.ts';
+import { type Db, playerLetters, playerProgress, playerState, players } from './db/client.ts';
+import { authRoutes, LOCAL_PLAYER, newKey, SESSION_COOKIE, sessionPlayer } from './login.ts';
+import { notePage, replyLetter } from './mail/letters.ts';
+import type { Mailer } from './mail/mailer.ts';
 
-/** На этапе 1 игрок один; вход и аккаунты — этап 6. */
-const PLAYER_ID = 'local';
+/** Переменные запроса: игрок из сессии (6a-1). */
+type Env = { Variables: { player: string } };
 
 export interface AppDeps {
   db: Db;
@@ -59,6 +63,15 @@ export interface AppDeps {
   now?: () => number;
   /** Через сколько ответ на запрос ложится во «Входящие», мс (T-11-A; DELAY-A). */
   mailDelayMs?: number;
+  /**
+   * Вход (6a-1): `link` — по ссылке на почту, у каждого игрока своё дело; `off` — один игрок
+   * без входа (как до этапа 6; тесты сервера).
+   */
+  auth?: 'off' | 'link';
+  /** Исходящая почта (ML-A); без неё ответы — только во «Входящие» на столе. */
+  mailer?: Mailer;
+  /** Адрес игры для ссылок в письмах (в разработке — Vite). */
+  publicUrl?: string;
 }
 
 /** Письмо-ответ, каким оно хранится. */
@@ -68,7 +81,11 @@ interface Letter {
   body: string;
   released: string[];
   deliverAt: Date;
+  addedAt: Date | null;
 }
+
+/** Куда идут ответы на запросы (6.6, P-14): на почту игрока или сразу во «Входящие». */
+type Channel = 'real' | 'internal';
 
 /** После «Решить дело» новых запросов нет (P-9). */
 const CLOSED = 'Расследование закрыто: открыта форма заключения. Новые запросы не принимаются.';
@@ -161,8 +178,11 @@ export function createApp({
   engine,
   now = () => Date.now(),
   mailDelayMs = 12_000,
-}: AppDeps): Hono {
-  const app = new Hono();
+  auth = 'off',
+  mailer,
+  publicUrl = 'http://localhost:5173',
+}: AppDeps): Hono<Env> & { sweepMail: () => Promise<number> } {
+  const app = new Hono<Env>();
 
   app.get('/api/health', (c) => (isReady() ? c.json({ ok: true }) : c.json({ ok: false }, 503)));
 
@@ -172,32 +192,55 @@ export function createApp({
     await next();
   });
 
+  // Вход по ссылке и «Добавить в дело» из письма — без сессии (6a-1).
+  authRoutes(app, { db, auth, mailer, publicUrl, production, materials, now });
+  app.get('/api/case/add', (c) => addToCase(c.req.query('l') ?? ''));
+
+  // Остальное — дело игрока из сессии; без входа — 401 (клиент покажет экран входа).
+  app.use('/api/*', async (c, next) => {
+    if (auth === 'off') {
+      c.set('player', LOCAL_PLAYER);
+      return next();
+    }
+    const pid = await sessionPlayer(db, getCookie(c, SESSION_COOKIE), now());
+    if (!pid) return c.json({ error: 'нужен вход' }, 401);
+    c.set('player', pid);
+    return next();
+  });
+
   const lockedById = new Map((engine?.locked ?? []).map((m) => [m.id, m]));
 
-  async function loadProgress(): Promise<Progress> {
-    const [row] = await db
-      .select()
-      .from(playerProgress)
-      .where(eq(playerProgress.playerId, PLAYER_ID));
+  async function loadProgress(pid: string): Promise<Progress> {
+    const [row] = await db.select().from(playerProgress).where(eq(playerProgress.playerId, pid));
     return row?.progress ?? emptyProgress();
   }
 
-  async function saveProgress(progress: Progress) {
+  async function saveProgress(pid: string, progress: Progress) {
     await db
       .insert(playerProgress)
-      .values({ playerId: PLAYER_ID, progress })
+      .values({ playerId: pid, progress })
       .onConflictDoUpdate({
         target: playerProgress.playerId,
         set: { progress, updatedAt: new Date() },
       });
   }
 
-  async function loadLetters(): Promise<Letter[]> {
+  async function loadLetters(pid: string): Promise<Letter[]> {
     return db
       .select()
       .from(playerLetters)
-      .where(eq(playerLetters.playerId, PLAYER_ID))
+      .where(eq(playerLetters.playerId, pid))
       .orderBy(asc(playerLetters.n));
+  }
+
+  /** Канал почты игрока: без входа и без почты — всё во «Входящие» на столе. */
+  async function channelOf(pid: string): Promise<Channel> {
+    if (auth === 'off' || !mailer) return 'internal';
+    const [p] = await db
+      .select({ ch: players.mailChannel })
+      .from(players)
+      .where(eq(players.id, pid));
+    return p?.ch ?? 'internal';
   }
 
   /**
@@ -206,11 +249,17 @@ export function createApp({
    * видны до его доставки. Порядок — по времени поступления: у письма вложения идут перед
    * ним (во «Входящих» письмо стоит впереди своих вложений).
    */
-  const playerMaterials = (progress: Progress, letters: Letter[]): Material[] => {
+  const playerMaterials = (progress: Progress, letters: Letter[], channel: Channel): Material[] => {
     const t = now();
     const byLetter = new Set(letters.flatMap((l) => l.released));
     const loose = progress.released.filter((id) => !byLetter.has(id));
-    const delivered = letters.filter((l) => l.deliverAt.getTime() <= t && l.title !== VERDICT_ROW);
+    // Настоящая почта: письмо в деле только после «Добавить в дело» в самом письме (M-C).
+    const delivered = letters.filter(
+      (l) =>
+        l.deliverAt.getTime() <= t &&
+        l.title !== VERDICT_ROW &&
+        (channel === 'internal' || l.addedAt !== null),
+    );
     return [
       ...materials,
       ...loose.flatMap((id) => lockedById.get(id) ?? []),
@@ -229,22 +278,32 @@ export function createApp({
       ...(progress.ended ? [EPILOGUE] : []),
     ];
   };
-  const mine = async () => playerMaterials(await loadProgress(), await loadLetters());
+  const mine = async (pid: string) =>
+    playerMaterials(await loadProgress(pid), await loadLetters(pid), await channelOf(pid));
 
   // Только чтение: «видено» отмечает сам движок на следующем действии (ответ уже доставил
   // открытое) — запись отсюда шла бы мимо очереди действий и могла затереть открытое.
-  app.get('/api/materials', async (c) => c.json(await mine()));
+  app.get('/api/materials', async (c) => c.json(await mine(c.get('player'))));
 
-  /** Письма в пути: через сколько мс каждое ляжет во «Входящие» — клиент заглянет тогда. */
+  /**
+   * Письма в пути: через сколько мс каждое ляжет во «Входящие» — клиент заглянет тогда.
+   * `waiting` — сколько ответов ждёт «Добавить в дело» на почте (настоящая почта): пока они
+   * есть, клиент заглядывает сам.
+   */
   app.get('/api/mail/pending', async (c) => {
+    const pid = c.get('player');
     const t = now();
-    const inMs = (await loadLetters()).map((l) => l.deliverAt.getTime() - t).filter((ms) => ms > 0);
-    return c.json({ inMs });
+    const letters = (await loadLetters(pid)).filter((l) => l.title !== VERDICT_ROW);
+    const real = (await channelOf(pid)) === 'real';
+    const inMs = real ? [] : letters.map((l) => l.deliverAt.getTime() - t).filter((ms) => ms > 0);
+    const waiting = real ? letters.filter((l) => l.addedAt === null).length : 0;
+    return c.json({ inMs, waiting });
   });
 
   app.get('/api/state', async (c) => {
-    const [row] = await db.select().from(playerState).where(eq(playerState.playerId, PLAYER_ID));
-    const mine_ = await mine();
+    const pid = c.get('player');
+    const [row] = await db.select().from(playerState).where(eq(playerState.playerId, pid));
+    const mine_ = await mine(pid);
     // Старое сохранение поднимается до текущей версии, нечитаемое — заменяется начальным.
     const saved = row ? upgradeState(row.state, mine_) : null;
     const state = reconcile(saved ?? defaultState(mine_), mine_);
@@ -252,15 +311,15 @@ export function createApp({
   });
 
   /** Одно действие через движок: ответ правила и материалы, которые оно открыло. */
-  async function runAction(input: ActionInput) {
+  async function runAction(pid: string, input: ActionInput) {
     if (!engine) return null;
     // Действия идут по очереди: иначе два запроса подряд затёрли бы прогресс. Очередь — в
     // одном процессе; несколько процессов сервера (этап 6) — транзакция с блокировкой строки.
     const run = queue.then(async () => {
-      const before = await loadProgress();
+      const before = await loadProgress(pid);
       const t = now();
       const { progress, outcome } = act(engine.content, before, input, t, GAME_CONFIG);
-      await saveProgress(progress);
+      await saveProgress(pid, progress);
       // Повтор осмотра (этап 4b): игрок снова переворачивает тот же лист — на обороте то же,
       // а не служебное «уже выдано ранее».
       const again =
@@ -300,7 +359,7 @@ export function createApp({
     if (production && (a === 'ФИНАЛ' || a === 'СТОП' || a === 'ХОДАТАЙСТВО')) {
       return c.json({ error: 'неверное действие' }, 400);
     }
-    return c.json(await runAction(parsed.data));
+    return c.json(await runAction(c.get('player'), parsed.data));
   });
 
   // Служебная строка действий — только в разработке (E2-CHECK-A): «ДЕЙСТВИЕ | ЦЕЛЬ | ЗНАЧЕНИЕ».
@@ -313,7 +372,7 @@ export function createApp({
     }
     const ok = ActionSchema.safeParse(input);
     if (!ok.success) return c.json({ error: 'Звонки — по телефонной линии (этап 6).' }, 400);
-    return c.json(await runAction(ok.data));
+    return c.json(await runAction(c.get('player'), ok.data));
   });
 
   /**
@@ -327,12 +386,14 @@ export function createApp({
     const parsed = PetitionSchema.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'Запрос не оформлен.' }, 400);
     const { to, ask, basis } = parsed.data;
+    const pid = c.get('player');
     const run = queue.then(async () => {
-      const before = await loadProgress();
+      const before = await loadProgress(pid);
       // После «Решить дело» запросов нет (P-9): папка запроса уступает место форме.
       if (caseOf(before).form || before.ended) return { form: CLOSED };
-      const letters = await loadLetters();
-      const own = new Set(playerMaterials(before, letters).map((m) => m.id));
+      const letters = await loadLetters(pid);
+      const channel = await channelOf(pid);
+      const own = new Set(playerMaterials(before, letters, channel).map((m) => m.id));
       if (!own.has(ask.file) || !own.has(basis.file)) {
         return { form: 'Карточка не из материалов дела.' };
       }
@@ -352,7 +413,7 @@ export function createApp({
         t,
       );
       if (outcome.result === 'лимит') return { form: outcome.reply };
-      await saveProgress(progress);
+      await saveProgress(pid, progress);
       // Общий отказ адресата (PRE-B): ответ сразу в папке, письма нет, попытка засчитана.
       if (GENERAL_REFUSAL_IDS.has(outcome.rule)) return { refused: outcome.reply };
       const n = (letters.at(-1)?.n ?? 0) + 1;
@@ -366,15 +427,18 @@ export function createApp({
         basis,
       });
       await db.insert(playerLetters).values({
-        playerId: PLAYER_ID,
+        playerId: pid,
         n,
         title: `Ответ на запрос № ${n}`,
         body,
         released: outcome.released,
         sentAt: new Date(t),
         deliverAt: new Date(t + mailDelayMs),
+        token: channel === 'real' ? newKey() : null,
       });
-      return { n, delayMs: mailDelayMs };
+      // Настоящая почта: письмо уйдёт в срок доставки (sweepMail); в игре — «направлен на почту».
+      if (channel === 'real') setTimeout(() => void sweepMail(), mailDelayMs + 50).unref();
+      return { n, delayMs: mailDelayMs, ...(channel === 'real' ? { toMail: true } : {}) };
     });
     queue = run.catch(() => undefined);
     const r = await run;
@@ -394,9 +458,13 @@ export function createApp({
     return row ? (JSON.parse(row.body) as VerdictResult) : null;
   };
 
-  app.get('/api/case', async (c) =>
-    c.json({ ...caseOf(await loadProgress()), result: verdictOf(await loadLetters()) }),
-  );
+  app.get('/api/case', async (c) => {
+    const pid = c.get('player');
+    return c.json({
+      ...caseOf(await loadProgress(pid)),
+      result: verdictOf(await loadLetters(pid)),
+    });
+  });
 
   /**
    * Отправить заключение (A-270; FM-A, BA-A): пять ответов — человек, карточка материала или
@@ -409,13 +477,14 @@ export function createApp({
     const parsed = VerdictSchema.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'Заключение не оформлено.' }, 400);
     const answers = parsed.data.answers;
+    const pid = c.get('player');
     const run = queue.then(async () => {
-      const before = await loadProgress();
+      const before = await loadProgress(pid);
       const st = caseOf(before);
       if (st.sent) return { error: 'Заключение уже отправлено.' };
       if (!st.form) return { error: 'Сначала откройте форму: «Решить дело».' };
-      const letters = await loadLetters();
-      const own = new Set(playerMaterials(before, letters).map((m) => m.id));
+      const letters = await loadLetters(pid);
+      const own = new Set(playerMaterials(before, letters, await channelOf(pid)).map((m) => m.id));
       const people = new Set([NOBODY, ...PERSONS.map((p) => p.id)]);
       const toEngine = (a: VerdictAnswer): EngineAnswer =>
         a === null ? null : 'card' in a ? { material: a.card.file } : a;
@@ -436,12 +505,12 @@ export function createApp({
         t,
       );
       if (outcome.result !== 'конец') return { error: outcome.reply };
-      await saveProgress(progress);
+      await saveProgress(pid, progress);
       const score = scoreVerdict(rubric, given);
       const result: VerdictResult = { answers, marks: score.marks, groups: score.groups };
       // Итог хранится строкой писем (игроку не письмом): после перезагрузки ответ бюро тот же.
       await db.insert(playerLetters).values({
-        playerId: PLAYER_ID,
+        playerId: pid,
         n: (letters.at(-1)?.n ?? 0) + 1,
         title: VERDICT_ROW,
         body: JSON.stringify(result),
@@ -461,13 +530,14 @@ export function createApp({
     const body = await c.req.json().catch(() => null);
     const parsed = PlayerStateSchema.safeParse(body);
     if (!parsed.success) return c.json({ error: 'неверное состояние' }, 400);
-    const bad = invalidReference(parsed.data, await mine());
+    const pid = c.get('player');
+    const bad = invalidReference(parsed.data, await mine(pid));
     if (bad) return c.json({ error: bad }, 400);
     const seqHeader = Number(c.req.header('x-state-seq'));
     const seq = Number.isSafeInteger(seqHeader) && seqHeader > 0 ? seqHeader : Date.now() * 1000;
     await db
       .insert(playerState)
-      .values({ playerId: PLAYER_ID, state: parsed.data, seq })
+      .values({ playerId: pid, state: parsed.data, seq })
       .onConflictDoUpdate({
         target: playerState.playerId,
         set: { state: parsed.data, seq, updatedAt: new Date() },
@@ -476,15 +546,15 @@ export function createApp({
     return c.body(null, 204);
   });
 
-  const resetCase = async () => {
-    await db.delete(playerState).where(eq(playerState.playerId, PLAYER_ID));
-    await db.delete(playerProgress).where(eq(playerProgress.playerId, PLAYER_ID));
-    await db.delete(playerLetters).where(eq(playerLetters.playerId, PLAYER_ID));
+  const resetCase = async (pid: string) => {
+    await db.delete(playerState).where(eq(playerState.playerId, pid));
+    await db.delete(playerProgress).where(eq(playerProgress.playerId, pid));
+    await db.delete(playerLetters).where(eq(playerLetters.playerId, pid));
   };
 
   app.delete('/api/state', async (c) => {
     if (production) return c.notFound();
-    await resetCase();
+    await resetCase(c.get('player'));
     return c.body(null, 204);
   });
 
@@ -494,9 +564,110 @@ export function createApp({
    */
   app.post('/api/new-case', async (c) => {
     await queue;
-    await resetCase();
+    await resetCase(c.get('player'));
     return c.body(null, 204);
   });
+
+  /**
+   * Канал почты (P-14, «письмо не пришло»): `internal` — ответы сразу во «Входящие» на столе.
+   * Обратно на настоящую почту: всё уже доставленное остаётся в деле.
+   */
+  app.put('/api/me/channel', async (c) => {
+    const body = (await c.req.json().catch(() => null)) as { channel?: unknown } | null;
+    const ch = body?.channel;
+    if (auth === 'off') return c.json({ error: 'без входа почты нет' }, 400);
+    if (ch !== 'real' && ch !== 'internal') return c.json({ error: 'неверный канал' }, 400);
+    const pid = c.get('player');
+    const t = new Date(now());
+    if (ch === 'real') {
+      await db
+        .update(playerLetters)
+        .set({ addedAt: t })
+        .where(
+          and(
+            eq(playerLetters.playerId, pid),
+            isNull(playerLetters.addedAt),
+            lte(playerLetters.deliverAt, t),
+          ),
+        );
+    }
+    await db.update(players).set({ mailChannel: ch }).where(eq(players.id, pid));
+    return c.body(null, 204);
+  });
+
+  /**
+   * «Добавить в дело» из письма (M-C): ключ письма — сам пропуск, вход не нужен (ссылку
+   * открывают и с телефона). Письмо и вложения ложатся во «Входящие» на столе.
+   */
+  async function addToCase(token: string): Promise<Response> {
+    const page = (title: string, text: string, status = 200) =>
+      new Response(notePage(title, text, { label: 'Открыть дело', href: `${publicUrl}/` }), {
+        status,
+        headers: { 'content-type': 'text/html; charset=utf-8' },
+      });
+    const t = new Date(now());
+    const [l] =
+      token.length >= 20
+        ? await db
+            .select()
+            .from(playerLetters)
+            .where(and(eq(playerLetters.token, token), lte(playerLetters.deliverAt, t)))
+        : [];
+    if (!l) return page('Ссылка не работает', 'Письмо не найдено.', 404);
+    if (!l.addedAt) {
+      await db
+        .update(playerLetters)
+        .set({ addedAt: t })
+        .where(and(eq(playerLetters.playerId, l.playerId), eq(playerLetters.n, l.n)));
+    }
+    return page(
+      'Добавлено в дело',
+      `Ответ на запрос № ${l.n}${l.released.length ? ' и вложения' : ''} — во «Входящих» на столе. Вернитесь к компьютеру.`,
+    );
+  }
+
+  /**
+   * Разослать ответы, срок доставки которых наступил (настоящая почта): письмо со ссылкой
+   * «Добавить в дело». Не ушло (почта не ответила) — повтор при следующем проходе.
+   */
+  let sweeping = false;
+  async function sweepMail(): Promise<number> {
+    if (!mailer || auth === 'off' || sweeping) return 0;
+    sweeping = true;
+    let sent = 0;
+    try {
+      const due = await db
+        .select({ l: playerLetters, email: players.email })
+        .from(playerLetters)
+        .innerJoin(players, eq(players.id, playerLetters.playerId))
+        .where(
+          and(
+            isNull(playerLetters.mailedAt),
+            isNull(playerLetters.addedAt),
+            isNotNull(playerLetters.token),
+            ne(playerLetters.title, VERDICT_ROW),
+            lte(playerLetters.deliverAt, new Date(now())),
+            eq(players.mailChannel, 'real'),
+          ),
+        );
+      for (const { l, email } of due) {
+        const link = `${publicUrl}/api/case/add?l=${l.token}`;
+        try {
+          await mailer.send(replyLetter(email, l, link));
+          await db
+            .update(playerLetters)
+            .set({ mailedAt: new Date(now()) })
+            .where(and(eq(playerLetters.playerId, l.playerId), eq(playerLetters.n, l.n)));
+          sent++;
+        } catch (e) {
+          console.error(`почта: ответ № ${l.n} не ушёл — ${(e as Error).message}`);
+        }
+      }
+    } finally {
+      sweeping = false;
+    }
+    return sent;
+  }
 
   if (webDist) {
     const isApi = (path: string) => path === '/api' || path.startsWith('/api/');
@@ -507,5 +678,5 @@ export function createApp({
     app.use('*', (c, next) => (isApi(c.req.path) ? next() : index(c, next)));
   }
 
-  return app;
+  return Object.assign(app, { sweepMail });
 }

@@ -37,6 +37,8 @@ interface PetitionStore {
   sending: boolean;
   /** Записка после отправки: ответ придёт во «Входящие». */
   sentNote: boolean;
+  /** Последний ответ придёт на почту игрока (настоящая почта), а не во «Входящие». */
+  toMail: boolean;
   /** Над папкой тянут лист или письмо — поля «Прошу» и «На основании» ждут его. */
   dragging: boolean;
   /** Поле под курсором — подсвечено: сюда ляжет карточка. */
@@ -88,6 +90,7 @@ export const usePetition = create<PetitionStore>((set, get) => {
     stamp: null,
     sending: false,
     sentNote: false,
+    toMail: false,
     discarded: null,
     dragging: false,
     dropTarget: null,
@@ -237,8 +240,9 @@ export const usePetition = create<PetitionStore>((set, get) => {
         set({ sending: false, refusal: r.refused });
         return;
       }
-      set({ sending: false, stamp: r.n });
-      game().checkMailIn(r.delayMs);
+      set({ sending: false, stamp: r.n, toMail: r.toMail === true });
+      if (r.toMail) game().watchMail();
+      else game().checkMailIn(r.delayMs);
       setTimeout(() => {
         game().updateState(removeDraft(d.id));
         set({ stamp: null, activeId: null, sentNote: true });

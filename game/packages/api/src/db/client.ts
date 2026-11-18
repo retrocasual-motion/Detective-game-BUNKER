@@ -5,7 +5,14 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 import * as schema from './schema.ts';
 
-export { playerLetters, playerProgress, playerState } from './schema.ts';
+export {
+  loginTokens,
+  playerLetters,
+  playerProgress,
+  playerState,
+  players,
+  sessions,
+} from './schema.ts';
 export type Db = PostgresJsDatabase<typeof schema>;
 
 const migrationsFolder = join(dirname(fileURLToPath(import.meta.url)), '../../drizzle');
