@@ -1,10 +1,10 @@
 import type { ThreeEvent } from '@react-three/fiber';
-import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import { type Group, Vector3 } from 'three';
 import { reducedMotion } from '../motion.ts';
 import { captionNow, useRecorder } from '../radio/recorder.ts';
 import { useGame } from '../store.ts';
+import { SETTLED, useAnimate } from './animate.ts';
 import { type Focus, holdPart, onClickPart, useScreenAnchor } from './Held3D.tsx';
 import { paintReceiverDial, paintRecorderScreen } from './radioFace.ts';
 import { Tag, useActive, useTexture } from './shapes.tsx';
@@ -84,13 +84,14 @@ export function RadioStand({
   onUnfocus: () => void;
 }) {
   const stand = useRef<Group>(null);
-  useFrame((_, dt) => {
+  useAnimate((dt) => {
     const g = stand.current;
-    if (!g) return;
+    if (!g) return false;
     const k = reducedMotion() ? 1 : 1 - Math.exp(-dt * 10);
     const [tx, ty] = focus ? [0, 0] : TILT;
     g.rotation.x += (tx - g.rotation.x) * k;
     g.rotation.y += (ty - g.rotation.y) * k;
+    return Math.abs(tx - g.rotation.x) + Math.abs(ty - g.rotation.y) > SETTLED;
   });
   return (
     <group

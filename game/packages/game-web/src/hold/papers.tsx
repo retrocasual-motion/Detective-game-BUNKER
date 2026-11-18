@@ -1,4 +1,4 @@
-import { type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
+import { type ThreeEvent, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   BackSide,
@@ -11,6 +11,7 @@ import {
 } from 'three';
 import { reducedMotion } from '../motion.ts';
 import type { Bundle, Sheet } from '../viewer/bundles.ts';
+import { SETTLED, useAnimate } from './animate.ts';
 import { holdPart, setPartCursor, useSpot } from './Held3D.tsx';
 import { Plate, useActive, useTexture } from './shapes.tsx';
 import { paintTexture } from './texture.ts';
@@ -187,13 +188,15 @@ function CardLayer({ n, z, onPull }: { n: number; z: number; onPull: () => void 
     onClick: onPull,
   });
   useEffect(() => () => setPartCursor(''), []);
-  useFrame((_, dt) => {
+  useAnimate((dt) => {
     const k = ease(dt);
-    out.current += ((hover ? OUT_HOVER : OUT_REST) - out.current) * k;
+    const outTo = hover ? OUT_HOVER : OUT_REST;
+    out.current += (outTo - out.current) * k;
     body.current?.scale.set((W + 2 * out.current) / W, (H + 2 * out.current) / H, 1);
     const sl = slide.current;
     sl.now = sl.dragging ? sl.to : sl.now + (sl.to - sl.now) * k;
     if (group.current) group.current.position.x = sl.now * W * 0.9;
+    return Math.abs(outTo - out.current) + Math.abs(sl.to - sl.now) > SETTLED;
   });
   // Пачку видно сбоку: луч мыши не вдоль её толщины; и зона захвата — ближе всего к мыши.
   const reach = (e: ThreeEvent<PointerEvent>) => {
@@ -287,8 +290,8 @@ function Flying({ flip, onDone }: { flip: Flip; onDone: () => void }) {
   const group = useRef<Group>(null);
   const done = useRef(false);
   useEffect(() => () => geo.dispose(), [geo]);
-  useFrame(() => {
-    if (done.current) return;
+  useAnimate(() => {
+    if (done.current) return false;
     const t = reducedMotion() ? 1 : Math.min(1, (performance.now() - flip.at) / FLIP_MS);
     const e = (1 - Math.cos(Math.PI * t)) / 2;
     const p = flip.dir === 1 ? e : 1 - e;
@@ -312,6 +315,7 @@ function Flying({ flip, onDone }: { flip: Flip; onDone: () => void }) {
       done.current = true;
       onDone();
     }
+    return !done.current;
   });
   return (
     <group ref={group} position={[0, 0, flip.zRight]}>
@@ -415,7 +419,9 @@ export function PaperStack({
   useEffect(() => {
     const was = last.current;
     last.current = page;
-    if (page === was) return;
+    // «Уменьшить движение»: лист ложится сразу, без полёта — и щелчок сразу после смены номера
+    // не попадает в переворот (на обложке он бы пропал).
+    if (page === was || reducedMotion()) return;
     const dir = page > was ? 1 : -1;
     const i = dir === 1 ? page - 1 : page;
     const restNow = b.sheets - page;
@@ -619,7 +625,7 @@ function EnvelopeFile({
     },
     true,
   );
-  useFrame((_, dt) => {
+  useAnimate((dt) => {
     const to = out.current ? LIFT_OUT : pick.hover && !empty ? LIFT_HOVER : 0;
     y.current += (to - y.current) * ease(dt);
     if (lift.current) lift.current.position.y = y.current;
@@ -628,7 +634,9 @@ function EnvelopeFile({
       out.current = false;
       y.current = 0;
       onPick();
+      return true;
     }
+    return out.current || Math.abs(to - y.current) > SETTLED;
   });
   const face = useTexture(
     () =>

@@ -1,4 +1,4 @@
-import { Canvas, type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, invalidate, type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import {
   type ReactNode,
   type PointerEvent as ReactPointerEvent,
@@ -12,6 +12,7 @@ import { type Group, type Object3D, PerspectiveCamera, Quaternion, Vector3 } fro
 import { useFreeArea } from '../device/deviceView.tsx';
 import { wheelIntent, zoomFactor } from '../input.ts';
 import { reducedMotion } from '../motion.ts';
+import { MAX_DT, SETTLED } from './animate.ts';
 import { clampPitch, orient } from './orient.ts';
 import { zoomStep } from './zoom.ts';
 
@@ -104,8 +105,10 @@ export function useScreenAnchor(ref: RefObject<Object3D | null>, w: number, h: n
     const obj = ref.current;
     if (!obj) return;
     screenNow = { obj, w, h };
+    invalidate();
     return () => {
       if (screenNow?.obj === obj) screenNow = null;
+      invalidate();
     };
   });
 }
@@ -150,6 +153,8 @@ const spotListeners = new Set<() => void>();
 const changed = () => {
   spotList = [...spots.values()];
   for (const l of spotListeners) l();
+  // Новой кнопке части нужно место — его ставит кадр сцены.
+  invalidate();
 };
 
 export function useSpot(ref: RefObject<Object3D | null>, spot: Omit<Spot, 'obj'>) {
@@ -217,7 +222,21 @@ function Rig({
   children: ReactNode;
 }) {
   const group = useRef<Group>(null);
-  const { camera, size } = useThree();
+  const { camera, size, invalidate: redraw } = useThree();
+  // Сцена рисуется по требованию (T-…): кадр — после смены пропсов (вплотную, режим) и на любой
+  // ввод (жесты копятся в gesture и забираются кадром). Захват — до stopPropagation разметки.
+  useEffect(() => {
+    redraw();
+  });
+  useEffect(() => {
+    const kick = () => redraw();
+    const opts = { capture: true, passive: true } as const;
+    const types = ['pointerdown', 'pointermove', 'pointerup', 'wheel', 'keydown'] as const;
+    for (const t of types) window.addEventListener(t, kick, opts);
+    return () => {
+      for (const t of types) window.removeEventListener(t, kick, opts);
+    };
+  }, [redraw]);
   const camTarget = useRef(new Vector3(0, 0, CAM_Z));
   // Свободный поворот: два угла без крена (orient.ts).
   const pitch = useRef(0);
@@ -316,7 +335,7 @@ function Rig({
       yaw.current = Math.round(yaw.current / (2 * Math.PI)) * 2 * Math.PI;
       camTarget.current.set(0, 0, CAM_Z);
     }
-    const k = reducedMotion() ? 1 : 1 - Math.exp(-dt * 12);
+    const k = reducedMotion() ? 1 : 1 - Math.exp(-Math.min(dt, MAX_DT) * 12);
     const target =
       mode === 'flip'
         ? new Quaternion().setFromAxisAngle(Y, yaw.current)
@@ -324,6 +343,13 @@ function Rig({
     group.current?.quaternion.slerp(target, k);
     camera.position.lerp(camTarget.current, k);
     camera.updateMatrixWorld();
+    // Ещё едет — нужен следующий кадр; доехала — сцена стоит, пока что-то не изменится.
+    const q = group.current?.quaternion;
+    if (
+      camera.position.distanceTo(camTarget.current) > SETTLED ||
+      (q && q.angleTo(target) > SETTLED)
+    )
+      redraw();
     if (mode === 'flip') {
       const back = Math.cos(yaw.current) < 0;
       if (back !== side.current) {
@@ -556,6 +582,7 @@ export default function Held3D({
       <Canvas
         camera={{ position: [0, 0, CAM_Z], fov: 30 }}
         dpr={[1, 2]}
+        frameloop="demand"
         onPointerMissed={(e) => {
           // Только щелчок левой: правая — «как было» или «отойти» (её «мимо» — не «положить»).
           if (e.type !== 'click') return;
