@@ -2041,6 +2041,9 @@ button {
 /* Живой экран на вещи: разметка приклеена к плоскости экрана (Held3D, useScreenAnchor). */
 .held-screen {
   position: absolute;
+  /* Место и масштаб — одним transform из Held3D (left/top каждый кадр — раскладка всей страницы). */
+  left: 0;
+  top: 0;
   transform-origin: 0 0;
   visibility: hidden;
   cursor: default;

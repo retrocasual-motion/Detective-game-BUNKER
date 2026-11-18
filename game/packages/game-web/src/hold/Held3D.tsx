@@ -239,6 +239,8 @@ function Rig({
   };
 
   const wasFocused = useRef(false);
+  /** Что уже записано в стили экрана и кнопок: писать только изменения (иначе — раскладка каждый кадр). */
+  const written = useRef(new WeakMap<HTMLElement, string>());
   useFrame((_, dt) => {
     const g = gesture.current;
     // Отошли от части — камера обратно, вещь снова в руках целиком.
@@ -333,7 +335,7 @@ function Rig({
     const el = screen.current;
     if (el) {
       const a = screenNow;
-      let shown = false;
+      let place = '';
       if (focus && a) {
         const q = a.obj.getWorldQuaternion(new Quaternion());
         const n = new Vector3(0, 0, 1).applyQuaternion(q);
@@ -343,13 +345,16 @@ function Rig({
           const left = ((tl.x + 1) / 2) * size.width;
           const right = ((br.x + 1) / 2) * size.width;
           const top = ((1 - tl.y) / 2) * size.height;
-          el.style.left = `${left}px`;
-          el.style.top = `${top}px`;
-          el.style.transform = `scale(${(right - left) / screenW})`;
-          shown = true;
+          // Сдвиг и масштаб одним transform (без left/top — без раскладки); округление — чтобы
+          // камера, подъехавшая почти до места, не двигала экран на доли пикселя каждый кадр.
+          place = `translate(${left.toFixed(1)}px, ${top.toFixed(1)}px) scale(${((right - left) / screenW).toFixed(4)})`;
         }
       }
-      el.style.visibility = shown ? 'visible' : 'hidden';
+      if (written.current.get(el) !== place) {
+        written.current.set(el, place);
+        if (place) el.style.transform = place;
+        el.style.visibility = place ? 'visible' : 'hidden';
+      }
     }
     // Кнопки активных частей — за частями; у отвёрнутой от камеры части кнопки нет.
     for (const s of spots.values()) {
@@ -361,9 +366,16 @@ function Rig({
       );
       const facing = normal.dot(camera.position.clone().sub(pos)) > 0;
       const p = pos.project(camera);
+      const left = (((p.x + 1) / 2) * size.width).toFixed(1);
+      const top = (((1 - p.y) / 2) * size.height).toFixed(1);
+      const place = facing ? `${left} ${top}` : '';
+      if (written.current.get(b) === place) continue;
+      written.current.set(b, place);
       b.style.display = facing ? 'block' : 'none';
-      b.style.left = `${((p.x + 1) / 2) * size.width}px`;
-      b.style.top = `${((1 - p.y) / 2) * size.height}px`;
+      if (facing) {
+        b.style.left = `${left}px`;
+        b.style.top = `${top}px`;
+      }
     }
   });
 
