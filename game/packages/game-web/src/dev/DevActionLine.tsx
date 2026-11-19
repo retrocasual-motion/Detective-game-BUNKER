@@ -1,44 +1,8 @@
-import { arrangeWall, openAll } from '@bunker/shared';
+import { arrangeWall } from '@bunker/shared';
 import { useState } from 'react';
 import { postActionLine, resetState } from '../api.ts';
 import { useGame } from '../store.ts';
 import { clearReading, loadReading, mmss, readingRows, readingTsv } from './readingLog.ts';
-
-/**
- * «ПОДГОТОВКА» — одним вводом открыть всё, что нужно для проверки запросов по списку
- * `game/docs/PETITION_CHECKLIST.md`: адреса сайтов (адресная книга) и материалы, из которых
- * берут карточки. Строки — из сквозного прохода пакета v3.4.
- */
-const PREPARE = [
-  'АДРЕС | браузер | vaultline-program.com',
-  'АДРЕС | браузер | frontrange-savings.com',
-  'АДРЕС | браузер | mailbridge.net',
-  'АДРЕС | браузер | sentinel-labs.net',
-  'АДРЕС | браузер | https://www.hexon-bio.com/archive',
-  'ОСМОТР | 45__вещи_Д_Миллер.md | увеличить',
-  'ОСМОТР | 50__радиопост_стойка_и_запись.md | свойства',
-  'ОСМОТР | П-05 | листать',
-  'ОСМОТР | П-05 | увеличить листы 19–24: просвечивающие строки',
-  'ОСМОТР | 29__бумаги_из_помещений (пачка П-02, слой картона сбоку) | вытащить картон',
-  'ОСМОТР | обложка дела A-24 и копия бланка осмотра, пачка П-02 | увеличить',
-  'ПАРОЛЬ | ноутбук | 5-1-2-3-6-9-8-7-4',
-];
-
-/**
- * «КОМПЬЮТЕР» — ответы бюро для проверки компьютера следователя (4c-3): журналы сервера (L214,
- * L215, L387–L390), экспорт ящика (L452) и архив проекта (L735). Пароли и даты выпусков — не
- * вводятся: их проверяют руками на компьютере. Строки — из сквозного прохода пакета v3.4.
- */
-const COMPUTER = [
-  'ХОДАТАЙСТВО | zapros@okrug-bureau.org | прошу: 20, «вызов переведён на голосовую почту» ; основание: 20, «приложение № 7»',
-  'ХОДАТАЙСТВО | zapros@okrug-bureau.org | прошу: 28, «терминал технической (отметки обходов)» ; основание: 30, «С 08:10»',
-  'ХОДАТАЙСТВО | zapros@okrug-bureau.org | прошу: 04, «Материалы сеансов пользователей служебного узла» ; основание: L214, «сеанс пользователя 05 — просмотр и экспорт»',
-  'АДРЕС | браузер | mailbridge.net',
-  'ХОДАТАЙСТВО | lawful-requests@mailbridge.net | прошу: L249, «Запросы органов» ; основание: L387, «e.pierce.uk@mailbridge.net»',
-  'АДРЕС | браузер | vaultline-program.com',
-  'ОСМОТР | 29__бумаги_из_помещений (пачка П-02, слой картона сбоку) | вытащить картон',
-  'ХОДАТАЙСТВО | documents@vaultline-program.com | прошу: L991, «Выбыл досрочно. Опись — архив проекта» ; основание: 26, «бланк VAULTLINE № VL-31»',
-];
 
 interface Entry {
   id: number;
@@ -50,10 +14,10 @@ interface Entry {
 
 /**
  * Служебная строка действий (E2-CHECK-A) — только в режиме разработки: проверить движок правил
- * руками, пока игровых действий в интерфейсе нет (папка — этап 3, замки и осмотр — этап 4).
+ * руками.
  * Формат — как в сквозном проходе пакета: «ДЕЙСТВИЕ | ЦЕЛЬ | ЗНАЧЕНИЕ» (хвост «=> …» и «# …»
- * можно не убирать); «СБРОС» — начать дело заново; «ПОРЯДОК» — разложить стену по порядку;
- * «ПОДГОТОВКА» — открыть всё для проверки запросов; «КОМПЬЮТЕР» — ответы бюро для компьютера. В игре для игроков её нет.
+ * можно не убирать); «СБРОС» — начать дело заново; «ПОРЯДОК» — разложить стену по порядку.
+ * Ручная проверка A-272 — по `game/docs/A272_MANUAL_CHECK.md`. В игре для игроков её нет.
  */
 export function DevActionLine() {
   const [open, setOpen] = useState(false);
@@ -81,39 +45,6 @@ export function DevActionLine() {
     note('ПОРЯДОК', 'Стена разложена по порядку.');
   };
 
-  const prepare = async (
-    lines: readonly string[] = PREPARE,
-    name = 'ПОДГОТОВКА',
-    done = 'Адреса и материалы для проверки запросов открыты (лоток «Входящие»).',
-  ) => {
-    if (busy) return;
-    setBusy(true);
-    // Конверты архива (A-260) — все вскрыты: карточки берутся из стартовых материалов.
-    const g = useGame.getState();
-    g.updateState((s) => openAll(s, g.materials));
-    const opened: string[] = [];
-    for (const l of lines) {
-      const r = await postActionLine(l).catch(() => null);
-      if (r) {
-        addReleased(r.released);
-        opened.push(...r.released.map((m) => m.id));
-      }
-    }
-    setBusy(false);
-    setLog((l) =>
-      [
-        {
-          id: Date.now(),
-          line: name,
-          result: 'готово',
-          reply: done,
-          opened,
-        },
-        ...l,
-      ].slice(0, 6),
-    );
-  };
-
   const run = async () => {
     const text = line.trim();
     if (!text || busy) return;
@@ -121,20 +52,6 @@ export function DevActionLine() {
     if (cmd === 'ПОРЯДОК') {
       setLine('');
       arrange();
-      return;
-    }
-    if (cmd === 'ПОДГОТОВКА') {
-      setLine('');
-      await prepare();
-      return;
-    }
-    if (cmd === 'КОМПЬЮТЕР') {
-      setLine('');
-      await prepare(
-        COMPUTER,
-        'КОМПЬЮТЕР',
-        'Ответы бюро — на компьютере следователя («Поступления», «Экспорт сервера VL-31»). Пароли и даты — вводить на компьютере.',
-      );
       return;
     }
     setBusy(true);
@@ -220,30 +137,6 @@ export function DevActionLine() {
             </button>
             <button type="button" data-testid="dev-arrange" onClick={arrange}>
               Разложить стену по порядку
-            </button>
-            <button
-              type="button"
-              data-testid="dev-prepare"
-              disabled={busy}
-              title="Открыть адреса и материалы для проверки запросов (PETITION_CHECKLIST.md)"
-              onClick={() => void prepare()}
-            >
-              Подготовка к запросам
-            </button>
-            <button
-              type="button"
-              data-testid="dev-computer"
-              disabled={busy}
-              title="Выдать ответы бюро для проверки компьютера следователя (команда «КОМПЬЮТЕР»)"
-              onClick={() =>
-                void prepare(
-                  COMPUTER,
-                  'КОМПЬЮТЕР',
-                  'Ответы бюро — на компьютере следователя («Поступления», «Экспорт сервера VL-31»). Пароли и даты — вводить на компьютере.',
-                )
-              }
-            >
-              Ответы бюро для компьютера
             </button>
             <button type="button" data-testid="dev-reading" onClick={showReading}>
               Время чтения

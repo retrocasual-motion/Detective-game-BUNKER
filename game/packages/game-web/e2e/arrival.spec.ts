@@ -105,28 +105,7 @@ test('до открытия закрытого материала его тек�
   await expect(page.locator('body')).not.toContainText('Запросы документов');
 });
 
-test('служебные кнопки: «Подготовка» открывает нужное для запросов, «Разложить» — стену по порядку', async ({
-  page,
-}) => {
-  await page.getByTestId('dev-line-tab').click();
-  await page.getByTestId('dev-prepare').click();
-  await expect(page.getByTestId('dev-line-log').locator('li').first()).toContainText('ПОДГОТОВКА');
-  for (const id of [
-    'L945',
-    'L130',
-    'L249',
-    'L272',
-    'L163',
-    'L945',
-    'L975',
-    'L957',
-    'L981',
-    'L956',
-    'L563',
-  ])
-    await expect(page.getByTestId('dev-line-log')).toContainText(id);
-  await close(page);
-
+test('служебная кнопка «Разложить» — стена по порядку', async ({ page }) => {
   await toWall(page);
   const sheet = page.getByTestId('wall-07');
   const before = await sheet.boundingBox();
