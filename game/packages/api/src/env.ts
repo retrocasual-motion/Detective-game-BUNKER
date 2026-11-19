@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -36,4 +37,12 @@ export const env = {
   mailFromName: e.MAIL_FROM_NAME ?? 'Окружное бюро расследований',
   /** Адрес игры для ссылок в письмах: в разработке — Vite, в Docker — сам сервер. */
   publicUrl: (e.PUBLIC_URL ?? 'http://localhost:5173').replace(/\/$/, ''),
+  /**
+   * Ключ подписи пропусков на сайты дела (A-272): сайты — на своих поддоменах, игрок приходит
+   * по ссылке из игры. В production без ключа — случайный при каждом запуске (пропуска
+   * сбрасываются при перезапуске; игрок снова откроет сайт из дела).
+   */
+  siteSecret:
+    e.SITE_SECRET ??
+    (e.NODE_ENV === 'production' ? randomBytes(32).toString('hex') : 'bunker-dev-site-secret'),
 };

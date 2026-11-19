@@ -72,18 +72,23 @@ describe('defaultState', () => {
 });
 
 describe('«Входящие» на столе', () => {
-  const withL = [...starting, mat('L101'), mat('L102')];
+  const withL = [...starting, mat('L945'), mat('L946')];
 
   it('открытое по ходу дела само на стену не вешается — ждёт во «Входящих», свежее первым', () => {
     const s = defaultState(withL);
     expect(s.wall.items.some((i) => i.id.startsWith('L'))).toBe(false);
-    expect(inboxIds(s, withL)).toEqual(['L102', 'L101']);
+    expect(inboxIds(s, withL)).toEqual(['L946', 'L945']);
   });
 
   it('повешенное на стену из «Входящих» уходит', () => {
     const s = defaultState(withL);
-    s.wall.items.push({ id: 'L101', x: 5, y: 5, z: 999, rot: 0 });
-    expect(inboxIds(reconcile(s, withL), withL)).toEqual(['L102']);
+    s.wall.items.push({ id: 'L945', x: 5, y: 5, z: 999, rot: 0 });
+    expect(inboxIds(reconcile(s, withL), withL)).toEqual(['L946']);
+  });
+
+  it('сайты дела (A-272) во «Входящие» не ложатся: они в браузере игрока', () => {
+    const web = [...withL, mat('L101'), mat('L620')];
+    expect(inboxIds(defaultState(web), web)).toEqual(['L946', 'L945']);
   });
 });
 

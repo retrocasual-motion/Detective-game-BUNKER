@@ -4,7 +4,8 @@ import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { postAction } from '../api.ts';
 import { OFFLINE } from '../lock.ts';
-import { NO_LINKS } from '../paperLinks.tsx';
+import { NO_LINKS, remarkSites } from '../paperLinks.tsx';
+import { openSite } from '../site.ts';
 import { useGame } from '../store.ts';
 import type { LapFile, Laptop } from './files.ts';
 
@@ -15,7 +16,7 @@ import type { LapFile, Laptop } from './files.ts';
  */
 
 const md = (text: string) => (
-  <Markdown remarkPlugins={[remarkGfm, remarkBreaks]} components={NO_LINKS}>
+  <Markdown remarkPlugins={[remarkGfm, remarkBreaks, remarkSites]} components={NO_LINKS}>
     {text}
   </Markdown>
 );
@@ -469,9 +470,13 @@ export function Printer({ lap }: { lap: Laptop }) {
 
 // ── Браузер ───────────────────────────────────────────────────────────────────
 
+/** Сайт — в настоящей вкладке (A-272). */
+export const SITE_ELSEWHERE = 'Сайт открывается в новой вкладке браузера.';
+
 /**
- * Браузер ноутбука: адресная строка и «Избранное» (четыре закладки, L560). Страница — та же,
- * что у браузера компьютера дела (движок «АДРЕС»); сохранённая страница — без сети.
+ * Браузер ноутбука: адресная строка и «Избранное» (четыре закладки, L560). Сайт открывается
+ * настоящим — в новой вкладке (A-272, BR-A): в игре сайты не дублируются. Архив газеты (17) и
+ * сохранённая страница — здесь, без сети.
  */
 export function Browser({
   lap,
@@ -494,7 +499,7 @@ export function Browser({
   const [hist, setHist] = useState<{ back: string[]; fwd: string[] }>({ back: [], fwd: [] });
   const visit = (address: string) => {
     if (url) setHist((h) => ({ back: [...h.back, url], fwd: [] }));
-    void go(address);
+    void go(address, true);
   };
 
   // Окно из сохранения — та же страница.
@@ -503,10 +508,20 @@ export function Browser({
     if (start && !saved) void go(start);
   }, []);
 
-  const go = async (address: string) => {
+  /** `user` — переход щелчком игрока: тогда и только тогда открывается вкладка сайта. */
+  const go = async (address: string, user = false) => {
     setUrl(address);
     onUrl?.(address);
     setTyped(address);
+    const bare = (address.replace(/^https?:\/\//, '').split('/')[0] ?? address).replace(
+      /^www\./,
+      '',
+    );
+    if (bare !== 'silverridge-chronicle.com') {
+      if (user) openSite(address);
+      setPage({ body: SITE_ELSEWHERE, material: null });
+      return;
+    }
     const r = await postAction('АДРЕС', 'браузер', address).catch(() => null);
     const g = useGame.getState();
     if (r?.released.length) g.addFound(r.released, '47', []);
@@ -547,7 +562,7 @@ export function Browser({
             const prev = hist.back[hist.back.length - 1];
             if (prev === undefined) return;
             setHist((h) => ({ back: h.back.slice(0, -1), fwd: [url, ...h.fwd] }));
-            void go(prev);
+            void go(prev, true);
           }}
         >
           ←
@@ -561,7 +576,7 @@ export function Browser({
             const next = hist.fwd[0];
             if (next === undefined) return;
             setHist((h) => ({ back: [...h.back, url], fwd: h.fwd.slice(1) }));
-            void go(next);
+            void go(next, true);
           }}
         >
           →

@@ -316,6 +316,26 @@ export const FOLDER_DOCS: Readonly<Record<string, string>> = { 'П-02/18': 'L991
  */
 export const FORM_MATERIALS: readonly string[] = ['L998', 'L999', 'L997'];
 
+/** Материалы настоящих сайтов (A-272): страницы и то, что открыто на них. */
+export const WEB_MATERIALS: readonly string[] = [
+  'L101',
+  'L130',
+  'L163',
+  'L177',
+  'L249',
+  'L272',
+  'L296',
+  'L453',
+  'L618',
+  'L619',
+  'L620',
+  'L735',
+  'L736',
+  'L737',
+  'L738',
+];
+export const isWeb = (id: string) => WEB_MATERIALS.includes(id);
+
 export const DEVICE_MATERIALS: Readonly<Record<string, readonly string[]>> = {
   // L947 — крупный план картинки учётной записи на экране входа.
   '47': ['L560', 'L561', 'L562', 'L563', 'L564', 'L565', 'L947'],
@@ -323,26 +343,12 @@ export const DEVICE_MATERIALS: Readonly<Record<string, readonly string[]>> = {
   '48': ['L540', 'L949'],
   // Камера инженера (A-268): время съёмки и крупные детали кадров — на экране самой камеры.
   '24': ['L905', 'L973'],
-  // Компьютер следователя (4c-3, DI-A): ответы бюро с вложениями, журналы сервера (TM-A),
-  // экспорт ящика, архив проекта и выпуски газеты из архива номеров.
-  pc: [
-    'L214',
-    'L215',
-    'L387',
-    'L388',
-    'L389',
-    'L390',
-    'L452',
-    'L453',
-    'L735',
-    'L736',
-    'L737',
-    'L738',
-    'L831',
-    'L832',
-    'L833',
-    'L834',
-  ],
+  // Компьютер следователя (4c-3, DI-A): программа «Сервер объекта VL-31» (диск, A-272) и
+  // выпуски газеты из архива номеров.
+  pc: ['L214', 'L215', 'L387', 'L388', 'L389', 'L390', 'L831', 'L832', 'L833', 'L834'],
+  // Настоящие сайты дела (A-272, AC-3): страницы, кабинет, хранилище, веб-почта — в браузере
+  // игрока, не в деле: на стол и стену не ложатся, поиск по делу их не находит (S5-A).
+  web: WEB_MATERIALS,
 };
 export const deviceOf = (materialId: string) =>
   Object.keys(DEVICE_MATERIALS).find((d) => DEVICE_MATERIALS[d]?.includes(materialId)) ?? null;

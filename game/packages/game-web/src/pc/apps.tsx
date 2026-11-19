@@ -3,8 +3,10 @@ import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { postAction } from '../api.ts';
+import { SITE_ELSEWHERE } from '../laptop/apps.tsx';
 import { formatWait, OFFLINE, useFieldWait } from '../lock.ts';
-import { NO_LINKS } from '../paperLinks.tsx';
+import { NO_LINKS, remarkSites } from '../paperLinks.tsx';
+import { openSite } from '../site.ts';
 import { useGame } from '../store.ts';
 import { forScreen, issueOf, normalizeDate } from './content.ts';
 
@@ -14,7 +16,7 @@ import { forScreen, issueOf, normalizeDate } from './content.ts';
  */
 
 const md = (text: string) => (
-  <Markdown remarkPlugins={[remarkGfm, remarkBreaks]} components={NO_LINKS}>
+  <Markdown remarkPlugins={[remarkGfm, remarkBreaks, remarkSites]} components={NO_LINKS}>
     {text}
   </Markdown>
 );
@@ -44,7 +46,7 @@ export function DocWindow({ id }: { id: string }) {
 /** Ячейки, по которым можно щёлкнуть, — короткие значения (код, терминал, маршрут), не время. */
 /**
  * Браузер компьютера дела: закладка «Архив номеров» (17) — поле «Дата выпуска» (движок, LK-A),
- * открытый выпуск — страницей; адресная строка — сайты (движок «АДРЕС»).
+ * открытый выпуск — страницей; адресная строка — сайты в новой вкладке (A-272, BR-A).
  */
 export function PcBrowser() {
   const archive = useGame((g) => g.materials.find((m) => m.id === '17'));
@@ -72,26 +74,14 @@ export function PcBrowser() {
       setMsg('');
     } else setMsg(!r ? `${OFFLINE}.` : (r.reply ?? 'Выпуск за эту дату не оцифрован.'));
   };
-  const go = async (address: string) => {
+  const go = (address: string) => {
     if (/silverridge-chronicle\.com/.test(address)) {
       setPage({ kind: 'archive' });
       return;
     }
-    const r = await postAction('АДРЕС', 'браузер', address).catch(() => null);
-    if (r?.released.length) useGame.getState().addFound(r.released, 'pc', []);
-    const host =
-      address
-        .replace(/^https?:\/\//, '')
-        .split('/')[0]
-        ?.replace(/^www\./, '') ?? '';
-    const m =
-      r?.released[0] ?? useGame.getState().materials.find((x) => host && x.title.includes(host));
-    if (m) setPage({ kind: 'doc', id: m.id });
-    else
-      setPage({
-        kind: 'text',
-        text: !r ? `${OFFLINE}.` : r.reply && !r.quiet ? r.reply : 'Не удаётся открыть страницу.',
-      });
+    // Сайты — настоящие, в новой вкладке (A-272, BR-A); здесь только архив газеты.
+    openSite(address);
+    setPage({ kind: 'text', text: SITE_ELSEWHERE });
   };
 
   return (
@@ -100,7 +90,7 @@ export function PcBrowser() {
         className="lap-toolbar lap-navbar"
         onSubmit={(e) => {
           e.preventDefault();
-          if (typed.trim()) void go(typed.trim());
+          if (typed.trim()) go(typed.trim());
         }}
       >
         <span className="lap-label">Адрес</span>

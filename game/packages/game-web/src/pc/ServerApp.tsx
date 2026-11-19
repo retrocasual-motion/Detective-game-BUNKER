@@ -2,7 +2,7 @@ import { type FormEvent, useMemo, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { formatWait, OFFLINE, useFieldWait } from '../lock.ts';
-import { NO_LINKS } from '../paperLinks.tsx';
+import { NO_LINKS, remarkSites } from '../paperLinks.tsx';
 import { useGame } from '../store.ts';
 import { enter } from './apps.tsx';
 import { exportFiles, matches, options, serverData, technical, withoutTitle } from './server.ts';
@@ -26,7 +26,7 @@ const MENU: { key: Section; label: string }[] = [
 ];
 
 const md = (text: string) => (
-  <Markdown remarkPlugins={[remarkGfm]} components={NO_LINKS}>
+  <Markdown remarkPlugins={[remarkGfm, remarkSites]} components={NO_LINKS}>
     {text}
   </Markdown>
 );

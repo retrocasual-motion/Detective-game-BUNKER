@@ -14,7 +14,7 @@ import remarkGfm from 'remark-gfm';
 import { trackReading } from '../dev/readingLog.ts';
 import { wheelIntent } from '../input.ts';
 import { useMenu } from '../menu/menu-store.ts';
-import { NO_LINKS } from '../paperLinks.tsx';
+import { NO_LINKS, remarkSites } from '../paperLinks.tsx';
 import { MediaPlayer } from '../player/MediaPlayer.tsx';
 import { EMBEDDED_MEDIA, MEDIA_IDS, splitEmbedded } from '../player/media.ts';
 import { clearFind, highlightFind } from '../search/highlight.ts';
@@ -184,7 +184,7 @@ export function Viewer({ materialId }: ViewerProps) {
           }
         : NO_LINKS;
     const md = (text: string) => (
-      <Markdown remarkPlugins={[remarkGfm, remarkBreaks]} components={components}>
+      <Markdown remarkPlugins={[remarkGfm, remarkBreaks, remarkSites]} components={components}>
         {unwrapLines(text)}
       </Markdown>
     );

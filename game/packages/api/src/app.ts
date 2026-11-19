@@ -22,6 +22,8 @@ import {
   PlayerStateSchema,
   pieceItemId,
   reconcile,
+  type SiteFormId,
+  type SitePage,
   upgradeState,
   type VerdictAnswer,
   type VerdictResult,
@@ -29,9 +31,9 @@ import {
 } from '@bunker/shared';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { eq, lt, sql } from 'drizzle-orm';
-import { Hono } from 'hono';
+import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
-import { getCookie } from 'hono/cookie';
+import { getCookie, setCookie } from 'hono/cookie';
 import { secureHeaders } from 'hono/secure-headers';
 import { z } from 'zod';
 import {
@@ -44,6 +46,7 @@ import {
 } from './db/client.ts';
 import { authRoutes, LOCAL_PLAYER, SESSION_COOKIE, sessionPlayer } from './login.ts';
 import type { Mailer } from './mail/mailer.ts';
+import { formAction, pageOf, readPass, signPass, siteByHost, siteOf, siteUrl } from './sites.ts';
 
 /** Переменные запроса: игрок из сессии (6a-1). */
 type Env = { Variables: { player: string } };
@@ -72,6 +75,8 @@ export interface AppDeps {
   mailer?: Mailer;
   /** Адрес игры для ссылок в письмах (в разработке — Vite). */
   publicUrl?: string;
+  /** Ключ подписи пропусков на сайты дела (A-272); в production — из окружения. */
+  siteSecret?: string;
 }
 
 /**
@@ -145,6 +150,7 @@ export function createApp({
   auth = 'off',
   mailer,
   publicUrl = 'http://localhost:5173',
+  siteSecret = 'bunker-dev-site-secret',
 }: AppDeps): Hono<Env> & { purge: () => Promise<void> } {
   const app = new Hono<Env>();
 
@@ -166,8 +172,10 @@ export function createApp({
   // Вход по ссылке — без сессии (6a-1).
   authRoutes(app, { db, auth, mailer, publicUrl, production, materials, now });
 
-  // Остальное — дело игрока из сессии; без входа — 401 (клиент покажет экран входа).
+  // Остальное — дело игрока из сессии; без входа — 401 (клиент покажет экран входа). Сайты дела
+  // (/api/site/…) узнают игрока сами: у сайта свой домен и своя cookie (A-272).
   app.use('/api/*', async (c, next) => {
+    if (c.req.path.startsWith('/api/site/')) return next();
     if (auth === 'off') {
       c.set('player', LOCAL_PLAYER);
       return next();
@@ -423,13 +431,148 @@ export function createApp({
     await db.delete(loginTokens).where(lt(loginTokens.expiresAt, t));
   }
 
+  // ── Сайты дела (A-272, AC-3; T-1, ST-A) ──────────────────────────────────────────
+  const SITE_COOKIE = 'bunker_site';
+  const SITE_PASS_MS = 30 * 86_400_000;
+  const gameHost = new URL(publicUrl).hostname;
+  const siteSecure = publicUrl.startsWith('https://');
+  const hostSite = (c: Context) => siteByHost(c.req.header('host'), gameHost);
+  /** Игрок на сайте: по cookie сайта (без входа — один игрок). */
+  const sitePlayer = (c: Context) =>
+    auth === 'off' ? LOCAL_PLAYER : readPass(siteSecret, getCookie(c, SITE_COOKIE), now());
+  /** Игрок из игры (сессия) или с другого сайта дела (cookie сайта). */
+  const anyPlayer = async (c: Context) =>
+    auth === 'off'
+      ? LOCAL_PLAYER
+      : ((await sessionPlayer(db, getCookie(c, SESSION_COOKIE), now())) ?? sitePlayer(c));
+
+  /**
+   * Перейти по адресу (ссылка в материале, адресная строка компьютера, ссылка на сайте): движок
+   * АДРЕС; открылось — адрес сайта с пропуском, иначе — ответ (404 и т. п.).
+   */
+  app.post('/api/site/open', bodyLimit({ maxSize: 4096 }), async (c) => {
+    const pid = await anyPlayer(c);
+    if (!pid) return c.json({ error: 'нужен вход' }, 401);
+    const body = (await c.req.json().catch(() => null)) as { address?: unknown } | null;
+    const address = typeof body?.address === 'string' ? body.address.trim().slice(0, 300) : '';
+    if (!address) return c.json({ error: 'нет адреса' }, 400);
+    const r = await runAction(pid, { action: 'АДРЕС', target: 'браузер', value: address });
+    if (!r) return c.notFound();
+    const at = siteOf(address);
+    if (r.quiet || !at) return c.json({ reply: r.reply });
+    const pass = signPass(siteSecret, pid, now() + 10 * 60_000);
+    return c.json({ url: `${siteUrl(publicUrl, at.site, at.path)}?enter=${pass}` });
+  });
+
+  /** Пропуск из ссылки → своя cookie сайта (хост — сайт дела). */
+  app.post('/api/site/enter', bodyLimit({ maxSize: 4096 }), async (c) => {
+    if (!hostSite(c)) return c.notFound();
+    const body = (await c.req.json().catch(() => null)) as { pass?: unknown } | null;
+    const pid = readPass(siteSecret, typeof body?.pass === 'string' ? body.pass : '', now());
+    if (!pid) return c.json({ error: 'пропуск недействителен' }, 403);
+    setCookie(c, SITE_COOKIE, signPass(siteSecret, pid, now() + SITE_PASS_MS), {
+      httpOnly: true,
+      sameSite: 'Lax',
+      secure: siteSecure,
+      path: '/',
+      maxAge: SITE_PASS_MS / 1000,
+    });
+    return c.body(null, 204);
+  });
+
+  /** Страница сайта: только открытое игроком (P-10). Вне игры — без форм и текста. */
+  app.get('/api/site/page', async (c) => {
+    const site = hostSite(c);
+    if (!site || !engine) return c.notFound();
+    const pid = sitePlayer(c);
+    if (!pid) return c.json({ anon: true, domain: site.domain });
+    const path = (c.req.query('path') ?? '/').slice(0, 200);
+    const r = await runAction(pid, {
+      action: 'АДРЕС',
+      target: 'браузер',
+      value: `${site.domain}${path === '/' ? '' : path}`,
+    });
+    if (!r || r.quiet) return c.json({ notFound: r?.reply ?? 'Страница не найдена (404).' });
+    const progress = await loadProgress(pid);
+    const has = (id: string) => progress.released.includes(id);
+    const mat = (id: string) => lockedById.get(id);
+    const docsOf = (ids: string[]) =>
+      ids.flatMap((id) => {
+        const m = has(id) ? mat(id) : undefined;
+        return m ? [{ id: m.id, title: m.title, body: m.body }] : [];
+      });
+    let main = site.page;
+    let docs: SitePage['docs'] = [];
+    let mailbox: string | undefined;
+    if (site.label === 'vaultline-program' && path.startsWith('/cabinet') && has('L620')) {
+      main = 'L620';
+      docs = docsOf(['L618', 'L619']);
+    } else if (site.label === 'docs.hexon-bio') docs = docsOf(['L736', 'L737', 'L738']);
+    else if (site.label === 'mailbridge' && path.startsWith('/mail') && has('L453')) {
+      main = 'L453';
+      mailbox = mat('L453')?.body;
+    }
+    const m = mat(main);
+    if (!m) return c.json({ notFound: 'Страница не найдена (404).' });
+    const t = now();
+    const wait: SitePage['wait'] = {};
+    for (const f of site.forms) {
+      const a = formAction(f, { address: 'e.pierce.uk@mailbridge.net' });
+      if (a) wait[f] = fieldWait(engine.content, progress, 'ПАРОЛЬ', a.target, t, GAME_CONFIG);
+    }
+    const page: SitePage = {
+      domain: site.domain,
+      ...pageOf(m),
+      docs,
+      ...(mailbox ? { mailbox } : {}),
+      ...(site.label === 'vaultline-program' ? { cabinet: has('L620') } : {}),
+      wait,
+    };
+    return c.json(page);
+  });
+
+  /** Форма сайта → движок (ПАРОЛЬ): ответ, открытое, пауза поля. */
+  app.post('/api/site/form', bodyLimit({ maxSize: 8192 }), async (c) => {
+    const site = hostSite(c);
+    if (!site || !engine) return c.notFound();
+    const pid = sitePlayer(c);
+    if (!pid) return c.json({ error: 'Откройте сайт из материалов дела.' }, 401);
+    const body = (await c.req.json().catch(() => null)) as {
+      form?: unknown;
+      values?: unknown;
+    } | null;
+    const form = body?.form as SiteFormId;
+    if (!site.forms.includes(form)) return c.json({ error: 'нет такой формы' }, 400);
+    const raw = (body?.values ?? {}) as Record<string, unknown>;
+    const values = Object.fromEntries(
+      Object.entries(raw)
+        .filter(([, v]) => typeof v === 'string')
+        .map(([k, v]) => [k, (v as string).slice(0, 200)]),
+    );
+    const a = formAction(form, values);
+    if (!a) return c.json({ error: 'нет такой формы' }, 400);
+    const r = await runAction(pid, { action: 'ПАРОЛЬ', target: a.target, value: a.value });
+    if (!r) return c.notFound();
+    return c.json({
+      reply: r.reply,
+      quiet: r.quiet,
+      opened: r.released.map((m) => m.id),
+      wait: r.wait ?? 0,
+      ...(production ? {} : { result: r.result }),
+    });
+  });
+
   if (webDist) {
     const isApi = (path: string) => path === '/api' || path.startsWith('/api/');
     const files = serveStatic({ root: webDist });
     const index = serveStatic({ root: webDist, path: 'index.html' });
+    // Сайт дела (хост — `vaultline-program.…`): своя страница сборки (A-272).
+    const sitePage = serveStatic({ root: webDist, path: 'sites.html' });
     app.use('/*', (c, next) => (isApi(c.req.path) ? next() : files(c, next)));
-    // Любой другой путь страницы — та же игра (одна страница).
-    app.use('*', (c, next) => (isApi(c.req.path) ? next() : index(c, next)));
+    // Любой другой путь страницы — та же игра (одна страница) или страница сайта.
+    app.use('*', (c, next) =>
+      isApi(c.req.path) ? next() : hostSite(c) ? sitePage(c, next) : index(c, next),
+    );
   }
 
   return Object.assign(app, { purge });

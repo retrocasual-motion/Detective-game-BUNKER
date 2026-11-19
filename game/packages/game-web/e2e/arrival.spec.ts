@@ -26,30 +26,30 @@ test('пустой лоток «Входящие» на столе — без п
 test('открытое ложится во «Входящие» на столе: письмо стоит; прочитать → «На стену» → висит на стене', async ({
   page,
 }) => {
-  await run(page, 'АДРЕС | браузер | vaultline-program.com');
+  await run(page, 'ОСМОТР | 45__вещи_Д_Миллер.md | увеличить');
   await close(page);
   await expect(page.getByTestId('inbox-tray')).toHaveText('Входящие · 1');
   // На стене его нет, пока игрок не повесит.
-  await expect(page.getByTestId('wall-L101')).toHaveCount(0);
-  await page.getByTestId('inbox-L101').click();
+  await expect(page.getByTestId('wall-L945')).toHaveCount(0);
+  await page.getByTestId('inbox-L945').click();
   const viewer = page.getByTestId('viewer');
-  await expect(viewer).toContainText('vaultline-program.com');
+  await expect(viewer).toContainText('Front Range Savings');
   await page.getByTestId('viewer-to-wall').click();
   await expect(page.getByTestId('viewer-to-wall')).toHaveText('На стене');
   // Пока лист открыт — на стене не видно; закрыли — появился и светится (правка автора 10.11).
-  await expect(page.getByTestId('wall-L101')).toHaveCount(0);
+  await expect(page.getByTestId('wall-L945')).toHaveCount(0);
   await page.keyboard.press('Escape');
-  await expect(page.getByTestId('wall-L101')).toHaveAttribute('data-found', 'true');
-  await expect(page.getByTestId('inbox-L101')).toHaveCount(0);
+  await expect(page.getByTestId('wall-L945')).toHaveAttribute('data-found', 'true');
+  await expect(page.getByTestId('inbox-L945')).toHaveCount(0);
   await expect(page.getByTestId('inbox-tray')).toHaveText('Входящие');
   await toWall(page);
-  await expect(page.getByTestId('wall-L101')).toBeInViewport();
+  await expect(page.getByTestId('wall-L945')).toBeInViewport();
 });
 
 test('письмо из «Входящих» можно мышкой перетащить прямо на доску за столом', async ({ page }) => {
-  await run(page, 'АДРЕС | браузер | vaultline-program.com');
+  await run(page, 'ОСМОТР | 45__вещи_Д_Миллер.md | увеличить');
   await close(page);
-  const letter = await page.getByTestId('inbox-L101').boundingBox();
+  const letter = await page.getByTestId('inbox-L945').boundingBox();
   if (!letter) throw new Error('нет письма');
   await page.mouse.move(letter.x + letter.width / 2, letter.y + 8);
   await page.mouse.down();
@@ -57,21 +57,21 @@ test('письмо из «Входящих» можно мышкой перет�
   await expect(page.getByTestId('drag-ghost')).toHaveClass(/ghost-ok/);
   await page.mouse.up();
   await expect(page.getByTestId('viewer')).toBeHidden();
-  await expect(page.getByTestId('inbox-L101')).toHaveCount(0);
+  await expect(page.getByTestId('inbox-L945')).toHaveCount(0);
   await toWall(page);
-  await expect(page.getByTestId('wall-L101')).toBeInViewport();
+  await expect(page.getByTestId('wall-L945')).toBeInViewport();
 });
 
 test('письмо, отпущенное мимо доски, остаётся в лотке', async ({ page }) => {
-  await run(page, 'АДРЕС | браузер | vaultline-program.com');
+  await run(page, 'ОСМОТР | 45__вещи_Д_Миллер.md | увеличить');
   await close(page);
-  const letter = await page.getByTestId('inbox-L101').boundingBox();
+  const letter = await page.getByTestId('inbox-L945').boundingBox();
   if (!letter) throw new Error('нет письма');
   await page.mouse.move(letter.x + letter.width / 2, letter.y + 8);
   await page.mouse.down();
   await page.mouse.move(683, 720, { steps: 8 });
   await page.mouse.up();
-  await expect(page.getByTestId('inbox-L101')).toBeVisible();
+  await expect(page.getByTestId('inbox-L945')).toBeVisible();
 });
 
 test('лист со стены «На стену» не предлагает', async ({ page }) => {
@@ -83,20 +83,20 @@ test('лист со стены «На стену» не предлагает', a
 
 test('у стены записка о поступлении ведёт к столу', async ({ page }) => {
   await toWall(page);
-  await run(page, 'АДРЕС | браузер | vaultline-program.com');
+  await run(page, 'ОСМОТР | 45__вещи_Д_Миллер.md | увеличить');
   await close(page);
   const note = page.getByTestId('arrival-note');
-  await expect(note).toContainText('Поступило во «Входящие» на столе: L101');
+  await expect(note).toContainText('Поступило во «Входящие» на столе: L945');
   await note.click();
   await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'desk');
-  await expect(page.getByTestId('inbox-L101')).toBeVisible();
+  await expect(page.getByTestId('inbox-L945')).toBeVisible();
 });
 
 test('после перезагрузки непрочитанное стоит в лотке', async ({ page }) => {
-  await run(page, 'АДРЕС | браузер | vaultline-program.com');
+  await run(page, 'ОСМОТР | 45__вещи_Д_Миллер.md | увеличить');
   await page.waitForTimeout(500);
   await page.reload();
-  await expect(page.getByTestId('inbox-L101')).toBeVisible();
+  await expect(page.getByTestId('inbox-L945')).toBeVisible();
 });
 
 test('до открытия закрытого материала его текста нет в браузере (P-10)', async ({ page }) => {
@@ -112,7 +112,7 @@ test('служебные кнопки: «Подготовка» открывае
   await page.getByTestId('dev-prepare').click();
   await expect(page.getByTestId('dev-line-log').locator('li').first()).toContainText('ПОДГОТОВКА');
   for (const id of [
-    'L101',
+    'L945',
     'L130',
     'L249',
     'L272',

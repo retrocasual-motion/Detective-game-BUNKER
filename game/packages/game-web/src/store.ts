@@ -8,6 +8,7 @@ import {
   deviceOf,
   FOLDER_DOCS,
   folderItemId,
+  isWeb,
   type Join,
   type Material,
   openAll,
@@ -207,6 +208,18 @@ export const useGame = create<GameStore>((set, get) => {
       const s = get().saveStatus;
       if (s === 'error' || s === 'saving') e.preventDefault();
     });
+    // Игрок вернулся из вкладки сайта (A-272): открытое там — в игре (коробка банка, кабинет).
+    let lookedAt = 0;
+    const look = () => {
+      const now = Date.now();
+      if (document.hidden || !get().state || get().elsewhere || now - lookedAt < 1500) return;
+      lookedAt = now;
+      getMaterials()
+        .then((m) => get().addReleased(m))
+        .catch(() => undefined);
+    };
+    window.addEventListener('focus', look);
+    document.addEventListener('visibilitychange', look);
     // Одна вкладка с делом (R2-02): новая говорит «я здесь» — прежняя досылает своё и перестаёт
     // сохранять, иначе её старое состояние (таймер письма и т. п.) затёрло бы работу в новой.
     if ('BroadcastChannel' in window) {
@@ -397,7 +410,9 @@ export const useGame = create<GameStore>((set, get) => {
       const fresh = released.filter((m) => !known.has(m.id));
       if (fresh.length === 0) return;
       const all = [...materials, ...fresh];
-      set({ materials: all, arrival: { ids: fresh.map((m) => m.id), at: Date.now() } });
+      // Записка «Поступило» — о том, что легло на стол; сайты и файлы устройств — на своих местах.
+      const ids = fresh.map((m) => m.id).filter((id) => deviceOf(id) === null);
+      set(ids.length ? { materials: all, arrival: { ids, at: Date.now() } } : { materials: all });
       if (state) get().updateState((s) => reconcile(s, all));
     },
 
@@ -589,6 +604,7 @@ export function useVisibleMaterials(): Material[] {
   const key = useGame((g) => (g.state ? openedOf(g.state).join(',') : ''));
   return useMemo(() => {
     const sealed = sealedIds({ opened: (key ? key.split(',') : []) as ContainerId[] });
-    return materials.filter((m) => !sealed.has(m.id));
+    // Сайты — не материалы дела: поиск по делу их не находит (A-272, S5-A).
+    return materials.filter((m) => !sealed.has(m.id) && !isWeb(m.id));
   }, [materials, key]);
 }
