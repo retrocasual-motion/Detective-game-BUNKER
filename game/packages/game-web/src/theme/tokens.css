@@ -51,6 +51,10 @@
   --color-pc-led: #67c766;
   --color-pc-led-busy: #f2a628;
   --color-screen: #1d2a2f;
+  /* Включённый монитор на столе: как рабочий стол бюро (pc.css), панель задач, отсвет. */
+  --color-pc-screen-on: #1f4a80;
+  --color-pc-screen-bar: #0c1a2e;
+  --color-pc-screen-glow: rgb(110 160 230 / 22%);
   --color-screen-text: #cfd8dc;
   --color-screen-icon: #8fa3ad;
   --color-screen-window: #d9d9d9;

@@ -28,6 +28,8 @@ interface Box {
   color: string;
   /** Цвет экрана на передней грани (монитор). */
   screen?: string;
+  /** Полоса панели задач внизу экрана. */
+  screenBar?: string;
   /** Поворот вокруг вертикали (рад; + — передом вправо, к игроку справа) и его ось (x, z), px. */
   yaw?: number;
   pivot?: [number, number];
@@ -202,6 +204,9 @@ const ENVELOPE_AT: Record<Exclude<ContainerId, 'personal' | 'bank'>, [number, nu
   protocols: [0.12, 0.7],
 };
 const ENVELOPE_ORDER = ['bunker', 'scene', 'protocols'] as const;
+/** Где стоит компьютер следователя (дисковод под монитором), доли p. */
+const PC_X = -0.62;
+const PC_Z = 0.34;
 const C4: [number, number] = [0.324, 0.229];
 /**
  * Короб с пачками — у стены правее середины; на нём — коробка из банка. Пока меньше настоящего
@@ -255,8 +260,6 @@ export function deskObjects(
   // (28 × 22 × 2,5 см; сам дисковод стоит прямо — лоток выезжает к игроку); системный
   // блок — под столом, его не видно. Диск дотащили до дисковода (DD-A) — лоток (14 см, выезжает
   // на 15) выходит к игроку и не достаёт до клавиатуры: ни во что не упирается.
-  const PC_X = -0.62;
-  const PC_Z = 0.34;
   /** Поворот монитора к следователю, градусы. */
   const TURN = 25;
   const DRIVE_W = 0.28;
@@ -304,7 +307,10 @@ export function deskObjects(
   // Коробка из банка — на коробе с пачками, если он уже на столе.
   const onPapers = opened.includes('bunker') ? PAPERS_H : 0;
   const [BX, BZ] = PAPERS_AT;
-  monitor.screen = col('--color-screen');
+  // Экран включён (автор 19.11): синий рабочий стол бюро и панель задач внизу — видно, что
+  // компьютер работает и на него можно нажать.
+  monitor.screen = col('--color-pc-screen-on');
+  monitor.screenBar = col('--color-pc-screen-bar');
   const all: DeskObject[] = [
     ...inboxObjects(r, col, inbox),
     {
@@ -678,6 +684,21 @@ export function boxPolys(b: Box, eye: Vec3, shade: (c: string, k: number) => str
         ).map((pt) => turned(b, pt)),
         color: b.screen,
       });
+      if (b.screenBar) {
+        const yb = y1 - iy * 1.6;
+        const bar = (y1 - y0) * 0.05;
+        out.push({
+          pts: (
+            [
+              [x0 + ix, yb - bar, z1 + 0.8],
+              [x1 - ix, yb - bar, z1 + 0.8],
+              [x1 - ix, yb, z1 + 0.8],
+              [x0 + ix, yb, z1 + 0.8],
+            ] as Vec3[]
+          ).map((pt) => turned(b, pt)),
+          color: b.screenBar,
+        });
+      }
     }
   }
   return out;
@@ -771,6 +792,17 @@ export function drawRoom(canvas: HTMLCanvasElement, pose: Pose, r: Room): void {
     const rad = (0.55 * r.p * r.p) / (r.p - c[2]);
     const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, rad);
     g.addColorStop(0, col('--color-lamp-light'));
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, r.vp.width, r.vp.height);
+  }
+  // Отсвет включённого экрана на столе перед монитором — слабое голубое пятно.
+  const m = toCamera([(PC_X + 0.08) * r.p, r.deskY, (PC_Z + 0.1) * r.p], pose, r.p);
+  if (m[2] < r.p - 1) {
+    const s = toScreen(m, r.p, r.vp);
+    const rad = (0.32 * r.p * r.p) / (r.p - m[2]);
+    const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, rad);
+    g.addColorStop(0, col('--color-pc-screen-glow'));
     g.addColorStop(1, 'transparent');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, r.vp.width, r.vp.height);
