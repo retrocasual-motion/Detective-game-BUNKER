@@ -1,5 +1,5 @@
 import { test as base } from '@playwright/test';
-import { E2E_EMAIL, expect, test, toWall } from './fixtures.ts';
+import { expect } from './fixtures.ts';
 
 /** Исходящая почта сервера (только в разработке): письма автотестам вместо Mailpit. */
 interface Out {
