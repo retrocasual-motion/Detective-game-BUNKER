@@ -1,0 +1,17 @@
+{
+  "_": "Ответы формы заключения L999 (A-270): только для сервера игры и ведущего. Номера вопросов — как в L999. person — id карточки человека (game/packages/shared/src/persons.ts) или «nobody»; material — номер материала (выдержка засчитывается по материалу, из которого выделена); choice — номер варианта с нуля.",
+  "questions": [
+    { "kind": "person", "nobody": true, "correct": ["p:moreau"] },
+    {
+      "kind": "material",
+      "correct": ["L981", "L619", "15", "L832", "L388", "L957", "L461", "L462"]
+    },
+    { "kind": "choice", "options": 3, "correct": [2] },
+    { "kind": "material", "correct": ["L736", "L388", "L389", "L390", "L738"] },
+    { "kind": "person", "correct": ["p:hale"] }
+  ],
+  "groups": [
+    { "id": "death", "title": "Гибель Адама Коула", "questions": [0, 1, 2] },
+    { "id": "program", "title": "Программа", "questions": [3, 4] }
+  ]
+}
