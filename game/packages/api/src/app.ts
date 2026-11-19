@@ -48,6 +48,7 @@ import {
 } from './db/client.ts';
 import { authRoutes, LOCAL_PLAYER, SESSION_COOKIE, sessionPlayer } from './login.ts';
 import type { Mailer } from './mail/mailer.ts';
+import { phoneLine } from './phone.ts';
 import { formAction, pageOf, readPass, signPass, siteByHost, siteOf, siteUrl } from './sites.ts';
 
 /** Переменные запроса: игрок из сессии (6a-1). */
@@ -112,6 +113,19 @@ const ActionSchema = z.object({
   action: z.enum(['ОСМОТР', 'АДРЕС', 'ПАРОЛЬ', 'РЕШИТЬ', 'ФИНАЛ', 'СТОП']),
   target: z.string().max(300),
   value: z.string().max(2000).optional(),
+});
+
+/** Набор на телефоне стола: номер (цифры, +, пробелы, скобки, дефисы) и цифры в разговоре. */
+const PhoneSchema = z.object({
+  number: z
+    .string()
+    .max(40)
+    .regex(/^[\d+*#\s()-]*$/),
+  keys: z
+    .string()
+    .max(40)
+    .regex(/^[\d*#]*$/)
+    .optional(),
 });
 
 /** Состояние ссылается только на материалы, которые у игрока есть (P-10). */
@@ -333,6 +347,18 @@ export function createApp({
     const ok = ActionSchema.safeParse(input);
     if (!ok.success) return c.json({ error: 'Звонки — по телефонной линии (этап 6).' }, 400);
     return c.json(await runAction(c.get('player'), ok.data));
+  });
+
+  /**
+   * Телефон на столе (6a-3, PH-B): номер набран, трубку сняли — что слышно; цифры в разговоре —
+   * ответ линии (`phone.ts`). Попыток не тратит, ничего не открывает (PH-1).
+   */
+  app.post('/api/phone', bodyLimit({ maxSize: 4 * 1024 }), async (c) => {
+    if (!engine) return c.notFound();
+    const parsed = PhoneSchema.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: 'неверный номер' }, 400);
+    const progress = await loadProgress(c.get('player'));
+    return c.json(phoneLine(engine.content, progress, parsed.data.number, parsed.data.keys));
   });
 
   /** Где дело: открыта ли форма заключения (после «Решить дело» → «Продолжить»), отправлено ли. */

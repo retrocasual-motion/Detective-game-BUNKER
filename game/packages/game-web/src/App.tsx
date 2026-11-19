@@ -12,6 +12,7 @@ import { useEffect, useMemo } from 'react';
 import { ArrivalNote } from './desk/ArrivalNote.tsx';
 import { Notebook } from './desk/Notebook.tsx';
 import { PlacedNote } from './desk/PlacedNote.tsx';
+import { DeskPhone } from './deskphone/DeskPhone.tsx';
 import { DevActionLine } from './dev/DevActionLine.tsx';
 import { HeldView } from './hold/HeldView.tsx';
 import { Credits, MainMenu, MenuTab } from './menu/MainMenu.tsx';
@@ -41,7 +42,7 @@ export function App() {
   const viewerId = useGame((g) => g.viewerId);
   const computerOpen = useGame((g) => g.computerOpen);
   // Вещь в руках, компьютер или ручка вплотную — их слой закрывает верхние кнопки.
-  const holding = useGame((g) => g.held !== null || g.computerOpen || !!g.pen);
+  const holding = useGame((g) => g.held !== null || g.computerOpen || !!g.pen || !!g.deskPhone);
   const loadFailed = useGame((g) => g.loadFailed);
   // Только то, что видно игроку: каждое «сохраняю → сохранено» не перерисовывает комнату (R3-06).
   const saveProblem = useGame((g) =>
@@ -92,7 +93,7 @@ export function App() {
       if (!dir || isTyping(e.target)) return;
       const g = useGame.getState();
       // Вещь в руках — стрелки её (меню фотоаппарата), не комнаты (R3-01).
-      if (g.viewerId || g.computerOpen || g.held || !g.state) return;
+      if (g.viewerId || g.computerOpen || g.held || g.deskPhone || !g.state) return;
       const to = NAV[g.state.view][dir];
       if (to) setView(to);
     };
@@ -180,6 +181,7 @@ export function App() {
       <ArrivalNote />
       <PlacedNote />
       <PcView />
+      <DeskPhone />
       <PenView />
       <HeldView />
       <SearchPanel />

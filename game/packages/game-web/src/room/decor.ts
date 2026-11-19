@@ -19,6 +19,8 @@ export type Hotspot =
   | { kind: 'computer' }
   /** Конверт «Прил. 7 · Сервер VL-31» с диском (A-272): взять в руки. */
   | { kind: 'disc' }
+  /** Телефон следователя (6a-3): подойти и позвонить. */
+  | { kind: 'deskphone' }
   | { kind: 'container'; id: ContainerId }
   | { kind: 'material'; id: string };
 
@@ -556,7 +558,9 @@ export function deskObjects(
     },
     {
       key: 'phone',
-      label: 'Телефон следователя',
+      label: 'Телефон следователя — позвонить',
+      hotspot: { kind: 'deskphone' },
+      testId: 'desk-phone',
       boxes: [
         // Офисный телефон 20 × 19 см, трубка 21 см.
         // Справа, ближе к игроку (автор 19.11).

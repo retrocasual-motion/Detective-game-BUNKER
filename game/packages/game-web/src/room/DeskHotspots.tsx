@@ -125,6 +125,7 @@ export function DeskHotspots({
               // только клавиатура.
               if (o.key.startsWith('inbox-') && e.detail > 0) return;
               if (h?.kind === 'computer') setComputerOpen(true);
+              else if (h?.kind === 'deskphone') useGame.getState().setDeskPhone(r);
               else if (h?.kind === 'disc') {
                 // Вынутый диск мышью — перетаскивание (щелчок без сдвига — там же); здесь —
                 // клавиатура.

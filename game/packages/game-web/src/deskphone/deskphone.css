@@ -1,0 +1,304 @@
+/* Телефон следователя крупно (6a-3): офисный телефон конца 2000-х, лежит на столе — вид чуть
+   сверху. Камера «подъезжает» из его места на столе. */
+.deskphone-view {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.dp-stage {
+  position: absolute;
+  transform-origin: 50% 50%;
+  perspective: 1400px;
+}
+.dp-stage.dp-in {
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+:root[data-motion="reduce"] .dp-stage.dp-in {
+  transition: none;
+}
+
+.dp-phone {
+  position: absolute;
+  inset: 0;
+  border-radius: 34px 34px 46px 46px;
+  background: linear-gradient(to bottom, var(--color-dp-body-top), var(--color-dp-body));
+  box-shadow:
+    0 30px 60px rgb(0 0 0 / 55%),
+    inset 0 2px 0 rgb(255 255 255 / 8%);
+  transform: rotateX(20deg);
+}
+
+/* Рычаг: углубление под трубку. */
+.dp-cradle {
+  position: absolute;
+  left: 26px;
+  top: 26px;
+  width: 196px;
+  height: 418px;
+  border-radius: 40px;
+  background: var(--color-dp-cradle);
+  box-shadow: inset 0 4px 12px rgb(0 0 0 / 60%);
+}
+
+.dp-handset {
+  position: absolute;
+  left: 34px;
+  top: 30px;
+  width: 180px;
+  height: 410px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.35s ease;
+  filter: drop-shadow(0 6px 6px rgb(0 0 0 / 45%));
+}
+.dp-ear,
+.dp-mouth {
+  position: absolute;
+  left: 0;
+  width: 180px;
+  height: 120px;
+  border-radius: 46px;
+  background: linear-gradient(90deg, var(--color-dp-body-top), var(--color-dp-handset));
+}
+.dp-ear {
+  top: 0;
+}
+.dp-mouth {
+  bottom: 0;
+}
+.dp-ear::after,
+.dp-mouth::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70px;
+  height: 46px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(var(--color-dp-holes) 2px, transparent 2.5px) 0 0 / 10px 10px;
+  opacity: 0.8;
+}
+.dp-grip {
+  position: absolute;
+  left: 46px;
+  top: 100px;
+  width: 88px;
+  height: 210px;
+  border-radius: 30px;
+  background: linear-gradient(90deg, var(--color-dp-body-top), var(--color-dp-handset));
+}
+.dp-handset:hover .dp-grip,
+.dp-handset:focus-visible .dp-grip {
+  outline: 2px solid var(--color-focus, #f0c040);
+  outline-offset: 2px;
+}
+/* Трубку сняли: поднята к игроку и в сторону. */
+.dp-off .dp-handset {
+  transform: translate(-90px, -70px) rotate(-18deg) scale(1.06);
+  filter: drop-shadow(0 26px 22px rgb(0 0 0 / 55%));
+}
+:root[data-motion="reduce"] .dp-handset {
+  transition: none;
+}
+
+.dp-cord {
+  position: absolute;
+  left: -34px;
+  top: 300px;
+  width: 50px;
+  height: 160px;
+  fill: none;
+  stroke: var(--color-dp-handset);
+  stroke-width: 7;
+  pointer-events: none;
+}
+
+.dp-panel {
+  position: absolute;
+  left: 248px;
+  top: 24px;
+  right: 24px;
+  bottom: 24px;
+}
+
+.dp-lcd {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 330px;
+  height: 128px;
+  padding: 8px 12px;
+  border: 6px solid var(--color-dp-bezel);
+  border-radius: 8px;
+  background: var(--color-dp-lcd);
+  color: var(--color-dp-lcd-ink);
+  font-family: ui-monospace, Consolas, monospace;
+  box-shadow: inset 0 2px 8px rgb(0 0 0 / 35%);
+}
+.dp-lcd-top {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+.dp-line {
+  margin-left: auto;
+}
+.dp-line-on {
+  font-weight: 700;
+}
+.dp-lcd-state {
+  margin-top: 6px;
+  font-size: 15px;
+}
+.dp-lcd-number {
+  font-size: 24px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.dp-lcd-soft {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  border-top: 1px solid currentcolor;
+  padding-top: 2px;
+}
+
+.dp-softkeys {
+  position: absolute;
+  left: 12px;
+  top: 140px;
+  width: 318px;
+  display: flex;
+  justify-content: space-between;
+}
+.dp-softkeys button {
+  width: 70px;
+  height: 18px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--color-dp-key);
+  box-shadow: 0 3px 0 var(--color-dp-key-shadow);
+  cursor: pointer;
+}
+
+.dp-keypad {
+  position: absolute;
+  left: 24px;
+  top: 178px;
+  display: grid;
+  grid-template-columns: repeat(3, 82px);
+  gap: 10px 14px;
+}
+.dp-key {
+  height: 52px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(to bottom, var(--color-dp-key-top), var(--color-dp-key));
+  box-shadow: 0 4px 0 var(--color-dp-key-shadow);
+  color: var(--color-dp-key-ink);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.dp-key:active,
+.dp-softkeys button:active,
+.dp-fkey:active {
+  /* Кнопка утоплена — без сдвига (сдвиг под наклоном уводит отпускание мыши мимо кнопки). */
+  box-shadow: inset 0 2px 4px var(--color-dp-key-shadow);
+  filter: brightness(0.92);
+}
+.dp-digit {
+  font-size: 22px;
+  font-weight: 700;
+}
+.dp-letters {
+  font-size: 10px;
+  letter-spacing: 1px;
+  opacity: 0.7;
+  min-height: 10px;
+}
+
+.dp-func {
+  position: absolute;
+  right: 0;
+  top: 190px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.dp-fkey {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 128px;
+  height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--color-dp-key);
+  box-shadow: 0 4px 0 var(--color-dp-key-shadow);
+  color: var(--color-dp-key-ink);
+  font-size: 12px;
+  cursor: pointer;
+}
+.dp-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-dp-led-off);
+  flex: none;
+}
+.dp-fkey-on .dp-led {
+  background: var(--color-pc-led);
+  box-shadow: 0 0 6px var(--color-pc-led);
+}
+
+/* Что слышно в трубке — под телефоном. */
+.dp-heard {
+  position: absolute;
+  translate: -50% 0;
+  width: min(640px, 90vw);
+  max-height: 30vh;
+  overflow: auto;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--color-dp-heard);
+  color: var(--color-dp-heard-ink);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.dp-heard p {
+  margin: 4px 0;
+}
+.dp-heard-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.7;
+}
+.dp-heard-keys {
+  opacity: 0.65;
+  font-family: ui-monospace, Consolas, monospace;
+}
+.dp-heard-note,
+.dp-hint {
+  font-size: 12px;
+  opacity: 0.65;
+}
+.dp-hint {
+  text-align: center;
+  font-size: 13px;
+}

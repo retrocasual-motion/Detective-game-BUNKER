@@ -91,6 +91,23 @@ export const postAction = async (
   return (await check(res)).json();
 };
 
+/** Что слышно на линии телефона стола (6a-3): соединение, текст, ждёт ли линия цифры. */
+export interface PhoneReply {
+  connected: boolean;
+  text: string;
+  menu: boolean;
+}
+
+/** Позвонить с телефона стола: номер; в разговоре — ещё и цифры (номер партии, заказа). */
+export const phoneCall = async (number: string, keys?: string): Promise<PhoneReply> => {
+  const res = await call('/api/phone', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(keys ? { number, keys } : { number }),
+  });
+  return (await check(res)).json();
+};
+
 /** Служебная строка действий — только в разработке (E2-CHECK-A). */
 export const postActionLine = async (line: string): Promise<ActionResult> => {
   const res = await call('/api/dev/action-line', {
