@@ -7,7 +7,8 @@ import { folderFieldAt, toVerdict, useCardDrop, wholeCard } from '../verdict/car
 import { markEpilogueRead, verdictActive } from '../verdict/verdict-store.ts';
 import { moveItem } from '../wall/wall-actions.ts';
 import { type Room, screenToBoard } from './camera.ts';
-import { type Bank, deskObjects, type Epilogue, screenRect } from './decor.ts';
+import { type Bank, type DiscOnDesk, deskObjects, type Epilogue, screenRect } from './decor.ts';
+import { insertServerDisc } from './drive.ts';
 
 const noColor = () => '#000000';
 
@@ -30,14 +31,14 @@ export function DeskHotspots({
   inbox,
   opened,
   epilogue = 'none',
-  disc = false,
+  disc = 'none',
   bank = 'none',
 }: {
   room: Room;
   inbox: string[];
   opened: readonly ContainerId[];
   epilogue?: Epilogue;
-  disc?: boolean;
+  disc?: DiscOnDesk;
   bank?: Bank;
 }) {
   const openViewer = useGame((g) => g.openViewer);
@@ -51,6 +52,8 @@ export function DeskHotspots({
       })),
     [room, inbox, opened, epilogue, disc, bank],
   );
+  // Дисковод под монитором (A-272): сюда отпускают диск.
+  const driveAt = spots.find((x) => x.o.key === 'drive')?.r;
   return (
     <div className="desk-hotspots">
       {spots.map(({ o, r }) =>
@@ -59,12 +62,31 @@ export function DeskHotspots({
             key={o.key}
             type="button"
             className={`desk-spot${o.fresh ? ' desk-spot-fresh' : ''}`}
-            data-testid={o.hotspot.kind === 'computer' ? 'computer-monitor' : o.testId}
+            data-testid={o.hotspot.kind === 'computer' && !o.testId ? 'computer-monitor' : o.testId}
             aria-label={o.label}
             title={o.label}
             style={grow(r)}
             onPointerDown={(e) => {
               const h = o.hotspot;
+              // Вынутый диск (A-272, DD-A): зажать и дотащить до дисковода под монитором — он
+              // вставится сам; щелчок без сдвига — диск в руки (прочитать надпись).
+              if (h?.kind === 'disc' && disc === 'out') {
+                e.preventDefault();
+                const overDrive = (pt: { x: number; y: number }) =>
+                  !!driveAt &&
+                  pt.x >= driveAt.left &&
+                  pt.x <= driveAt.left + driveAt.width &&
+                  pt.y >= driveAt.top - 30 &&
+                  pt.y <= driveAt.top + driveAt.height + 20;
+                startGhostDrag(e.nativeEvent, {
+                  label: 'Диск «Прил. 7»',
+                  className: 'drag-ghost-disc',
+                  canDrop: overDrive,
+                  onDrop: () => void insertServerDisc(),
+                  onClick: () => useGame.getState().hold({ type: 'device', id: SERVER_DISC_ID }),
+                });
+                return;
+              }
               // Лист из «Входящих» можно утащить прямо на доску (правка автора 09.11).
               if (h?.kind !== 'material' || !o.key.startsWith('inbox-')) return;
               e.preventDefault();
@@ -103,9 +125,12 @@ export function DeskHotspots({
               // только клавиатура.
               if (o.key.startsWith('inbox-') && e.detail > 0) return;
               if (h?.kind === 'computer') setComputerOpen(true);
-              else if (h?.kind === 'disc')
-                useGame.getState().hold({ type: 'device', id: SERVER_DISC_ID });
-              else if (h?.kind === 'container')
+              else if (h?.kind === 'disc') {
+                // Вынутый диск мышью — перетаскивание (щелчок без сдвига — там же); здесь —
+                // клавиатура.
+                if (!(disc === 'out' && e.detail > 0))
+                  useGame.getState().hold({ type: 'device', id: SERVER_DISC_ID });
+              } else if (h?.kind === 'container')
                 useGame.getState().hold({ type: 'container', id: h.id });
               else if (h) {
                 // Эпилог открыт — подсветка снята.

@@ -1,25 +1,20 @@
-import { useState } from 'react';
 import { DoubleSide } from 'three';
-import { postAction } from '../api.ts';
-import { OFFLINE } from '../lock.ts';
 import { useGame } from '../store.ts';
-import Held3D, { afterLeaving } from './Held3D.tsx';
+import Held3D from './Held3D.tsx';
 import { Plate, useTexture } from './shapes.tsx';
 import { paintTexture } from './texture.ts';
 
 /**
  * Конверт «Прил. 7 · Сервер VL-31» с диском (A-272, AC-2; автор 19.11): в руках — заклеенный
- * конверт, «Вскрыть конверт» — в руках диск, его крутят и читают надпись; «Вставить диск в
- * компьютер» — движок (ОСМОТР 52 — вставить диск в дисковод), затем компьютер: лоток, диск,
- * раскрутка, значок программы. Надписи — только из канона: на конверте маркером «Прил. 7 ·
- * Сервер VL-31» (файл 52), диск — «Прил. 7 · Сервер VL-31» (L214).
+ * конверт, «Вскрыть конверт» — в руках диск, его крутят и читают надпись. Отложили — диск лежит
+ * на столе; вставляет его игрок сам: зажать на столе и дотащить до дисковода под монитором
+ * (DD-A, `room/drive.ts`). Кнопки «Вставить» нет. Надписи — только из канона: на конверте
+ * маркером «Прил. 7 · Сервер VL-31» (файл 52), диск — «Прил. 7 · Сервер VL-31» (L214).
  */
 
 const KRAFT = '#b58f5a';
 const INK = '#1d1d1d';
 const LABEL = 'Прил. 7 · Сервер VL-31';
-/** Цель действия — как в сквозном проходе пакета. */
-const TARGET = '52__конверт_прил_7_сервер.md';
 
 /** Конверт заклеен, без печати; надпись маркером. */
 function ServerEnvelope() {
@@ -128,58 +123,8 @@ function Disc() {
 }
 
 export function ServerDiscHeld() {
-  const out = useGame((g) => g.discOut);
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState('');
+  const out = useGame((g) => !!g.state?.discOut);
   const close = () => useGame.getState().hold(null);
-
-  const insert = async () => {
-    if (busy) return;
-    setBusy(true);
-    const r = await postAction('ОСМОТР', TARGET, 'вставить диск в дисковод').catch(() => null);
-    setBusy(false);
-    if (!r) {
-      setMsg(`${OFFLINE}.`);
-      return;
-    }
-    const g = useGame.getState();
-    if (r.released.length) g.addFound(r.released, 'pc', []);
-    afterLeaving(() => {
-      useGame.getState().hold(null);
-      useGame.getState().insertDisc();
-    });
-  };
-
-  const action = out ? (
-    <div className="held-action">
-      <button
-        type="button"
-        className="tool held-action-btn"
-        data-testid="disc-insert"
-        disabled={busy}
-        onClick={() => void insert()}
-      >
-        Вставить диск в компьютер
-      </button>
-      {msg && (
-        <p className="held-action-msg" role="status">
-          {msg}
-        </p>
-      )}
-    </div>
-  ) : (
-    <div className="held-action">
-      <button
-        type="button"
-        className="tool held-action-btn"
-        data-testid="disc-envelope-open"
-        onClick={() => useGame.setState({ discOut: true })}
-      >
-        Вскрыть конверт
-      </button>
-    </div>
-  );
-
   return (
     <Held3D
       key={out ? 'disc' : 'envelope'}
@@ -187,7 +132,20 @@ export function ServerDiscHeld() {
       half={out ? [1.2, 1.2] : [1.5, 1.1]}
       label={out ? `Диск «${LABEL}»` : `Конверт «${LABEL}»`}
       onClose={close}
-      action={action}
+      action={
+        out ? undefined : (
+          <div className="held-action">
+            <button
+              type="button"
+              className="tool held-action-btn"
+              data-testid="disc-envelope-open"
+              onClick={() => useGame.getState().takeDiscOut()}
+            >
+              Вскрыть конверт
+            </button>
+          </div>
+        )
+      }
     >
       {out ? <Disc /> : <ServerEnvelope />}
     </Held3D>

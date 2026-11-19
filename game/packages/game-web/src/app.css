@@ -2082,6 +2082,19 @@ button {
 .held-loading {
   cursor: progress;
 }
+/* Диск сервера тянут к дисководу (A-272, DD-A): под курсором — диск. */
+.drag-ghost-disc {
+  width: 64px;
+  height: 64px;
+  min-width: 0;
+  margin: -32px 0 0 -32px;
+  padding: 0;
+  rotate: 0deg;
+  border-radius: 50%;
+  background: radial-gradient(circle, #3d3e40 0 9%, #e9e8e3 10% 32%, #c9ccd3 33% 100%);
+  color: transparent;
+  overflow: hidden;
+}
 .held-action-wrap {
   position: absolute;
   left: 50%;

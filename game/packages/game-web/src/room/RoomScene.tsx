@@ -12,7 +12,8 @@ import {
   toCss,
 } from './camera.ts';
 import { DeskHotspots } from './DeskHotspots.tsx';
-import { type Bank, drawObjects, drawRoom, type Epilogue } from './decor.ts';
+import { type Bank, type DiscOnDesk, drawObjects, drawRoom, type Epilogue } from './decor.ts';
+import { DRIVE_IDLE, type DriveLook } from './drive.ts';
 import { NavArrows } from './NavArrows.tsx';
 import { useViewport } from './useViewport.ts';
 import { VIEW_LABELS } from './views.ts';
@@ -37,8 +38,10 @@ interface RoomSceneProps {
   opened: readonly ContainerId[];
   /** Эпилог после заключения — конвертом на столе. */
   epilogue?: Epilogue;
-  /** Конверт с диском сервера на столе (A-272). */
-  disc?: boolean;
+  /** Диск сервера на столе (A-272). */
+  disc?: DiscOnDesk;
+  /** Дисковод под монитором: кадр вставки. */
+  drive?: DriveLook;
   /** Коробка из банка (A-272). */
   bank?: Bank;
 }
@@ -58,8 +61,9 @@ export function RoomScene({
   inbox,
   opened,
   epilogue = 'none',
-  disc = false,
+  disc = 'none',
   bank = 'none',
+  drive = DRIVE_IDLE,
 }: RoomSceneProps) {
   const vp = useViewport();
   const room = useMemo(() => roomFor(vp), [vp]);
@@ -75,7 +79,7 @@ export function RoomScene({
     if (world.current) world.current.style.transform = pose ? toCss(poseOps(pose, room.p)) : 'none';
     if (pose && back.current) drawRoom(back.current, pose, room);
     if (pose && front.current)
-      drawObjects(front.current, pose, room, inbox, opened, epilogue, disc, bank);
+      drawObjects(front.current, pose, room, inbox, opened, epilogue, disc, bank, drive);
   };
 
   useLayoutEffect(() => {

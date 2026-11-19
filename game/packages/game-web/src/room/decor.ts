@@ -1,5 +1,6 @@
 import { CONTAINER_IDS, CONTAINERS, type ContainerId, EPILOGUE_ID } from '@bunker/shared';
 import { type Pose, type Room, toCamera, toScreen, type Vec3 } from './camera.ts';
+import { DRIVE_IDLE, type DriveLook } from './drive.ts';
 
 /**
  * Серый декор комнаты и предметы на столе (черновик «Стены», 08.11) — на холстах своей
@@ -29,6 +30,9 @@ interface Box {
   screen?: string;
 }
 
+/** Диск сервера на столе (A-272): в конверте, вынут из конверта, вставлен (нет на столе). */
+export type DiscOnDesk = 'envelope' | 'out' | 'none';
+
 /** Коробка из банка на столе: нет, пришла (подсвечена), вскрыта. */
 export type Bank = 'none' | 'box' | 'open';
 
@@ -48,6 +52,16 @@ export interface DeskObject {
   testId?: string;
   /** Только что пришло и ещё не открыто — подсвечено (эпилог). */
   fresh?: boolean;
+  /** Плоские круги поверх коробок — диск на столе и на лотке дисковода (A-272). */
+  discs?: Disc[];
+}
+
+/** Плоский круг на высоте lift над столом: диск с тёмной втулкой. */
+interface Disc {
+  min: Vec3;
+  max: Vec3;
+  color: string;
+  hub: string;
 }
 
 /** Сколько писем лотка видно стоящими (остальные — за ними). */
@@ -166,10 +180,12 @@ export function deskObjects(
   opened: readonly ContainerId[] = CONTAINER_IDS,
   /** Эпилог после заключения: «fresh» — конверт пришёл и не открыт (подсвечен). */
   epilogue: Epilogue = 'none',
-  /** Конверт с диском сервера лежит на столе (диск ещё не вставлен, A-272). */
-  disc = false,
+  /** Диск сервера на столе: в конверте, вынут (лежит сам), нет — вставлен (A-272). */
+  discOn: DiscOnDesk = 'none',
   /** Коробка из банка (A-272, AC-4): нет, пришла и не вскрыта, вскрыта (кассета и проигрыватель). */
   bank: Bank = 'none',
+  /** Дисковод под монитором: кадр вставки диска. */
+  drive: DriveLook = DRIVE_IDLE,
 ): DeskObject[] {
   const { p, deskY } = r;
   const box = (
@@ -187,27 +203,46 @@ export function deskObjects(
   });
   const device = col('--color-device');
   const edge = col('--color-device-edge');
-  // Рабочее место бюро (A-272, PC-A — автор 19.11: «дисковод как в 2000-х, под монитор»): плоский
-  // корпус «desktop» на столе, на нём ЖК-монитор на ножке. Спереди корпуса — дисковод CD/DVD,
-  // дисковод дискет, кнопка питания и огоньки.
+  // Рабочее место бюро (A-272; автор 19.11: «под монитором — чисто дисковод, блок под столом»):
+  // монитор на ножке стоит на тонком дисководе CD/DVD; системный блок — под столом, его не видно.
+  // Диск дотащили до дисковода (DD-A) — лоток выезжает к игроку, диск ложится, лоток уезжает.
+  /** Диск — плоский круг диаметром d (рисуется кругом, не коробкой). */
+  const disc = (x: number, z: number, d: number, lift: number): Disc => ({
+    ...box(x, z, d, d, 0.003, col('--color-disc-hub'), lift),
+    hub: col('--color-pc-bay'),
+  });
   const PC_X = -0.66;
   const PC_Z = 0.2;
-  const CASE_H = 0.085;
-  const front = PC_Z + 0.15 + 0.003;
-  const pcCase = col('--color-pc-case');
+  const DRIVE_H = 0.03;
+  const DRIVE_D = 0.2;
+  const front = PC_Z + DRIVE_D / 2 + 0.002;
   const bay = col('--color-pc-bay');
-  const pcBoxes = [
-    box(PC_X, PC_Z, 0.36, 0.3, CASE_H, pcCase),
-    // Дисковод CD/DVD и дисковод дискет — слева, кнопка и огоньки — справа.
-    box(PC_X - 0.075, front, 0.17, 0.006, 0.022, bay, 0.052),
-    box(PC_X - 0.11, front, 0.1, 0.006, 0.012, bay, 0.025),
-    box(PC_X + 0.125, front, 0.03, 0.006, 0.03, col('--color-pc-button'), 0.03),
-    box(PC_X + 0.09, front, 0.01, 0.005, 0.006, col('--color-pc-led'), 0.04),
-    // Ножка и подставка монитора.
-    box(PC_X, PC_Z, 0.17, 0.11, 0.008, edge, CASE_H),
-    box(PC_X, PC_Z - 0.01, 0.05, 0.035, 0.05, edge, CASE_H + 0.008),
+  const trayD = 0.16 * drive.out;
+  const pcBoxes: Box[] = [
+    box(PC_X, PC_Z, 0.24, DRIVE_D, DRIVE_H, col('--color-pc-case')),
+    // Щель лотка, кнопка выброса, огонёк.
+    box(PC_X - 0.02, front, 0.17, 0.004, 0.006, bay, 0.015),
+    box(PC_X + 0.095, front, 0.028, 0.005, 0.008, col('--color-pc-button'), 0.008),
+    box(
+      PC_X + 0.065,
+      front,
+      0.01,
+      0.004,
+      0.004,
+      col(drive.led ? '--color-pc-led-busy' : '--color-pc-led'),
+      0.01,
+    ),
+    // Выехавший лоток и диск на нём.
+    ...(trayD > 0.002 ? [box(PC_X - 0.02, front + trayD / 2, 0.15, trayD, 0.006, bay, 0.012)] : []),
   ];
-  const monitor = box(PC_X, PC_Z - 0.01, 0.34, 0.05, 0.24, col('--color-monitor'), CASE_H + 0.05);
+  const trayDisc =
+    drive.disc && drive.out > 0.6 ? [disc(PC_X - 0.02, front + trayD / 2, 0.12, 0.018)] : [];
+  // Ножка и подставка монитора — на дисководе.
+  const stand = [
+    box(PC_X, PC_Z - 0.02, 0.16, 0.11, 0.008, edge, DRIVE_H),
+    box(PC_X, PC_Z - 0.03, 0.05, 0.035, 0.05, edge, DRIVE_H + 0.008),
+  ];
+  const monitor = box(PC_X, PC_Z - 0.03, 0.34, 0.05, 0.24, col('--color-monitor'), DRIVE_H + 0.05);
   monitor.screen = col('--color-screen');
   const all: DeskObject[] = [
     ...inboxObjects(r, col, inbox),
@@ -283,7 +318,7 @@ export function deskObjects(
     }),
     // Конверт с диском сервера (A-272, AC-2): у компьютера, перед клавиатурой; подсвечен, пока диск не
     // вставлен; вставили — пустой конверт уходит, диск остаётся в компьютере.
-    ...(disc
+    ...(discOn === 'envelope'
       ? [
           {
             key: 'server-disc',
@@ -299,7 +334,22 @@ export function deskObjects(
             fresh: true,
           },
         ]
-      : []),
+      : discOn === 'out'
+        ? [
+            {
+              // Диск, вынутый из конверта (DD-A): лежит на столе — взять или дотащить до дисковода.
+              key: 'server-disc',
+              label: 'Диск «Прил. 7 · Сервер VL-31»',
+              boxes: [],
+              discs: [disc(-0.44, 0.61, 0.12, 0)],
+              hotspot: { kind: 'disc' as const },
+              tag: 'Диск «Прил. 7»',
+              tagInside: true,
+              testId: 'server-disc-out',
+              fresh: true,
+            },
+          ]
+        : []),
     // Коробка из банка (A-272, AC-4): справа, у лампы; пока не вскрыта — подсвечена, как новое.
     ...(bank === 'box'
       ? [
@@ -353,8 +403,17 @@ export function deskObjects(
     {
       key: 'monitor',
       label: 'Компьютер следователя',
-      boxes: [...pcBoxes, monitor],
+      boxes: [...stand, monitor],
       hotspot: { kind: 'computer' },
+    },
+    {
+      // Дисковод CD/DVD под монитором (A-272): щелчок — компьютер; сюда дотаскивают диск.
+      key: 'drive',
+      label: 'Дисковод компьютера',
+      boxes: pcBoxes,
+      discs: trayDisc,
+      hotspot: { kind: 'computer' },
+      testId: 'disc-drive',
     },
     {
       key: 'laptop',
@@ -551,7 +610,7 @@ export function screenRect(o: DeskObject, pose: Pose, r: Room) {
   let y0 = Number.POSITIVE_INFINITY;
   let x1 = Number.NEGATIVE_INFINITY;
   let y1 = Number.NEGATIVE_INFINITY;
-  for (const b of o.boxes)
+  for (const b of [...o.boxes, ...(o.discs ?? [])])
     for (const x of [b.min[0], b.max[0]])
       for (const y of [b.min[1], b.max[1]])
         for (const z of [b.min[2], b.max[2]]) {
@@ -630,17 +689,40 @@ export function drawObjects(
   inbox: string[] = [],
   opened: readonly ContainerId[] = CONTAINER_IDS,
   epilogue: Epilogue = 'none',
-  disc = false,
+  disc: DiscOnDesk = 'none',
   bank: Bank = 'none',
+  drive: DriveLook = DRIVE_IDLE,
 ): void {
   const ctx = prepare(canvas, r);
   if (!ctx) return;
   const col = colors(canvas);
-  for (const o of sortObjects(deskObjects(r, col, inbox, opened, epilogue, disc, bank), pose.eye)) {
+  for (const o of sortObjects(
+    deskObjects(r, col, inbox, opened, epilogue, disc, bank, drive),
+    pose.eye,
+  )) {
     const boxes = [...o.boxes].sort(
       (a, b) => dist(center(b), pose.eye) - dist(center(a), pose.eye),
     );
     for (const b of boxes)
       for (const poly of boxPolys(b, pose.eye, shade)) fill(ctx, poly, pose, r);
+    for (const d of o.discs ?? []) for (const poly of discPolys(d)) fill(ctx, poly, pose, r);
   }
+}
+
+/** Круг диска и втулка — многоугольники на верхней грани (лицом к камере сверху). */
+function discPolys(d: Disc): Poly[] {
+  const cx = (d.min[0] + d.max[0]) / 2;
+  const cz = (d.min[2] + d.max[2]) / 2;
+  const R = (d.max[0] - d.min[0]) / 2;
+  const y = d.min[1];
+  const ring = (rad: number) =>
+    Array.from({ length: 28 }, (_, k): Vec3 => {
+      const a = (k / 28) * Math.PI * 2;
+      return [cx + rad * Math.cos(a), y, cz + rad * Math.sin(a)];
+    });
+  return [
+    { pts: ring(R), color: d.color },
+    { pts: ring(R * 0.42), color: shade(d.color, 0.9) },
+    { pts: ring(R * 0.16), color: d.hub },
+  ];
 }

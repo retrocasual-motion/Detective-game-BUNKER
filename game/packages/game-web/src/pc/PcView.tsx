@@ -7,7 +7,6 @@ import { DesktopIcon, gridAt, settle, snapToGrid, Window } from '../laptop/Deskt
 import '../laptop/laptop.css';
 import { useGame } from '../store.ts';
 import { DocWindow, PcBrowser } from './apps.tsx';
-import { DiscDrive } from './DiscDrive.tsx';
 import { ServerApp } from './ServerApp.tsx';
 import './pc.css';
 
@@ -15,13 +14,6 @@ import './pc.css';
 const SCREEN_W = 1280;
 const SCREEN_H = 800;
 const BEZEL = 30;
-/**
- * Системный блок под монитором (PC-A, pc.css): ножка и верх корпуса с дисководами входят в кадр;
- * низ корпуса может уйти за край — экран остаётся крупным.
- */
-const CASE_SPACE = 26 + 78;
-/** На сколько поднять компьютер в кадре, пока вставляют диск: весь корпус и выехавший лоток. */
-const INSERT_LIFT = 260;
 
 type Kind = 'terminal' | 'browser' | 'doc';
 interface Win {
@@ -64,20 +56,18 @@ const ICONS: Icon[] = [SERVER, BROWSER];
  * Компьютер следователя (4c-3; решения автора 11.11 — CO-A, DI-A, TM-A; вид — полицейский):
  * рабочее место специалиста Окружного бюро расследований. Та же мини-ОС, что у ноутбука, —
  * свой рабочий стол: герб бюро на обоях, служебная полоса, браузер; диск «Прил. 7» вставлен —
- * «Сервер объекта VL-31» (A-272). Справа — системный блок с дисководом. Окна и значки сохраняются (`state.pc`). Esc или щелчок мимо монитора —
+ * «Сервер объекта VL-31» (A-272). Дисковод — на столе под монитором (`room/drive.ts`). Окна и значки сохраняются (`state.pc`). Esc или щелчок мимо монитора —
  * отойти от компьютера.
  */
 export function PcView() {
   const open = useGame((g) => g.computerOpen);
   const material = useGame((g) => g.pcMaterial);
   const area = useFreeArea();
-  // Монитор на системном блоке (дисковод, A-272) — вместе по середине свободного места.
+  // Экран — во всё свободное место (дисковод — на столе под монитором, здесь его нет; автор 19.11).
   const scale = Math.min(
     (area.width - 40) / (SCREEN_W + BEZEL * 2),
-    (area.height - 40) / (SCREEN_H + BEZEL * 2 + 18 + CASE_SPACE),
+    (area.height - 40) / (SCREEN_H + BEZEL * 2 + 18),
   );
-  const hasDisc = useGame((g) => g.materials.some((m) => m.id === SERVER_LOG_ID));
-  const inserting = useGame((g) => g.discInserting);
   const { onUp, button } = useSelectionCard('pc-to-folder', 'pc');
   useFindOnScreen('.pc-screen', open);
 
@@ -106,8 +96,6 @@ export function PcView() {
           width: SCREEN_W + BEZEL * 2,
           height: SCREEN_H + BEZEL * 2 + 18,
           left: area.center || undefined,
-          // Вставляют диск — взгляд опускается к дисководу (корпус и лоток в кадре), потом обратно.
-          top: `calc(50% - ${((CASE_SPACE + (inserting ? INSERT_LIFT : 0)) * scale) / 2}px)`,
           transform: `translate(-50%, -50%) scale(${scale})`,
         }}
       >
@@ -130,7 +118,6 @@ export function PcView() {
           </span>
           <span className="pc-power" />
         </div>
-        <DiscDrive hasDisc={hasDisc} />
       </div>
       {button}
       {/* Видимый ✕, как у вещи в руках (R5-09, R5-10; CORNER/PC-A: «закрыть — ✕, щелчок мимо, Esc»). */}

@@ -4,7 +4,8 @@ import { expect, sheet, test } from './fixtures.ts';
 /**
  * Компьютер следователя (этап 4c-3; решения автора 11.11 — CO-A, DI-A; полицейский вид) и диск
  * сервера (A-272, AC-2; автор 19.11): конверт 52 на столе → «Вскрыть конверт» → диск в руках →
- * «Вставить диск в компьютер» → лоток, раскрутка → «Сервер объекта VL-31» на рабочем столе.
+ * диск отложили — он на столе → зажать и дотащить до дисковода под монитором (DD-A) → лоток,
+ * раскрутка на столе → «Сервер объекта VL-31» на рабочем столе.
  * Браузер — архив номеров газеты. Файлы остаются на компьютере.
  */
 
@@ -29,7 +30,7 @@ async function pcUp(page: Page) {
 
 const icon = (page: Page, name: string) => page.getByTestId(`lap-icon-${name}`);
 
-test('рабочее место бюро: служебная полоса, часы; без диска — только браузер; системный блок рядом', async ({
+test('рабочее место бюро: служебная полоса, часы; без диска — только браузер; экран — без дисковода', async ({
   page,
 }) => {
   await pcUp(page);
@@ -37,8 +38,6 @@ test('рабочее место бюро: служебная полоса, ча�
   await expect(page.getByTestId('pc-clock')).toContainText(':');
   await expect(icon(page, 'Браузер')).toBeVisible();
   await expect(icon(page, SERVER)).toHaveCount(0);
-  await expect(page.getByTestId('pc-case')).toBeVisible();
-  await expect(page.getByTestId('pc-tray')).toHaveAttribute('data-state', 'closed');
   // Стрелки при открытом компьютере не переключают вид; Esc и щелчок мимо — отойти.
   await page.keyboard.press('ArrowUp');
   await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'desk');
@@ -49,7 +48,7 @@ test('рабочее место бюро: служебная полоса, ча�
   await expect(page.getByTestId('computer')).toHaveCount(0);
 });
 
-test('диск сервера: конверт → вскрыть → диск → вставить → лоток, раскрутка → программа; конверт уходит', async ({
+test('диск сервера: конверт → вскрыть → диск на столе → дотащить до дисковода → компьютер с программой (DD-A)', async ({
   page,
 }) => {
   const envelope = page.getByTestId('server-disc');
@@ -59,22 +58,55 @@ test('диск сервера: конверт → вскрыть → диск �
   await expect(page.getByTestId('held')).toBeVisible();
   await page.getByTestId('disc-envelope-open').click();
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Диск/);
-  await page.getByTestId('disc-insert').click();
-  // Компьютер открылся сам: лоток проходит шаги и закрывается, значок программы — после.
-  await expect(page.getByTestId('computer')).toBeVisible();
+  // Кнопки «Вставить» нет: диск отложили — он на столе.
+  await expect(page.getByTestId('disc-insert')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('held')).toHaveCount(0);
+  const disc = page.getByTestId('server-disc-out');
+  await expect(disc).toBeVisible();
+  // Щелчок без сдвига — снова в руки.
+  await disc.click();
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Диск/);
+  await page.keyboard.press('Escape');
+  // Отпустили мимо дисковода — ничего.
+  const d = await disc.boundingBox();
+  const drive = await page.getByTestId('disc-drive').boundingBox();
+  if (!d || !drive) throw new Error('нет диска или дисковода');
+  await page.mouse.move(d.x + d.width / 2, d.y + d.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(700, 300, { steps: 8 });
+  await page.mouse.up();
+  await expect(disc).toBeVisible();
+  // Дотащили до дисковода — вставка на столе, потом компьютер с новым значком.
+  await page.mouse.move(d.x + d.width / 2, d.y + d.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(drive.x + drive.width / 2, drive.y + drive.height / 2, { steps: 10 });
+  await page.mouse.up();
+  await expect(disc).toHaveCount(0);
+  await expect(page.getByTestId('computer')).toBeVisible({ timeout: 6000 });
   await expect(icon(page, SERVER)).toBeVisible();
-  await expect(page.getByTestId('pc-tray')).toHaveAttribute('data-state', 'closed');
   // Журналы — в программе, не на столе и не на стене.
   await expect(page.getByTestId('inbox-L214')).toHaveCount(0);
   await expect(sheet(page, 'L214')).toHaveCount(0);
   await page.keyboard.press('Escape');
-  await expect(envelope).toHaveCount(0);
   // После перезагрузки — так же: диск в компьютере.
   await page.reload();
   await expect(page.getByTestId('room')).toBeVisible();
   await expect(page.getByTestId('server-disc')).toHaveCount(0);
+  await expect(page.getByTestId('server-disc-out')).toHaveCount(0);
   await pcUp(page);
   await expect(icon(page, SERVER)).toBeVisible();
+});
+
+test('вынутый диск после перезагрузки — на столе, не в конверте', async ({ page }) => {
+  await page.getByTestId('server-disc').click();
+  await page.getByTestId('disc-envelope-open').click();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('server-disc-out')).toBeVisible();
+  await page.waitForTimeout(800);
+  await page.reload();
+  await expect(page.getByTestId('server-disc-out')).toBeVisible();
+  await expect(page.getByTestId('server-disc')).toHaveCount(0);
 });
 
 test('программа сервера: журнал с фильтрами, узел связи, терминал технической', async ({

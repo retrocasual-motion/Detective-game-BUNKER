@@ -78,12 +78,12 @@ interface GameStore {
   unpinExcerpt(id: string): void;
   /** «Открыть» у выписки: источник на этом месте (сайт — во вкладке, устройство — в руках). */
   openExcerpt(id: string): void;
-  /** Конверт с диском сервера вскрыт — в руках диск (A-272; до перезагрузки). */
-  discOut: boolean;
-  /** Диск только что вставили: компьютер показывает лоток и раскрутку, затем — значок программы. */
+  /** Вскрыли конверт 52: диск вынут — лежит на столе (сохраняется, A-272). */
+  takeDiscOut(): void;
+  /** Диск дотащили до дисковода: на столе играет вставка (лоток, раскрутка; DD-A). */
   discInserting: boolean;
-  /** Вставили диск: отойти к компьютеру, где играет вставка (AC-2). */
   insertDisc(): void;
+  /** Вставка доиграла — компьютер с новым значком программы. */
   discInserted(): void;
   setNotebookOpen(open: boolean): void;
   /** Сервер не ответил при загрузке — игра повторяет запрос. */
@@ -270,7 +270,6 @@ export const useGame = create<GameStore>((set, get) => {
     viewerId: null,
     folderOpen: false,
     notebookOpen: false,
-    discOut: false,
     discInserting: false,
     loadFailed: false,
     arrival: null,
@@ -467,11 +466,14 @@ export const useGame = create<GameStore>((set, get) => {
       set({ find });
     },
 
+    takeDiscOut() {
+      get().updateState((s) => (s.discOut ? s : { ...s, discOut: true }));
+    },
     insertDisc() {
-      set({ discOut: false, discInserting: true, computerOpen: true, pcMaterial: null });
+      set({ discInserting: true, held: null });
     },
     discInserted() {
-      set({ discInserting: false });
+      set({ discInserting: false, computerOpen: true, pcMaterial: null });
     },
 
     setFolderOpen(open) {
