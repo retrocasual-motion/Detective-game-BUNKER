@@ -8,7 +8,7 @@
 Ветка `dev/a272-entrances`, PR в main только после «мержим».
 
 ## Next Step
-Phase 8 — документы (DECISIONS, ARCHITECTURE, DEVELOPMENT, UX_PRINCIPLES), PR, gh pr checks, «мержим?».
+PR открыт; автор проверяет руками по A272_MANUAL_CHECK.md; по фидбеку — правки, затем «мержим?».
 
 ## Current Phase
 Phase 8
@@ -71,9 +71,11 @@ Phase 8
 - **Status:** complete
 
 ### Phase 8: Проверка и документы (§7)
-- [ ] pnpm test, Playwright-сценарии §7, документы ARCHITECTURE / DEVELOPMENT / UX_PRINCIPLES / DECISIONS
-- [ ] PR, gh pr checks, «мержим?»
-- **Status:** pending
+- [x] pnpm test (260), Playwright 164 (сценарии §7: диск → программа → 05; вход Кейт → A-24 → анкета; хранилище → 0417; банк → коробка → кассета; почта через «Забыли пароль?»; три ошибки → пауза; выписка → стена → «открыть»)
+- [x] Документы: ARCHITECTURE, DEVELOPMENT, DECISIONS («A-272 в коде»), UX_PRINCIPLES, README, статус задания; ручная проверка — A272_MANUAL_CHECK.md
+- [x] Сборка: в коде страниц нет ответов (логин кабинета — от сервера)
+- [ ] PR, gh pr checks, «мержим?» — после ручной проверки автором
+- **Status:** in_progress
 
 ## Decisions Made
 | Decision | Rationale |

@@ -555,7 +555,8 @@ export function createApp({
       ...pageOf(m),
       docs,
       ...(mailbox ? { mailbox } : {}),
-      ...(site.label === 'vaultline-program' ? { cabinet: has('L620') } : {}),
+      // Логин — только тому, кто уже вошёл (он сам его ввёл); в коде страницы его нет (P-10).
+      ...(site.label === 'vaultline-program' ? { cabinet: has('L620') ? 'k.walsh' : null } : {}),
       wait,
     };
     return c.json(page);

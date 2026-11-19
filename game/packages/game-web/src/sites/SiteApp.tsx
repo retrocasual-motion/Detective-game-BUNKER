@@ -204,7 +204,7 @@ function Page({ page, reload }: { page: SitePage; reload: () => Promise<void> })
             if (id === 'vl-login' && page.cabinet)
               return (
                 <p key={id} className="site-in" data-testid="site-in">
-                  Вы вошли: k.walsh · <a href="/cabinet">Кабинет сотрудника</a>
+                  Вы вошли: {page.cabinet} · <a href="/cabinet">Кабинет сотрудника</a>
                 </p>
               );
             if (id === 'vl-forgot' && page.cabinet) return null;

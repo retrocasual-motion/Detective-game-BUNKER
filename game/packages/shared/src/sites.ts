@@ -116,8 +116,8 @@ export interface SitePage {
   docs: { id: string; title: string; body: string }[];
   /** Веб-почта (L453): текст ящика — письма разбирает страница. */
   mailbox?: string;
-  /** Кабинет сотрудника открыт (вход выполнен). */
-  cabinet?: boolean;
+  /** Кабинет сотрудника открыт (вход выполнен): логин — от сервера, в коде страницы его нет (P-10). */
+  cabinet?: string | null;
   /** Сколько мс ещё ждёт каждое поле (лимит неверных вводов). */
   wait: Partial<Record<SiteFormId, number>>;
 }

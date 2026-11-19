@@ -141,7 +141,7 @@ describe('сайты дела на сервере (A-272)', () => {
     expect(p.domain).toBe('vaultline-program.com');
     expect(p.nav).toContain('Вход для сотрудников');
     expect(p.body).toContain('::form:vl-login::');
-    expect(p.cabinet).toBe(false);
+    expect(p.cabinet).toBeNull();
     const game = await a.request('/api/site/page?path=/', { headers: { host: 'localhost:5173' } });
     expect(game.status).toBe(404);
   });
