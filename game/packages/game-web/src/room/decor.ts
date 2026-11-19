@@ -136,6 +136,8 @@ function inboxObjects(r: Room, col: Col, inbox: string[]): DeskObject[] {
       label: 'Входящие',
       boxes: [at(X, Z, 0.26, 0.16, 0.012, tray), at(X, Z - 0.075, 0.26, 0.01, 0.07, tray, 0.012)],
       tag: inbox.length ? `Входящие · ${inbox.length}` : 'Входящие',
+      // Бирка — на самом лотке: под ним лежит газета.
+      tagInside: true,
       testId: 'inbox-tray',
     },
     ...letters,
@@ -223,7 +225,7 @@ const C4: [number, number] = [0.324, 0.229];
  * (BX-A — 38 × 30 × 25): 30 × 22 × 15, чтобы не спорил с компьютером (автор 19.11; размеры — на
  * этапе дизайна).
  */
-const PAPERS_AT: [number, number] = [0.4, 0.13];
+const PAPERS_AT: [number, number] = [0.43, 0.125];
 const PAPERS_H = 0.15;
 
 export function deskObjects(
@@ -336,9 +338,11 @@ export function deskObjects(
     {
       key: 'radio',
       label: 'Радиопост: стойка и запись регистратора',
-      boxes: [box(0.61, 0.64, 0.26, 0.16, 0.1, device)],
+      boxes: [box(0.11, 0.12, 0.26, 0.16, 0.1, device)],
       hotspot: { kind: 'material', id: '50' },
       tag: 'Изъято · 50',
+      // Бирка — на корпусе: перед радиопостом лежат конверты.
+      tagInside: true,
       testId: 'device-50',
     },
     // Коробка «Личные вещи» (A-260): опечатана — крышка; вскрыта — пакеты сверху.
@@ -372,8 +376,8 @@ export function deskObjects(
       label: 'Газета',
       boxes: [
         // Сложена вчетверо: 29 × 19 см; заголовок газеты — у дальнего края.
-        box(0.66, 0.38, 0.29, 0.19, 0.012, col('--color-newspaper')),
-        box(0.66, 0.315, 0.26, 0.035, 0.002, col('--color-newspaper-ink'), 0.012),
+        box(0.49, 0.335, 0.29, 0.19, 0.012, col('--color-newspaper')),
+        box(0.49, 0.27, 0.26, 0.035, 0.002, col('--color-newspaper-ink'), 0.012),
       ],
       hotspot: { kind: 'material' as const, id: '15' },
       testId: 'newspaper',
@@ -555,8 +559,9 @@ export function deskObjects(
       label: 'Телефон следователя',
       boxes: [
         // Офисный телефон 20 × 19 см, трубка 21 см.
-        box(0.1, 0.12, 0.2, 0.19, 0.07, col('--color-phone')),
-        box(0.045, 0.12, 0.055, 0.21, 0.04, col('--color-phone'), 0.07),
+        // Справа, ближе к игроку (автор 19.11).
+        box(0.61, 0.64, 0.2, 0.19, 0.07, col('--color-phone')),
+        box(0.555, 0.64, 0.055, 0.21, 0.04, col('--color-phone'), 0.07),
       ],
     },
     // Эпилог (автор 17.11): после заключения — конверт посередине стола, ближе к игроку; пока не
