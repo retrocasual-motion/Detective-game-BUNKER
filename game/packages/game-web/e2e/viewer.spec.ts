@@ -37,6 +37,19 @@ test('лист — ровно по центру экрана: короткий, 
   expect(widths.size, 'ширина одна у всех листов').toBe(1);
 });
 
+test('лист чуть длиннее экрана — страницами, по центру (поля абзацев в счёт; CI, A-272)', async ({
+  page,
+}) => {
+  // Как другой шрифт в CI: текст письма 01 становится чуть выше страницы.
+  await page.addStyleTag({ content: '.viewer-flow p { line-height: 1.4 !important; }' });
+  await sheet(page, '01').click(STRIP);
+  await page.waitForTimeout(200);
+  const box = await page.getByTestId('viewer-paper').boundingBox();
+  if (!box) throw new Error('нет листа');
+  expect(Math.abs(box.y + box.height / 2 - 768 / 2)).toBeLessThan(2);
+  expect(box.y + box.height).toBeLessThanOrEqual(768);
+});
+
 test('щелчок мимо листа закрывает просмотрщик', async ({ page }) => {
   await sheet(page, '01').click(STRIP);
   await pastOpenGuard(page);
