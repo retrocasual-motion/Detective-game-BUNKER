@@ -12,7 +12,7 @@ import {
   toCss,
 } from './camera.ts';
 import { DeskHotspots } from './DeskHotspots.tsx';
-import { drawObjects, drawRoom, type Epilogue } from './decor.ts';
+import { type Bank, drawObjects, drawRoom, type Epilogue } from './decor.ts';
 import { NavArrows } from './NavArrows.tsx';
 import { useViewport } from './useViewport.ts';
 import { VIEW_LABELS } from './views.ts';
@@ -39,6 +39,8 @@ interface RoomSceneProps {
   epilogue?: Epilogue;
   /** Конверт с диском сервера на столе (A-272). */
   disc?: boolean;
+  /** Коробка из банка (A-272). */
+  bank?: Bank;
 }
 
 /**
@@ -57,6 +59,7 @@ export function RoomScene({
   opened,
   epilogue = 'none',
   disc = false,
+  bank = 'none',
 }: RoomSceneProps) {
   const vp = useViewport();
   const room = useMemo(() => roomFor(vp), [vp]);
@@ -72,7 +75,7 @@ export function RoomScene({
     if (world.current) world.current.style.transform = pose ? toCss(poseOps(pose, room.p)) : 'none';
     if (pose && back.current) drawRoom(back.current, pose, room);
     if (pose && front.current)
-      drawObjects(front.current, pose, room, inbox, opened, epilogue, disc);
+      drawObjects(front.current, pose, room, inbox, opened, epilogue, disc, bank);
   };
 
   useLayoutEffect(() => {
@@ -152,7 +155,14 @@ export function RoomScene({
       </div>
       <canvas ref={front} className="scene-decor scene-front" hidden={flat} />
       {atDesk && (
-        <DeskHotspots room={room} inbox={inbox} opened={opened} epilogue={epilogue} disc={disc} />
+        <DeskHotspots
+          room={room}
+          inbox={inbox}
+          opened={opened}
+          epilogue={epilogue}
+          disc={disc}
+          bank={bank}
+        />
       )}
       {/* Стрелки видны и во время перехода: щелчок сразу ведёт к новой цели (MOVE-A). */}
       {!hideNav && <NavArrows view={ph.to} onGo={onGo} />}

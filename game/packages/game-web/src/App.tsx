@@ -1,4 +1,12 @@
-import { type ContainerId, EPILOGUE_ID, inboxIds, openedOf, SERVER_LOG_ID } from '@bunker/shared';
+import {
+  BANK_BOX_ID,
+  BANK_LIST_ID,
+  type ContainerId,
+  EPILOGUE_ID,
+  inboxIds,
+  openedOf,
+  SERVER_LOG_ID,
+} from '@bunker/shared';
 import { useEffect, useMemo } from 'react';
 
 import { ArrivalNote } from './desk/ArrivalNote.tsx';
@@ -9,6 +17,7 @@ import { HeldView } from './hold/HeldView.tsx';
 import { Credits, MainMenu, MenuTab } from './menu/MainMenu.tsx';
 import { PcView } from './pc/PcView.tsx';
 import { PenView } from './player/PenView.tsx';
+import type { Bank } from './room/decor.ts';
 import { RoomScene } from './room/RoomScene.tsx';
 import { KEY_DIR, NAV } from './room/views.ts';
 import { SearchPanel } from './search/SearchPanel.tsx';
@@ -42,6 +51,15 @@ export function App() {
   const closed = useVerdict((v) => v.status.form || v.status.sent);
   // Конверт с диском сервера — на столе, пока диск не вставлен (A-272): вставлен — журналы открыты.
   const disc = useGame((g) => !g.materials.some((m) => m.id === SERVER_LOG_ID));
+  // Коробка из банка (A-272): пришла (опись открыта формой банка) — на столе; вскрыта — кассета.
+  const bank = useGame(
+    (g): Bank =>
+      !g.materials.some((m) => m.id === BANK_LIST_ID)
+        ? 'none'
+        : g.state && openedOf(g.state).includes(BANK_BOX_ID)
+          ? 'open'
+          : 'box',
+  );
   // Эпилог после заключения — конвертом на столе; пока не открыт — подсвечен (автор 17.11).
   const epilogue = useGame((g) =>
     !g.materials.some((m) => m.id === EPILOGUE_ID)
@@ -114,6 +132,7 @@ export function App() {
         opened={opened}
         epilogue={epilogue}
         disc={disc}
+        bank={bank}
       />
       {saveProblem === 'error' && (
         <div className="save-error" data-testid="save-error" role="status">

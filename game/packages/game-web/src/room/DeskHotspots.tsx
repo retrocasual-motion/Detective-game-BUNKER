@@ -7,7 +7,7 @@ import { folderFieldAt, toVerdict, useCardDrop, wholeCard } from '../verdict/car
 import { markEpilogueRead, verdictActive } from '../verdict/verdict-store.ts';
 import { moveItem } from '../wall/wall-actions.ts';
 import { type Room, screenToBoard } from './camera.ts';
-import { deskObjects, type Epilogue, screenRect } from './decor.ts';
+import { type Bank, deskObjects, type Epilogue, screenRect } from './decor.ts';
 
 const noColor = () => '#000000';
 
@@ -31,23 +31,25 @@ export function DeskHotspots({
   opened,
   epilogue = 'none',
   disc = false,
+  bank = 'none',
 }: {
   room: Room;
   inbox: string[];
   opened: readonly ContainerId[];
   epilogue?: Epilogue;
   disc?: boolean;
+  bank?: Bank;
 }) {
   const openViewer = useGame((g) => g.openViewer);
   const setComputerOpen = useGame((g) => g.setComputerOpen);
   const updateState = useGame((g) => g.updateState);
   const spots = useMemo(
     () =>
-      deskObjects(room, noColor, inbox, opened, epilogue, disc).map((o) => ({
+      deskObjects(room, noColor, inbox, opened, epilogue, disc, bank).map((o) => ({
         o,
         r: screenRect(o, room.poses.desk, room),
       })),
-    [room, inbox, opened, epilogue, disc],
+    [room, inbox, opened, epilogue, disc, bank],
   );
   return (
     <div className="desk-hotspots">

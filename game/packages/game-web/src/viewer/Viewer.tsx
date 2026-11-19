@@ -380,6 +380,7 @@ export function Viewer({ materialId }: ViewerProps) {
               <article
                 className="viewer-paper"
                 data-testid="viewer-paper"
+                data-kind={material?.kind}
                 onPointerDown={(e) => {
                   downAt.current = { x: e.clientX, y: e.clientY };
                 }}

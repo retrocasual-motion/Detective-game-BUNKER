@@ -146,3 +146,43 @@ test('поиск по делу сайты не находит (S5-A)', async ({ 
   await page.getByTestId('search-input').fill('Месяц тишины');
   await expect(page.getByTestId('search-L101')).toHaveCount(0);
 });
+
+test.describe('коробка из банка (A-272, AC-4)', () => {
+  test.use({ sealed: true });
+
+  test('форма банка → коробка на столе → вскрыть: опись и лист со сгибом — на стену, кассета — слушать', async ({
+    page,
+  }) => {
+    await expect(page.getByTestId('container-bank')).toHaveCount(0);
+    const fr = await site(page, 'frontrange-savings.com');
+    await fill(fr, 'fr-death', { box: '845', surname: 'Коул', date: '13.10.2009' });
+    await expect(fr.getByTestId('site-fr-death-msg')).toContainText('Сообщение принято');
+    // Вернулся во вкладку игры — коробка на столе (лоток пуст: всё в коробке).
+    await page.bringToFront();
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    const box = page.getByTestId('container-bank');
+    await expect(box).toBeVisible();
+    await expect(page.getByTestId('inbox-L460')).toHaveCount(0);
+    await box.click();
+    await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /ячейка № 845/);
+    await page.getByTestId('envelope-open').click();
+    await page.getByTestId('envelope-stay').click();
+    await expect(page.getByTestId('envelope-view')).toBeHidden();
+    await expect(page.getByTestId('container-bank')).toHaveCount(0);
+    // Лист акта — подлинник, сложен вдвое: на стене карточка со сгибом.
+    await expect(sheet(page, 'L461').locator('[data-kind="folded"]').first()).toBeAttached();
+    await expect(sheet(page, 'L460')).toBeAttached();
+    // Кассета с проигрывателем — на столе: вставить и слушать.
+    await page.getByTestId('device-L462').click();
+    await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /микрокассет/);
+    await page.getByTestId('cassette-insert').click();
+    const player = page.getByTestId('viewer').getByTestId('media-player');
+    await expect(player).toBeVisible();
+    await expect(page.getByTestId('media-time')).toContainText('0:36');
+    const bar = page.getByTestId('media-bar');
+    const b = await bar.boundingBox();
+    if (!b) throw new Error('нет шкалы');
+    await bar.click({ position: { x: (b.width * 12) / 36, y: b.height / 2 } });
+    await expect(page.getByTestId('media-caption')).toContainText('Объявлять не будем');
+  });
+});

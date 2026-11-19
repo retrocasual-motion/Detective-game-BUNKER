@@ -128,6 +128,8 @@ export function inboxIds(state: PlayerState, materials: Material[]): string[] {
     ...Object.values(DEVICE_MATERIALS).flat(),
     // Предупреждение и форма заключения — окна «Решить дело», не материалы дела (A-270).
     ...FORM_MATERIALS,
+    // Коробка из банка не вскрыта — её содержимое в ней, не в лотке (A-272).
+    ...sealedIds(state),
   ]);
   return materials
     .filter((m) => isReleased(m) && !hidden.has(m.id))

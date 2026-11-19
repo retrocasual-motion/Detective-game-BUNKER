@@ -8,7 +8,7 @@ import type { PlayerState } from './schemas.ts';
  * названием конверта.
  */
 
-export type ContainerId = 'protocols' | 'scene' | 'bunker' | 'personal';
+export type ContainerId = 'protocols' | 'scene' | 'bunker' | 'personal' | 'bank';
 
 export interface Container {
   id: ContainerId;
@@ -40,11 +40,22 @@ export const CONTAINERS: readonly Container[] = [
     devices: ['29'],
   },
   { id: 'personal', label: 'Личные вещи', files: range(40, 46) },
+  /**
+   * Коробка из банка (A-272, AC-4): появляется на столе после формы «Сообщить о смерти
+   * арендатора» (L460 открыт). Опись и лист акта — на стену; микрокассета с проигрывателем бюро
+   * (L462) — на стол, слушают на проигрывателе.
+   */
+  {
+    id: 'bank',
+    label: 'Front Range Savings · ячейка № 845 · вскрыта 17.11.2009',
+    files: ['L460', 'L461'],
+    devices: ['L462'],
+  },
 ];
 
 export const CONTAINER_IDS = CONTAINERS.map((c) => c.id) as [ContainerId, ...ContainerId[]];
 
-/** Изъятые вещи (24, 47–50 и коробка пачек 29): берут в руки, а не читают листом. */
+/** Изъятые вещи (24, 47–50, коробка пачек 29, кассета с проигрывателем L462): берут в руки. */
 export const DEVICE_IDS: ReadonlySet<string> = new Set(CONTAINERS.flatMap((c) => c.devices ?? []));
 
 /** Газета на столе — бумажный номер (E44, A-260): видна, но на стене со старта не висит. */
@@ -72,6 +83,10 @@ export const containerContents = (c: Container) => [...c.files, ...(c.devices ??
  */
 export const openedOf = (s: Pick<PlayerState, 'opened'>): readonly ContainerId[] =>
   s.opened ?? CONTAINER_IDS;
+
+/** Коробка банка на столе: её содержимое открыто движком (A-272). */
+export const BANK_BOX_ID: ContainerId = 'bank';
+export const BANK_LIST_ID = 'L460';
 
 export const isOpened = (s: Pick<PlayerState, 'opened'>, id: ContainerId) =>
   openedOf(s).includes(id);

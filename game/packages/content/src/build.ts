@@ -80,6 +80,7 @@ const LOCKED_KIND: Readonly<Record<string, MaterialKind>> = {
       'L738',
     ].map((id) => [id, 'stapled' as const]),
   ),
+  L461: 'folded', // подлинник акта из ячейки 845, сложен вдвое (A-272, AC-4)
   L462: 'disc',
 };
 const lockedKind = (id: string): MaterialKind => {

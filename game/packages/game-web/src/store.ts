@@ -410,8 +410,10 @@ export const useGame = create<GameStore>((set, get) => {
       const fresh = released.filter((m) => !known.has(m.id));
       if (fresh.length === 0) return;
       const all = [...materials, ...fresh];
-      // Записка «Поступило» — о том, что легло на стол; сайты и файлы устройств — на своих местах.
-      const ids = fresh.map((m) => m.id).filter((id) => deviceOf(id) === null);
+      // Записка «Поступило» — о том, что легло в лоток; сайты, файлы устройств и содержимое
+      // невскрытой коробки из банка — на своих местах (коробка сама подсвечена на столе).
+      const boxed = state ? sealedIds(state) : new Set<string>();
+      const ids = fresh.map((m) => m.id).filter((id) => deviceOf(id) === null && !boxed.has(id));
       set(ids.length ? { materials: all, arrival: { ids, at: Date.now() } } : { materials: all });
       if (state) get().updateState((s) => reconcile(s, all));
     },

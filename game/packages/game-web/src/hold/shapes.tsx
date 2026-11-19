@@ -185,23 +185,30 @@ export function Envelope({
   );
 }
 
-export function Box({ items, onOpen }: { items: Item[]; onOpen: () => void }) {
+/**
+ * Коробка с пломбой: «Личные вещи» (A-260) или коробка вещдоков из банка (A-272, AC-4) — надпись
+ * на передней стенке, опись на крышке.
+ */
+export function Box({
+  items,
+  onOpen,
+  title = 'Личные вещи',
+  note = 'Изъято с объекта · 7 пакетов',
+}: {
+  items: Item[];
+  onOpen: () => void;
+  title?: string;
+  note?: string;
+}) {
   const front = useTexture(
     () =>
       paintTexture(2.6, 1.3, BOX, ({ ctx, w, h, text }) => {
         ctx.fillStyle = INK;
         text('Дело № 09-1128', w * 0.06, h * 0.1, w * 0.8, '56px Georgia, serif', 66);
-        text('Личные вещи', w * 0.06, h * 0.3, w * 0.8, '700 120px Georgia, serif', 130);
-        text(
-          'Изъято с объекта · 7 пакетов',
-          w * 0.06,
-          h * 0.62,
-          w * 0.8,
-          '54px Georgia, serif',
-          64,
-        );
+        const y = text(title, w * 0.06, h * 0.3, w * 0.88, '700 110px Georgia, serif', 120);
+        text(note, w * 0.06, Math.max(y + 10, h * 0.62), w * 0.88, '54px Georgia, serif', 64);
       }),
-    [],
+    [title, note],
   );
   const lid = useTexture(
     () => paintTexture(2.5, 1.7, '#9a8462', (p) => paintList(p, items, p.h * 0.08)),

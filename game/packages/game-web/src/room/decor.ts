@@ -29,6 +29,9 @@ interface Box {
   screen?: string;
 }
 
+/** Коробка из банка на столе: нет, пришла (подсвечена), вскрыта. */
+export type Bank = 'none' | 'box' | 'open';
+
 /** Эпилог на столе: нет, пришёл и не открыт (подсвечен), открыт. */
 export type Epilogue = 'none' | 'fresh' | 'read';
 
@@ -150,7 +153,7 @@ export function roomPolys(r: Room, col: Col): Poly[] {
  * Устройства — из описи (24, 47–50); пакеты 40–46 лежат в коробке.
  */
 /** Где лежит конверт на столе (доли p): ближний ряд, по порядку. */
-const ENVELOPE_AT: Record<Exclude<ContainerId, 'personal'>, [number, number]> = {
+const ENVELOPE_AT: Record<Exclude<ContainerId, 'personal' | 'bank'>, [number, number]> = {
   protocols: [-0.2, 0.56],
   scene: [0.04, 0.56],
   bunker: [0.28, 0.56],
@@ -165,6 +168,8 @@ export function deskObjects(
   epilogue: Epilogue = 'none',
   /** Конверт с диском сервера лежит на столе (диск ещё не вставлен, A-272). */
   disc = false,
+  /** Коробка из банка (A-272, AC-4): нет, пришла и не вскрыта, вскрыта (кассета и проигрыватель). */
+  bank: Bank = 'none',
 ): DeskObject[] {
   const { p, deskY } = r;
   const box = (
@@ -239,8 +244,10 @@ export function deskObjects(
       testId: 'newspaper',
     },
     // Конверты архива (A-260): опечатаны, у каждого — название; вскрытый со стола уходит.
-    ...CONTAINERS.filter((c) => c.id !== 'personal' && !opened.includes(c.id)).map((c) => {
-      const [x, z] = ENVELOPE_AT[c.id as Exclude<ContainerId, 'personal'>];
+    ...CONTAINERS.filter(
+      (c) => c.id !== 'personal' && c.id !== 'bank' && !opened.includes(c.id),
+    ).map((c) => {
+      const [x, z] = ENVELOPE_AT[c.id as Exclude<ContainerId, 'personal' | 'bank'>];
       return {
         key: `envelope-${c.id}`,
         label: `Конверт «${c.label}», опечатан — вскрыть`,
@@ -270,6 +277,41 @@ export function deskObjects(
             tagInside: true,
             testId: 'server-disc',
             fresh: true,
+          },
+        ]
+      : []),
+    // Коробка из банка (A-272, AC-4): справа, у лампы; пока не вскрыта — подсвечена, как новое.
+    ...(bank === 'box'
+      ? [
+          {
+            key: 'bank-box',
+            label: 'Коробка «Front Range Savings · ячейка № 845» — вскрыть',
+            boxes: [
+              box(0.74, 0.28, 0.14, 0.1, 0.06, col('--color-box')),
+              box(0.74, 0.28, 0.145, 0.105, 0.01, col('--color-box-lid'), 0.06),
+              box(0.74, 0.28, 0.02, 0.105, 0.012, col('--color-seal'), 0.06),
+            ],
+            hotspot: { kind: 'container' as const, id: 'bank' as const },
+            tag: 'Ячейка № 845',
+            testId: 'container-bank',
+            fresh: true,
+          },
+        ]
+      : []),
+    // Кассета и проигрыватель микрокассет бюро (L462) — из коробки банка, за ноутбуком.
+    ...(bank === 'open'
+      ? [
+          {
+            key: 'cassette',
+            label: 'Проигрыватель микрокассет бюро и кассета «06.10.08»',
+            boxes: [
+              box(-0.1, 0.17, 0.12, 0.08, 0.03, col('--color-device')),
+              box(-0.13, 0.17, 0.045, 0.03, 0.004, col('--color-device-edge'), 0.03),
+              box(0.0, 0.18, 0.05, 0.035, 0.012, col('--color-newspaper')),
+            ],
+            hotspot: { kind: 'material' as const, id: 'L462' },
+            tag: 'Кассета · L462',
+            testId: 'device-L462',
           },
         ]
       : []),
@@ -569,11 +611,12 @@ export function drawObjects(
   opened: readonly ContainerId[] = CONTAINER_IDS,
   epilogue: Epilogue = 'none',
   disc = false,
+  bank: Bank = 'none',
 ): void {
   const ctx = prepare(canvas, r);
   if (!ctx) return;
   const col = colors(canvas);
-  for (const o of sortObjects(deskObjects(r, col, inbox, opened, epilogue, disc), pose.eye)) {
+  for (const o of sortObjects(deskObjects(r, col, inbox, opened, epilogue, disc, bank), pose.eye)) {
     const boxes = [...o.boxes].sort(
       (a, b) => dist(center(b), pose.eye) - dist(center(a), pose.eye),
     );

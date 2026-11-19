@@ -7,7 +7,8 @@ export const ZOOM_MAX = 3;
 /**
  * Каким предметом материал лежит на столе (TECH_PLAN 4.2, UX-A1): форма по типу, не по значимости.
  * sheet — лист на бланке; stapled — скреплённые листы; half — половина листа; photos — отпечатки;
- * pack — пачка сканов; notebook — тетрадь; disc — диск в конверте; bag — пакет вещдоков.
+ * pack — пачка сканов; notebook — тетрадь; disc — диск в конверте; bag — пакет вещдоков;
+ * folded — лист, сложенный вдвое (подлинник акта из ячейки, A-272): сгиб виден.
  */
 export const MaterialKindSchema = z.enum([
   'sheet',
@@ -18,6 +19,7 @@ export const MaterialKindSchema = z.enum([
   'notebook',
   'disc',
   'bag',
+  'folded',
 ]);
 export type MaterialKind = z.infer<typeof MaterialKindSchema>;
 
