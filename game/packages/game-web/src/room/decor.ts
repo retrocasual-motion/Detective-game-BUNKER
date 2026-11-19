@@ -197,11 +197,21 @@ export function roomPolys(r: Room, col: Col): Poly[] {
  * — за краем экрана; раскладка подобрана так, чтобы вещи не пересекались и не уходили за край.
  * Устройства — из описи (24, 47–50); пакеты 40–46 лежат в коробке.
  */
-/** Конверты архива C4 (324 × 229 мм) — стопкой внахлёст, от дальнего к ближнему. */
-const ENVELOPE_AT: Record<Exclude<ContainerId, 'personal' | 'bank'>, [number, number]> = {
-  bunker: [0.08, 0.53],
-  scene: [0.1, 0.615],
-  protocols: [0.12, 0.7],
+/**
+ * Конверты архива C4 (324 × 229 мм) — стопкой внахлёст, от дальнего к ближнему: в начале дела —
+ * посередине перед игроком. Вскрыли «Осмотр места…» — на это место выложено изъятое (устройства),
+ * оставшиеся конверты сдвинуты назад, за ноутбук (автор 19.11: «улики ближе к нам, крупно»).
+ */
+type EnvelopeId = Exclude<ContainerId, 'personal' | 'bank'>;
+const ENVELOPE_AT: Record<EnvelopeId, [number, number]> = {
+  bunker: [0.08, 0.555],
+  scene: [0.1, 0.64],
+  protocols: [0.12, 0.725],
+};
+const ENVELOPE_BACK: Record<EnvelopeId, [number, number]> = {
+  bunker: [0.14, 0.36],
+  scene: [0.16, 0.4],
+  protocols: [0.18, 0.445],
 };
 const ENVELOPE_ORDER = ['bunker', 'scene', 'protocols'] as const;
 /** Где стоит компьютер следователя (дисковод под монитором), доли p. */
@@ -213,7 +223,7 @@ const C4: [number, number] = [0.324, 0.229];
  * (BX-A — 38 × 30 × 25): 30 × 22 × 15, чтобы не спорил с компьютером (автор 19.11; размеры — на
  * этапе дизайна).
  */
-const PAPERS_AT: [number, number] = [0.4, 0.15];
+const PAPERS_AT: [number, number] = [0.4, 0.13];
 const PAPERS_H = 0.15;
 
 export function deskObjects(
@@ -326,7 +336,7 @@ export function deskObjects(
     {
       key: 'radio',
       label: 'Радиопост: стойка и запись регистратора',
-      boxes: [box(0.78, 0.43, 0.26, 0.16, 0.1, device)],
+      boxes: [box(0.61, 0.64, 0.26, 0.16, 0.1, device)],
       hotspot: { kind: 'material', id: '50' },
       tag: 'Изъято · 50',
       testId: 'device-50',
@@ -337,8 +347,8 @@ export function deskObjects(
           key: 'bags',
           label: 'Коробка: личные вещи членов группы (40–46)',
           boxes: [
-            box(-0.2, 0.145, 0.33, 0.23, 0.16, col('--color-box')),
-            box(-0.22, 0.14, 0.24, 0.16, 0.03, col('--color-bag'), 0.15),
+            box(-0.19, 0.25, 0.33, 0.23, 0.16, col('--color-box')),
+            box(-0.21, 0.245, 0.24, 0.16, 0.03, col('--color-bag'), 0.15),
           ],
           tag: 'Личные вещи · 40–46',
           testId: 'bags-box',
@@ -348,9 +358,9 @@ export function deskObjects(
           label: 'Коробка «Личные вещи», опечатана — вскрыть',
           boxes: [
             // Коробка 33 × 23 × 16 см (как коробка «В руках»), крышка и лента пломбы.
-            box(-0.2, 0.145, 0.33, 0.23, 0.16, col('--color-box')),
-            box(-0.2, 0.145, 0.34, 0.24, 0.015, col('--color-box-lid'), 0.16),
-            box(-0.2, 0.145, 0.03, 0.24, 0.017, col('--color-seal'), 0.16),
+            box(-0.19, 0.25, 0.33, 0.23, 0.16, col('--color-box')),
+            box(-0.19, 0.25, 0.34, 0.24, 0.015, col('--color-box-lid'), 0.16),
+            box(-0.19, 0.25, 0.03, 0.24, 0.017, col('--color-seal'), 0.16),
           ],
           hotspot: { kind: 'container' as const, id: 'personal' as const },
           tag: 'Личные вещи',
@@ -362,8 +372,8 @@ export function deskObjects(
       label: 'Газета',
       boxes: [
         // Сложена вчетверо: 29 × 19 см; заголовок газеты — у дальнего края.
-        box(0.45, 0.41, 0.29, 0.19, 0.012, col('--color-newspaper')),
-        box(0.45, 0.345, 0.26, 0.035, 0.002, col('--color-newspaper-ink'), 0.012),
+        box(0.66, 0.38, 0.29, 0.19, 0.012, col('--color-newspaper')),
+        box(0.66, 0.315, 0.26, 0.035, 0.002, col('--color-newspaper-ink'), 0.012),
       ],
       hotspot: { kind: 'material' as const, id: '15' },
       testId: 'newspaper',
@@ -371,11 +381,12 @@ export function deskObjects(
     // Конверты архива (A-260): опечатаны, у каждого — название; вскрытый со стола уходит. C4,
     // стопкой внахлёст: у дальних видна полоска с названием — по ней и щёлкают.
     ...envelopes.map((id, k) => {
-      const [x, z] = ENVELOPE_AT[id];
+      const at = opened.includes('scene') ? ENVELOPE_BACK : ENVELOPE_AT;
+      const [x, z] = at[id];
       const c = CONTAINERS.find((cc) => cc.id === id);
       const lift = k * 0.008;
       const next = envelopes[k + 1];
-      const nearEdge = next ? ENVELOPE_AT[next][1] - C4[1] / 2 : z + C4[1] / 2;
+      const nearEdge = next ? at[next][1] - C4[1] / 2 : z + C4[1] / 2;
       const farEdge = z - C4[1] / 2;
       return {
         key: `envelope-${id}`,
@@ -401,8 +412,8 @@ export function deskObjects(
             label: 'Конверт «Прил. 7 · Сервер VL-31» — взять',
             boxes: [
               // Конверт C6 (162 × 114 мм), в нём диск 12 см.
-              box(-0.36, 0.44, 0.162, 0.114, 0.006, col('--color-archive-envelope')),
-              box(-0.36, 0.44, 0.1, 0.07, 0.002, col('--color-newspaper'), 0.006),
+              box(-0.38, 0.47, 0.162, 0.114, 0.006, col('--color-archive-envelope')),
+              box(-0.38, 0.47, 0.1, 0.07, 0.002, col('--color-newspaper'), 0.006),
             ],
             hotspot: { kind: 'disc' as const },
             tag: 'Прил. 7 · Сервер VL-31',
@@ -418,7 +429,7 @@ export function deskObjects(
               key: 'server-disc',
               label: 'Диск «Прил. 7 · Сервер VL-31»',
               boxes: [],
-              discs: [disc(-0.36, 0.44, 0.12, 0)],
+              discs: [disc(-0.38, 0.47, 0.12, 0)],
               hotspot: { kind: 'disc' as const },
               tag: 'Диск «Прил. 7»',
               tagInside: true,
@@ -499,7 +510,7 @@ export function deskObjects(
     {
       key: 'laptop',
       label: 'Ноутбук руководителя',
-      boxes: [box(0.47, 0.68, 0.34, 0.24, 0.032, device)],
+      boxes: [box(0.12, 0.7, 0.34, 0.24, 0.032, device)],
       hotspot: { kind: 'material', id: '47' },
       tag: 'Изъято · 47',
       testId: 'device-47',
@@ -507,7 +518,7 @@ export function deskObjects(
     {
       key: 'pen',
       label: 'Ручка-диктофон',
-      boxes: [box(-0.16, 0.48, 0.14, 0.014, 0.014, edge)],
+      boxes: [box(-0.25, 0.82, 0.14, 0.014, 0.014, edge)],
       hotspot: { kind: 'material', id: '49' },
       tag: 'Изъято · 49',
       testId: 'device-49',
@@ -518,8 +529,8 @@ export function deskObjects(
       label: 'Камера инженера',
       boxes: [
         // Лежит плашмя, объективом вверх: стоя заслоняла бы ручку-диктофон.
-        box(-0.12, 0.35, 0.1, 0.06, 0.025, device),
-        box(-0.105, 0.35, 0.035, 0.035, 0.012, edge, 0.025),
+        box(0.38, 0.73, 0.1, 0.06, 0.025, device),
+        box(0.395, 0.73, 0.035, 0.035, 0.012, edge, 0.025),
       ],
       hotspot: { kind: 'material', id: '24' },
       tag: 'Изъято · 24',
@@ -528,7 +539,7 @@ export function deskObjects(
     {
       key: 'mobile',
       label: 'Телефон (владелец не установлен)',
-      boxes: [box(-0.24, 0.33, 0.065, 0.12, 0.012, col('--color-screen'))],
+      boxes: [box(0.4, 0.59, 0.065, 0.12, 0.012, col('--color-screen'))],
       hotspot: { kind: 'material', id: '48' },
       tag: 'Изъято · 48',
       testId: 'device-48',
@@ -544,8 +555,8 @@ export function deskObjects(
       label: 'Телефон следователя',
       boxes: [
         // Офисный телефон 20 × 19 см, трубка 21 см.
-        box(0.13, 0.13, 0.2, 0.19, 0.07, col('--color-phone')),
-        box(0.075, 0.13, 0.055, 0.21, 0.04, col('--color-phone'), 0.07),
+        box(0.1, 0.12, 0.2, 0.19, 0.07, col('--color-phone')),
+        box(0.045, 0.12, 0.055, 0.21, 0.04, col('--color-phone'), 0.07),
       ],
     },
     // Эпилог (автор 17.11): после заключения — конверт посередине стола, ближе к игроку; пока не
@@ -558,8 +569,8 @@ export function deskObjects(
             label: 'Конверт: эпилог дела — открыть',
             boxes: [
               // C5 (229 × 162 мм) — поверх стопки, если конверты ещё на столе.
-              box(0.1, 0.7, 0.229, 0.162, 0.006, col('--color-archive-envelope'), 0.03),
-              box(0.1, 0.7, 0.14, 0.03, 0.003, col('--color-newspaper'), 0.036),
+              box(0.16, 0.4, 0.229, 0.162, 0.006, col('--color-archive-envelope'), 0.03),
+              box(0.16, 0.4, 0.14, 0.03, 0.003, col('--color-newspaper'), 0.036),
             ],
             hotspot: { kind: 'material' as const, id: EPILOGUE_ID },
             tag: 'Эпилог',
