@@ -33,11 +33,12 @@ interface RoomSceneProps {
   wall: ReactNode;
   /** «Входящие» на столе: что стоит в лотке, свежее — первым. */
   inbox: string[];
-  /** Сколько писем в корзине (комки). */
   /** Вскрытые конверты архива (A-260). */
   opened: readonly ContainerId[];
   /** Эпилог после заключения — конвертом на столе. */
   epilogue?: Epilogue;
+  /** Конверт с диском сервера на столе (A-272). */
+  disc?: boolean;
 }
 
 /**
@@ -55,6 +56,7 @@ export function RoomScene({
   inbox,
   opened,
   epilogue = 'none',
+  disc = false,
 }: RoomSceneProps) {
   const vp = useViewport();
   const room = useMemo(() => roomFor(vp), [vp]);
@@ -69,7 +71,8 @@ export function RoomScene({
     if (pose) live.current = pose;
     if (world.current) world.current.style.transform = pose ? toCss(poseOps(pose, room.p)) : 'none';
     if (pose && back.current) drawRoom(back.current, pose, room);
-    if (pose && front.current) drawObjects(front.current, pose, room, inbox, opened, epilogue);
+    if (pose && front.current)
+      drawObjects(front.current, pose, room, inbox, opened, epilogue, disc);
   };
 
   useLayoutEffect(() => {
@@ -148,7 +151,9 @@ export function RoomScene({
         </div>
       </div>
       <canvas ref={front} className="scene-decor scene-front" hidden={flat} />
-      {atDesk && <DeskHotspots room={room} inbox={inbox} opened={opened} epilogue={epilogue} />}
+      {atDesk && (
+        <DeskHotspots room={room} inbox={inbox} opened={opened} epilogue={epilogue} disc={disc} />
+      )}
       {/* Стрелки видны и во время перехода: щелчок сразу ведёт к новой цели (MOVE-A). */}
       {!hideNav && <NavArrows view={ph.to} onGo={onGo} />}
     </div>

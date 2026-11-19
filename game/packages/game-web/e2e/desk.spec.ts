@@ -53,8 +53,7 @@ test('монитор: щелчок — компьютер следователя
   await page.getByTestId('computer-monitor').click();
   const computer = page.getByTestId('computer');
   await expect(computer).toBeVisible();
-  for (const s of ['Экспорт сервера VL-31', 'Браузер'])
-    await expect(page.getByTestId(`lap-icon-${s}`)).toBeVisible();
+  for (const s of ['Браузер']) await expect(page.getByTestId(`lap-icon-${s}`)).toBeVisible();
   // Стрелки при открытом компьютере не переключают вид.
   await page.keyboard.press('ArrowUp');
   await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'desk');

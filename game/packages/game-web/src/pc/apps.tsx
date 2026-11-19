@@ -1,4 +1,4 @@
-import { type FormEvent, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { type FormEvent, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
@@ -6,11 +6,11 @@ import { postAction } from '../api.ts';
 import { formatWait, OFFLINE, useFieldWait } from '../lock.ts';
 import { NO_LINKS } from '../paperLinks.tsx';
 import { useGame } from '../store.ts';
-import { forScreen, hasValue, issueOf, locate, normalizeDate, serverDocs } from './content.ts';
+import { forScreen, issueOf, normalizeDate } from './content.ts';
 
 /**
- * Программы компьютера следователя (4c-3; CO-A, DI-A, TM-A): «Экспорт сервера VL-31» — терминал
- * с вкладками; браузер с архивом номеров газеты (дата выпуска). Всё остаётся на компьютере (DV-A); текст — в запрос (data-material).
+ * Программы компьютера следователя (4c-3; CO-A, DI-A): браузер с архивом номеров газеты (дата
+ * выпуска), документ окном. «Сервер объекта VL-31» — ServerApp.tsx (A-272). Всё остаётся на компьютере (DV-A); текст — в запрос (data-material).
  */
 
 const md = (text: string) => (
@@ -20,7 +20,7 @@ const md = (text: string) => (
 );
 
 /** Ответ движка на ввод в поле: открыто (released / уже было), отказ с текстом, пауза. */
-async function enter(field: string, value: string) {
+export async function enter(field: string, value: string) {
   const r = await postAction('ПАРОЛЬ', field, value).catch(() => null);
   const g = useGame.getState();
   if (r?.released.length) g.addFound(r.released, 'pc', []);
@@ -42,147 +42,6 @@ export function DocWindow({ id }: { id: string }) {
 }
 
 /** Ячейки, по которым можно щёлкнуть, — короткие значения (код, терминал, маршрут), не время. */
-const pickable = (td: HTMLTableCellElement) => {
-  const t = (td.textContent ?? '').trim();
-  return td.tagName === 'TD' && td.cellIndex > 0 && t.length > 0 && t.length <= 32 && t !== '—';
-};
-
-/**
- * «Экспорт сервера VL-31» (TM-A; вид TM2-A + TM2-B — автор 11.11): терминал 2000-х. Слева — не
- * больше четырёх документов (что пришло по запросам), F1… — документ; над текстом — разделы
- * ярлыками. Щелчок по коду, терминалу или маршруту в таблице — строки с этим значением ярче,
- * прочие бледнеют (не исчезают); «✕» — как было. Ввода нет; поиск — свой, по делу.
- */
-export function Terminal({ start }: { start?: string }) {
-  const materials = useGame((g) => g.materials);
-  const docs = useMemo(() => serverDocs(materials), [materials]);
-  const [pos, setPos] = useState(() => locate(docs, start));
-  const [mark, setMark] = useState<string | null>(null);
-  const body = useRef<HTMLElement>(null);
-  const doc = docs[pos.doc] ?? docs[0];
-  const part = doc?.parts[pos.part] ?? doc?.parts[0];
-  // Другой документ — выделение снимается: оно работает внутри документа (по всем его разделам).
-  const openDoc = (d: number) => {
-    setPos({ doc: d, part: docs[d]?.start ?? 0 });
-    setMark(null);
-  };
-
-  // Выделение — по всем таблицам открытой части; ячейки, по которым можно щёлкнуть, — отмечены.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: пересчёт при смене части и значения
-  useLayoutEffect(() => {
-    const root = body.current;
-    if (!root) return;
-    for (const td of root.querySelectorAll('td')) td.classList.toggle('pc-pick', pickable(td));
-    // Журнал событий (время · терминал · учётная запись · событие · результат) — свои ширины.
-    for (const t of root.querySelectorAll('table')) {
-      const th = [...t.querySelectorAll('th')].map((x) => x.textContent?.trim());
-      t.classList.toggle('pc-log', th.length === 5 && th[0] === 'Время');
-    }
-    for (const tr of root.querySelectorAll('tbody tr')) {
-      const cells = [...tr.querySelectorAll('td')].slice(1).map((td) => td.textContent ?? '');
-      const on = !!mark && cells.some((c) => hasValue(c, mark));
-      tr.classList.toggle('pc-row-on', on);
-      tr.classList.toggle('pc-row-off', !!mark && !on);
-    }
-  }, [mark, pos, part?.body]);
-
-  return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: F1… — документы терминала, когда он в фокусе
-    <div
-      className="pc-term"
-      data-testid="pc-terminal"
-      tabIndex={-1}
-      onKeyDown={(e) => {
-        const n = /^F(\d)$/.exec(e.key)?.[1];
-        if (n && docs[Number(n) - 1]) {
-          e.preventDefault();
-          openDoc(Number(n) - 1);
-        }
-      }}
-    >
-      {/* Строка заголовка программы — неяркая: не меню и не кнопка (правка автора 11.11). */}
-      <div className="pc-term-head">
-        <span>ОКРУЖНОЕ БЮРО РАССЛЕДОВАНИЙ · ДЕЛО № 09-1128</span>
-        <span>ВЫГРУЗКА С СЕРВЕРА ОБЪЕКТА VL-31</span>
-      </div>
-      {!doc || !part ? (
-        <div className="pc-term-empty" data-testid="pc-terminal-empty">
-          &gt; НЕТ ДАННЫХ. Выгрузки с сервера объекта выдаются бюро по запросу специалиста.
-          <span className="pc-term-cursor" />
-        </div>
-      ) : (
-        <div className="pc-term-main">
-          <div className="pc-term-page">
-            {doc.parts.length > 1 && (
-              <div className="pc-term-parts">
-                {doc.parts.map((p, k) => (
-                  <button
-                    key={p.label}
-                    type="button"
-                    aria-pressed={k === pos.part}
-                    className={k === pos.part ? 'pc-part-on' : undefined}
-                    data-testid={`pc-part-${k}`}
-                    onClick={() => setPos({ doc: pos.doc, part: k })}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            )}
-            {mark && (
-              <div className="pc-term-mark" data-testid="pc-mark">
-                Выделено: <b>{mark}</b>
-                <button
-                  type="button"
-                  aria-label="Снять выделение"
-                  data-testid="pc-mark-clear"
-                  onClick={() => setMark(null)}
-                >
-                  ✕
-                </button>
-              </div>
-            )}
-            {/* biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: щелчок по ячейке — необязательное выделение; всё читается и без него */}
-            <section
-              ref={body}
-              className="pc-term-body"
-              data-material={part.material}
-              data-testid="pc-term-body"
-              onClick={(e) => {
-                const td = (e.target as HTMLElement).closest('td');
-                if (!td || !pickable(td) || window.getSelection()?.toString()) return;
-                const v = (td.textContent ?? '').trim();
-                setMark((m) => (m === v ? null : v));
-              }}
-            >
-              {/* Паспорт выгрузки — над первым разделом документа, не над каждым. */}
-              {doc.note && pos.part === 0 && <div className="pc-term-note">{doc.note}</div>}
-              <Markdown remarkPlugins={[remarkGfm]} components={NO_LINKS}>
-                {part.body}
-              </Markdown>
-            </section>
-          </div>
-          {/* Документы — строкой F-клавиш внизу, как в программах DOS (Norton Commander). */}
-          <nav className="pc-term-tabs">
-            {docs.map((d, k) => (
-              <button
-                key={d.key}
-                type="button"
-                className={k === pos.doc ? 'pc-term-tab-on' : undefined}
-                data-testid={`pc-term-${d.key}`}
-                onClick={() => openDoc(k)}
-              >
-                <kbd>{d.key}</kbd>
-                {d.title}
-              </button>
-            ))}
-          </nav>
-        </div>
-      )}
-    </div>
-  );
-}
-
 /**
  * Браузер компьютера дела: закладка «Архив номеров» (17) — поле «Дата выпуска» (движок, LK-A),
  * открытый выпуск — страницей; адресная строка — сайты (движок «АДРЕС»).

@@ -67,6 +67,13 @@ interface GameStore {
   folderOpen: boolean;
   /** Блокнот следователя выдвинут (DV-A). */
   notebookOpen: boolean;
+  /** Конверт с диском сервера вскрыт — в руках диск (A-272; до перезагрузки). */
+  discOut: boolean;
+  /** Диск только что вставили: компьютер показывает лоток и раскрутку, затем — значок программы. */
+  discInserting: boolean;
+  /** Вставили диск: отойти к компьютеру, где играет вставка (AC-2). */
+  insertDisc(): void;
+  discInserted(): void;
   setNotebookOpen(open: boolean): void;
   /** Сервер не ответил при загрузке — игра повторяет запрос. */
   loadFailed: boolean;
@@ -231,6 +238,8 @@ export const useGame = create<GameStore>((set, get) => {
     viewerId: null,
     folderOpen: false,
     notebookOpen: false,
+    discOut: false,
+    discInserting: false,
     loadFailed: false,
     arrival: null,
     computerOpen: false,
@@ -394,6 +403,13 @@ export const useGame = create<GameStore>((set, get) => {
 
     setNotebookOpen(open) {
       set({ notebookOpen: open });
+    },
+
+    insertDisc() {
+      set({ discOut: false, discInserting: true, computerOpen: true, pcMaterial: null });
+    },
+    discInserted() {
+      set({ discInserting: false });
     },
 
     setFolderOpen(open) {

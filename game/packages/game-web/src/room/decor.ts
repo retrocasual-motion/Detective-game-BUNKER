@@ -16,6 +16,8 @@ export interface Poly {
 /** Что делает щелчок по предмету: компьютер или материал дела (устройство). */
 export type Hotspot =
   | { kind: 'computer' }
+  /** Конверт «Прил. 7 · Сервер VL-31» с диском (A-272): взять в руки. */
+  | { kind: 'disc' }
   | { kind: 'container'; id: ContainerId }
   | { kind: 'material'; id: string };
 
@@ -161,6 +163,8 @@ export function deskObjects(
   opened: readonly ContainerId[] = CONTAINER_IDS,
   /** Эпилог после заключения: «fresh» — конверт пришёл и не открыт (подсвечен). */
   epilogue: Epilogue = 'none',
+  /** Конверт с диском сервера лежит на столе (диск ещё не вставлен, A-272). */
+  disc = false,
 ): DeskObject[] {
   const { p, deskY } = r;
   const box = (
@@ -250,6 +254,25 @@ export function deskObjects(
         testId: `container-${c.id}`,
       };
     }),
+    // Конверт с диском сервера (A-272, AC-2): у компьютера, перед клавиатурой; подсвечен, пока диск не
+    // вставлен; вставили — пустой конверт уходит, диск остаётся в компьютере.
+    ...(disc
+      ? [
+          {
+            key: 'server-disc',
+            label: 'Конверт «Прил. 7 · Сервер VL-31» — взять',
+            boxes: [
+              box(-0.44, 0.61, 0.15, 0.11, 0.01, col('--color-archive-envelope')),
+              box(-0.44, 0.61, 0.09, 0.09, 0.002, col('--color-newspaper'), 0.01),
+            ],
+            hotspot: { kind: 'disc' as const },
+            tag: 'Прил. 7 · Сервер VL-31',
+            tagInside: true,
+            testId: 'server-disc',
+            fresh: true,
+          },
+        ]
+      : []),
     // Коробка с пачками бумаг из помещений (29, PH-B, BX-A): на месте конверта «Документация объекта»,
     // когда он вскрыт.
     {
@@ -545,11 +568,12 @@ export function drawObjects(
   inbox: string[] = [],
   opened: readonly ContainerId[] = CONTAINER_IDS,
   epilogue: Epilogue = 'none',
+  disc = false,
 ): void {
   const ctx = prepare(canvas, r);
   if (!ctx) return;
   const col = colors(canvas);
-  for (const o of sortObjects(deskObjects(r, col, inbox, opened, epilogue), pose.eye)) {
+  for (const o of sortObjects(deskObjects(r, col, inbox, opened, epilogue, disc), pose.eye)) {
     const boxes = [...o.boxes].sort(
       (a, b) => dist(center(b), pose.eye) - dist(center(a), pose.eye),
     );

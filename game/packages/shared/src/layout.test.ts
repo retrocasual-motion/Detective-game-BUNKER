@@ -29,7 +29,7 @@ const mat = (id: string, placement: Material['placement'] = 'desk'): Material =>
   sourceFile: `${id}__x.md`,
 });
 // Как в контенте: 01…51 без 16 (лента объявлений снята, A-262).
-const starting: Material[] = Array.from({ length: 51 }, (_, i) => String(i + 1).padStart(2, '0'))
+const starting: Material[] = Array.from({ length: 52 }, (_, i) => String(i + 1).padStart(2, '0'))
   .filter((id) => id !== '16')
   .map((id) => mat(id, ['24', '47', '48', '49', '50'].includes(id) ? 'evidence' : 'desk'));
 
@@ -158,7 +158,8 @@ describe('upgradeState', () => {
     const got = upgradeState(v4, starting);
     expect(got?.view).toBe('wall');
     expect(got?.wall.items.find((i) => i.id === '03')).toMatchObject({ x: 2000, y: 1500 });
-    expect(got?.wall.items).toHaveLength(starting.length + PERSONS.length);
+    // Все стартовые, кроме конверта с диском (52, A-272), — на стене.
+    expect(got?.wall.items).toHaveLength(starting.length - 1 + PERSONS.length);
     expect(got?.wall.threads).toHaveLength(1);
   });
 
@@ -204,6 +205,20 @@ describe('разложить по порядку (служебная кнопк�
     expect(s.wall.threads).toEqual(moved.wall.threads);
     expect(s.wall.notes).toEqual(moved.wall.notes);
     expect(s.wall.camera).toEqual(moved.wall.camera);
+  });
+});
+
+describe('конверт с диском сервера (A-272)', () => {
+  it('52 на стене не висит: ни со старта, ни из старого сохранения, ни при «всё вскрыто»', () => {
+    const s = defaultState(starting);
+    expect(s.wall.items.some((i) => i.id === '52')).toBe(false);
+    const hung = {
+      ...s,
+      wall: { ...s.wall, items: [...s.wall.items, { id: '52', x: 0, y: 0, z: 1, rot: 0 }] },
+    };
+    expect(reconcile(hung, starting).wall.items.some((i) => i.id === '52')).toBe(false);
+    const legacy = { ...s, opened: undefined };
+    expect(reconcile(legacy, starting).wall.items.some((i) => i.id === '52')).toBe(false);
   });
 });
 

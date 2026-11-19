@@ -442,6 +442,8 @@ export interface Held3DProps {
   screenMenu?: boolean;
   /** Что ещё лежит поверх сцены вплотную (лист описания). */
   extra?: ReactNode;
+  /** Кнопка действия внизу, пока вещь в руках («Вставить диск в компьютер», A-272). */
+  action?: ReactNode;
   children: ReactNode;
 }
 
@@ -458,6 +460,7 @@ export default function Held3D({
   screenW = 1000,
   screenMenu = false,
   extra,
+  action,
   children,
 }: Held3DProps) {
   const screenEl = useRef<HTMLDivElement>(null);
@@ -676,6 +679,12 @@ export default function Held3D({
         </p>
       )}
       {focus && extra}
+      {/* Кнопка — интерфейс, не «мимо»: щелчок по ней вещь не кладёт. */}
+      {action && (
+        <div className="held-action-wrap" onPointerDown={(e) => e.stopPropagation()}>
+          {action}
+        </div>
+      )}
       <button
         type="button"
         className="tool tool-close held-close"

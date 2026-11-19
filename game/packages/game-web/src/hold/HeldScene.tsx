@@ -1,4 +1,10 @@
-import { CONTAINERS, type ContainerId, containerContents, folderItemId } from '@bunker/shared';
+import {
+  CONTAINERS,
+  type ContainerId,
+  containerContents,
+  folderItemId,
+  SERVER_DISC_ID,
+} from '@bunker/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
 import { CAMERA_PX, CameraScreen, CameraSheet } from '../camera/CameraScreen.tsx';
@@ -24,6 +30,7 @@ import { CAMERA_FOCUS, CameraDevice } from './cameraModel.tsx';
 import Held3D, { afterLeaving, type Focus } from './Held3D.tsx';
 import { Folder, PaperStack, PapersBox } from './papers.tsx';
 import { RADIO_FOCUS, type RadioPart, RadioStand, SCREEN_PX } from './radioStand.tsx';
+import { ServerDiscHeld } from './serverDisc.tsx';
 import { Box, Device, Envelope } from './shapes.tsx';
 
 /** Вещь в руках со сценой three.js — отдельный кусок сборки (грузится, когда вещь взяли). */
@@ -62,6 +69,7 @@ export default function HeldThing({ held }: { held: Held }) {
   }
 
   if (held.id === PAPERS_ID) return <Papers />;
+  if (held.id === SERVER_DISC_ID) return <ServerDiscHeld />;
   if (held.id === '50') return <RadioHeld title={titles.get('50') ?? '50'} close={close} />;
 
   const title = titles.get(held.id) ?? held.id;

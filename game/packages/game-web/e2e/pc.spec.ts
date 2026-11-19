@@ -2,9 +2,10 @@ import type { Page } from '@playwright/test';
 import { expect, sheet, test } from './fixtures.ts';
 
 /**
- * Компьютер следователя (этап 4c-3; решения автора 11.11 — CO-A, DI-A, TM-A; полицейский вид):
- * рабочее место бюро, «Экспорт сервера VL-31» — терминал с вкладками по мере открытого, браузер
- * с архивом номеров газеты. Файлы остаются на компьютере. Запросов нет (A-272).
+ * Компьютер следователя (этап 4c-3; решения автора 11.11 — CO-A, DI-A; полицейский вид) и диск
+ * сервера (A-272, AC-2; автор 19.11): конверт 52 на столе → «Вскрыть конверт» → диск в руках →
+ * «Вставить диск в компьютер» → лоток, раскрутка → «Сервер объекта VL-31» на рабочем столе.
+ * Браузер — архив номеров газеты. Файлы остаются на компьютере.
  */
 
 /** Открыть материалы служебной строкой движка (как в сквозном проходе пакета), затем перезагрузка. */
@@ -17,11 +18,9 @@ async function grant(page: Page, lines: string[]) {
   await expect(page.getByTestId('room')).toBeVisible();
 }
 
-/** Диск сервера (A-272): журналы, терминал технической, сеансы пользователя 05. */
-const BUREAU = [
-  'ОСМОТР | 52__конверт_прил_7_сервер.md | вставить диск в дисковод',
-  'ПАРОЛЬ | сервер объекта: сеансы пользователей | 05',
-];
+/** Диск вставлен (A-272): журналы, терминал технической. */
+const DISC = ['ОСМОТР | 52__конверт_прил_7_сервер.md | вставить диск в дисковод'];
+const SERVER = 'Сервер объекта VL-31';
 
 async function pcUp(page: Page) {
   await page.getByTestId('computer-monitor').click();
@@ -30,57 +29,120 @@ async function pcUp(page: Page) {
 
 const icon = (page: Page, name: string) => page.getByTestId(`lap-icon-${name}`);
 
-test('рабочее место бюро: значки, служебная полоса, часы; пусто, пока диска нет', async ({
+test('рабочее место бюро: служебная полоса, часы; без диска — только браузер; системный блок рядом', async ({
   page,
 }) => {
   await pcUp(page);
   await expect(page.getByTestId('computer')).toContainText('ОКРУЖНОЕ БЮРО РАССЛЕДОВАНИЙ');
   await expect(page.getByTestId('pc-clock')).toContainText(':');
-  await icon(page, 'Экспорт сервера VL-31').dblclick();
-  await expect(page.getByTestId('pc-terminal-empty')).toContainText('НЕТ ДАННЫХ');
+  await expect(icon(page, 'Браузер')).toBeVisible();
+  await expect(icon(page, SERVER)).toHaveCount(0);
+  await expect(page.getByTestId('pc-tower')).toBeVisible();
+  await expect(page.getByTestId('pc-tray')).toHaveAttribute('data-state', 'closed');
   // Стрелки при открытом компьютере не переключают вид; Esc и щелчок мимо — отойти.
   await page.keyboard.press('ArrowUp');
   await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'desk');
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('computer')).toHaveCount(0);
   await pcUp(page);
-  // Окна на месте после выхода (сохранение).
-  await expect(page.getByTestId('pc-terminal')).toBeVisible();
   await page.getByTestId('computer-close').click({ position: { x: 10, y: 10 } });
   await expect(page.getByTestId('computer')).toHaveCount(0);
 });
 
-test('диск сервера: журналы — в терминале, не на столе; терминал — документы, выделение щелчком', async ({
+test('диск сервера: конверт → вскрыть → диск → вставить → лоток, раскрутка → программа; конверт уходит', async ({
   page,
 }) => {
-  await grant(page, BUREAU);
+  const envelope = page.getByTestId('server-disc');
+  await expect(envelope).toBeVisible();
+  await expect(sheet(page, '52')).toHaveCount(0);
+  await envelope.click();
+  await expect(page.getByTestId('held')).toBeVisible();
+  await page.getByTestId('disc-envelope-open').click();
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Диск/);
+  await page.getByTestId('disc-insert').click();
+  // Компьютер открылся сам: лоток проходит шаги и закрывается, значок программы — после.
+  await expect(page.getByTestId('computer')).toBeVisible();
+  await expect(icon(page, SERVER)).toBeVisible();
+  await expect(page.getByTestId('pc-tray')).toHaveAttribute('data-state', 'closed');
+  // Журналы — в программе, не на столе и не на стене.
   await expect(page.getByTestId('inbox-L214')).toHaveCount(0);
   await expect(sheet(page, 'L214')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(envelope).toHaveCount(0);
+  // После перезагрузки — так же: диск в компьютере.
+  await page.reload();
+  await expect(page.getByTestId('room')).toBeVisible();
+  await expect(page.getByTestId('server-disc')).toHaveCount(0);
   await pcUp(page);
-  // Терминал: четыре документа (журнал, техническая, пользователь 05, копии), журнал — на ленте событий.
-  await icon(page, 'Экспорт сервера VL-31').dblclick();
-  const term = page.getByTestId('pc-terminal');
-  await expect(term).toBeVisible();
-  await expect(page.getByTestId('pc-term-F1')).toContainText('Журнал сервера 13.10');
-  await expect(page.getByTestId('pc-term-F2')).toContainText('Отметки технической');
-  await expect(page.getByTestId('pc-term-F3')).toContainText('Пользователь 05');
-  await expect(page.getByTestId('pc-term-F4')).toContainText('Копии экспортов');
-  await expect(page.getByTestId('pc-part-1')).toHaveAttribute('aria-pressed', 'true');
-  const body = page.getByTestId('pc-term-body');
-  await expect(body).toContainText('08:43:10');
-  // Щелчок по коду — строки с ним ярче, прочие бледнеют, ничего не пропадает.
-  const rows = await body.locator('tbody tr').count();
-  await body.locator('td', { hasText: /^05$/ }).first().click();
-  await expect(page.getByTestId('pc-mark')).toContainText('05');
-  await expect(body.locator('tr.pc-row-on')).toHaveCount(6);
-  await expect(body.locator('tbody tr')).toHaveCount(rows);
-  await page.getByTestId('pc-part-2').click();
-  await expect(body.locator('tr.pc-row-on').first()).toContainText('05');
-  await page.getByTestId('pc-mark-clear').click();
-  await expect(body.locator('tr.pc-row-off')).toHaveCount(0);
-  await term.focus();
-  await page.keyboard.press('F3');
-  await expect(body).toHaveAttribute('data-material', 'L387');
+  await expect(icon(page, SERVER)).toBeVisible();
+});
+
+test('программа сервера: журнал с фильтрами, узел связи, терминал технической', async ({
+  page,
+}) => {
+  await grant(page, DISC);
+  await pcUp(page);
+  await icon(page, SERVER).dblclick();
+  const srv = page.getByTestId('srv');
+  await expect(srv).toContainText('Время — часы сервера объекта. Только чтение.');
+  const log = page.getByTestId('srv-log');
+  await expect(log).toContainText('08:43:10');
+  const all = await log.locator('tbody tr').count();
+  await page.getByTestId('srv-filter-account').selectOption('05');
+  const fives = await log.locator('tbody tr').count();
+  expect(fives).toBeGreaterThan(0);
+  expect(fives).toBeLessThan(all);
+  for (const cell of await log.locator('tbody tr td:nth-child(3)').allTextContents())
+    expect(cell).toContain('05');
+  await page.getByTestId('srv-filter-clear').click();
+  // Щелчок по терминалу в строке — фильтр по нему.
+  await log
+    .locator('td', { hasText: /^узел связи$/ })
+    .first()
+    .locator('.srv-pick')
+    .click();
+  await expect(page.getByTestId('srv-filter-terminal')).toHaveValue('узел связи');
+  await page.getByTestId('srv-menu-node').click();
+  await expect(page.getByTestId('srv-page')).toContainText('Внешние отправки');
+  await page.getByTestId('srv-menu-tech').click();
+  await expect(page.getByTestId('srv-page')).toContainText('панель насосной');
+});
+
+test('сеансы пользователей: код 07 — нет; 02 — без файлов; 05 — сеанс и папка «Экспорты»', async ({
+  page,
+}) => {
+  await grant(page, DISC);
+  await pcUp(page);
+  await icon(page, SERVER).dblclick();
+  await page.getByTestId('srv-menu-sessions').click();
+  const code = page.getByTestId('srv-code');
+  const msg = page.getByTestId('srv-msg');
+  await code.fill('07');
+  await page.getByTestId('srv-code-open').click();
+  await expect(msg).toHaveText('Такого кода нет.');
+  await code.fill('02');
+  await page.getByTestId('srv-code-open').click();
+  await expect(msg).toContainText('Сохранённых файлов');
+  await code.fill('05');
+  await page.getByTestId('srv-code-open').click();
+  await expect(page.getByTestId('srv-session')).toContainText('координатор программы');
+  await page.getByTestId('srv-file-L389').click();
+  await expect(page.getByTestId('srv-export')).toHaveAttribute('data-material', 'L389');
+  await expect(sheet(page, 'L387')).toHaveCount(0);
+});
+
+test('код сеанса: три неверных подряд — поле ждёт (AC-5)', async ({ page }) => {
+  await grant(page, DISC);
+  await pcUp(page);
+  await icon(page, SERVER).dblclick();
+  await page.getByTestId('srv-menu-sessions').click();
+  for (const c of ['11', '12', '13']) {
+    await page.getByTestId('srv-code').fill(c);
+    await page.getByTestId('srv-code-open').click();
+    await expect(page.getByTestId('srv-msg')).not.toHaveText('');
+  }
+  await expect(page.getByTestId('srv-msg')).toContainText('Повторите через');
+  await expect(page.getByTestId('srv-code')).toBeDisabled();
 });
 
 test('браузер: архив номеров — дата выпуска; неоцифрованная дата — отказ', async ({ page }) => {
@@ -99,22 +161,19 @@ test('браузер: архив номеров — дата выпуска; н�
   await expect(sheet(page, 'L833')).toHaveCount(0);
 });
 
-test('из поиска — компьютер открыт на нужном месте', async ({ page }) => {
-  await grant(page, BUREAU);
+test('из поиска — программа сервера открыта на нужном разделе', async ({ page }) => {
+  await grant(page, [...DISC, 'ПАРОЛЬ | сервер объекта: сеансы пользователей | 05']);
   await page.getByTestId('search-tab').click();
   await page.getByTestId('search-input').fill('сеансов пользователя 05');
   await page.getByTestId('search-L387').locator('.search-hit').first().click();
-  await expect(page.getByTestId('pc-terminal')).toBeVisible();
-  await expect(page.getByTestId('pc-term-body')).toHaveAttribute('data-material', 'L387');
+  await expect(page.getByTestId('srv-session')).toBeVisible();
 });
 
-test('окна меняют размер за угол; не меньше 460×300; текст терминала не налезает', async ({
-  page,
-}) => {
-  await grant(page, BUREAU);
+test('окна меняют размер за угол; не меньше 460×300', async ({ page }) => {
+  await grant(page, DISC);
   await pcUp(page);
-  await icon(page, 'Экспорт сервера VL-31').dblclick();
-  const win = page.getByTestId('lap-win-Экспорт сервера VL-31');
+  await icon(page, SERVER).dblclick();
+  const win = page.getByTestId(`lap-win-${SERVER}`);
   const before = await win.boundingBox();
   const g = await win.getByTestId('lap-resize-se').boundingBox();
   if (!before || !g) throw new Error('нет окна');
@@ -129,14 +188,4 @@ test('окна меняют размер за угол; не меньше 460×3
   const scale = before.width / 1060;
   expect(small.width).toBeGreaterThan(455 * scale);
   expect(small.height).toBeGreaterThan(295 * scale);
-  for (const k of [0, 1, 2, 3]) {
-    await page.getByTestId(`pc-part-${k}`).click();
-    const over = await page
-      .getByTestId('pc-term-body')
-      .evaluate(
-        (root) =>
-          [...root.querySelectorAll('td')].filter((c) => c.scrollWidth > c.clientWidth + 1).length,
-      );
-    expect(over).toBe(0);
-  }
 });

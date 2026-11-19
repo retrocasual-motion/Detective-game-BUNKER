@@ -1,4 +1,4 @@
-import type { PcWindow } from '@bunker/shared';
+import { type PcWindow, SERVER_LOG_ID } from '@bunker/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ddmmyyyy, gameNow, hhmm } from '../clock.ts';
 import { useFreeArea, useSelectionCard } from '../device/deviceView.tsx';
@@ -6,19 +6,23 @@ import { FileIcon } from '../laptop/apps.tsx';
 import { DesktopIcon, gridAt, settle, snapToGrid, Window } from '../laptop/Desktop.tsx';
 import '../laptop/laptop.css';
 import { useGame } from '../store.ts';
-import { DocWindow, PcBrowser, Terminal } from './apps.tsx';
+import { DocWindow, PcBrowser } from './apps.tsx';
+import { DiscDrive } from './DiscDrive.tsx';
+import { ServerApp } from './ServerApp.tsx';
 import './pc.css';
 
 /** Экран монитора, логические px. */
 const SCREEN_W = 1280;
 const SCREEN_H = 800;
 const BEZEL = 30;
+/** Место под системный блок справа от монитора: отступ и ширина корпуса (pc.css). */
+const TOWER_SPACE = 36 + 230;
 
 type Kind = 'terminal' | 'browser' | 'doc';
 interface Win {
   id: string;
   kind: Kind;
-  /** Документ (doc), вкладка терминала (terminal) — материал. */
+  /** Документ (doc), раздел программы сервера (terminal) — материал. */
   ref?: string;
 }
 interface Placed {
@@ -33,31 +37,41 @@ interface Placed {
 }
 
 type Icon = { key: string; name: string; type: string; win: Win };
-/** Значки рабочего стола. «Поступлений» нет: запросов и ответов нет (A-272). */
-const ICONS: Icon[] = [
-  {
-    key: 'terminal',
-    name: 'Экспорт сервера VL-31',
-    type: 'server',
-    win: { id: 'terminal', kind: 'terminal' },
-  },
-  { key: 'browser', name: 'Браузер', type: 'browser', win: { id: 'browser', kind: 'browser' } },
-];
+/**
+ * Значки рабочего стола. «Поступлений» нет: запросов и ответов нет (A-272). Программа сервера
+ * появляется, когда вставлен диск «Прил. 7» (AC-2); вид окна — 'terminal' (как в сохранениях).
+ */
+const BROWSER: Icon = {
+  key: 'browser',
+  name: 'Браузер',
+  type: 'browser',
+  win: { id: 'browser', kind: 'browser' },
+};
+const SERVER: Icon = {
+  key: 'terminal',
+  name: 'Сервер объекта VL-31',
+  type: 'server',
+  win: { id: 'terminal', kind: 'terminal' },
+};
+const ICONS: Icon[] = [SERVER, BROWSER];
 
 /**
  * Компьютер следователя (4c-3; решения автора 11.11 — CO-A, DI-A, TM-A; вид — полицейский):
  * рабочее место специалиста Окружного бюро расследований. Та же мини-ОС, что у ноутбука, —
- * свой рабочий стол: герб бюро на обоях, служебная полоса, «Экспорт сервера VL-31», браузер. Окна и значки сохраняются (`state.pc`). Esc или щелчок мимо монитора —
+ * свой рабочий стол: герб бюро на обоях, служебная полоса, браузер; диск «Прил. 7» вставлен —
+ * «Сервер объекта VL-31» (A-272). Справа — системный блок с дисководом. Окна и значки сохраняются (`state.pc`). Esc или щелчок мимо монитора —
  * отойти от компьютера.
  */
 export function PcView() {
   const open = useGame((g) => g.computerOpen);
   const material = useGame((g) => g.pcMaterial);
   const area = useFreeArea();
+  // Монитор и системный блок справа (дисковод, A-272) — вместе по середине свободного места.
   const scale = Math.min(
-    (area.width - 40) / (SCREEN_W + BEZEL * 2),
+    (area.width - 40) / (SCREEN_W + BEZEL * 2 + TOWER_SPACE),
     (area.height - 40) / (SCREEN_H + BEZEL * 2 + 18),
   );
+  const hasDisc = useGame((g) => g.materials.some((m) => m.id === SERVER_LOG_ID));
   const { onUp, button } = useSelectionCard('pc-to-folder');
 
   useEffect(() => {
@@ -84,7 +98,7 @@ export function PcView() {
         style={{
           width: SCREEN_W + BEZEL * 2,
           height: SCREEN_H + BEZEL * 2 + 18,
-          left: area.center || undefined,
+          left: area.center ? area.center - (TOWER_SPACE * scale) / 2 : undefined,
           transform: `translate(-50%, -50%) scale(${scale})`,
         }}
       >
@@ -100,6 +114,7 @@ export function PcView() {
         <div className="pc-monitor-chin" aria-hidden>
           <span className="pc-power" />
         </div>
+        <DiscDrive hasDisc={hasDisc} />
       </div>
       {button}
       {/* Видимый ✕, как у вещи в руках (R5-09, R5-10; CORNER/PC-A: «закрыть — ✕, щелчок мимо, Esc»). */}
@@ -151,7 +166,10 @@ function PcDesktop({ material }: { material: string | null }) {
     ),
   );
   const materials = useGame((g) => g.materials);
-  const icons = ICONS;
+  // Значок программы — когда диск в компьютере и вставка доиграла.
+  const inserting = useGame((g) => g.discInserting);
+  const disc = materials.some((m) => m.id === SERVER_LOG_ID) && !inserting;
+  const icons = useMemo(() => (disc ? ICONS : [BROWSER]), [disc]);
   // Значки, которые игрок не двигал, — в свободные клетки сетки по порядку.
   const auto = useMemo(() => {
     const placed = icons.flatMap((i) =>
@@ -165,7 +183,7 @@ function PcDesktop({ material }: { material: string | null }) {
       placed.push(p);
     });
     return out;
-  }, [iconPos]);
+  }, [icons, iconPos]);
   const at = (key: string) => iconPos[key] ?? auto[key] ?? gridAt(0);
   const [selIcon, setSelIcon] = useState<string | null>(null);
   const [startOpen, setStartOpen] = useState(false);
@@ -238,7 +256,7 @@ function PcDesktop({ material }: { material: string | null }) {
   const top = wins.reduce((m, p) => (!p.min && p.z > m ? p.z : m), 0);
   const winTitle = (w: Win) =>
     w.kind === 'terminal'
-      ? 'Экспорт сервера VL-31'
+      ? 'Сервер объекта VL-31'
       : w.kind === 'browser'
         ? 'Браузер'
         : title(w.ref ?? '');
@@ -285,7 +303,8 @@ function PcDesktop({ material }: { material: string | null }) {
       </div>
 
       {wins.map((p) =>
-        p.min ? null : (
+        // Окно программы без диска (сохранение до A-272) — не показывать.
+        p.min || (p.win.kind === 'terminal' && !disc) ? null : (
           <Window
             key={p.win.id}
             p={p}
@@ -300,7 +319,7 @@ function PcDesktop({ material }: { material: string | null }) {
             onClose={() => close(p.win.id)}
           >
             {p.win.kind === 'terminal' ? (
-              <Terminal key={p.win.ref ?? ''} start={p.win.ref} />
+              <ServerApp key={p.win.ref ?? ''} start={p.win.ref} />
             ) : p.win.kind === 'browser' ? (
               <PcBrowser />
             ) : (
@@ -315,7 +334,7 @@ function PcDesktop({ material }: { material: string | null }) {
           <div className="lap-start-user pc-start-user">Специалист · дело № 09-1128</div>
           <div className="lap-start-cols">
             <div className="lap-start-left">
-              {ICONS.map((i) => (
+              {icons.map((i) => (
                 <button key={i.key} type="button" onClick={() => openWin(i.win)}>
                   <FileIcon type={i.type} size={24} /> {i.name}
                 </button>

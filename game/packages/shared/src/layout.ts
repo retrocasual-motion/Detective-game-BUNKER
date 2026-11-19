@@ -2,6 +2,7 @@ import {
   CONTAINERS,
   type ContainerId,
   containerContents,
+  NEVER_ON_WALL,
   OFF_WALL_IDS,
   openedOf,
   sealedIds,
@@ -258,7 +259,8 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
   const seen = new Set<string>();
   const items: WallItem[] = state.wall.items
     .filter((i) => {
-      if (!known.has(i.id) || seen.has(i.id) || parts.has(i.id)) return false;
+      if (!known.has(i.id) || seen.has(i.id) || parts.has(i.id) || NEVER_ON_WALL.has(i.id))
+        return false;
       seen.add(i.id);
       return true;
     })
@@ -273,7 +275,13 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
   const sealed = sealedIds(state);
   const legacy = state.opened === undefined;
   for (const id of [...PERSONS.map((p) => p.id), ...startingIds(materials)]) {
-    if (seen.has(id) || sealed.has(id) || parts.has(id) || (!legacy && OFF_WALL_IDS.has(id)))
+    if (
+      seen.has(id) ||
+      sealed.has(id) ||
+      parts.has(id) ||
+      (!legacy && OFF_WALL_IDS.has(id)) ||
+      NEVER_ON_WALL.has(id)
+    )
       continue;
     const slot = startSlot(id, materials);
     if (!slot) continue;

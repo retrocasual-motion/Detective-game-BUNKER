@@ -1,4 +1,4 @@
-import { type ContainerId, EPILOGUE_ID, inboxIds, openedOf } from '@bunker/shared';
+import { type ContainerId, EPILOGUE_ID, inboxIds, openedOf, SERVER_LOG_ID } from '@bunker/shared';
 import { useEffect, useMemo } from 'react';
 
 import { ArrivalNote } from './desk/ArrivalNote.tsx';
@@ -38,8 +38,10 @@ export function App() {
     g.saveStatus === 'error' || g.saveStatus === 'rejected' ? g.saveStatus : null,
   );
   const elsewhere = useGame((g) => g.elsewhere);
-  // После «Решить дело» папка запроса уступает место форме заключения (P-9).
+  // После «Решить дело» — форма заключения (P-9).
   const closed = useVerdict((v) => v.status.form || v.status.sent);
+  // Конверт с диском сервера — на столе, пока диск не вставлен (A-272): вставлен — журналы открыты.
+  const disc = useGame((g) => !g.materials.some((m) => m.id === SERVER_LOG_ID));
   // Эпилог после заключения — конвертом на столе; пока не открыт — подсвечен (автор 17.11).
   const epilogue = useGame((g) =>
     !g.materials.some((m) => m.id === EPILOGUE_ID)
@@ -111,6 +113,7 @@ export function App() {
         inbox={inbox}
         opened={opened}
         epilogue={epilogue}
+        disc={disc}
       />
       {saveProblem === 'error' && (
         <div className="save-error" data-testid="save-error" role="status">

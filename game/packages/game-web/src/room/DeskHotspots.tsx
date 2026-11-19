@@ -1,4 +1,4 @@
-import { CARD_W, type ContainerId } from '@bunker/shared';
+import { CARD_W, type ContainerId, SERVER_DISC_ID } from '@bunker/shared';
 import { useMemo } from 'react';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
@@ -30,22 +30,24 @@ export function DeskHotspots({
   inbox,
   opened,
   epilogue = 'none',
+  disc = false,
 }: {
   room: Room;
   inbox: string[];
   opened: readonly ContainerId[];
   epilogue?: Epilogue;
+  disc?: boolean;
 }) {
   const openViewer = useGame((g) => g.openViewer);
   const setComputerOpen = useGame((g) => g.setComputerOpen);
   const updateState = useGame((g) => g.updateState);
   const spots = useMemo(
     () =>
-      deskObjects(room, noColor, inbox, opened, epilogue).map((o) => ({
+      deskObjects(room, noColor, inbox, opened, epilogue, disc).map((o) => ({
         o,
         r: screenRect(o, room.poses.desk, room),
       })),
-    [room, inbox, opened, epilogue],
+    [room, inbox, opened, epilogue, disc],
   );
   return (
     <div className="desk-hotspots">
@@ -99,6 +101,8 @@ export function DeskHotspots({
               // только клавиатура.
               if (o.key.startsWith('inbox-') && e.detail > 0) return;
               if (h?.kind === 'computer') setComputerOpen(true);
+              else if (h?.kind === 'disc')
+                useGame.getState().hold({ type: 'device', id: SERVER_DISC_ID });
               else if (h?.kind === 'container')
                 useGame.getState().hold({ type: 'container', id: h.id });
               else if (h) {
