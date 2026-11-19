@@ -182,9 +182,13 @@ const ENVELOPE_AT: Record<Exclude<ContainerId, 'personal' | 'bank'>, [number, nu
 };
 const ENVELOPE_ORDER = ['bunker', 'scene', 'protocols'] as const;
 const C4: [number, number] = [0.324, 0.229];
-/** Короб с пачками (BX-A, 38 × 30 × 25 см) — у стены правее середины; на нём — коробка из банка. */
-const PAPERS_AT: [number, number] = [0.39, 0.17];
-const PAPERS_H = 0.25;
+/**
+ * Короб с пачками — у стены правее середины; на нём — коробка из банка. Пока меньше настоящего
+ * (BX-A — 38 × 30 × 25): 30 × 22 × 15, чтобы не спорил с компьютером (автор 19.11; размеры — на
+ * этапе дизайна).
+ */
+const PAPERS_AT: [number, number] = [0.39, 0.15];
+const PAPERS_H = 0.15;
 
 export function deskObjects(
   r: Room,
@@ -221,13 +225,14 @@ export function deskObjects(
     ...box(x, z, d, d, 0.003, col('--color-disc-hub'), lift),
     hub: col('--color-pc-bay'),
   });
-  // Рабочее место бюро (A-272; автор 19.11): в левом углу стола — монитор 19" 16:10 (44 × 29 см,
-  // как экран компьютера 1280 × 800) на тонком дисководе CD/DVD (26 × 22 × 2,5 см); системный
+  // Рабочее место бюро (A-272; автор 19.11: «больше и ближе к нам — активный элемент, а не фон»):
+  // слева, ближе к игроку — монитор 22" 16:10 (50 × 33 см, как экран компьютера 1280 × 800) на
+  // тонком дисководе CD/DVD (28 × 22 × 2,5 см); системный
   // блок — под столом, его не видно. Диск дотащили до дисковода (DD-A) — лоток (14 см, выезжает
   // на 15) выходит к игроку и не достаёт до клавиатуры: ни во что не упирается.
-  const PC_X = -0.84;
-  const PC_Z = 0.15;
-  const DRIVE_W = 0.26;
+  const PC_X = -0.78;
+  const PC_Z = 0.3;
+  const DRIVE_W = 0.28;
   const DRIVE_D = 0.22;
   const DRIVE_H = 0.025;
   const TRAY_X = PC_X + 0.03;
@@ -238,7 +243,7 @@ export function deskObjects(
     box(PC_X, PC_Z, DRIVE_W, DRIVE_D, DRIVE_H, col('--color-pc-case')),
     // Щель лотка, кнопка выброса, огонёк.
     box(TRAY_X, front, 0.15, 0.004, 0.005, bay, 0.012),
-    box(PC_X + 0.115, front, 0.024, 0.005, 0.008, col('--color-pc-button'), 0.007),
+    box(PC_X + 0.12, front, 0.024, 0.005, 0.008, col('--color-pc-button'), 0.007),
     box(
       PC_X - 0.1,
       front,
@@ -258,7 +263,7 @@ export function deskObjects(
     box(PC_X, PC_Z - 0.02, 0.22, 0.16, 0.01, edge, DRIVE_H),
     box(PC_X, PC_Z - 0.04, 0.05, 0.035, 0.07, edge, DRIVE_H + 0.01),
   ];
-  const monitor = box(PC_X, PC_Z - 0.04, 0.44, 0.05, 0.29, col('--color-monitor'), DRIVE_H + 0.07);
+  const monitor = box(PC_X, PC_Z - 0.04, 0.5, 0.05, 0.33, col('--color-monitor'), DRIVE_H + 0.07);
   const envelopes = ENVELOPE_ORDER.filter((id) => !opened.includes(id));
   // Коробка из банка — на коробе с пачками, если он уже на столе.
   const onPapers = opened.includes('bunker') ? PAPERS_H : 0;
@@ -290,8 +295,8 @@ export function deskObjects(
           key: 'bags',
           label: 'Коробка: личные вещи членов группы (40–46)',
           boxes: [
-            box(-0.38, 0.145, 0.33, 0.23, 0.16, col('--color-box')),
-            box(-0.4, 0.14, 0.24, 0.16, 0.03, col('--color-bag'), 0.15),
+            box(-0.3, 0.145, 0.33, 0.23, 0.16, col('--color-box')),
+            box(-0.32, 0.14, 0.24, 0.16, 0.03, col('--color-bag'), 0.15),
           ],
           tag: 'Личные вещи · 40–46',
           testId: 'bags-box',
@@ -301,9 +306,9 @@ export function deskObjects(
           label: 'Коробка «Личные вещи», опечатана — вскрыть',
           boxes: [
             // Коробка 33 × 23 × 16 см (как коробка «В руках»), крышка и лента пломбы.
-            box(-0.38, 0.145, 0.33, 0.23, 0.16, col('--color-box')),
-            box(-0.38, 0.145, 0.34, 0.24, 0.015, col('--color-box-lid'), 0.16),
-            box(-0.38, 0.145, 0.03, 0.24, 0.017, col('--color-seal'), 0.16),
+            box(-0.3, 0.145, 0.33, 0.23, 0.16, col('--color-box')),
+            box(-0.3, 0.145, 0.34, 0.24, 0.015, col('--color-box-lid'), 0.16),
+            box(-0.3, 0.145, 0.03, 0.24, 0.017, col('--color-seal'), 0.16),
           ],
           hotspot: { kind: 'container' as const, id: 'personal' as const },
           tag: 'Личные вещи',
@@ -354,8 +359,8 @@ export function deskObjects(
             label: 'Конверт «Прил. 7 · Сервер VL-31» — взять',
             boxes: [
               // Конверт C6 (162 × 114 мм), в нём диск 12 см.
-              box(-0.55, 0.72, 0.162, 0.114, 0.006, col('--color-archive-envelope')),
-              box(-0.55, 0.72, 0.1, 0.07, 0.002, col('--color-newspaper'), 0.006),
+              box(-0.5, 0.79, 0.162, 0.114, 0.006, col('--color-archive-envelope')),
+              box(-0.5, 0.79, 0.1, 0.07, 0.002, col('--color-newspaper'), 0.006),
             ],
             hotspot: { kind: 'disc' as const },
             tag: 'Прил. 7 · Сервер VL-31',
@@ -371,7 +376,7 @@ export function deskObjects(
               key: 'server-disc',
               label: 'Диск «Прил. 7 · Сервер VL-31»',
               boxes: [],
-              discs: [disc(-0.55, 0.72, 0.12, 0)],
+              discs: [disc(-0.5, 0.79, 0.12, 0)],
               hotspot: { kind: 'disc' as const },
               tag: 'Диск «Прил. 7»',
               tagInside: true,
@@ -417,17 +422,17 @@ export function deskObjects(
           },
         ]
       : []),
-    // Коробка с пачками бумаг из помещений (29, PH-B, BX-A): на месте конверта «Документация объекта»,
-    // когда он вскрыт.
+    // Коробка с пачками бумаг из помещений (29, PH-B, BX-A): у стены, когда вскрыт конверт
+    // «Документация объекта».
     {
       key: 'papers',
       label: 'Коробка: пачки бумаг из помещений (9 пачек)',
       // Архивный короб с крышкой (BX-A): внутри конверты стоят на ребре, как в картотеке.
-      // 38 × 30 × 25 см (BX-A) — у стены правее середины.
+      // 30 × 22 × 15 см (пока меньше BX-A, см. PAPERS_AT).
       boxes: [
-        box(BX, BZ, 0.38, 0.3, 0.22, col('--color-box')),
-        box(BX, BZ, 0.39, 0.31, 0.04, col('--color-box'), 0.21),
-        box(BX, BZ + 0.06, 0.12, 0.06, 0.003, col('--color-newspaper'), PAPERS_H),
+        box(BX, BZ, 0.3, 0.22, 0.13, col('--color-box')),
+        box(BX, BZ, 0.31, 0.23, 0.03, col('--color-box'), 0.12),
+        box(BX, BZ + 0.045, 0.1, 0.05, 0.003, col('--color-newspaper'), PAPERS_H),
       ],
       hotspot: { kind: 'material' as const, id: '29' },
       tagInside: true,
@@ -460,7 +465,7 @@ export function deskObjects(
     {
       key: 'pen',
       label: 'Ручка-диктофон',
-      boxes: [box(-0.27, 0.79, 0.14, 0.014, 0.014, edge)],
+      boxes: [box(-0.4, 0.41, 0.14, 0.014, 0.014, edge)],
       hotspot: { kind: 'material', id: '49' },
       tag: 'Изъято · 49',
       testId: 'device-49',
@@ -471,8 +476,8 @@ export function deskObjects(
       label: 'Камера инженера',
       boxes: [
         // Лежит плашмя, объективом вверх: стоя заслоняла бы ручку-диктофон.
-        box(-0.28, 0.69, 0.1, 0.06, 0.025, device),
-        box(-0.265, 0.69, 0.035, 0.035, 0.012, edge, 0.025),
+        box(-0.24, 0.46, 0.1, 0.06, 0.025, device),
+        box(-0.225, 0.46, 0.035, 0.035, 0.012, edge, 0.025),
       ],
       hotspot: { kind: 'material', id: '24' },
       tag: 'Изъято · 24',
@@ -481,7 +486,7 @@ export function deskObjects(
     {
       key: 'mobile',
       label: 'Телефон (владелец не установлен)',
-      boxes: [box(-0.38, 0.75, 0.065, 0.12, 0.012, col('--color-screen'))],
+      boxes: [box(-0.38, 0.5, 0.065, 0.12, 0.012, col('--color-screen'))],
       hotspot: { kind: 'material', id: '48' },
       tag: 'Изъято · 48',
       testId: 'device-48',
@@ -490,7 +495,7 @@ export function deskObjects(
       key: 'keyboard',
       label: 'Клавиатура',
       // 44 × 15 см — перед монитором; лоток дисковода выезжает до неё не доставая.
-      boxes: [box(-0.6, 0.55, 0.44, 0.15, 0.03, edge)],
+      boxes: [box(-0.48, 0.655, 0.44, 0.15, 0.03, edge)],
     },
     {
       key: 'phone',
