@@ -45,9 +45,9 @@
   --color-person-shape: #6f6f6f;
   --color-monitor: #2f3033;
   /* Системный блок 2000-х (A-272, PC-A): бежево-серый пластик, ниши дисководов, кнопка, огонёк. */
-  --color-pc-case: #c9c3b3;
-  --color-pc-bay: #3d3e40;
-  --color-pc-button: #b3ac9b;
+  --color-pc-case: #2f3033; /* как монитор (автор 19.11) */
+  --color-pc-bay: #18191b;
+  --color-pc-button: #4a4c50;
   --color-pc-led: #67c766;
   --color-pc-led-busy: #f2a628;
   --color-screen: #1d2a2f;
