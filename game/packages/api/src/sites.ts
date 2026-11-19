@@ -1,11 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import {
-  formToken,
-  type Material,
-  SITE_FORMS,
-  type SiteFormId,
-  type SitePage,
-} from '@bunker/shared';
+import { formToken, type Material, type SiteFormId, type SitePage } from '@bunker/shared';
 
 /**
  * Настоящие сайты дела (A-272, AC-3; T-1, ST-A): их отдаёт наш сервер по имени хоста —
@@ -208,7 +202,6 @@ export function pageOf(
       re.test(rest.replace(/\n/g, ' ')),
     )?.[0];
     if (form) {
-      if (form === 'fr-death') out.push(`### ${SITE_FORMS['fr-death'].title}`);
       out.push(formToken(form));
       if (form === 'vl-login') out.push(formToken('vl-forgot'));
       if (form === 'mb-login') out.push(formToken('mb-forgot'));
