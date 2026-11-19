@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { lockContent, phoneContent } from './content.ts';
 
-const pack = '../../../playtest/packs/v3.3-2026-10-29';
+const pack = '../../../playtest/packs/v3.4-2026-11-18';
 const read = (dir: string, prefix: string) => {
   const f = readdirSync(`${pack}/${dir}`).find((x) => x.startsWith(prefix));
   return readFileSync(`${pack}/${dir}/${f}`, 'utf8').replace(/\r\n?/g, '\n');

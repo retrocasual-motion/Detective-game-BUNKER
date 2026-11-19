@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { type Material, type MaterialKind, MaterialSchema } from '@bunker/shared';
 
 /** Пакет игрока относительно этой папки (src/). */
-export const DEFAULT_PACK_DIR = '../../../../playtest/packs/v3.3-2026-10-29';
+export const DEFAULT_PACK_DIR = '../../../../playtest/packs/v3.4-2026-11-18';
 export const DEFAULT_PLAYER_DIR = `${DEFAULT_PACK_DIR}/player`;
 
 /** Изъятые устройства лежат в виде «Слева», а не на столе (TECH_PLAN 4.0, 4.2). */
@@ -48,6 +48,7 @@ export const KIND_BY_ID: Readonly<Record<string, MaterialKind>> = {
     ['40', '41', '42', '43', '44', '45', '46'].map((id) => [id, 'bag' as const]),
   ),
   '51': 'half', // половина листа
+  '52': 'disc', // конверт «Прил. 7 · Сервер VL-31» с диском (A-272)
 };
 
 const FILE = /^(\d{2})__.+\.md$/;

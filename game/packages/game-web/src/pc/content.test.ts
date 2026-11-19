@@ -12,7 +12,7 @@ import {
   serverDocs,
 } from './content.ts';
 
-const dir = '../../../playtest/packs/v3.3-2026-10-29/locked';
+const dir = '../../../playtest/packs/v3.4-2026-11-18/locked';
 const mat = (id: string) => {
   const f = readdirSync(dir).find((x) => x.startsWith(`${id}__`)) ?? '';
   const body = readFileSync(`${dir}/${f}`, 'utf8').replace(/\r\n?/g, '\n');

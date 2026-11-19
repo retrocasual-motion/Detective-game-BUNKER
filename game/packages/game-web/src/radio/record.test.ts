@@ -10,7 +10,7 @@ import {
   windows,
 } from './record.ts';
 
-const dir = '../../../playtest/packs/v3.3-2026-10-29/player';
+const dir = '../../../playtest/packs/v3.4-2026-11-18/player';
 const f = readdirSync(dir).find((x) => x.startsWith('50__')) ?? '';
 const body = readFileSync(`${dir}/${f}`, 'utf8').replace(/\r\n?/g, '\n');
 

@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { answerLabel, parseVerdictForm } from '@bunker/shared';
 import { describe, expect, it } from 'vitest';
 
-const dir = '../../../playtest/packs/v3.3-2026-10-29/locked';
+const dir = '../../../playtest/packs/v3.4-2026-11-18/locked';
 const L999 = readFileSync(
   `${dir}/${readdirSync(dir).find((f: string) => f.startsWith('L999__'))}`,
   'utf8',

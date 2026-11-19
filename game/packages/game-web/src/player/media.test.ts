@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { EMBEDDED_MEDIA, parseMedia, rowAt, splitEmbedded } from './media.ts';
 
-const pack = '../../../playtest/packs/v3.3-2026-10-29';
+const pack = '../../../playtest/packs/v3.4-2026-11-18';
 const read = (dir: string, id: string) => {
   const f = readdirSync(`${pack}/${dir}`).find((x) => x.startsWith(`${id}__`)) ?? '';
   return readFileSync(`${pack}/${dir}/${f}`, 'utf8');

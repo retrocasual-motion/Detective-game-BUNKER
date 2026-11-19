@@ -6,7 +6,7 @@ import { readPack } from './pack.ts';
 import { emptyProgress } from './types.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const content = readPack(join(here, '../../../../playtest/packs/v3.3-2026-10-29'));
+const content = readPack(join(here, '../../../../playtest/packs/v3.4-2026-11-18'));
 
 describe('ошибки оформления запроса (FORM-B)', () => {
   it('все 7 правил есть в access.json и все — отказы запросов', () => {

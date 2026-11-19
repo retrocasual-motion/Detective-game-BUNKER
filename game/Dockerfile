@@ -15,11 +15,11 @@ COPY game/packages/api/package.json packages/api/
 COPY game/packages/game-web/package.json packages/game-web/
 RUN pnpm install --frozen-lockfile
 COPY game/ ./
-COPY playtest/packs/v3.3-2026-10-29/player /app/playtest/packs/v3.3-2026-10-29/player
-COPY playtest/packs/v3.3-2026-10-29/locked /app/playtest/packs/v3.3-2026-10-29/locked
-COPY playtest/packs/v3.3-2026-10-29/gm/access.json /app/playtest/packs/v3.3-2026-10-29/gm/access.json
+COPY playtest/packs/v3.4-2026-11-18/player /app/playtest/packs/v3.4-2026-11-18/player
+COPY playtest/packs/v3.4-2026-11-18/locked /app/playtest/packs/v3.4-2026-11-18/locked
+COPY playtest/packs/v3.4-2026-11-18/gm/access.json /app/playtest/packs/v3.4-2026-11-18/gm/access.json
 # Ответы формы заключения (A-270) — только в серверный контент, в браузер не попадают.
-COPY playtest/packs/v3.3-2026-10-29/gm/verdict.json /app/playtest/packs/v3.3-2026-10-29/gm/verdict.json
+COPY playtest/packs/v3.4-2026-11-18/gm/verdict.json /app/playtest/packs/v3.4-2026-11-18/gm/verdict.json
 RUN pnpm content:build && pnpm -F @bunker/game-web build
 
 FROM node:26.13.0-slim

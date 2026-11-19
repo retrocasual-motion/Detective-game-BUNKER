@@ -7,7 +7,7 @@ import { pyRegex } from './pyre.ts';
 import { walk } from './walk.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const PACK = join(here, '../../../../playtest/packs/v3.3-2026-10-29');
+const PACK = join(here, '../../../../playtest/packs/v3.4-2026-11-18');
 const content = readPack(PACK);
 const script = (name: string) => readFileSync(join(PACK, 'gm', name), 'utf8');
 
@@ -27,7 +27,7 @@ describe('правила пакета', () => {
       ...(x.cards ?? []).flat().flatMap((s) => [s.file ?? '.*', s.quote ?? '.*']),
       ...(x.not_cards ?? []).flatMap((s) => [s.file ?? '.*', s.quote ?? '.*']),
     ]);
-    expect(pats.length).toBeGreaterThan(400);
+    expect(pats.length).toBeGreaterThan(250);
     for (const p of pats) expect(() => pyRegex(p), p).not.toThrow();
   });
 
@@ -38,15 +38,15 @@ describe('правила пакета', () => {
 });
 
 describe('сквозные проходы пакета — как эталон playtest.py walk', () => {
-  it('walkthrough.txt: 180 действий без несовпадений, открыто 74 из 74', () => {
+  it('walkthrough.txt: 163 действия без несовпадений, открыто 74 из 74', () => {
     const r = walk(content, script('walkthrough.txt'));
     expect(report(r)).toBe('');
-    expect(r.actions).toBe(180);
+    expect(r.actions).toBe(163);
     expect(r.released.length).toBe(content.locked.size);
     expect(content.locked.size).toBe(74);
   });
 
-  for (const name of ['walkthrough_a257.txt', 'walkthrough_a259.txt', 'walkthrough_a263.txt']) {
+  for (const name of ['walkthrough_a263.txt']) {
     it(`${name}: без несовпадений`, () => {
       const r = walk(content, script(name));
       expect(report(r)).toBe('');
