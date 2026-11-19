@@ -1225,12 +1225,14 @@ button {
 }
 .excerpt-source {
   margin-top: auto;
+  padding-right: 44px;
   font: 9px / 1.2 var(--font-paper);
   color: rgb(0 0 0 / 55%);
 }
+/* «открыть» — в правом нижнем углу: в верхнем — крестик «Снять выписку». */
 .excerpt-open {
   position: absolute;
-  top: 4px;
+  bottom: 6px;
   right: 6px;
   padding: 0 4px;
   border: none;
