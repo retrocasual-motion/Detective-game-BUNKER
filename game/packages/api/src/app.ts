@@ -620,7 +620,10 @@ export function createApp({
     const index = serveStatic({ root: webDist, path: 'index.html' });
     // Сайт дела (хост — `vaultline-program.…`): своя страница сборки (A-272).
     const sitePage = serveStatic({ root: webDist, path: 'sites.html' });
-    app.use('/*', (c, next) => (isApi(c.req.path) ? next() : files(c, next)));
+    // Страница сайта (путь без расширения файла) — не `index.html` игры, который раздача файлов
+    // отдала бы на «/»; файлы сборки (скрипты, стили) — те же.
+    const sitePath = (c: Context) => !!hostSite(c) && !/\.[a-z0-9]+$/i.test(c.req.path);
+    app.use('/*', (c, next) => (isApi(c.req.path) || sitePath(c) ? next() : files(c, next)));
     // Любой другой путь страницы — та же игра (одна страница) или страница сайта.
     app.use('*', (c, next) =>
       isApi(c.req.path) ? next() : hostSite(c) ? sitePage(c, next) : index(c, next),

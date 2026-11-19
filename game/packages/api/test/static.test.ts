@@ -7,6 +7,7 @@ import type { Db } from '../src/db/client.ts';
 
 const dist = mkdtempSync(join(tmpdir(), 'bunker-web-'));
 writeFileSync(join(dist, 'index.html'), '<div id="root"></div>');
+writeFileSync(join(dist, 'sites.html'), '<div id="site"></div>');
 mkdirSync(join(dist, 'assets'));
 writeFileSync(join(dist, 'assets', 'app.js'), 'console.log(1)');
 
@@ -28,6 +29,16 @@ describe('отдача собранного клиента (production)', () => 
 
   it('неизвестный путь страницы → index.html', async () => {
     expect(await (await app.request('/desk')).text()).toContain('<div id="root">');
+  });
+
+  it('хост сайта дела (A-272): «/» и путь страницы → sites.html, файлы сборки — те же', async () => {
+    const host = { host: 'vaultline-program.localhost:5173' };
+    expect(await (await app.request('/', { headers: host })).text()).toContain('<div id="site">');
+    expect(await (await app.request('/cabinet', { headers: host })).text()).toContain(
+      '<div id="site">',
+    );
+    const js = await app.request('/assets/app.js', { headers: host });
+    expect(js.headers.get('content-type')).toMatch(/javascript/);
   });
 
   it('неизвестный /api/… → 404, а не страница', async () => {
