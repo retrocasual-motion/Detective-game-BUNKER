@@ -54,3 +54,14 @@ export const sessions = pgTable('sessions', {
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+/**
+ * Выписки с сайтов дела (A-272, DB-B): сайт — другая вкладка и другой домен, стену игрока он не
+ * трогает; выписка ждёт здесь, пока вкладка игры её не заберёт (вернулся к игре).
+ */
+export const pendingExcerpts = pgTable('pending_excerpts', {
+  id: text('id').primaryKey(),
+  playerId: text('player_id').notNull(),
+  data: jsonb('data').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});

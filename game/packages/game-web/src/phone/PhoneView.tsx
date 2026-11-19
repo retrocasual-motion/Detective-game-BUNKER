@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { postAction } from '../api.ts';
 import { gameNow, hhmm } from '../clock.ts';
-import { useSelectionCard } from '../device/deviceView.tsx';
+import { useFindOnScreen, useSelectionCard } from '../device/deviceView.tsx';
 import { useGame } from '../store.ts';
 import { lockContent, phoneContent } from './content.ts';
 import {
@@ -108,7 +108,8 @@ export function PhoneLive() {
     const t = setInterval(() => setNow(gameNow(started)), 10_000);
     return () => clearInterval(t);
   }, [started]);
-  const { onUp, button } = useSelectionCard('phone-to-folder');
+  const { onUp, button } = useSelectionCard('phone-to-folder', 'phone');
+  useFindOnScreen('.held-screen', true);
   const zoomed = useRef(false);
   useEffect(
     () => () => {

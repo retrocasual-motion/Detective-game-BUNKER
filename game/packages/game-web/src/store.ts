@@ -1,4 +1,5 @@
 import {
+  addExcerpt,
   boardCamera,
   CARD_H,
   CARD_W,
@@ -19,16 +20,19 @@ import {
   pieceItemId,
   pieceOf,
   reconcile,
+  removeExcerpt,
   sealedIds,
   type View,
   WALL_BOUNDS,
+  type WallExcerpt,
 } from '@bunker/shared';
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import { getMaterials, getState, postAction, putState } from './api.ts';
+import { ackExcerpts, getExcerpts, getMaterials, getState, postAction, putState } from './api.ts';
 import { clampToBounds } from './canvas/math.ts';
 import { todayKey } from './clock.ts';
 import { createSaver } from './save.ts';
+import { openSite } from './site.ts';
 import { moveItem } from './wall/wall-actions.ts';
 
 const screen = () => ({ width: window.innerWidth, height: window.innerHeight });
@@ -68,6 +72,12 @@ interface GameStore {
   folderOpen: boolean;
   /** Блокнот следователя выдвинут (DV-A). */
   notebookOpen: boolean;
+  /** Выписка — на стену (A-272, DB-B): в поле версии, светится как новое. */
+  pinExcerpt(x: WallExcerpt): void;
+  /** Снять выписку со стены. */
+  unpinExcerpt(id: string): void;
+  /** «Открыть» у выписки: источник на этом месте (сайт — во вкладке, устройство — в руках). */
+  openExcerpt(id: string): void;
   /** Конверт с диском сервера вскрыт — в руках диск (A-272; до перезагрузки). */
   discOut: boolean;
   /** Диск только что вставили: компьютер показывает лоток и раскрутку, затем — значок программы. */
@@ -208,6 +218,14 @@ export const useGame = create<GameStore>((set, get) => {
       const s = get().saveStatus;
       if (s === 'error' || s === 'saving') e.preventDefault();
     });
+    // Выписки с сайтов (A-272, DB-B): ждут на сервере — повесить, сохранить, убрать из очереди.
+    const takeExcerpts = async () => {
+      const list = await getExcerpts();
+      if (!list.length) return;
+      for (const x of list) get().pinExcerpt(x);
+      await saver.flush();
+      await ackExcerpts(list.map((x) => x.id));
+    };
     // Игрок вернулся из вкладки сайта (A-272): открытое там — в игре (коробка банка, кабинет).
     let lookedAt = 0;
     const look = () => {
@@ -216,6 +234,7 @@ export const useGame = create<GameStore>((set, get) => {
       lookedAt = now;
       getMaterials()
         .then((m) => get().addReleased(m))
+        .then(() => takeExcerpts())
         .catch(() => undefined);
     };
     window.addEventListener('focus', look);
@@ -420,6 +439,32 @@ export const useGame = create<GameStore>((set, get) => {
 
     setNotebookOpen(open) {
       set({ notebookOpen: open });
+    },
+
+    pinExcerpt(x) {
+      const before = onWallNow(get().state);
+      get().updateState((s) => addExcerpt(s, x));
+      markNew(before);
+    },
+
+    unpinExcerpt(id) {
+      get().updateState((s) => removeExcerpt(s, id));
+    },
+
+    openExcerpt(id) {
+      const x = get().state?.excerpts?.find((e) => e.id === id);
+      if (!x) return;
+      const find = { q: x.text, k: 0 };
+      if (x.place.kind === 'site') {
+        const hash = `#x=${encodeURIComponent(x.text)}${x.place.letter ? `&l=${x.place.letter}` : ''}`;
+        openSite(x.place.address ?? '', window, hash);
+        return;
+      }
+      if (x.place.kind === 'pc') get().openPc(x.material);
+      else if (x.place.kind === 'laptop') get().openLaptop(x.material);
+      else if (x.place.kind === 'phone') get().openPhone(x.material);
+      else get().openCamera();
+      set({ find });
     },
 
     insertDisc() {

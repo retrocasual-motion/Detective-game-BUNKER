@@ -16,6 +16,7 @@ import {
   type PlayerState,
   PlayerStateSchema,
   STATE_VERSION,
+  type WallExcerpt,
   type WallItem,
   ZOOM_MIN,
 } from './schemas.ts';
@@ -254,6 +255,8 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
     ...(state.taken ?? []).map(folderItemId),
     // Обрывки, вынутые из материалов (SRC-A): «S:42/1».
     ...(state.pieces ?? []).map(pieceItemId),
+    // Выписки (A-272): только из материалов, что у игрока есть.
+    ...excerptsOf(state, materials).map((x) => x.id),
   ]);
   // Половины, сложенные в один лист (MG-A), на стене не висят — висит совмещённый.
   const parts = joinedParts(state.joined);
@@ -295,7 +298,56 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
     (t) => seen.has(t.from) && seen.has(t.to) && t.from !== t.to,
   );
 
-  return { ...state, wall: { ...state.wall, items, threads, notes: kept } };
+  const excerpts = excerptsOf(state, materials).filter((x) => seen.has(x.id));
+  return {
+    ...state,
+    wall: { ...state.wall, items, threads, notes: kept },
+    ...(state.excerpts ? { excerpts } : {}),
+  };
+}
+
+/** Выписки из материалов, что у игрока есть, без повторов. */
+export function excerptsOf(state: PlayerState, materials: Material[]): WallExcerpt[] {
+  const have = new Set(materials.map((m) => m.id));
+  const seen = new Set<string>();
+  return (state.excerpts ?? []).filter((x) => {
+    if (!have.has(x.material) || seen.has(x.id)) return false;
+    seen.add(x.id);
+    return true;
+  });
+}
+
+/**
+ * Выписка — на стену (A-272, DB-B): в поле версии — на свободное место доски, не в ряды «как
+ * пришло»; уже есть такая (то же место, тот же текст) — без повтора.
+ */
+export function addExcerpt(state: PlayerState, x: WallExcerpt): PlayerState {
+  const list = state.excerpts ?? [];
+  if (list.some((e) => e.id === x.id)) return state;
+  const at = freeBlock(state.wall.items, () => CARD_W, CARD_W, CARD_H) ?? onWall(0, GRID_TOP);
+  const z = state.wall.items.reduce((m, i) => Math.max(m, i.z), 0) + 1;
+  return {
+    ...state,
+    excerpts: [...list, x],
+    wall: {
+      ...state.wall,
+      items: [...state.wall.items, { id: x.id, ...onWall(at.x, at.y), z, rot: hangTilt(x.id) }],
+    },
+  };
+}
+
+/** Снять выписку со стены — вместе с нитями. */
+export function removeExcerpt(state: PlayerState, id: string): PlayerState {
+  if (!(state.excerpts ?? []).some((x) => x.id === id)) return state;
+  return {
+    ...state,
+    excerpts: (state.excerpts ?? []).filter((x) => x.id !== id),
+    wall: {
+      ...state.wall,
+      items: state.wall.items.filter((i) => i.id !== id),
+      threads: state.wall.threads.filter((t) => t.from !== id && t.to !== id),
+    },
+  };
 }
 
 /** Папка, вынутая из пачки, на стене: «F:П-02/18» (taken «П-02/18»). */

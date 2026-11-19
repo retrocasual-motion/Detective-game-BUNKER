@@ -1,11 +1,12 @@
 import type { AccessRules } from '@bunker/engine';
-import type { Material, SitePage } from '@bunker/shared';
+import { defaultState, type Material, type SitePage } from '@bunker/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
 import { createApp } from '../src/app.ts';
 import {
   connectDb,
   type Db,
   migrateDb,
+  pendingExcerpts,
   playerProgress,
   playerState,
   players,
@@ -87,7 +88,8 @@ beforeAll(async () => {
 });
 afterAll(async () => close());
 beforeEach(async () => {
-  for (const t of [playerState, playerProgress, players, sessions]) await db.delete(t);
+  for (const t of [playerState, playerProgress, players, sessions, pendingExcerpts])
+    await db.delete(t);
   clock = 1_000_000;
 });
 
@@ -215,5 +217,64 @@ describe('сайты дела на сервере (A-272)', () => {
     // Пропуск живёт 10 минут.
     clock += 11 * 60_000;
     expect((await json(a, '/api/site/enter', { pass }, { host: SITE })).status).toBe(403);
+  });
+
+  it('выписка с сайта ждёт игру: забрать → подтвердить; только из открытого (P-10)', async () => {
+    const a = app();
+    await page(a);
+    const x = (material: string, id = 'x:a1') => ({
+      id,
+      text: 'Месяц тишины',
+      material,
+      source: 'vaultline-program.com · Главная',
+      place: { kind: 'site', address: 'vaultline-program.com' },
+    });
+    expect((await json(a, '/api/site/excerpt', x('L620', 'x:no'), { host: SITE })).status).toBe(
+      400,
+    );
+    expect((await json(a, '/api/site/excerpt', x('L101'))).status).toBe(404);
+    expect((await json(a, '/api/site/excerpt', x('L101'), { host: SITE })).status).toBe(204);
+    const got = (await (await a.request('/api/excerpts')).json()) as { id: string }[];
+    expect(got.map((g) => g.id)).toEqual(['x:a1']);
+    await json(a, '/api/excerpts/ack', { ids: ['x:a1'] });
+    expect(await (await a.request('/api/excerpts')).json()).toEqual([]);
+  });
+
+  it('сохранение с выпиской из неоткрытого материала — 400; из открытого — да', async () => {
+    const a = app();
+    await page(a);
+    const s = defaultState([...materials, locked[0] as Material]);
+    const ex = {
+      id: 'x:b',
+      text: 'текст',
+      material: 'L620',
+      source: 'кабинет',
+      place: { kind: 'site' as const, address: 'vaultline-program.com/cabinet' },
+    };
+    const put = (st: unknown) =>
+      a.request('/api/state', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(st),
+      });
+    expect(
+      (
+        await put({
+          ...s,
+          excerpts: [ex],
+          wall: { ...s.wall, items: [...s.wall.items, { id: 'x:b', x: 0, y: 0, z: 1, rot: 0 }] },
+        })
+      ).status,
+    ).toBe(400);
+    const ok = { ...ex, material: 'L101' };
+    expect(
+      (
+        await put({
+          ...s,
+          excerpts: [ok],
+          wall: { ...s.wall, items: [...s.wall.items, { id: 'x:b', x: 0, y: 0, z: 1, rot: 0 }] },
+        })
+      ).status,
+    ).toBe(204);
   });
 });

@@ -4,7 +4,7 @@
  * сразу, в щелчке (иначе браузер посчитает её всплывающим окном и закроет), адрес — когда
  * ответит сервер. Не открылось — в той же вкладке ответ: «Страница не найдена (404)…».
  */
-export function openSite(address: string, from: Window = window): void {
+export function openSite(address: string, from: Window = window, hash = ''): void {
   const tab = from.open('', '_blank');
   const show = (text: string) => {
     if (!tab) return;
@@ -21,8 +21,9 @@ export function openSite(address: string, from: Window = window): void {
     .then((r) => r.json() as Promise<{ url?: string; reply?: string; error?: string }>)
     .then((r) => {
       if (r.url) {
-        if (tab) tab.location.href = r.url;
-        else from.location.assign(r.url);
+        // `#x=…` — выписка: сайт откроется на этом месте (A-272, DB-B).
+        if (tab) tab.location.href = r.url + hash;
+        else from.location.assign(r.url + hash);
       } else show(`${address}\n\n${r.reply ?? r.error ?? 'Страница не найдена (404).'}`);
     })
     .catch(() => show('Нет связи с сервером игры.'));

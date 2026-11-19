@@ -15,6 +15,7 @@ import {
 import {
   defaultState,
   EPILOGUE_ID,
+  ExcerptSchema,
   folderItemId,
   type Material,
   PERSONS,
@@ -30,7 +31,7 @@ import {
   VerdictSchema,
 } from '@bunker/shared';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { eq, lt, sql } from 'drizzle-orm';
+import { and, eq, inArray, lt, sql } from 'drizzle-orm';
 import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { getCookie, setCookie } from 'hono/cookie';
@@ -39,6 +40,7 @@ import { z } from 'zod';
 import {
   type Db,
   loginTokens,
+  pendingExcerpts,
   playerProgress,
   playerState,
   playerVerdicts,
@@ -114,8 +116,12 @@ const ActionSchema = z.object({
 
 /** Состояние ссылается только на материалы, которые у игрока есть (P-10). */
 function invalidReference(s: PlayerState, materials: Material[]): string | null {
+  const own = new Set(materials.map((m) => m.id));
+  const excerpt = (s.excerpts ?? []).find((x) => !own.has(x.material));
+  if (excerpt) return `нет материала ${excerpt.material}`;
   const allIds = new Set([
     ...materials.map((m) => m.id),
+    ...(s.excerpts ?? []).map((x) => x.id),
     ...PERSONS.map((p) => p.id),
     ...s.wall.notes.map((n) => n.id),
     // Папка, вынутая из пачки (RD-A): на стене — «F:П-02/18», если её и правда вынули.
@@ -219,6 +225,29 @@ export function createApp({
   // Только чтение: «видено» отмечает сам движок на следующем действии (ответ уже доставил
   // открытое) — запись отсюда шла бы мимо очереди действий и могла затереть открытое.
   app.get('/api/materials', async (c) => c.json(await mine(c.get('player'))));
+
+  /** Выписки с сайтов, что ждут стены (A-272): вкладка игры забирает их, когда к ней вернулись. */
+  app.get('/api/excerpts', async (c) => {
+    const rows = await db
+      .select()
+      .from(pendingExcerpts)
+      .where(eq(pendingExcerpts.playerId, c.get('player')));
+    return c.json(rows.map((r) => r.data));
+  });
+  /** Выписки повешены и сохранены — убрать из очереди. */
+  app.post('/api/excerpts/ack', bodyLimit({ maxSize: 16 * 1024 }), async (c) => {
+    const body = (await c.req.json().catch(() => null)) as { ids?: unknown } | null;
+    const ids = Array.isArray(body?.ids)
+      ? body.ids.filter((x): x is string => typeof x === 'string').slice(0, 300)
+      : [];
+    if (ids.length)
+      await db
+        .delete(pendingExcerpts)
+        .where(
+          and(eq(pendingExcerpts.playerId, c.get('player')), inArray(pendingExcerpts.id, ids)),
+        );
+    return c.body(null, 204);
+  });
 
   app.get('/api/state', async (c) => {
     const pid = c.get('player');
@@ -405,6 +434,7 @@ export function createApp({
       await tx.delete(playerState).where(eq(playerState.playerId, pid));
       await tx.delete(playerProgress).where(eq(playerProgress.playerId, pid));
       await tx.delete(playerVerdicts).where(eq(playerVerdicts.playerId, pid));
+      await tx.delete(pendingExcerpts).where(eq(pendingExcerpts.playerId, pid));
     });
 
   app.delete('/api/state', async (c) => {
@@ -529,6 +559,27 @@ export function createApp({
       wait,
     };
     return c.json(page);
+  });
+
+  /**
+   * Выписка с сайта на стену (A-272, DB-B): ждёт, пока вкладка игры её не заберёт. Только из
+   * открытого игроком (P-10) и только с сайта дела.
+   */
+  app.post('/api/site/excerpt', bodyLimit({ maxSize: 8192 }), async (c) => {
+    const site = hostSite(c);
+    if (!site) return c.notFound();
+    const pid = sitePlayer(c);
+    if (!pid) return c.json({ error: 'Откройте сайт из материалов дела.' }, 401);
+    const parsed = ExcerptSchema.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success || parsed.data.place.kind !== 'site')
+      return c.json({ error: 'неверная выписка' }, 400);
+    const own = new Set(playerMaterials(await loadProgress(pid)).map((m) => m.id));
+    if (!own.has(parsed.data.material)) return c.json({ error: 'нет материала' }, 400);
+    await db
+      .insert(pendingExcerpts)
+      .values({ id: parsed.data.id, playerId: pid, data: parsed.data })
+      .onConflictDoNothing();
+    return c.body(null, 204);
   });
 
   /** Форма сайта → движок (ПАРОЛЬ): ответ, открытое, пауза поля. */

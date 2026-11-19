@@ -64,7 +64,11 @@ export function ServerApp({ start }: { start?: string }) {
             </button>
           ))}
         </nav>
-        <section className="srv-page" data-testid="srv-page">
+        <section
+          className="srv-page"
+          data-testid="srv-page"
+          data-source={`Сервер объекта VL-31 · ${MENU.find((m) => m.key === sec)?.label ?? ''}`}
+        >
           {sec === 'log' ? (
             <Log data={data} />
           ) : sec === 'node' ? (

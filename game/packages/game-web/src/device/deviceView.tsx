@@ -1,4 +1,5 @@
 import { type MouseEvent, useEffect, useState } from 'react';
+import { clearFind, highlightFind } from '../search/highlight.ts';
 import { useGame } from '../store.ts';
 import { quoteCard, toVerdict, useVerdictOpen } from '../verdict/cards.ts';
 
@@ -33,11 +34,22 @@ export function useFreeArea() {
   return area;
 }
 
-/** Выделение на экране устройства — кнопка «В заключение», пока форма открыта. */
-export function useSelectionCard(testId: string) {
-  const [sel, setSel] = useState<{ text: string; material: string; x: number; y: number } | null>(
-    null,
-  );
+/** Где выделили: экран какого устройства (для «открыть» у выписки). */
+export type ScreenKind = 'pc' | 'laptop' | 'phone' | 'camera';
+
+/**
+ * Выделение на экране устройства (A-272, DB-B): «На стену» — выписка рукой следователя; пока
+ * открыта форма заключения — и «В заключение» (FM-A). Источник — подпись ближайшего
+ * `data-source` (файл, раздел, письмо), иначе название материала.
+ */
+export function useSelectionCard(testId: string, kind: ScreenKind) {
+  const [sel, setSel] = useState<{
+    text: string;
+    material: string;
+    source: string;
+    x: number;
+    y: number;
+  } | null>(null);
   const verdictOpen = useVerdictOpen();
 
   useEffect(() => {
@@ -53,36 +65,78 @@ export function useSelectionCard(testId: string) {
     const s = window.getSelection();
     const text = s?.toString() ?? '';
     if (!s || s.isCollapsed || !text.trim()) return;
-    const holder = (
-      s.anchorNode instanceof Element ? s.anchorNode : s.anchorNode?.parentElement
-    )?.closest('[data-material]');
+    const at = s.anchorNode instanceof Element ? s.anchorNode : s.anchorNode?.parentElement;
+    const holder = at?.closest('[data-material]');
     const material = holder?.getAttribute('data-material');
     if (!material || !e.currentTarget.contains(holder ?? null)) return;
+    const title = useGame.getState().materials.find((m) => m.id === material)?.title ?? material;
     const r = s.getRangeAt(s.rangeCount - 1).getBoundingClientRect();
     setSel({
-      text: text.trim(),
+      text: text.replace(/\s+/g, ' ').trim(),
       material,
-      x: Math.min(Math.max(r.right, 80), window.innerWidth - 80),
+      source: at?.closest('[data-source]')?.getAttribute('data-source') ?? title,
+      x: Math.min(Math.max(r.right, 120), window.innerWidth - 120),
       y: Math.min(Math.max(r.bottom, 0), window.innerHeight - 48),
     });
   };
-  const toFolder = () => {
-    if (!sel) return;
-    toVerdict(quoteCard(sel.material, sel.text));
+  const done = () => {
     window.getSelection()?.removeAllRanges();
     setSel(null);
   };
-  const button = sel && verdictOpen && (
-    <button
-      type="button"
-      className="to-petition"
-      data-testid={testId}
-      style={{ left: sel.x, top: sel.y + 6 }}
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={toFolder}
-    >
-      В заключение
-    </button>
+  const button = sel && (
+    <div className="sel-actions" style={{ left: sel.x, top: sel.y + 6 }}>
+      <button
+        type="button"
+        className="to-petition"
+        data-testid={testId.replace(/-to-folder$/, '-to-wall')}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => {
+          useGame.getState().pinExcerpt({
+            id: `x:${crypto.randomUUID()}`,
+            text: sel.text.slice(0, 600),
+            material: sel.material,
+            source: sel.source.slice(0, 160),
+            place: { kind },
+          });
+          done();
+        }}
+      >
+        На стену
+      </button>
+      {verdictOpen && (
+        <button
+          type="button"
+          className="to-petition"
+          data-testid={testId}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            toVerdict(quoteCard(sel.material, sel.text));
+            done();
+          }}
+        >
+          В заключение
+        </button>
+      )}
+    </div>
   );
   return { onUp, button };
+}
+
+/**
+ * «Открыть» у выписки (A-272, DB-B): устройство открыто на её файле — выписанные слова
+ * подсвечены и прокручены в вид (та же подсветка, что у поиска по делу).
+ */
+export function useFindOnScreen(selector: string, on: boolean) {
+  const find = useGame((g) => g.find);
+  useEffect(() => {
+    if (!on || !find) return;
+    const t = setTimeout(() => {
+      const root = document.querySelector(selector);
+      const r = root ? highlightFind(root, find.q, find.k) : null;
+      r?.startContainer.parentElement?.scrollIntoView({ block: 'center' });
+      useGame.setState({ find: null });
+    }, 500);
+    return () => clearTimeout(t);
+  }, [find, on, selector]);
+  useEffect(() => (on ? undefined : clearFind()), [on]);
 }

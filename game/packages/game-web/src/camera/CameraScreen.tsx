@@ -35,7 +35,7 @@ const PlayIcon = () => (
 export function CameraScreen() {
   const c = useCamera();
   const props973 = useGame(body('L973'));
-  const { onUp, button } = useSelectionCard('camera-to-folder');
+  const { onUp, button } = useSelectionCard('camera-to-folder', 'camera');
   const [w, h] = CAMERA_PX;
   const time = props973 ? frameTime(props973, c.frame) : null;
   const page = Math.floor((c.frame - 1) / 9);
@@ -161,7 +161,7 @@ export function CameraSheet() {
   const frames = useMemo(() => parseFrames(b24), [b24]);
   const f = frames[frame - 1];
   const details = zoom && b905 ? frameDetails(b905, frame) : [];
-  const { onUp, button } = useSelectionCard('camera-sheet-to-folder');
+  const { onUp, button } = useSelectionCard('camera-sheet-to-folder', 'camera');
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: выделение описания кадра в запрос
     <div

@@ -57,6 +57,13 @@
       "when": 1795070700695,
       "tag": "0007_thin_princess_powerful",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795089699341,
+      "tag": "0008_military_gwen_stacy",
+      "breakpoints": true
     }
   ]
 }

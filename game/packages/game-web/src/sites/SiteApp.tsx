@@ -7,6 +7,7 @@ import { NO_LINKS, remarkSites } from '../paperLinks.tsx';
 import { type Letter, mailbox } from '../pc/content.ts';
 import { MediaPlayer } from '../player/MediaPlayer.tsx';
 import { EMBEDDED_MEDIA, splitEmbedded } from '../player/media.ts';
+import { highlightFind } from '../search/highlight.ts';
 
 /**
  * Сайт дела (A-272, AC-3; T-1): страница из материала пакета — функциональная редакция (финальные
@@ -45,7 +46,7 @@ export function SiteApp() {
           headers: json,
           body: JSON.stringify({ pass }),
         }).catch(() => undefined);
-        history.replaceState(null, '', location.pathname);
+        history.replaceState(null, '', location.pathname + location.hash);
       }
       await reload();
     })();
@@ -74,10 +75,94 @@ export function SiteApp() {
   return <Page page={page} reload={reload} />;
 }
 
+/** Выписка, на которой открыли страницу (`#x=слова&l=письмо`, A-272, DB-B). */
+function wanted(): { text: string; letter: number | null } | null {
+  const h = new URLSearchParams(location.hash.slice(1));
+  const text = h.get('x');
+  return text ? { text, letter: Number(h.get('l')) || null } : null;
+}
+
 function Page({ page, reload }: { page: SitePage; reload: () => Promise<void> }) {
   const parts = useMemo(() => page.body.split(/\n\n(?=::form:)|(?<=::)\n\n/), [page.body]);
+  const want = useMemo(wanted, []);
+  const [sel, setSel] = useState<{
+    text: string;
+    material: string;
+    source: string;
+    letter: number | null;
+    x: number;
+    y: number;
+  } | null>(null);
+  const [pinned, setPinned] = useState('');
+
+  // Открыли выпиской — слова подсвечены и в виду (как поиск по делу в игре).
+  useEffect(() => {
+    if (!want) return;
+    const t = setTimeout(() => {
+      const r = highlightFind(document.body, want.text, 0);
+      r?.startContainer.parentElement?.scrollIntoView({ block: 'center' });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [want]);
+
+  useEffect(() => {
+    const off = () => {
+      const s = window.getSelection();
+      if (!s || s.isCollapsed || !s.toString().trim()) setSel(null);
+    };
+    document.addEventListener('selectionchange', off);
+    return () => document.removeEventListener('selectionchange', off);
+  }, []);
+
+  /** Выделение на странице — кнопка «На стену» у его конца. */
+  const onUp = () => {
+    const s = window.getSelection();
+    const text = s?.toString().replace(/\s+/g, ' ').trim() ?? '';
+    if (!s || s.isCollapsed || !text) return;
+    const at = s.anchorNode instanceof Element ? s.anchorNode : s.anchorNode?.parentElement;
+    if (at?.closest('form, button')) return;
+    const material = at?.closest('[data-material]')?.getAttribute('data-material');
+    if (!material) return;
+    const r = s.getRangeAt(s.rangeCount - 1).getBoundingClientRect();
+    setSel({
+      text: text.slice(0, 600),
+      material,
+      source:
+        at?.closest('[data-source]')?.getAttribute('data-source') ??
+        `${page.domain} · ${page.title}`,
+      letter: Number(at?.closest('[data-letter]')?.getAttribute('data-letter')) || null,
+      x: Math.min(Math.max(r.right, 80), window.innerWidth - 80),
+      y: r.bottom + window.scrollY,
+    });
+  };
+  const toWall = async () => {
+    if (!sel) return;
+    const res = await fetch('/api/site/excerpt', {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({
+        id: `x:${crypto.randomUUID()}`,
+        text: sel.text,
+        material: sel.material,
+        source: sel.source.slice(0, 160),
+        place: {
+          kind: 'site',
+          address: `${page.domain}${location.pathname === '/' ? '' : location.pathname}`,
+          ...(sel.letter ? { letter: sel.letter } : {}),
+        },
+      }),
+    }).catch(() => null);
+    window.getSelection()?.removeAllRanges();
+    setSel(null);
+    setPinned(
+      res?.ok ? 'На стене в деле — вернитесь к игре.' : 'Не получилось: нет связи с игрой.',
+    );
+    setTimeout(() => setPinned(''), 4000);
+  };
+
   return (
-    <div className="site" data-testid="site" data-domain={page.domain}>
+    // biome-ignore lint/a11y/noStaticElementInteractions: выделение текста мышью — выписка на стену
+    <div className="site" data-testid="site" data-domain={page.domain} onMouseUp={onUp}>
       <header className="site-head">
         <div className="site-brand">
           <b>{page.domain}</b>
@@ -93,7 +178,7 @@ function Page({ page, reload }: { page: SitePage; reload: () => Promise<void> })
       </header>
       <main className="site-main" data-material={page.material}>
         {page.mailbox ? (
-          <WebMail body={page.mailbox} />
+          <WebMail body={page.mailbox} letter={want?.letter ?? null} />
         ) : (
           parts.map((p, k) => {
             const id = FORM_TOKEN.exec(p.trim())?.[1] as SiteFormId | undefined;
@@ -143,8 +228,27 @@ function Page({ page, reload }: { page: SitePage; reload: () => Promise<void> })
             );
           })
         )}
-        {page.docs.length > 0 && <Docs docs={page.docs} />}
+        {page.docs.length > 0 && (
+          <Docs docs={page.docs} domain={page.domain} want={want?.text ?? null} />
+        )}
       </main>
+      {sel && (
+        <button
+          type="button"
+          className="site-to-wall"
+          data-testid="site-to-wall"
+          style={{ left: sel.x, top: sel.y + 6 }}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => void toWall()}
+        >
+          На стену
+        </button>
+      )}
+      {pinned && (
+        <p className="site-pinned" role="status" data-testid="site-pinned">
+          {pinned}
+        </p>
+      )}
     </div>
   );
 }
@@ -278,8 +382,20 @@ function MailForgot({ wait }: { wait: SitePage['wait'] }) {
 }
 
 /** Документы, открытые на странице (учёт анкет, архив проекта): заголовок — раскрыть. */
-function Docs({ docs }: { docs: SitePage['docs'] }) {
-  const [open, setOpen] = useState<string | null>(docs.at(-1)?.id ?? null);
+function Docs({
+  docs,
+  domain,
+  want,
+}: {
+  docs: SitePage['docs'];
+  domain: string;
+  want: string | null;
+}) {
+  // Открыли выпиской — раскрыт документ, где она есть.
+  const [open, setOpen] = useState<string | null>(
+    (want && docs.find((d) => d.body.replace(/\s+/g, ' ').includes(want))?.id) ||
+      (docs.at(-1)?.id ?? null),
+  );
   return (
     <section className="site-docs" data-testid="site-docs">
       <h2>Открытые документы</h2>
@@ -288,6 +404,7 @@ function Docs({ docs }: { docs: SitePage['docs'] }) {
           key={d.id}
           className="site-doc"
           data-material={d.id}
+          data-source={`${domain} · ${d.title}`}
           data-testid={`site-doc-${d.id}`}
         >
           <button type="button" onClick={() => setOpen(open === d.id ? null : d.id)}>
@@ -301,13 +418,15 @@ function Docs({ docs }: { docs: SitePage['docs'] }) {
 }
 
 /** Веб-почта Mailbridge 2009 года (L453): «Входящие» и «Отправленные», только чтение. */
-function WebMail({ body }: { body: string }) {
+function WebMail({ body, letter }: { body: string; letter: number | null }) {
   const letters = useMemo(() => mailbox(body), [body]);
   const [box, setBox] = useState<'in' | 'out'>('in');
   const sent = (l: Letter) => l.from.includes(ME);
   const list = letters.filter((l) => (box === 'out' ? sent(l) : !sent(l)));
-  const [sel, setSel] = useState<number | null>(null);
+  const [sel, setSel] = useState<number | null>(letter);
   const cur = letters.find((l) => l.n === sel) ?? null;
+  // Источник выписки — как на конверте: «почта Э. Пирс · 09.10 · Re: B».
+  const short = (d: string) => d.split(' ')[0]?.slice(0, 5) ?? d;
   return (
     <div className="site-mail" data-testid="site-mail" data-material="L453">
       <aside>
@@ -348,7 +467,12 @@ function WebMail({ body }: { body: string }) {
           </tbody>
         </table>
         {cur && (
-          <article className="site-letter" data-testid="site-letter">
+          <article
+            className="site-letter"
+            data-testid="site-letter"
+            data-letter={cur.n}
+            data-source={`почта Э. Пирс · ${short(cur.date)} · ${cur.subject}`}
+          >
             <h3>{cur.subject}</h3>
             <p className="site-letter-meta">
               {cur.date} · {cur.from} → {cur.to}

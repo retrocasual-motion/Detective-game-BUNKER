@@ -1,4 +1,10 @@
-import type { Material, PlayerState, VerdictAnswer, VerdictResult } from '@bunker/shared';
+import type {
+  Material,
+  PlayerState,
+  VerdictAnswer,
+  VerdictResult,
+  WallExcerpt,
+} from '@bunker/shared';
 
 /**
  * Запрос с пределом ожидания (R2-07): завис сервер — через 15 с ошибка, как при обрыве связи,
@@ -163,4 +169,19 @@ export const postVerdict = async (
   });
   if (res.status === 422) return res.json();
   return (await check(res)).json();
+};
+
+/** Выписки с сайтов, что ждут стены (A-272, DB-B). */
+export const getExcerpts = async (): Promise<WallExcerpt[]> =>
+  (await check(await call('/api/excerpts'))).json();
+
+/** Выписки повешены и сохранены — сервер убирает их из очереди. */
+export const ackExcerpts = async (ids: string[]): Promise<void> => {
+  await check(
+    await call('/api/excerpts/ack', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ids }),
+    }),
+  );
 };

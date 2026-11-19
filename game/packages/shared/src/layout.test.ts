@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { sealedIds } from './archive.ts';
 import {
+  addExcerpt,
   arrangeWall,
   BOARD_PAD,
   boardCamera,
@@ -14,6 +15,7 @@ import {
   openAll,
   openContainer,
   reconcile,
+  removeExcerpt,
   upgradeState,
   WALL_BOUNDS,
 } from './layout.ts';
@@ -332,5 +334,42 @@ describe('старое сохранение на большой доске (WB-C
     const first = reconcile(far, starting).wall.items[0];
     expect(first?.x).toBeLessThanOrEqual(WALL_BOUNDS.right - 80);
     expect(first?.y).toBeLessThanOrEqual(WALL_BOUNDS.bottom - 80);
+  });
+});
+
+describe('выписки на стене (A-272, DB-B)', () => {
+  const withL = [...starting, mat('L620')];
+  const x = {
+    id: 'x:1',
+    text: 'Текущий этап — по номеру программы',
+    material: 'L620',
+    source: 'vaultline-program.com · Кабинет',
+    place: { kind: 'site' as const, address: 'vaultline-program.com/cabinet' },
+  };
+
+  it('выписка — на свободное место стены; повтор не добавляется; снимается вместе с нитями', () => {
+    const s = addExcerpt(defaultState(withL), x);
+    const at = s.wall.items.find((i) => i.id === 'x:1');
+    expect(at).toBeDefined();
+    expect(
+      s.wall.items.filter((i) => i.id !== 'x:1').some((i) => i.x === at?.x && i.y === at?.y),
+    ).toBe(false);
+    expect(addExcerpt(s, x)).toBe(s);
+    const tied = {
+      ...s,
+      wall: { ...s.wall, threads: [{ id: 't', from: 'x:1', to: '01', label: '' }] },
+    };
+    const off = removeExcerpt(tied, 'x:1');
+    expect(off.excerpts).toEqual([]);
+    expect(off.wall.items.some((i) => i.id === 'x:1')).toBe(false);
+    expect(off.wall.threads).toEqual([]);
+  });
+
+  it('reconcile: выписка из материала, которого нет, снимается; своя — остаётся', () => {
+    const s = addExcerpt(defaultState(withL), x);
+    expect(reconcile(s, withL).wall.items.some((i) => i.id === 'x:1')).toBe(true);
+    const gone = reconcile(s, starting);
+    expect(gone.wall.items.some((i) => i.id === 'x:1')).toBe(false);
+    expect(gone.excerpts).toEqual([]);
   });
 });

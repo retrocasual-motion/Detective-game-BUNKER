@@ -78,6 +78,27 @@ export const NoteSchema = z.object({
 export type Note = z.infer<typeof NoteSchema>;
 
 /**
+ * Выписка на стену (A-272, AC-6; DB-B): выделенные слова с сайта, из почты, с экрана устройства —
+ * карточкой-каталожкой рукой следователя; внизу источник, «открыть» — источник на этом месте.
+ * Материал — откуда выписано (для формы заключения и P-10: только открытое игроком).
+ */
+export const ExcerptPlaceSchema = z.object({
+  kind: z.enum(['site', 'pc', 'laptop', 'phone', 'camera']),
+  /** Сайт: адрес с путём (`vaultline-program.com/cabinet`). */
+  address: z.string().max(300).optional(),
+  /** Веб-почта: номер письма. */
+  letter: z.number().int().min(1).max(999).optional(),
+});
+export const ExcerptSchema = z.object({
+  id: z.string().regex(/^x:[\w-]{1,64}$/),
+  text: z.string().min(1).max(600),
+  material: z.string().regex(/^(\d{2}|L\d{3})$/),
+  source: z.string().max(160),
+  place: ExcerptPlaceSchema,
+});
+export type WallExcerpt = z.infer<typeof ExcerptSchema>;
+
+/**
  * Карточка (K-A): выделенная строка материала или материал целиком (тогда цитата — его
  * название) — опора в форме заключения (FM-A). У карточки нет типов, меток и подсветки (P-1).
  * M001… — письма-ответы на запросы, снятые A-272: номер остаётся допустимым, чтобы старое
@@ -157,6 +178,8 @@ export const PlayerStateSchema = z.object({
     threads: z.array(ThreadSchema),
     notes: z.array(NoteSchema),
   }),
+  /** Выписки на стене (A-272, DB-B). Нет поля — выписок нет. */
+  excerpts: z.array(ExcerptSchema).max(300).optional(),
   /**
    * Вскрытые конверты архива (A-260). Нет поля — сохранение из времени до конвертов: всё уже
    * на стене, конверты считаются вскрытыми (openedOf).

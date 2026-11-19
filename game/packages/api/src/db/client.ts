@@ -7,6 +7,7 @@ import * as schema from './schema.ts';
 
 export {
   loginTokens,
+  pendingExcerpts,
   playerProgress,
   playerState,
   players,

@@ -1,7 +1,7 @@
 import { type PcWindow, SERVER_LOG_ID } from '@bunker/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ddmmyyyy, gameNow, hhmm } from '../clock.ts';
-import { useFreeArea, useSelectionCard } from '../device/deviceView.tsx';
+import { useFindOnScreen, useFreeArea, useSelectionCard } from '../device/deviceView.tsx';
 import { FileIcon } from '../laptop/apps.tsx';
 import { DesktopIcon, gridAt, settle, snapToGrid, Window } from '../laptop/Desktop.tsx';
 import '../laptop/laptop.css';
@@ -72,7 +72,8 @@ export function PcView() {
     (area.height - 40) / (SCREEN_H + BEZEL * 2 + 18),
   );
   const hasDisc = useGame((g) => g.materials.some((m) => m.id === SERVER_LOG_ID));
-  const { onUp, button } = useSelectionCard('pc-to-folder');
+  const { onUp, button } = useSelectionCard('pc-to-folder', 'pc');
+  useFindOnScreen('.pc-screen', open);
 
   useEffect(() => {
     if (!open) return;

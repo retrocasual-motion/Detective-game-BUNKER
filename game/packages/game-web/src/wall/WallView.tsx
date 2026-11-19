@@ -30,7 +30,14 @@ import { useInputMode } from '../input.ts';
 import { reducedMotion } from '../motion.ts';
 import { useViewport } from '../room/useViewport.ts';
 import { shownCamera, useGame } from '../store.ts';
-import { folderFieldAt, overFolder, toVerdict, useCardDrop, wholeCard } from '../verdict/cards.ts';
+import {
+  folderFieldAt,
+  overFolder,
+  quoteCard,
+  toVerdict,
+  useCardDrop,
+  wholeCard,
+} from '../verdict/cards.ts';
 import { useVerdict, verdictActive } from '../verdict/verdict-store.ts';
 import { FOLDER_SHEETS, folderOnWall } from '../viewer/bundles.ts';
 import { useCameraTween } from './useCameraTween.ts';
@@ -156,6 +163,7 @@ const JOIN_PAUSE_MS = 450;
 
 export function WallView() {
   const wall = useGame((g) => g.state?.wall);
+  const excerptList = useGame((g) => g.state?.excerpts);
   const trackpad = useInputMode() === 'trackpad';
   // Со стола доска видна целиком (правка автора 09.11); у стены — камера игрока.
   const atDesk = useGame((g) => g.state?.view === 'desk');
@@ -379,6 +387,12 @@ export function WallView() {
         toVerdict(wholeCard(m));
         return;
       }
+      // Выписка — опора в форме заключения (A-272, FM-A: «материал или выдержка»).
+      const ex = useGame.getState().state?.excerpts?.find((x) => x.id === id);
+      if (f && ex) {
+        toVerdict(quoteCard(ex.material, ex.text));
+        return;
+      }
       updateState(moveItem(id, x, y));
       snapJoin(id);
     },
@@ -392,7 +406,8 @@ export function WallView() {
       setLive(dx === 0 && dy === 0 ? null : { id, dx, dy });
       const drag = useCardDrop.getState();
       // Над формой заключения тянут и карточку человека (A-270).
-      const material = !id.includes(':') || (id.startsWith('p:') && verdictActive());
+      const material =
+        !id.includes(':') || id.startsWith('x:') || (id.startsWith('p:') && verdictActive());
       const group = selectedRef.current.size > 1 && selectedRef.current.has(id);
       if (!at || !useGame.getState().folderOpen || !material || group || (dx === 0 && dy === 0)) {
         drag.setOver(false);
@@ -407,6 +422,7 @@ export function WallView() {
   const activate = useCallback(
     (id: string) => {
       if (id.startsWith('n:')) setEditingNote(id);
+      else if (id.startsWith('x:')) useGame.getState().openExcerpt(id);
       else if (id.startsWith('F:')) {
         // Папка из пачки — её листы из описи (RD-A, DS-A до отдельного документа).
         const f = folderOnWall(id, useGame.getState().materials);
@@ -472,6 +488,7 @@ export function WallView() {
     });
   };
 
+  const unpinExcerpt = useCallback((id: string) => useGame.getState().unpinExcerpt(id), []);
   const deleteNote = useCallback(
     (id: string) => {
       const s = useGame.getState().state;
@@ -502,6 +519,7 @@ export function WallView() {
 
   const byId = new Map(materials.map((m) => [m.id, m]));
   const notes = new Map(wall.notes.map((n) => [n.id, n]));
+  const excerpts = new Map((excerptList ?? []).map((x) => [x.id, x]));
   // Нити идут за вещью сразу, пока её тянут; тянут выделенную — за всеми выделенными.
   const shown = frame ? frame.hit : selected;
   const groupDrag = !!live && selected.size > 1 && selected.has(live.id);
@@ -560,6 +578,7 @@ export function WallView() {
     let width: number | undefined;
     let toolbar: ReactNode = null;
     const folder = item.id.startsWith('F:') ? folderOnWall(item.id, materials) : null;
+    const excerpt = excerpts.get(item.id);
     const piece = pieceOf(item.id);
     if (piece) {
       // Обрывок, вынутый из материала (SRC-A): рваный край сверху — той же линией, что низ
@@ -594,6 +613,29 @@ export function WallView() {
         <>
           <span className="folder-sticker">{folder.code}</span>
           <span className="card-title">Папка из пачки {folder.bundle}</span>
+        </>
+      );
+    } else if (excerpt) {
+      // Выписка (A-272, DB-B): каталожка — слова рукой следователя, внизу мелко источник,
+      // в углу «открыть» — источник на этом месте.
+      kind = 'excerpt';
+      label = `Выписка: ${excerpt.text}`;
+      content = (
+        <>
+          <span className="excerpt-text">{excerpt.text}</span>
+          <span className="excerpt-source">{excerpt.source}</span>
+          <button
+            type="button"
+            className="excerpt-open"
+            data-testid={`excerpt-open-${excerpt.id}`}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              useGame.getState().openExcerpt(excerpt.id);
+            }}
+          >
+            открыть
+          </button>
         </>
       );
     } else if (m) {
@@ -689,7 +731,8 @@ export function WallView() {
         onDrop={drop}
         onLive={onLive}
         pin={pin}
-        onDelete={note ? deleteNote : undefined}
+        onDelete={note ? deleteNote : excerpt ? unpinExcerpt : undefined}
+        deleteLabel={excerpt ? 'Снять выписку' : undefined}
         hidden={ghost?.id === item.id}
         selected={shown.has(item.id)}
         found={foundId === item.id || fresh.has(item.id)}
