@@ -175,8 +175,8 @@ describe('край доски', () => {
 });
 
 describe('разложить по порядку (служебная кнопка)', () => {
-  it('стартовые — на начальные места, письма и записки — рядами правее сетки (WB-C); нити остаются', () => {
-    const mats = [...starting, mat('L214'), mat('M001')];
+  it('стартовые — на начальные места, пришедшее и записки — рядами правее сетки (WB-C); нити остаются', () => {
+    const mats = [...starting, mat('L214'), mat('L215')];
     const base = defaultState(mats);
     const moved: PlayerState = {
       ...base,
@@ -185,7 +185,7 @@ describe('разложить по порядку (служебная кнопк�
         camera: { x: 999, y: 999, zoom: 1.5 },
         items: [
           ...base.wall.items.map((i) => ({ ...i, x: i.x + 777, y: -i.y, rot: 40 })),
-          { id: 'M001', x: 5, y: 5, z: 90, rot: 0 },
+          { id: 'L215', x: 5, y: 5, z: 90, rot: 0 },
           { id: 'L214', x: 6, y: 6, z: 91, rot: 0 },
           { id: 'n1', x: 7, y: 7, z: 92, rot: 0 },
         ],
@@ -199,31 +199,11 @@ describe('разложить по порядку (служебная кнопк�
     const right = Math.max(...base.wall.items.map((i) => i.x)) + CARD_W;
     expect(at('L214')?.x).toBeGreaterThan(right);
     expect(at('n1')?.x ?? 0).toBeLessThanOrEqual(WALL_BOUNDS.right - CARD_W);
-    expect(at('L214')?.x).toBeLessThan(at('M001')?.x ?? 0);
-    expect(at('M001')?.x).toBeLessThan(at('n1')?.x ?? 0);
+    expect(at('L214')?.x).toBeLessThan(at('L215')?.x ?? 0);
+    expect(at('L215')?.x).toBeLessThan(at('n1')?.x ?? 0);
     expect(s.wall.threads).toEqual(moved.wall.threads);
     expect(s.wall.notes).toEqual(moved.wall.notes);
     expect(s.wall.camera).toEqual(moved.wall.camera);
-  });
-});
-
-describe('корзина (TR-A)', () => {
-  const withM = [...starting, mat('L101'), mat('M001'), mat('M002')];
-  const s = defaultState(withM);
-
-  it('выброшенное письмо не стоит во «Входящих»', () => {
-    expect(inboxIds({ ...s, trash: ['M001'] }, withM)).toEqual(['M002', 'L101']);
-  });
-
-  it('reconcile: в корзине только свои письма-ответы без повторов; со стены выброшенное снято', () => {
-    const hung = {
-      ...s,
-      wall: { ...s.wall, items: [...s.wall.items, { id: 'M001', x: 0, y: 0, z: 999, rot: 0 }] },
-      trash: ['M001', 'M001', 'L101', 'M404'],
-    };
-    const got = reconcile(hung, withM);
-    expect(got.trash).toEqual(['M001']);
-    expect(got.wall.items.some((i) => i.id === 'M001')).toBe(false);
   });
 });
 

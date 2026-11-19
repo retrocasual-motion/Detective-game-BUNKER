@@ -1,16 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import {
-  attachments,
-  forScreen,
-  hasValue,
-  incoming,
-  issueOf,
-  locate,
-  mailbox,
-  normalizeDate,
-  serverDocs,
-} from './content.ts';
+import { hasValue, issueOf, locate, mailbox, normalizeDate, serverDocs } from './content.ts';
 
 const dir = '../../../playtest/packs/v3.4-2026-11-18/locked';
 const mat = (id: string) => {
@@ -67,19 +57,6 @@ describe('компьютер следователя — из канона', () =
       from: 'j.mercer@sentinel-labs.net',
       subject: 'Условия',
     });
-  });
-  it('«Поступления» — только письма; вложения — отдельными файлами, замок до пароля', () => {
-    const got = [mat('L452'), mat('L735'), mat('L214')];
-    expect(incoming(got).map((x) => [x.name, x.attachment])).toEqual([
-      ['Ответ Mailbridge.txt', 'mailbox_export_e.pierce.uk.mbx'],
-      ['Ответ VAULTLINE.txt', 'VL-31_project_archive.enc'],
-    ]);
-    expect(attachments(got)).toEqual([
-      { id: 'mbx', file: 'mailbox_export_e.pierce.uk.mbx', unlocked: false },
-      { id: 'enc', file: 'VL-31_project_archive.enc', unlocked: false },
-    ]);
-    expect(attachments([...got, mat('L453')])[0]?.unlocked).toBe(true);
-    expect(forScreen(mat('L452').body)).not.toContain('Ввод:');
   });
   it('дата выпуска: разделители любые; повтор — выпуск по дате', () => {
     expect(normalizeDate('14-10-2009')).toBe('14.10.2009');

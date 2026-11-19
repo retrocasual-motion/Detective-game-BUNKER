@@ -116,7 +116,7 @@ test('угол листа листает не только по нарисова
   const right = box.x + box.width;
   const bottom = box.y + box.height;
   await page.waitForTimeout(450); // щелчок сразу после открытия — второй щелчок двойного
-  // Пустое поле внизу листа — не строка: ничего не отмечено, кнопки «в запрос» нет.
+  // Пустое поле внизу листа — не строка: ничего не отмечено, кнопки у выделения нет.
   await page.mouse.click(box.x + box.width / 2 - 80, bottom - 8);
   await expect(page.getByTestId('viewer')).toBeVisible();
   expect(await page.evaluate(() => window.getSelection()?.toString() ?? '')).toBe('');
@@ -152,12 +152,14 @@ test.describe('живой лист (движение не уменьшено)', 
       .toMatch(/rotateY\(-[1-9]/);
   });
 
-  test('над папкой запроса лист помнит, где мышь: наклон к ней, а не ровно', async ({ page }) => {
+  test('мышь внизу слева от листа — лист помнит, где она: наклон к ней, а не ровно', async ({
+    page,
+  }) => {
     await sheet(page, '07').click(STRIP);
-    const tab = await page.getByTestId('petition-corner').boundingBox();
-    if (!tab) throw new Error('нет папки');
-    await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2, { steps: 6 });
-    // Папка внизу слева от листа — лист наклонён к ней (левый нижний край приподнят).
+    const vp = page.viewportSize();
+    if (!vp) throw new Error('нет окна');
+    await page.mouse.move(40, vp.height - 40, { steps: 6 });
+    // Мышь внизу слева от листа — лист наклонён к ней (левый нижний край приподнят).
     await expect
       .poll(async () => (await page.getByTestId('viewer-flip').getAttribute('style')) ?? '')
       .toMatch(/rotateX\([1-9][\d.]*deg\) rotateY\([1-9]/);

@@ -79,8 +79,8 @@ export interface Bounds {
   bottom: number;
 }
 
-/** Пришло по ходу дела (закрытый материал L… или письмо-ответ M…), а не стартовое (01…51). */
-export const isReleased = (m: Pick<Material, 'id'>) => /^[LM]/.test(m.id);
+/** Пришло по ходу дела (закрытый материал L…), а не стартовое (01…52). */
+export const isReleased = (m: Pick<Material, 'id'>) => /^L/.test(m.id);
 
 /** Псевдослучайное число 0…1 по номеру и «оси» — без состояния, всегда одинаковое. */
 function noise(k: number, axis: number): number {
@@ -121,7 +121,6 @@ export function startSlot(id: string, materials: Material[]): { x: number; y: nu
 export function inboxIds(state: PlayerState, materials: Material[]): string[] {
   const hidden = new Set([
     ...state.wall.items.map((i) => i.id),
-    ...(state.trash ?? []),
     // Вынутая папка висит на стене папкой — её материал не во «Входящих» (DS-A).
     ...(state.taken ?? []).flatMap((t) => FOLDER_DOCS[t] ?? []),
     // Файлы устройств — на устройстве (LW-A).
@@ -141,8 +140,6 @@ export function defaultState(materials: Material[]): PlayerState {
       version: STATE_VERSION,
       view: 'desk',
       wall: { camera: DEFAULT_WALL_CAMERA, items: [], threads: [], notes: [] },
-      drafts: [],
-      trash: [],
       // Новое дело (A-260): конверты на столе ещё опечатаны.
       opened: [],
     },
@@ -258,13 +255,10 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
   // Половины, сложенные в один лист (MG-A), на стене не висят — висит совмещённый.
   const parts = joinedParts(state.joined);
 
-  // Корзина — только свои письма-ответы, без повторов; выброшенное на стене не висит.
-  const trash = [...new Set(state.trash ?? [])].filter((id) => /^M/.test(id) && known.has(id));
-  const binned = new Set(trash);
   const seen = new Set<string>();
   const items: WallItem[] = state.wall.items
     .filter((i) => {
-      if (!known.has(i.id) || seen.has(i.id) || binned.has(i.id) || parts.has(i.id)) return false;
+      if (!known.has(i.id) || seen.has(i.id) || parts.has(i.id)) return false;
       seen.add(i.id);
       return true;
     })
@@ -291,17 +285,7 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
     (t) => seen.has(t.from) && seen.has(t.to) && t.from !== t.to,
   );
 
-  // Карточка черновика ссылается только на то, что у игрока есть.
-  const ids = new Set(materials.map((m) => m.id));
-  const card = <T extends { file: string } | null>(c: T): T | null =>
-    c && !ids.has(c.file) ? null : c;
-  const drafts = (state.drafts ?? []).map((d) => ({
-    ...d,
-    ask: card(d.ask),
-    basis: card(d.basis),
-  }));
-
-  return { ...state, wall: { ...state.wall, items, threads, notes: kept }, drafts, trash };
+  return { ...state, wall: { ...state.wall, items, threads, notes: kept } };
 }
 
 /** Папка, вынутая из пачки, на стене: «F:П-02/18» (taken «П-02/18»). */

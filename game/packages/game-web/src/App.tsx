@@ -4,12 +4,10 @@ import { useEffect, useMemo } from 'react';
 import { ArrivalNote } from './desk/ArrivalNote.tsx';
 import { Notebook } from './desk/Notebook.tsx';
 import { PlacedNote } from './desk/PlacedNote.tsx';
-import { ThrowToast, TrashView } from './desk/TrashBin.tsx';
 import { DevActionLine } from './dev/DevActionLine.tsx';
 import { HeldView } from './hold/HeldView.tsx';
 import { Credits, MainMenu, MenuTab } from './menu/MainMenu.tsx';
 import { PcView } from './pc/PcView.tsx';
-import { PetitionCorner } from './petition/PetitionCorner.tsx';
 import { PenView } from './player/PenView.tsx';
 import { RoomScene } from './room/RoomScene.tsx';
 import { KEY_DIR, NAV } from './room/views.ts';
@@ -76,7 +74,6 @@ export function App() {
   // Строкой: новый массив на каждое изменение стора перерисовывал бы комнату без нужды.
   const inboxKey = useGame((g) => (g.state ? inboxIds(g.state, g.materials).join(',') : ''));
   const inbox = useMemo(() => (inboxKey ? inboxKey.split(',') : []), [inboxKey]);
-  const trash = useGame((g) => g.state?.trash.length ?? 0);
   // Строкой — по той же причине, что и «Входящие».
   const openedKey = useGame((g) => (g.state ? openedOf(g.state).join(',') : ''));
   const opened = useMemo(
@@ -112,7 +109,6 @@ export function App() {
         hideNav={viewerId !== null || computerOpen || holding}
         wall={wall}
         inbox={inbox}
-        trash={trash}
         opened={opened}
         epilogue={epilogue}
       />
@@ -152,12 +148,10 @@ export function App() {
       <PlacedNote />
       <PcView />
       <PenView />
-      <TrashView />
       <HeldView />
       <SearchPanel />
-      <ThrowToast />
       {viewerId && <Viewer key={viewerId} materialId={viewerId} />}
-      {closed ? <VerdictCorner /> : <PetitionCorner />}
+      {closed && <VerdictCorner />}
       <MenuTab />
       <SolveCase />
       <EpilogueNote />

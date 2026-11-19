@@ -1,18 +1,9 @@
 /** Формат `gm/access.json` пакета игрока (собирает `gm/build_access.py`). */
 
-export type ActionName =
-  | 'ОСМОТР'
-  | 'ХОДАТАЙСТВО'
-  | 'АДРЕС'
-  | 'ЗВОНОК'
-  | 'ПАРОЛЬ'
-  | 'РЕШИТЬ'
-  | 'ФИНАЛ'
-  | 'СТОП';
+export type ActionName = 'ОСМОТР' | 'АДРЕС' | 'ЗВОНОК' | 'ПАРОЛЬ' | 'РЕШИТЬ' | 'ФИНАЛ' | 'СТОП';
 
 export const ACTIONS: readonly ActionName[] = [
   'ОСМОТР',
-  'ХОДАТАЙСТВО',
   'АДРЕС',
   'ЗВОНОК',
   'ПАРОЛЬ',
@@ -21,20 +12,12 @@ export const ACTIONS: readonly ActionName[] = [
   'СТОП',
 ];
 
-/** Вариант карточки: шаблон номера файла и шаблон цитаты. */
-export interface CardSpec {
-  file?: string;
-  quote?: string;
-}
-
 export interface Rule {
   id: string;
   action: string;
   target: string;
   target_label?: string;
   accept?: string[];
-  cards?: CardSpec[][];
-  not_cards?: CardSpec[];
   release: string[];
   requires?: string[];
   requires_reply?: string;
@@ -60,7 +43,6 @@ export interface AccessRules {
   version: number;
   final_form?: FinalForm;
   attempt_limit?: Partial<Record<string, number>>;
-  address_book?: boolean;
   attempt_limit_reply?: string;
   default_reply?: Partial<Record<string, string>>;
   rules: Rule[];
@@ -85,19 +67,11 @@ export type Result =
   | 'конец'
   | 'после конца';
 
-/** Карточка запроса: номер файла (01…51, L…, «почта») и цитата из него. */
-export interface Card {
-  file: string;
-  quote: string;
-}
-
 export interface ActionInput {
   action: ActionName;
   target: string;
   /** Значение (пароль, адрес, действие осмотра, ответ «продолжить»). */
   value?: string;
-  /** Для ХОДАТАЙСТВО: «Прошу» и «На основании». */
-  cards?: [Card, Card];
 }
 
 /** Прогресс игрока, который ведёт движок (пишет только сервер). */
@@ -108,8 +82,6 @@ export interface Progress {
   seen: string[];
   /** Неверные попытки по полям: ключ — действие и поле. */
   fails: Record<string, { n: number; last: number }>;
-  /** Почта специалиста: ответы на запросы (из неё тоже берут карточки). */
-  mail: string;
   /** ФИНАЛ или СТОП принят — дело закрыто. */
   ended: boolean;
 }
@@ -118,7 +90,6 @@ export const emptyProgress = (): Progress => ({
   released: [],
   seen: [],
   fails: {},
-  mail: '',
   ended: false,
 });
 
@@ -140,6 +111,11 @@ export interface EngineConfig {
    * полях, и в архиве газеты). Нет — как в пакете.
    */
   limits?: Partial<Record<string, number>>;
+  /**
+   * Поля без лимита — поиск, а не отправка (DS-B, автор 19.11): шаблоны цели поля (как в
+   * правилах, Python-регулярные). Ошибка поиска не считается неверной попыткой.
+   */
+  unlimited?: readonly string[];
 }
 
 export const DEFAULT_CONFIG: EngineConfig = { pauseMs: 10 * 60 * 1000 };

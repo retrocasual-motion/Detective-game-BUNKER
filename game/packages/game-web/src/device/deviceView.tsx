@@ -1,18 +1,16 @@
 import { type MouseEvent, useEffect, useState } from 'react';
-import { emailIn, quoteCard } from '../petition/drafts.ts';
-import { usePetition } from '../petition/petition-store.ts';
 import { useGame } from '../store.ts';
-import { useToFolderLabel } from '../verdict/verdict-store.ts';
+import { quoteCard, toVerdict, useVerdictOpen } from '../verdict/cards.ts';
 
 /**
  * Общее у экранов устройств (ноутбук 4c-1, телефон 4c-2): устройство стоит в свободном месте
- * между папкой запроса и блокнотом (они лежат сверху — правка автора 11.11); выделенная
- * строка на экране — в запрос (PT-A).
+ * между папкой заключения и блокнотом (они лежат сверху — правка автора 11.11); выделенная
+ * строка на экране — в заключение, пока открыта его форма (PT-A, FM-A).
  */
 
 /** Свободное место по горизонтали: середина и ширина (обновляется, когда папка или блокнот выдвинуты). */
 export function useFreeArea() {
-  const folderShown = useGame((g) => g.petitionOpen);
+  const folderShown = useGame((g) => g.folderOpen);
   const notebookShown = useGame((g) => g.notebookOpen);
   const [area, setArea] = useState(() => ({
     center: window.innerWidth / 2,
@@ -35,14 +33,12 @@ export function useFreeArea() {
   return area;
 }
 
-/** Выделение на экране устройства — кнопка «В запрос» (или «В «Кому»» для адреса). */
-export function useSelectionPetition(testId: string) {
+/** Выделение на экране устройства — кнопка «В заключение», пока форма открыта. */
+export function useSelectionCard(testId: string) {
   const [sel, setSel] = useState<{ text: string; material: string; x: number; y: number } | null>(
     null,
   );
-  const folderShown = useGame((g) => g.petitionOpen);
-  const toAddress = usePetition((p) => p.field === 'to');
-  const toFolder = useToFolderLabel();
+  const verdictOpen = useVerdictOpen();
 
   useEffect(() => {
     const onChange = () => {
@@ -70,28 +66,22 @@ export function useSelectionPetition(testId: string) {
       y: Math.min(Math.max(r.bottom, 0), window.innerHeight - 48),
     });
   };
-  const toPetition = () => {
+  const toFolder = () => {
     if (!sel) return;
-    const pet = usePetition.getState();
-    const address = emailIn(sel.text);
-    if (folderShown && toAddress && address) pet.setTo(address);
-    else {
-      const card = quoteCard(sel.material, sel.text);
-      if (card) pet.addCard(card);
-    }
+    toVerdict(quoteCard(sel.material, sel.text));
     window.getSelection()?.removeAllRanges();
     setSel(null);
   };
-  const button = sel && (
+  const button = sel && verdictOpen && (
     <button
       type="button"
       className="to-petition"
       data-testid={testId}
       style={{ left: sel.x, top: sel.y + 6 }}
       onMouseDown={(e) => e.preventDefault()}
-      onClick={toPetition}
+      onClick={toFolder}
     >
-      {folderShown && toAddress && emailIn(sel.text) ? 'В «Кому»' : toFolder}
+      В заключение
     </button>
   );
   return { onUp, button };

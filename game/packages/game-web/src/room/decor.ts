@@ -16,7 +16,6 @@ export interface Poly {
 /** Что делает щелчок по предмету: компьютер или материал дела (устройство). */
 export type Hotspot =
   | { kind: 'computer' }
-  | { kind: 'trash' }
   | { kind: 'container'; id: ContainerId }
   | { kind: 'material'; id: string };
 
@@ -102,51 +101,6 @@ function inboxObjects(r: Room, col: Col, inbox: string[]): DeskObject[] {
   ];
 }
 
-/** Сколько комков видно в корзине (остальные — под ними). */
-export const TRASH_SHOWN = 5;
-
-/**
- * Корзина у стола (TR-A, решение автора 09.11): сюда выбрасывают письма-ответы, они лежат
- * скомканными. Стоит на правом углу стола: пол у стола с сидячей камеры не виден.
- */
-function trashObject(r: Room, col: Col, trash: number): DeskObject {
-  const { p, deskY } = r;
-  const X = 0.76;
-  const Z = 0.3;
-  const W = 0.11;
-  const H = 0.12;
-  const at = (x: number, z: number, w: number, h: number, color: string, lift: number): Box => ({
-    min: [(x - w / 2) * p, deskY - (lift + h) * p, (z - w / 2) * p],
-    max: [(x + w / 2) * p, deskY - lift * p, (z + w / 2) * p],
-    color,
-  });
-  // Комки — по кругу у верха корзины, каждый чуть выше края.
-  const spots: [number, number][] = [
-    [0, 0],
-    [-0.03, 0.025],
-    [0.03, -0.02],
-    [0.028, 0.03],
-    [-0.028, -0.028],
-  ];
-  const crumples = spots
-    .slice(0, Math.min(trash, TRASH_SHOWN))
-    .map(([dx, dz], k) =>
-      at(X + dx, Z + dz, 0.042 - k * 0.003, 0.035, col('--color-crumple'), H - 0.015),
-    );
-  return {
-    key: 'trash',
-    label: trash ? `Корзина: выброшено писем — ${trash}` : 'Корзина (пусто)',
-    boxes: [
-      at(X, Z, W, H, col('--color-bin'), 0),
-      at(X, Z, W - 0.016, 0.001, col('--color-bin-inside'), H),
-      ...crumples,
-    ],
-    hotspot: { kind: 'trash' },
-    tag: trash ? `Корзина · ${trash}` : 'Корзина',
-    testId: 'trash-bin',
-  };
-}
-
 const rect = (c: Vec3, u: Vec3, v: Vec3): Vec3[] => [
   [c[0] - u[0] - v[0], c[1] - u[1] - v[1], c[2] - u[2] - v[2]],
   [c[0] + u[0] - v[0], c[1] + u[1] - v[1], c[2] + u[2] - v[2]],
@@ -204,7 +158,6 @@ export function deskObjects(
   r: Room,
   col: Col,
   inbox: string[] = [],
-  trash = 0,
   opened: readonly ContainerId[] = CONTAINER_IDS,
   /** Эпилог после заключения: «fresh» — конверт пришёл и не открыт (подсвечен). */
   epilogue: Epilogue = 'none',
@@ -229,7 +182,6 @@ export function deskObjects(
   monitor.screen = col('--color-screen');
   const all: DeskObject[] = [
     ...inboxObjects(r, col, inbox),
-    trashObject(r, col, trash),
     {
       key: 'lamp',
       label: 'Лампа',
@@ -591,14 +543,13 @@ export function drawObjects(
   pose: Pose,
   r: Room,
   inbox: string[] = [],
-  trash = 0,
   opened: readonly ContainerId[] = CONTAINER_IDS,
   epilogue: Epilogue = 'none',
 ): void {
   const ctx = prepare(canvas, r);
   if (!ctx) return;
   const col = colors(canvas);
-  for (const o of sortObjects(deskObjects(r, col, inbox, trash, opened, epilogue), pose.eye)) {
+  for (const o of sortObjects(deskObjects(r, col, inbox, opened, epilogue), pose.eye)) {
     const boxes = [...o.boxes].sort(
       (a, b) => dist(center(b), pose.eye) - dist(center(a), pose.eye),
     );

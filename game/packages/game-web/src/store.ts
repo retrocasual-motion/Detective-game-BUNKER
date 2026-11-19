@@ -24,11 +24,11 @@ import {
 } from '@bunker/shared';
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import { getMaterials, getPendingMail, getState, postAction, putState } from './api.ts';
+import { getMaterials, getState, postAction, putState } from './api.ts';
 import { clampToBounds } from './canvas/math.ts';
 import { todayKey } from './clock.ts';
 import { createSaver } from './save.ts';
-import { type Binned, binLetter, moveItem, takeLetter, unbinLetter } from './wall/wall-actions.ts';
+import { moveItem } from './wall/wall-actions.ts';
 
 const screen = () => ({ width: window.innerWidth, height: window.innerHeight });
 
@@ -39,7 +39,7 @@ export const shownCamera = (s: PlayerState) =>
 /** Найденное поиском показывается не мельче этого (карточка ~100 px, заголовок читается). */
 const REVEAL_ZOOM = 0.6;
 
-/** Часть экрана, не закрытая панелью поиска (справа) и папкой запроса (слева). */
+/** Часть экрана, не закрытая панелью поиска (справа) и папкой заключения (слева). */
 function freeArea(vp: { width: number; height: number }) {
   const panel = document.querySelector('.search-panel')?.getBoundingClientRect();
   const folder = document.querySelector('.petition-open .petition-folder')?.getBoundingClientRect();
@@ -50,9 +50,6 @@ function freeArea(vp: { width: number; height: number }) {
     bottom: vp.height,
   };
 }
-
-/** Сколько можно «Вернуть» выброшенное письмо, мс. */
-const UNDO_MS = 6000;
 
 /** Что в руках: конверт или коробка архива — или изъятое устройство (по номеру материала). */
 export type Held = { type: 'container'; id: ContainerId } | { type: 'device'; id: string };
@@ -66,8 +63,8 @@ interface GameStore {
   saveStatus: SaveStatus;
   /** Материал, открытый в просмотрщике (null — закрыт). */
   viewerId: string | null;
-  /** Открыта папка запроса. */
-  petitionOpen: boolean;
+  /** Открыта папка формы заключения («Решить дело»). */
+  folderOpen: boolean;
   /** Блокнот следователя выдвинут (DV-A). */
   notebookOpen: boolean;
   setNotebookOpen(open: boolean): void;
@@ -84,9 +81,6 @@ interface GameStore {
   openPc(material: string | null): void;
   /** Вскрыть конверт архива или коробку (A-260): содержимое — на стену группой. */
   openContainer(id: ContainerId): void;
-  /** Окно корзины у стола открыто (TR-A). */
-  trashOpen: boolean;
-  setTrashOpen(open: boolean): void;
   /**
    * Вещь в руках (этап 4a): конверт, коробка или устройство — крупно, вертеть мышью, колесо —
    * ближе к точке под курсором, щелчок по самой вещи — вскрыть или включить.
@@ -119,11 +113,6 @@ interface GameStore {
   hold(h: Held | null): void;
   /** Открыть материал листом (экран устройства в 4a). */
   readMaterial(materialId: string): void;
-  /** Только что выброшенное письмо — его можно «Вернуть» несколько секунд. */
-  binned: Binned | null;
-  /** Письмо-ответ — в корзину (со стены или из «Входящих»); остальное не выбрасывается. */
-  throwAway(id: string): void;
-  undoThrow(): void;
   /** Повесить лист из «Входящих» на стену — в середину видимой части стены. */
   pinToWall(materialId: string): void;
   /** Движок открыл материалы: в дело и во «Входящие» на столе (правка автора 09.11). */
@@ -151,13 +140,6 @@ interface GameStore {
    * найденное руками, — светится, пока игрок не взялся за стену или не ушёл к столу от неё.
    */
   freshWall: string[];
-  /** Через ms заглянуть, не пришёл ли ответ на запрос (MAIL-B: письмо во «Входящие»). */
-  checkMailIn(ms: number): void;
-  /**
-   * Настоящая почта (6a-1): ответы ждут «Добавить в дело» в письме — заглядывать на сервер,
-   * пока ждут (и сразу, когда игрок вернулся к окну игры).
-   */
-  watchMail(): void;
   load(): Promise<void>;
   /** Дослать сохранение сейчас (перед «Новым делом»: иначе уход со страницы вернёт старое). */
   flushSave(): Promise<void>;
@@ -166,7 +148,7 @@ interface GameStore {
   resumeSaving(): void;
   /** Дело открыли в другой вкладке: здесь не сохраняется (R2-02). */
   elsewhere: boolean;
-  setPetitionOpen(open: boolean): void;
+  setFolderOpen(open: boolean): void;
   /** Открыть материал; из поиска — с найденным словом (k — какое совпадение показать). */
   openViewer(materialId: string, find?: { q: string; k: number }, excerpt?: Excerpt): void;
   /**
@@ -208,10 +190,6 @@ export type Excerpt = { title: string; from: number; to: number; section?: strin
 
 const onWallNow = (s: PlayerState | null) => new Set((s?.wall.items ?? []).map((i) => i.id));
 
-/** Как часто заглядывать, пока ответ ждёт «Добавить в дело» в письме, мс. */
-const MAIL_WATCH_MS = 4000;
-let mailWatch: ReturnType<typeof setInterval> | null = null;
-
 export const useGame = create<GameStore>((set, get) => {
   const saver = createSaver(putState, 500, (saveStatus) => set({ saveStatus }));
   if (typeof window !== 'undefined') {
@@ -251,13 +229,12 @@ export const useGame = create<GameStore>((set, get) => {
     saveStatus: 'saved',
     elsewhere: false,
     viewerId: null,
-    petitionOpen: false,
+    folderOpen: false,
     notebookOpen: false,
     loadFailed: false,
     arrival: null,
     computerOpen: false,
     pcMaterial: null,
-    trashOpen: false,
     held: null,
     laptop: null,
     phone: null,
@@ -272,7 +249,6 @@ export const useGame = create<GameStore>((set, get) => {
     freshWall: [],
     foundId: null,
     wallFly: 0,
-    binned: null,
 
     dismissArrival() {
       set({ arrival: null });
@@ -341,26 +317,6 @@ export const useGame = create<GameStore>((set, get) => {
 
     readMaterial(materialId) {
       set({ viewerId: materialId, find: null });
-    },
-
-    setTrashOpen(open) {
-      set({ trashOpen: open });
-    },
-
-    throwAway(id) {
-      const s = get().state;
-      if (!s || s.trash.includes(id)) return;
-      const taken = takeLetter(id, s);
-      get().updateState(binLetter(id));
-      if (!get().state?.trash.includes(id)) return;
-      set({ binned: taken });
-      setTimeout(() => set((g) => (g.binned === taken ? { binned: null } : g)), UNDO_MS);
-    },
-
-    undoThrow() {
-      const b = get().binned;
-      if (b) get().updateState(unbinLetter(b));
-      set({ binned: null });
     },
 
     pinToWall(materialId) {
@@ -440,8 +396,8 @@ export const useGame = create<GameStore>((set, get) => {
       set({ notebookOpen: open });
     },
 
-    setPetitionOpen(open) {
-      set({ petitionOpen: open });
+    setFolderOpen(open) {
+      set({ folderOpen: open });
     },
 
     openViewer(materialId, find, excerpt) {
@@ -552,42 +508,6 @@ export const useGame = create<GameStore>((set, get) => {
       set({ searchOpen: open });
     },
 
-    checkMailIn(ms) {
-      setTimeout(async () => {
-        try {
-          get().addReleased(await getMaterials());
-        } catch {
-          // Сервер не ответил — заглянем ещё раз чуть позже.
-          get().checkMailIn(3000);
-        }
-      }, Math.max(0, ms) + 300);
-    },
-
-    watchMail() {
-      if (mailWatch) return;
-      // Не чаще одного опроса сразу и не в скрытой вкладке (R2-08): вернулся к окну — focus.
-      let busy = false;
-      const look = async () => {
-        if (busy || document.hidden || get().elsewhere) return;
-        busy = true;
-        try {
-          get().addReleased(await getMaterials());
-          const { waiting } = await getPendingMail();
-          if (waiting) return;
-        } catch {
-          return;
-        } finally {
-          busy = false;
-        }
-        if (mailWatch) clearInterval(mailWatch);
-        mailWatch = null;
-        window.removeEventListener('focus', onFocus);
-      };
-      const onFocus = () => void look();
-      mailWatch = setInterval(() => void look(), MAIL_WATCH_MS);
-      window.addEventListener('focus', onFocus);
-    },
-
     flushSave() {
       return saver.flush();
     },
@@ -612,13 +532,6 @@ export const useGame = create<GameStore>((set, get) => {
             new URLSearchParams(window.location.search).get('opened') === 'all'
           )
             get().updateState((s) => openAll(s, materials));
-          // Письма, которые ещё в пути (запрос отправили до перезагрузки).
-          getPendingMail()
-            .then(({ inMs, waiting }) => {
-              for (const ms of inMs) get().checkMailIn(ms);
-              if (waiting) get().watchMail();
-            })
-            .catch(() => undefined);
           return;
         } catch {
           set({ loadFailed: true });
@@ -653,7 +566,7 @@ export const useGame = create<GameStore>((set, get) => {
 
 /**
  * Материалы, которые игрок видит: без невскрытых конвертов архива (A-260). По ним — поиск по
- * делу (A-196: «по открытым текстам») и адресная книга запроса.
+ * делу (A-196: «по открытым текстам»).
  */
 export function useVisibleMaterials(): Material[] {
   const materials = useGame((g) => g.materials);

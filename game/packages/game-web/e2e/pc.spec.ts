@@ -3,11 +3,11 @@ import { expect, sheet, test } from './fixtures.ts';
 
 /**
  * Компьютер следователя (этап 4c-3; решения автора 11.11 — CO-A, DI-A, TM-A; полицейский вид):
- * рабочее место бюро, «Поступления» — вложения ответов, «Экспорт сервера VL-31» — терминал с
- * вкладками по мере ответов, браузер с архивом номеров газеты. Файлы остаются на компьютере.
+ * рабочее место бюро, «Экспорт сервера VL-31» — терминал с вкладками по мере открытого, браузер
+ * с архивом номеров газеты. Файлы остаются на компьютере. Запросов нет (A-272).
  */
 
-/** Ответы бюро — служебной строкой движка (как в сквозном проходе пакета), затем перезагрузка. */
+/** Открыть материалы служебной строкой движка (как в сквозном проходе пакета), затем перезагрузка. */
 async function grant(page: Page, lines: string[]) {
   for (const line of lines) {
     const r = await page.request.post('/api/dev/action-line', { data: { line } });
@@ -17,11 +17,10 @@ async function grant(page: Page, lines: string[]) {
   await expect(page.getByTestId('room')).toBeVisible();
 }
 
+/** Диск сервера (A-272): журналы, терминал технической, сеансы пользователя 05. */
 const BUREAU = [
-  'ХОДАТАЙСТВО | zapros@okrug-bureau.org | прошу: 20, «вызов переведён на голосовую почту» ; основание: 20, «приложение № 7»',
-  'ХОДАТАЙСТВО | zapros@okrug-bureau.org | прошу: 04, «Материалы сеансов пользователей служебного узла» ; основание: L214, «сеанс пользователя 05 — просмотр и экспорт»',
-  'АДРЕС | браузер | mailbridge.net',
-  'ХОДАТАЙСТВО | lawful-requests@mailbridge.net | прошу: L249, «Запросы органов» ; основание: L387, «e.pierce.uk@mailbridge.net»',
+  'ОСМОТР | 52__конверт_прил_7_сервер.md | вставить диск в дисковод',
+  'ПАРОЛЬ | сервер объекта: сеансы пользователей | 05',
 ];
 
 async function pcUp(page: Page) {
@@ -31,14 +30,12 @@ async function pcUp(page: Page) {
 
 const icon = (page: Page, name: string) => page.getByTestId(`lap-icon-${name}`);
 
-test('рабочее место бюро: значки, служебная полоса, часы; пусто, пока бюро не ответило', async ({
+test('рабочее место бюро: значки, служебная полоса, часы; пусто, пока диска нет', async ({
   page,
 }) => {
   await pcUp(page);
   await expect(page.getByTestId('computer')).toContainText('ОКРУЖНОЕ БЮРО РАССЛЕДОВАНИЙ');
   await expect(page.getByTestId('pc-clock')).toContainText(':');
-  await icon(page, 'Поступления').dblclick();
-  await expect(page.getByTestId('pc-incoming-empty')).toBeVisible();
   await icon(page, 'Экспорт сервера VL-31').dblclick();
   await expect(page.getByTestId('pc-terminal-empty')).toContainText('НЕТ ДАННЫХ');
   // Стрелки при открытом компьютере не переключают вид; Esc и щелчок мимо — отойти.
@@ -53,28 +50,21 @@ test('рабочее место бюро: значки, служебная по�
   await expect(page.getByTestId('computer')).toHaveCount(0);
 });
 
-test('«Поступления» — только письма; вложение — свой файл с замком; терминал — документы, выделение щелчком', async ({
+test('диск сервера: журналы — в терминале, не на столе; терминал — документы, выделение щелчком', async ({
   page,
 }) => {
   await grant(page, BUREAU);
   await expect(page.getByTestId('inbox-L214')).toHaveCount(0);
   await expect(sheet(page, 'L214')).toHaveCount(0);
   await pcUp(page);
-  await icon(page, 'Поступления').dblclick();
-  await expect(page.getByTestId('pc-in-L452')).toContainText('Ответ Mailbridge');
-  await expect(page.getByTestId('pc-in-L452')).toContainText('на рабочем столе');
-  await expect(page.getByTestId('pc-in-L214')).toHaveCount(0);
-  await expect(icon(page, 'mailbox_export_e.pierce.uk.mbx')).toBeVisible();
-  await page.getByTestId('pc-in-L452').dblclick();
-  await expect(page.getByTestId('pc-doc')).not.toContainText('Ввод:');
-  // Терминал: три документа (журнал, пользователь 05, копии), журнал — на ленте событий.
+  // Терминал: четыре документа (журнал, техническая, пользователь 05, копии), журнал — на ленте событий.
   await icon(page, 'Экспорт сервера VL-31').dblclick();
   const term = page.getByTestId('pc-terminal');
   await expect(term).toBeVisible();
   await expect(page.getByTestId('pc-term-F1')).toContainText('Журнал сервера 13.10');
-  await expect(page.getByTestId('pc-term-F2')).toContainText('Пользователь 05');
-  await expect(page.getByTestId('pc-term-F3')).toContainText('Копии экспортов');
-  await expect(page.getByTestId('pc-term-F4')).toHaveCount(0);
+  await expect(page.getByTestId('pc-term-F2')).toContainText('Отметки технической');
+  await expect(page.getByTestId('pc-term-F3')).toContainText('Пользователь 05');
+  await expect(page.getByTestId('pc-term-F4')).toContainText('Копии экспортов');
   await expect(page.getByTestId('pc-part-1')).toHaveAttribute('aria-pressed', 'true');
   const body = page.getByTestId('pc-term-body');
   await expect(body).toContainText('08:43:10');
@@ -89,45 +79,8 @@ test('«Поступления» — только письма; вложение
   await page.getByTestId('pc-mark-clear').click();
   await expect(body.locator('tr.pc-row-off')).toHaveCount(0);
   await term.focus();
-  await page.keyboard.press('F2');
+  await page.keyboard.press('F3');
   await expect(body).toHaveAttribute('data-material', 'L387');
-});
-
-test('экспорт ящика: неверный пароль — «Неверный пароль.»; «тоффи» — почта с письмами, замок снят', async ({
-  page,
-}) => {
-  await grant(page, BUREAU);
-  await pcUp(page);
-  await icon(page, 'mailbox_export_e.pierce.uk.mbx').dblclick();
-  const input = page.getByTestId('pc-password-input');
-  await expect(input).toHaveAttribute('type', 'password');
-  await input.fill('Bobby');
-  await page.getByTestId('pc-password-ok').click();
-  await expect(page.getByTestId('pc-password-msg')).toHaveText('Неверный пароль.');
-  await input.fill('тоффи');
-  await page.keyboard.press('Enter');
-  await expect(page.getByTestId('pc-mail')).toBeVisible();
-  await expect(page.getByTestId('pc-letter-10')).toBeVisible();
-  await page.getByTestId('pc-letter-2').click();
-  await expect(page.getByTestId('pc-mail-read')).toContainText('j.mercer@sentinel-labs.net');
-  await expect(icon(page, 'mailbox_export_e.pierce.uk.mbx').locator('.lap-ico-mail')).toHaveCount(
-    1,
-  );
-  await expect(page.getByTestId('inbox-L453')).toHaveCount(0);
-});
-
-test('пароль ящика: пять неверных — поле ждёт (LK-A)', async ({ page }) => {
-  await grant(page, BUREAU);
-  await pcUp(page);
-  await icon(page, 'mailbox_export_e.pierce.uk.mbx').dblclick();
-  const msg = page.getByTestId('pc-password-msg');
-  for (let k = 0; k < 5; k++) {
-    await page.getByTestId('pc-password-input').fill(`нет${k}`);
-    await page.getByTestId('pc-password-ok').click();
-    await expect(msg).not.toHaveText('');
-  }
-  await expect(msg).toContainText('Поле не принимает значение. Повторите через 1:5');
-  await expect(page.getByTestId('pc-password-input')).toBeDisabled();
 });
 
 test('браузер: архив номеров — дата выпуска; неоцифрованная дата — отказ', async ({ page }) => {
@@ -153,27 +106,6 @@ test('из поиска — компьютер открыт на нужном м
   await page.getByTestId('search-L387').locator('.search-hit').first().click();
   await expect(page.getByTestId('pc-terminal')).toBeVisible();
   await expect(page.getByTestId('pc-term-body')).toHaveAttribute('data-material', 'L387');
-});
-
-test('архив проекта: пароль 0417 — три документа; документ — окном на компьютере', async ({
-  page,
-}) => {
-  await grant(page, [
-    'АДРЕС | браузер | vaultline-program.com',
-    'ОСМОТР | 29__бумаги_из_помещений (пачка П-02, слой картона сбоку) | вытащить картон',
-    'ХОДАТАЙСТВО | documents@vaultline-program.com | прошу: L991, «Выбыл досрочно. Опись — архив проекта» ; основание: 26, «бланк VAULTLINE № VL-31»',
-  ]);
-  await pcUp(page);
-  await icon(page, 'Поступления').dblclick();
-  await page.getByTestId('pc-in-L735').dblclick();
-  await expect(page.getByTestId('pc-doc')).toHaveAttribute('data-material', 'L735');
-  await icon(page, 'VL-31_project_archive.enc').dblclick();
-  await page.getByTestId('pc-password-input').fill('0417');
-  await page.getByTestId('pc-password-ok').click();
-  await expect(page.getByTestId('pc-archive')).toBeVisible();
-  await page.getByTestId('pc-archive-L737').dblclick();
-  await expect(page.getByTestId('pc-doc').last()).toHaveAttribute('data-material', 'L737');
-  await expect(page.getByTestId('inbox-L737')).toHaveCount(0);
 });
 
 test('окна меняют размер за угол; не меньше 460×300; текст терминала не налезает', async ({

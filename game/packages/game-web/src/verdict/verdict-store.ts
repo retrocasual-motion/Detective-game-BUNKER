@@ -91,7 +91,7 @@ export const useVerdict = create<VerdictStore>((set, get) => {
   /** Папка открыта — поля ждут листы со стены и стола, как у папки запроса. */
   const show = (open: boolean) => {
     set({ open });
-    game().setPetitionOpen(open);
+    game().setFolderOpen(open);
   };
   return {
     status: { form: false, sent: false, result: null },
@@ -129,7 +129,7 @@ export const useVerdict = create<VerdictStore>((set, get) => {
       const r = await postAction('РЕШИТЬ', 'дело', 'продолжить');
       take(r.released);
       set({ warning: false, status: { form: true, sent: false, result: null } });
-      game().setPetitionOpen(false);
+      game().setFolderOpen(false);
       show(true);
     },
 

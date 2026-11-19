@@ -28,11 +28,9 @@ import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
 import { useInputMode } from '../input.ts';
 import { reducedMotion } from '../motion.ts';
-import { wholeCard } from '../petition/drafts.ts';
-import { overFolder, petitionFieldAt } from '../petition/fieldAt.ts';
-import { usePetition } from '../petition/petition-store.ts';
 import { useViewport } from '../room/useViewport.ts';
 import { shownCamera, useGame } from '../store.ts';
+import { folderFieldAt, overFolder, toVerdict, useCardDrop, wholeCard } from '../verdict/cards.ts';
 import { useVerdict, verdictActive } from '../verdict/verdict-store.ts';
 import { FOLDER_SHEETS, folderOnWall } from '../viewer/bundles.ts';
 import { useCameraTween } from './useCameraTween.ts';
@@ -42,7 +40,6 @@ import {
   addNote,
   addThread,
   editNote,
-  isLetter,
   labelThread,
   moveItem,
   moveItems,
@@ -165,7 +162,6 @@ export function WallView() {
   const vp = useViewport();
   const materials = useGame((g) => g.materials);
   const updateState = useGame((g) => g.updateState);
-  const throwAway = useGame((g) => g.throwAway);
   const openViewer = useGame((g) => g.openViewer);
   // Найдено поиском (SR-D): подсвечено; камера доски плывёт к нему (wallFly).
   const foundId = useGame((g) => g.foundId);
@@ -362,7 +358,7 @@ export function WallView() {
     (id: string, x: number, y: number, at: { x: number; y: number }) => {
       setLive(null);
       setGhost(null);
-      usePetition.getState().setDrag(false, null);
+      useCardDrop.getState().setOver(false);
       // Тянули выделенную — едут все выделенные (MS-D).
       const group = selectedRef.current;
       if (group.size > 1 && group.has(id)) {
@@ -370,18 +366,17 @@ export function WallView() {
         if (was) updateState(moveItems([...group], x - was.x, y - was.y));
         return;
       }
-      // Лист отпустили на поле открытой папки — карточка «материал целиком» (K-A), лист
-      // остаётся на стене, где висел.
-      const f = petitionFieldAt(at.x, at.y);
+      // Лист отпустили на поле открытой формы заключения — карточка «материал целиком» (K-A),
+      // лист остаётся на стене, где висел.
+      const f = folderFieldAt(at.x, at.y) && verdictActive();
       // Карточку человека отпустили на форму заключения (A-270): ответ «кто», карточка — на стене.
       if (f && id.startsWith('p:') && verdictActive()) {
         useVerdict.getState().addPerson(id);
         return;
       }
       const m = useGame.getState().materials.find((mm) => mm.id === id);
-      if (f && f !== 'to' && m) {
-        usePetition.getState().setActiveField(f);
-        usePetition.getState().addCard(wholeCard(m));
+      if (f && m) {
+        toVerdict(wholeCard(m));
         return;
       }
       updateState(moveItem(id, x, y));
@@ -389,23 +384,22 @@ export function WallView() {
     },
     [updateState, snapJoin],
   );
-  // Лист тянут над открытой папкой запроса: над ней идёт его призрак (поверх папки), поле
+  // Лист тянут над открытой формой заключения: над ней идёт его призрак (поверх папки), поле
   // под курсором подсвечено (правка автора 09.11).
   const [ghost, setGhost] = useState<{ id: string; x: number; y: number } | null>(null);
   const onLive = useCallback(
     (id: string, dx: number, dy: number, at?: { x: number; y: number }) => {
       setLive(dx === 0 && dy === 0 ? null : { id, dx, dy });
-      const pet = usePetition.getState();
+      const drag = useCardDrop.getState();
       // Над формой заключения тянут и карточку человека (A-270).
       const material = !id.includes(':') || (id.startsWith('p:') && verdictActive());
       const group = selectedRef.current.size > 1 && selectedRef.current.has(id);
-      if (!at || !useGame.getState().petitionOpen || !material || group || (dx === 0 && dy === 0)) {
-        pet.setDrag(false, null);
+      if (!at || !useGame.getState().folderOpen || !material || group || (dx === 0 && dy === 0)) {
+        drag.setOver(false);
         setGhost(null);
         return;
       }
-      const f = petitionFieldAt(at.x, at.y);
-      pet.setDrag(true, f === 'to' ? null : f);
+      drag.setOver(folderFieldAt(at.x, at.y));
       setGhost(overFolder(at.x, at.y) ? { id, x: at.x, y: at.y } : null);
     },
     [],
@@ -695,8 +689,7 @@ export function WallView() {
         onDrop={drop}
         onLive={onLive}
         pin={pin}
-        onDelete={note ? deleteNote : isLetter(item.id) ? throwAway : undefined}
-        deleteLabel={note ? undefined : 'В корзину'}
+        onDelete={note ? deleteNote : undefined}
         hidden={ghost?.id === item.id}
         selected={shown.has(item.id)}
         found={foundId === item.id || fresh.has(item.id)}
@@ -841,7 +834,7 @@ export function WallView() {
       {ghost &&
         createPortal(
           <div
-            className={`drag-ghost drag-ghost-paper${usePetition.getState().dropTarget ? ' ghost-ok' : ''}`}
+            className={`drag-ghost drag-ghost-paper${useCardDrop.getState().over ? ' ghost-ok' : ''}`}
             data-testid="drag-ghost"
             style={{ translate: `${ghost.x}px ${ghost.y}px` }}
           >

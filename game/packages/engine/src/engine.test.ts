@@ -89,6 +89,17 @@ describe('act', () => {
     expect(later.outcome.result).toBe('успех');
   });
 
+  it('поле поиска (DS-B) не считает промахи: после трёх — не пауза, а снова ответ', () => {
+    const cfg = { pauseMs: 2 * MIN, unlimited: ['сейф'] };
+    let p = emptyProgress();
+    for (let i = 0; i < 5; i++) {
+      const r = act(content, p, { action: 'ПАРОЛЬ', target: 'Сейф', value: 'нет' }, i, cfg);
+      expect(r.outcome.result).toBe('отказ');
+      p = r.progress;
+    }
+    expect(p.fails).toEqual({});
+  });
+
   it('неверный ввод ничего не стирает и не меняет исходный прогресс (P-4)', () => {
     const p0 = emptyProgress();
     const r = act(content, p0, { action: 'ПАРОЛЬ', target: 'сейф', value: 'нет' }, 0);

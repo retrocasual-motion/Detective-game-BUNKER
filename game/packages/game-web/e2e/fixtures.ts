@@ -25,8 +25,6 @@ export const test = base.extend<{ sealed: boolean; input: 'mouse' | 'trackpad' }
       .toBe(200);
     // Вход без письма (6a-1; служебный маршрут разработки): cookie — у страницы теста.
     await page.request.post('/api/dev/login', { data: { email: E2E_EMAIL } });
-    // Каналом почты по умолчанию тестам — «Входящие» на столе; настоящую почту проверяет login.spec.
-    await page.request.put('/api/me/channel', { data: { channel: 'internal' } });
     const res = await page.request.delete('/api/state');
     expect(res.status()).toBe(204);
     // `play` — сразу в дело, без главного меню (MM-A); меню проверяет menu.spec.

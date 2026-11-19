@@ -1,4 +1,4 @@
-import type { Card, Material, PlayerState, VerdictAnswer, VerdictResult } from '@bunker/shared';
+import type { Material, PlayerState, VerdictAnswer, VerdictResult } from '@bunker/shared';
 
 /**
  * Запрос с пределом ожидания (R2-07): завис сервер — через 15 с ошибка, как при обрыве связи,
@@ -108,10 +108,10 @@ export const resetState = async (): Promise<void> => {
   await check(await call('/api/state', { method: 'DELETE' }));
 };
 
-/** Кто вошёл (6a-1): без входа (`off`) или по ссылке — почта и куда идут ответы. */
+/** Кто вошёл (6a-1): без входа (`off`) или по ссылке — почта. */
 export type Me =
   | { auth: 'off' }
-  | { auth: 'link'; email: string; channel: 'real' | 'internal' }
+  | { auth: 'link'; email: string }
   | { auth: 'link'; email?: undefined };
 
 /** null — сервер не ответил; `{auth:'link'}` без почты — нужен вход. */
@@ -140,49 +140,6 @@ export const requestLogin = async (
 export const logout = async (): Promise<void> => {
   await call('/api/logout', { method: 'POST' });
 };
-
-/** Куда идут ответы на запросы: на почту или сразу во «Входящие» (P-14). */
-export const setMailChannel = async (channel: 'real' | 'internal'): Promise<void> => {
-  await check(
-    await call('/api/me/channel', {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ channel }),
-    }),
-  );
-};
-
-/** Итог отправки запроса: номер и задержка ответа — или ошибка оформления (FORM-B). */
-export type PetitionResult =
-  /** `toMail` — ответ придёт на почту игрока (настоящая почта), а не во «Входящие». */
-  | { ok: true; n: number; delayMs: number; toMail?: boolean }
-  /** Общий отказ адресата (PRE-B): ответ сразу, письма нет, попытка засчитана. */
-  | { ok: true; refused: string }
-  | { ok: false; error: string };
-
-/** Отправить запрос из папки (этап 3). */
-export const postPetition = async (to: string, ask: Card, basis: Card): Promise<PetitionResult> => {
-  const res = await call('/api/petition', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ to, ask, basis }),
-  });
-  if (res.status === 422 || res.status === 400) {
-    const { error } = (await res.json()) as { error: string };
-    return { ok: false, error };
-  }
-  const r = (await check(res).then((x) => x.json())) as
-    | { n: number; delayMs: number; toMail?: boolean }
-    | { refused: string };
-  return 'refused' in r ? { ok: true, refused: r.refused } : { ok: true, ...r };
-};
-
-/**
- * Письма в пути: через сколько мс каждое ляжет во «Входящие»; `waiting` — ответы, которые
- * ждут «Добавить в дело» на почте игрока.
- */
-export const getPendingMail = async (): Promise<{ inMs: number[]; waiting: number }> =>
-  (await check(await call('/api/mail/pending'))).json();
 
 /** Где дело (A-270): открыта ли форма заключения, отправлено ли заключение. */
 export interface CaseStatus {

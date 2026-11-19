@@ -1,29 +1,16 @@
-import { type FormEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { type FormEvent, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { postAction } from '../api.ts';
-import { FileIcon } from '../laptop/apps.tsx';
 import { formatWait, OFFLINE, useFieldWait } from '../lock.ts';
 import { NO_LINKS } from '../paperLinks.tsx';
 import { useGame } from '../store.ts';
-import {
-  forScreen,
-  hasValue,
-  type Incoming,
-  incoming,
-  issueOf,
-  locate,
-  mailbox,
-  normalizeDate,
-  serverDocs,
-} from './content.ts';
+import { forScreen, hasValue, issueOf, locate, normalizeDate, serverDocs } from './content.ts';
 
 /**
- * Программы компьютера следователя (4c-3; CO-A, DI-A, TM-A): «Поступления» — вложения ответов
- * бюро; окно пароля (ящик, архив; LK-A); почтовый клиент экспорта ящика; контейнер архива;
- * «Экспорт сервера VL-31» — терминал с вкладками по мере ответов; браузер с архивом номеров
- * газеты (дата выпуска). Всё остаётся на компьютере (DV-A); текст — в запрос (data-material).
+ * Программы компьютера следователя (4c-3; CO-A, DI-A, TM-A): «Экспорт сервера VL-31» — терминал
+ * с вкладками; браузер с архивом номеров газеты (дата выпуска). Всё остаётся на компьютере (DV-A); текст — в запрос (data-material).
  */
 
 const md = (text: string) => (
@@ -41,163 +28,7 @@ async function enter(field: string, value: string) {
   return r;
 }
 
-/** Окно пароля зашифрованного вложения (канон: «Поле ввода: Пароль ящика / Пароль архива»). */
-export function PasswordBox({
-  label,
-  field,
-  file,
-  open,
-  onOpen,
-}: {
-  label: string;
-  field: string;
-  file: string;
-  /** Уже открыт (пароль вводили) — показать содержимое. */
-  open: boolean;
-  onOpen: () => void;
-}) {
-  const [value, setValue] = useState('');
-  const [msg, setMsg] = useState('');
-  const wait = useFieldWait(field);
-  useEffect(() => {
-    if (open) onOpen();
-  }, [open, onOpen]);
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!value.trim() || wait > 0) return;
-    const r = await enter(field, value.trim());
-    if (!r) setMsg(`${OFFLINE}.`);
-    else if (!r.quiet) onOpen();
-    else setMsg(r.reply && !/^С этим|^Такого/.test(r.reply) ? r.reply : 'Неверный пароль.');
-  };
-  return (
-    <form className="pc-pass" onSubmit={(e) => void submit(e)} data-testid="pc-password">
-      <div className="pc-pass-head">
-        <FileIcon type="lock" size={32} />
-        <div>
-          <b>{file}</b>
-          <div>Файл зашифрован. Введите пароль, чтобы открыть.</div>
-        </div>
-      </div>
-      <label className="pc-pass-field">
-        {label}
-        <input
-          type="password"
-          autoComplete="off"
-          data-testid="pc-password-input"
-          value={value}
-          disabled={wait > 0}
-          onChange={(e) => {
-            setValue(e.target.value);
-            setMsg('');
-          }}
-        />
-      </label>
-      <div className="pc-pass-msg" data-testid="pc-password-msg" role="status">
-        {wait > 0 ? `Поле не принимает значение. Повторите через ${formatWait(wait)}` : msg}
-      </div>
-      <div className="pc-pass-actions">
-        <button type="submit" disabled={wait > 0} data-testid="pc-password-ok">
-          Открыть
-        </button>
-      </div>
-    </form>
-  );
-}
-
-/** Почтовый клиент экспорта ящика (L453): список писем и текст выбранного. */
-export function Mail() {
-  const body = useGame((g) => g.materials.find((m) => m.id === 'L453')?.body ?? '');
-  const letters = useMemo(() => mailbox(body), [body]);
-  const [sel, setSel] = useState(letters[0]?.n ?? 0);
-  const cur = letters.find((l) => l.n === sel);
-  return (
-    <div className="pc-mail" data-testid="pc-mail">
-      <aside className="pc-mail-folders">
-        <b>e.pierce.uk@mailbridge.net</b>
-        <span className="pc-mail-folder-on">Все письма ({letters.length})</span>
-      </aside>
-      <div className="pc-mail-main">
-        <table className="pc-mail-list">
-          <thead>
-            <tr>
-              <th>№</th>
-              <th>Дата</th>
-              <th>От</th>
-              <th>Кому</th>
-              <th>Тема</th>
-            </tr>
-          </thead>
-          <tbody data-material="L453">
-            {letters.map((l) => (
-              <tr
-                key={l.n}
-                className={l.n === sel ? 'pc-row-sel' : undefined}
-                data-testid={`pc-letter-${l.n}`}
-                onClick={() => setSel(l.n)}
-              >
-                <td>{l.n}</td>
-                <td>{l.date}</td>
-                <td>{l.from}</td>
-                <td>{l.to}</td>
-                <td>{l.subject}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {cur && (
-          <article className="pc-mail-read" data-material="L453" data-testid="pc-mail-read">
-            <div className="pc-mail-head">
-              <div>
-                <span>От:</span> {cur.from}
-              </div>
-              <div>
-                <span>Кому:</span> {cur.to}
-              </div>
-              <div>
-                <span>Дата:</span> {cur.date}
-              </div>
-              <div>
-                <span>Тема:</span> {cur.subject}
-              </div>
-            </div>
-            {md(cur.body)}
-          </article>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/** Контейнер архива проекта после пароля: три документа (L736–L738). */
-export function ArchiveBox({ openDoc }: { openDoc: (id: string) => void }) {
-  // Выборка — из списка, не в селекторе: новый массив на каждый вызов зациклил бы перерисовку.
-  const materials = useGame((g) => g.materials);
-  const docs = useMemo(() => materials.filter((m) => /^L73[678]$/.test(m.id)), [materials]);
-  return (
-    <div className="pc-archive" data-testid="pc-archive">
-      <div className="pc-archive-head">VL-31_project_archive.enc — контейнер открыт</div>
-      <table className="lap-files">
-        <thead>
-          <tr>
-            <th>Документ</th>
-          </tr>
-        </thead>
-        <tbody>
-          {docs.map((d) => (
-            <tr key={d.id} data-testid={`pc-archive-${d.id}`} onDoubleClick={() => openDoc(d.id)}>
-              <td>
-                <FileIcon type="doc" size={16} /> {d.title.replace(/^Архив проекта VL-31:\s*/, '')}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-/** Документ (ответ бюро, документ архива, выпуск газеты) — страницей, текст выделяется. */
+/** Документ (выпуск газеты и т. п.) — страницей, текст выделяется. */
 export function DocWindow({ id }: { id: string }) {
   const m = useGame((g) => g.materials.find((x) => x.id === id));
   if (!m) return null;
@@ -348,54 +179,6 @@ export function Terminal({ start }: { start?: string }) {
           </nav>
         </div>
       )}
-    </div>
-  );
-}
-
-/** «Поступления»: письма-ответы; вложение каждого сохранено на рабочий стол (правка автора 11.11). */
-export function IncomingFolder({ open }: { open: (it: Incoming) => void }) {
-  const materials = useGame((g) => g.materials);
-  const list = useMemo(() => incoming(materials), [materials]);
-  const [sel, setSel] = useState<string | null>(null);
-  return (
-    <div className="lap-explorer" data-testid="pc-incoming">
-      <div className="lap-toolbar">
-        <span className="lap-label">Адрес</span>
-        <div className="lap-address">Рабочий стол › Поступления</div>
-      </div>
-      <div className="lap-files-wrap">
-        {list.length === 0 ? (
-          <p className="pc-empty" data-testid="pc-incoming-empty">
-            Поступлений нет. Ответы на запросы с вложениями появляются здесь.
-          </p>
-        ) : (
-          <table className="lap-files">
-            <thead>
-              <tr>
-                <th>Письмо</th>
-                <th>Вложение</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map((it) => (
-                <tr
-                  key={it.id}
-                  className={sel === it.id ? 'lap-row-sel' : undefined}
-                  data-testid={`pc-in-${it.id}`}
-                  onClick={() => setSel(it.id)}
-                  onDoubleClick={() => open(it)}
-                >
-                  <td>
-                    <FileIcon type="txt" size={16} /> {it.name}
-                  </td>
-                  <td>{it.attachment ? `${it.attachment} — на рабочем столе` : '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-      <div className="lap-status">Писем: {list.length}</div>
     </div>
   );
 }

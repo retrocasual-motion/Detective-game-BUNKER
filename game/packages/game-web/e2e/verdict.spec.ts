@@ -19,7 +19,6 @@ test('«Решить дело»: предупреждение ни к чему �
   await expect(page.getByTestId('solve-warning')).toContainText('назад пути нет');
   await page.getByTestId('solve-back').click();
   await expect(page.getByTestId('solve-warning')).toHaveCount(0);
-  await expect(page.getByTestId('petition-corner')).toBeVisible();
   await expect(page.getByTestId('solve-case')).toBeVisible();
 });
 
@@ -27,8 +26,7 @@ test('форма: пять вопросов по одному, проверка,
   page,
 }) => {
   await openForm(page);
-  // Папка запроса и кнопка ушли: расследование закрыто (P-9).
-  await expect(page.getByTestId('petition-corner')).toHaveCount(0);
+  // Кнопка ушла: расследование закрыто (P-9).
   await expect(page.getByTestId('solve-case')).toHaveCount(0);
   // Предупреждение и форма — окна «Решить дело», не материалы во «Входящих».
   await expect(page.getByTestId('arrival-note')).toHaveCount(0);
@@ -40,13 +38,13 @@ test('форма: пять вопросов по одному, проверка,
   await expect(page.getByTestId('verdict-person-p:moreau')).toHaveAttribute('aria-pressed', 'true');
   await page.getByTestId('verdict-next').click();
 
-  // 2. Почему — карточка материала, тем же жестом, что в запрос («В заключение целиком»).
+  // 2. Почему — карточка материала («В заключение целиком»).
   await expect(question(page)).toHaveText('Почему этот человек так поступил?');
   await page.getByTestId('verdict-corner').click();
   // Газета (15) лежит на столе: «Помним» — Том Бернар.
   await page.getByTestId('newspaper').click();
-  await expect(page.getByTestId('viewer-whole-to-petition')).toHaveText('В заключение целиком');
-  await page.getByTestId('viewer-whole-to-petition').click();
+  await expect(page.getByTestId('viewer-whole-to-folder')).toHaveText('В заключение целиком');
+  await page.getByTestId('viewer-whole-to-folder').click();
   await page.keyboard.press('Escape');
   await expect(folder(page)).toBeVisible();
   await expect(page.getByTestId('verdict-card')).toContainText('15');

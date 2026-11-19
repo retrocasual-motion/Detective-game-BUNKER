@@ -22,8 +22,6 @@ export const env = {
   pgPort: Number(e.PG_PORT ?? 5433),
   /** Собранный клиент; задаётся в Docker (в разработке клиент отдаёт Vite). */
   webDist: e.WEB_DIST ? fromRoot(e.WEB_DIST) : undefined,
-  /** Задержка ответа на запрос, мс (DELAY-A; пока 12 с — для проверки автором). */
-  mailDelayMs: Number(e.MAIL_DELAY_MS ?? 12_000),
   /** Вход (6a-1): `link` — по ссылке на почту; `off` — один игрок без входа, как раньше. */
   auth: (e.AUTH === 'off' ? 'off' : 'link') as 'off' | 'link',
   /**

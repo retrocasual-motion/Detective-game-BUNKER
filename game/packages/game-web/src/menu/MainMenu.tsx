@@ -22,7 +22,6 @@ export function MainMenu() {
   const [error, setError] = useState('');
   const email = useEmail();
   const input = useInputMode();
-  const channel = useAccount((a) => (a.me?.auth === 'link' && a.me.email ? a.me.channel : null));
   // Esc в «Настройках» и в подтверждении — назад, как «Назад» / «Отмена» (R5-12).
   useEffect(() => {
     if (screen !== 'menu' || panel === 'none') return;
@@ -159,31 +158,6 @@ export function MainMenu() {
                 </label>
               ))}
             </fieldset>
-            {channel && (
-              <fieldset className="main-menu-group" data-testid="menu-mail">
-                Ответы на запросы приходят:
-                <label className="main-menu-check">
-                  <input
-                    type="radio"
-                    name="mail-channel"
-                    data-testid="menu-mail-real"
-                    checked={channel === 'real'}
-                    onChange={() => void useAccount.getState().setChannel('real')}
-                  />
-                  на почту ({email}) — «Добавить в дело» в письме кладёт их на стол
-                </label>
-                <label className="main-menu-check">
-                  <input
-                    type="radio"
-                    name="mail-channel"
-                    data-testid="menu-mail-internal"
-                    checked={channel === 'internal'}
-                    onChange={() => void useAccount.getState().setChannel('internal')}
-                  />
-                  сразу во «Входящие» на столе (если письма не приходят)
-                </label>
-              </fieldset>
-            )}
             <div className="main-menu-row">
               <button type="button" data-testid="menu-back" onClick={() => setPanel('none')}>
                 Назад

@@ -42,7 +42,7 @@ function PersonAnswer({ i, q, a }: { i: number; q: FormQuestion; a: VerdictAnswe
 /** Ответ на вопрос о материале: одна карточка — как поле «Прошу» в запросе (K-A). */
 function MaterialAnswer({ i, a }: { i: number; a: VerdictAnswer }) {
   const answer = useVerdict((v) => v.answer);
-  const droppable = useGame((g) => g.petitionOpen);
+  const droppable = useGame((g) => g.folderOpen);
   const card = a && 'card' in a ? a.card : null;
   return (
     <div

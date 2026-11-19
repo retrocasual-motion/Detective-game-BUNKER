@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useSelectionPetition } from '../device/deviceView.tsx';
+import { useSelectionCard } from '../device/deviceView.tsx';
 import { useGame } from '../store.ts';
 import { MENU, say, useCamera, zoomOf } from './camera.ts';
 import { FRAME_COUNT, frameDetails, frameTime, parseFrames } from './frames.ts';
@@ -35,7 +35,7 @@ const PlayIcon = () => (
 export function CameraScreen() {
   const c = useCamera();
   const props973 = useGame(body('L973'));
-  const { onUp, button } = useSelectionPetition('camera-to-petition');
+  const { onUp, button } = useSelectionCard('camera-to-folder');
   const [w, h] = CAMERA_PX;
   const time = props973 ? frameTime(props973, c.frame) : null;
   const page = Math.floor((c.frame - 1) / 9);
@@ -161,7 +161,7 @@ export function CameraSheet() {
   const frames = useMemo(() => parseFrames(b24), [b24]);
   const f = frames[frame - 1];
   const details = zoom && b905 ? frameDetails(b905, frame) : [];
-  const { onUp, button } = useSelectionPetition('camera-sheet-to-petition');
+  const { onUp, button } = useSelectionCard('camera-sheet-to-folder');
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: выделение описания кадра в запрос
     <div

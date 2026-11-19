@@ -148,35 +148,6 @@ test('проводник: «Тревога» — записи, «Свойств�
   await expect(page.getByTestId('lap-sheet')).toContainText('Front Range Savings');
 });
 
-test('выделил строку в окне — «В запрос»: карточка из файла ноутбука (PT-A)', async ({ page }) => {
-  await laptopUp(page);
-  await unlock(page);
-  await page.getByTestId('lap-icon-Доклад_Р.txt').dblclick();
-  const pad = page.getByTestId('lap-notepad');
-  await pad.evaluate((el) => {
-    const text = el.firstChild;
-    if (!text) return;
-    const i = (text.textContent ?? '').indexOf('e.pierce.uk@mailbridge.net');
-    const r = document.createRange();
-    r.setStart(text, i);
-    r.setEnd(text, i + 'e.pierce.uk@mailbridge.net'.length);
-    const s = window.getSelection();
-    s?.removeAllRanges();
-    s?.addRange(r);
-  });
-  const box = await pad.boundingBox();
-  if (!box) throw new Error('нет блокнота');
-  await page.mouse.move(box.x + 40, box.y + 40);
-  await page.mouse.up();
-  await page.getByTestId('laptop-to-petition').click();
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Escape');
-  await page.getByTestId('petition-corner').click();
-  await expect(page.getByTestId('petition-card').first()).toContainText(
-    'e.pierce.uk@mailbridge.net',
-  );
-});
-
 test('неверный ключ и сразу новый — новый не обрывается (правка автора 10.11)', async ({
   page,
 }) => {

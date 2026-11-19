@@ -7,10 +7,10 @@ import * as schema from './schema.ts';
 
 export {
   loginTokens,
-  playerLetters,
   playerProgress,
   playerState,
   players,
+  playerVerdicts,
   sessions,
 } from './schema.ts';
 export type Db = PostgresJsDatabase<typeof schema>;

@@ -1,4 +1,4 @@
-import { EPILOGUE_ID, inboxIds, letterPetition, PERSONS, PIECES } from '@bunker/shared';
+import { EPILOGUE_ID, inboxIds, PERSONS, PIECES } from '@bunker/shared';
 import {
   type CSSProperties,
   type MouseEvent,
@@ -15,14 +15,11 @@ import { trackReading } from '../dev/readingLog.ts';
 import { wheelIntent } from '../input.ts';
 import { useMenu } from '../menu/menu-store.ts';
 import { NO_LINKS } from '../paperLinks.tsx';
-import { emailIn, quoteCard, wholeCard } from '../petition/drafts.ts';
-import { usePetition } from '../petition/petition-store.ts';
 import { MediaPlayer } from '../player/MediaPlayer.tsx';
 import { EMBEDDED_MEDIA, MEDIA_IDS, splitEmbedded } from '../player/media.ts';
 import { clearFind, highlightFind } from '../search/highlight.ts';
 import { useGame } from '../store.ts';
-import { useToFolderLabel } from '../verdict/verdict-store.ts';
-import { isLetter, takeOutOfBin } from '../wall/wall-actions.ts';
+import { quoteCard, toVerdict, useVerdictOpen, wholeCard } from '../verdict/cards.ts';
 import { excerptBody, isBundleListing, rowTarget } from './bundles.ts';
 import { splitSection } from './pieces.ts';
 import { sameRange, snapToWords, unitRangeAt } from './selectUnit.ts';
@@ -61,8 +58,8 @@ export function Viewer({ materialId }: ViewerProps) {
   // Карточка персонажа — посмотреть поближе (правка автора 09.11).
   const person = PERSONS.find((p) => p.id === materialId);
   const close = useGame((g) => g.closeViewer);
-  const folderOpen = useGame((g) => g.petitionOpen);
-  const wholeLabel = useToFolderLabel();
+  const folderOpen = useGame((g) => g.folderOpen);
+  const verdictOpen = useVerdictOpen();
   const notebookOpen = useGame((g) => g.notebookOpen);
   // Поиск открыт — панель справа поверх затемнения, лист левее (SR-D).
   const searchOpen = useGame((g) => g.searchOpen);
@@ -73,11 +70,6 @@ export function Viewer({ materialId }: ViewerProps) {
   );
   const pinToWall = useGame((g) => g.pinToWall);
   const [pinned, setPinned] = useState(false);
-  // Письмо-ответ (этап 3): повторить запрос (RP-A), выбросить или достать (TR-A).
-  const letter = material && isLetter(material.id) ? material : null;
-  const petition = useMemo(() => (letter ? letterPetition(letter.body) : null), [letter]);
-  const inTrash = useGame((g) => g.state?.trash.includes(materialId) ?? false);
-  const [noRoom, setNoRoom] = useState(false);
 
   // Лист в руках (этап 4b): страницы, переворот, приближение — useSheet.
   const zoomRef = useRef<HTMLDivElement>(null);
@@ -100,13 +92,10 @@ export function Viewer({ materialId }: ViewerProps) {
 
   // Время чтения (RD-A) — только в разработке.
   useEffect(() => (import.meta.env.DEV ? trackReading(materialId) : undefined), [materialId]);
-  // Выделенная строка листа — кнопка «В запрос» у её конца (K-A).
+  // Выделенная строка листа — кнопка «В заключение» у её конца, пока форма открыта (K-A, FM-A).
   const [sel, setSel] = useState<{ text: string; x: number; y: number } | null>(null);
-  const toAddress = usePetition((p) => p.field === 'to');
-  const folderShown = useGame((g) => g.petitionOpen);
-  const toFolder = useToFolderLabel();
 
-  // Выделение «для запроса» (SEL-C): щелчок отмечает строку целиком, протягивание — слова.
+  // Выделение строки (SEL-C): щелчок отмечает строку целиком, протягивание — слова.
   const downAt = useRef<{ x: number; y: number } | null>(null);
   const marked = useRef<Range | null>(null);
 
@@ -119,7 +108,7 @@ export function Viewer({ materialId }: ViewerProps) {
     return () => document.removeEventListener('selectionchange', onChange);
   }, []);
 
-  /** Кнопка «В запрос» — у конца выделения, но всегда на экране. */
+  /** Кнопка «В заключение» — у конца выделения, но всегда на экране. */
   const showButton = (paper: Element) => {
     const s = window.getSelection();
     const text = s?.toString() ?? '';
@@ -172,15 +161,9 @@ export function Viewer({ materialId }: ViewerProps) {
     showButton(paper);
   };
 
-  const toPetition = () => {
+  const toFolder = () => {
     if (!sel) return;
-    const pet = usePetition.getState();
-    const address = emailIn(sel.text);
-    if (folderShown && toAddress && address) pet.setTo(address);
-    else {
-      const card = quoteCard(materialId, sel.text);
-      if (card) pet.addCard(card);
-    }
+    toVerdict(quoteCard(materialId, sel.text));
     window.getSelection()?.removeAllRanges();
     setSel(null);
   };
@@ -471,55 +454,15 @@ export function Viewer({ materialId }: ViewerProps) {
           >
             ✕
           </button>
-          {material && materialId !== EPILOGUE_ID && (
+          {verdictOpen && material && materialId !== EPILOGUE_ID && (
             <button
               type="button"
               className="tool"
-              data-testid="viewer-whole-to-petition"
-              title="Материал целиком — карточкой в запрос (для фото, аудио, видео, писем)"
-              onClick={() => usePetition.getState().addCard(wholeCard(material))}
+              data-testid="viewer-whole-to-folder"
+              title="Материал целиком — карточкой в заключение (для фото, аудио, видео)"
+              onClick={() => toVerdict(wholeCard(material))}
             >
-              {wholeLabel} целиком
-            </button>
-          )}
-          {petition && (
-            <button
-              type="button"
-              className="tool"
-              data-testid="viewer-repeat"
-              title="Новый черновик с тем же адресом и карточками — замените ту, что не подошла"
-              onClick={() => setNoRoom(!usePetition.getState().repeat(petition))}
-            >
-              Повторить запрос
-            </button>
-          )}
-          {noRoom && (
-            <p className="viewer-tools-note" data-testid="viewer-no-room">
-              Все черновики заняты — отправьте или выбросьте один.
-            </p>
-          )}
-          {letter && !inTrash && (
-            <button
-              type="button"
-              className="tool"
-              data-testid="viewer-to-trash"
-              title="Убрать письмо в корзину у стола; в деле оно останется"
-              onClick={() => {
-                useGame.getState().throwAway(letter.id);
-                close();
-              }}
-            >
-              В корзину
-            </button>
-          )}
-          {letter && inTrash && (
-            <button
-              type="button"
-              className="tool"
-              data-testid="viewer-from-trash"
-              onClick={() => useGame.getState().updateState(takeOutOfBin(letter.id))}
-            >
-              Достать из корзины
+              В заключение целиком
             </button>
           )}
           {(inInbox || pinned) && (
@@ -543,17 +486,17 @@ export function Viewer({ materialId }: ViewerProps) {
           {sheet.closeup}
         </aside>
       )}
-      {sel && material && (
+      {sel && material && verdictOpen && (
         <button
           type="button"
           className="to-petition"
-          data-testid="to-petition"
+          data-testid="to-folder"
           style={{ left: sel.x, top: sel.y + 6 }}
           // Кнопка не снимает выделение, пока на неё нажимают.
           onMouseDown={(e) => e.preventDefault()}
-          onClick={toPetition}
+          onClick={toFolder}
         >
-          {folderShown && toAddress && emailIn(sel.text) ? 'В «Кому»' : toFolder}
+          В заключение
         </button>
       )}
     </div>

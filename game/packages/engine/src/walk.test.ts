@@ -2,8 +2,10 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { act } from './engine.ts';
 import { readPack } from './pack.ts';
 import { pyRegex } from './pyre.ts';
+import { emptyProgress } from './types.ts';
 import { walk } from './walk.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -21,13 +23,8 @@ const report = (r: ReturnType<typeof walk>) =>
 describe('правила пакета', () => {
   it('все шаблоны access.json переводятся в JavaScript', () => {
     const r = content.rules.rules;
-    const pats = r.flatMap((x) => [
-      x.target,
-      ...(x.accept ?? []),
-      ...(x.cards ?? []).flat().flatMap((s) => [s.file ?? '.*', s.quote ?? '.*']),
-      ...(x.not_cards ?? []).flatMap((s) => [s.file ?? '.*', s.quote ?? '.*']),
-    ]);
-    expect(pats.length).toBeGreaterThan(250);
+    const pats = r.flatMap((x) => [x.target, ...(x.accept ?? [])]);
+    expect(pats.length).toBeGreaterThan(200);
     for (const p of pats) expect(() => pyRegex(p), p).not.toThrow();
   });
 
@@ -53,4 +50,81 @@ describe('сквозные проходы пакета — как эталон p
       expect(r.actions).toBeGreaterThan(0);
     });
   }
+});
+
+describe('лимиты в игре на пакете v3.4 (AC-5, LM-A, DS-B)', () => {
+  // Как GAME_CONFIG сервера (api/src/app.ts).
+  const cfg = { pauseMs: 2 * 60 * 1000, unlimited: ['документ\\w* программ|поиск документ'] };
+  const login = (p = emptyProgress()) =>
+    act(
+      content,
+      p,
+      {
+        action: 'ПАРОЛЬ',
+        target: 'vaultline-program.com — вход для сотрудников',
+        value: 'k.walsh / Йен',
+      },
+      0,
+      cfg,
+    ).progress;
+
+  it('поиск «Документов программы» не считает промахи; «Учёт анкет» — три и пауза', () => {
+    let p = login();
+    for (let i = 1; i <= 5; i++) {
+      const r = act(
+        content,
+        p,
+        {
+          action: 'ПАРОЛЬ',
+          target: 'кабинет VAULTLINE: документы программы',
+          value: `нет такого ${i}`,
+        },
+        i * 1000,
+        cfg,
+      );
+      expect(r.outcome.result).not.toBe('лимит');
+      p = r.progress;
+    }
+    for (let i = 0; i < 3; i++) {
+      p = act(
+        content,
+        p,
+        { action: 'ПАРОЛЬ', target: 'кабинет VAULTLINE: учёт анкет', value: 'Z-99' },
+        10_000 + i,
+        cfg,
+      ).progress;
+    }
+    const r = act(
+      content,
+      p,
+      { action: 'ПАРОЛЬ', target: 'кабинет VAULTLINE: учёт анкет', value: 'A-24 / 06.10.2008' },
+      20_000,
+      cfg,
+    );
+    expect(r.outcome.result).toBe('лимит');
+  });
+
+  it('дата газеты — десять неверных, потом пауза 2 минуты', () => {
+    let p = emptyProgress();
+    for (let i = 0; i < 10; i++) {
+      const v = `${String(i + 1).padStart(2, '0')}.01.2000`;
+      p = act(
+        content,
+        p,
+        { action: 'ПАРОЛЬ', target: 'архив номеров газеты', value: v },
+        i,
+        cfg,
+      ).progress;
+    }
+    const at = (t: number) =>
+      act(
+        content,
+        p,
+        { action: 'ПАРОЛЬ', target: 'архив номеров газеты', value: '14.12.1987' },
+        t,
+        cfg,
+      ).outcome.result;
+    expect(at(1000)).toBe('лимит');
+    expect(at(2 * 60 * 1000 + 100)).toBe('успех');
+  });
 });
