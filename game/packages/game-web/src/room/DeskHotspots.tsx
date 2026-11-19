@@ -140,7 +140,9 @@ export function DeskHotspots({
             }}
           >
             {o.tag && (
-              <span className={`device-tag${o.tagInside ? ' device-tag-inside' : ''}`}>
+              <span
+                className={`device-tag${o.tagInside ? ' device-tag-inside' : ''}${o.tagLine ? ' device-tag-line' : ''}`}
+              >
                 {o.tag}
               </span>
             )}

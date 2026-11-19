@@ -1976,6 +1976,12 @@ button {
   text-align: center;
 }
 
+/* Конверт в стопке: видна узкая полоска — надпись в одну строку (RS-A). */
+.device-tag-line {
+  white-space: nowrap;
+  max-width: none;
+}
+
 /* ── Конверт архива в руках (A-260, правка автора 09.11). ── */
 .envelope-view {
   position: absolute;
