@@ -15,8 +15,13 @@ import './pc.css';
 const SCREEN_W = 1280;
 const SCREEN_H = 800;
 const BEZEL = 30;
-/** Место под системный блок справа от монитора: отступ и ширина корпуса (pc.css). */
-const TOWER_SPACE = 36 + 230;
+/**
+ * Системный блок под монитором (PC-A, pc.css): ножка и верх корпуса с дисководами входят в кадр;
+ * низ корпуса может уйти за край — экран остаётся крупным.
+ */
+const CASE_SPACE = 26 + 78;
+/** На сколько поднять компьютер в кадре, пока вставляют диск: весь корпус и выехавший лоток. */
+const INSERT_LIFT = 260;
 
 type Kind = 'terminal' | 'browser' | 'doc';
 interface Win {
@@ -66,12 +71,13 @@ export function PcView() {
   const open = useGame((g) => g.computerOpen);
   const material = useGame((g) => g.pcMaterial);
   const area = useFreeArea();
-  // Монитор и системный блок справа (дисковод, A-272) — вместе по середине свободного места.
+  // Монитор на системном блоке (дисковод, A-272) — вместе по середине свободного места.
   const scale = Math.min(
-    (area.width - 40) / (SCREEN_W + BEZEL * 2 + TOWER_SPACE),
-    (area.height - 40) / (SCREEN_H + BEZEL * 2 + 18),
+    (area.width - 40) / (SCREEN_W + BEZEL * 2),
+    (area.height - 40) / (SCREEN_H + BEZEL * 2 + 18 + CASE_SPACE),
   );
   const hasDisc = useGame((g) => g.materials.some((m) => m.id === SERVER_LOG_ID));
+  const inserting = useGame((g) => g.discInserting);
   const { onUp, button } = useSelectionCard('pc-to-folder', 'pc');
   useFindOnScreen('.pc-screen', open);
 
@@ -99,7 +105,9 @@ export function PcView() {
         style={{
           width: SCREEN_W + BEZEL * 2,
           height: SCREEN_H + BEZEL * 2 + 18,
-          left: area.center ? area.center - (TOWER_SPACE * scale) / 2 : undefined,
+          left: area.center || undefined,
+          // Вставляют диск — взгляд опускается к дисководу (корпус и лоток в кадре), потом обратно.
+          top: `calc(50% - ${((CASE_SPACE + (inserting ? INSERT_LIFT : 0)) * scale) / 2}px)`,
           transform: `translate(-50%, -50%) scale(${scale})`,
         }}
       >
@@ -112,7 +120,14 @@ export function PcView() {
         >
           <PcDesktop material={material} />
         </div>
+        {/* Подбородок ЖК-монитора 2000-х: кнопки меню и огонёк питания. */}
         <div className="pc-monitor-chin" aria-hidden>
+          <span className="pc-chin-buttons">
+            <span />
+            <span />
+            <span />
+            <span />
+          </span>
           <span className="pc-power" />
         </div>
         <DiscDrive hasDisc={hasDisc} />

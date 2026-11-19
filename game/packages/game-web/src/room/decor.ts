@@ -187,7 +187,27 @@ export function deskObjects(
   });
   const device = col('--color-device');
   const edge = col('--color-device-edge');
-  const monitor = box(-0.66, 0.2, 0.32, 0.24, 0.25, col('--color-monitor'), 0.04);
+  // Рабочее место бюро (A-272, PC-A — автор 19.11: «дисковод как в 2000-х, под монитор»): плоский
+  // корпус «desktop» на столе, на нём ЖК-монитор на ножке. Спереди корпуса — дисковод CD/DVD,
+  // дисковод дискет, кнопка питания и огоньки.
+  const PC_X = -0.66;
+  const PC_Z = 0.2;
+  const CASE_H = 0.085;
+  const front = PC_Z + 0.15 + 0.003;
+  const pcCase = col('--color-pc-case');
+  const bay = col('--color-pc-bay');
+  const pcBoxes = [
+    box(PC_X, PC_Z, 0.36, 0.3, CASE_H, pcCase),
+    // Дисковод CD/DVD и дисковод дискет — слева, кнопка и огоньки — справа.
+    box(PC_X - 0.075, front, 0.17, 0.006, 0.022, bay, 0.052),
+    box(PC_X - 0.11, front, 0.1, 0.006, 0.012, bay, 0.025),
+    box(PC_X + 0.125, front, 0.03, 0.006, 0.03, col('--color-pc-button'), 0.03),
+    box(PC_X + 0.09, front, 0.01, 0.005, 0.006, col('--color-pc-led'), 0.04),
+    // Ножка и подставка монитора.
+    box(PC_X, PC_Z, 0.17, 0.11, 0.008, edge, CASE_H),
+    box(PC_X, PC_Z - 0.01, 0.05, 0.035, 0.05, edge, CASE_H + 0.008),
+  ];
+  const monitor = box(PC_X, PC_Z - 0.01, 0.34, 0.05, 0.24, col('--color-monitor'), CASE_H + 0.05);
   monitor.screen = col('--color-screen');
   const all: DeskObject[] = [
     ...inboxObjects(r, col, inbox),
@@ -237,8 +257,8 @@ export function deskObjects(
       key: 'newspaper',
       label: 'Газета',
       boxes: [
-        box(-0.37, 0.33, 0.19, 0.13, 0.01, col('--color-newspaper')),
-        box(-0.37, 0.29, 0.17, 0.025, 0.002, col('--color-newspaper-ink'), 0.01),
+        box(-0.33, 0.33, 0.19, 0.13, 0.01, col('--color-newspaper')),
+        box(-0.33, 0.29, 0.17, 0.025, 0.002, col('--color-newspaper-ink'), 0.01),
       ],
       hotspot: { kind: 'material' as const, id: '15' },
       testId: 'newspaper',
@@ -333,7 +353,7 @@ export function deskObjects(
     {
       key: 'monitor',
       label: 'Компьютер следователя',
-      boxes: [box(-0.66, 0.22, 0.12, 0.1, 0.04, edge), monitor],
+      boxes: [...pcBoxes, monitor],
       hotspot: { kind: 'computer' },
     },
     {

@@ -37,7 +37,7 @@ test('рабочее место бюро: служебная полоса, ча�
   await expect(page.getByTestId('pc-clock')).toContainText(':');
   await expect(icon(page, 'Браузер')).toBeVisible();
   await expect(icon(page, SERVER)).toHaveCount(0);
-  await expect(page.getByTestId('pc-tower')).toBeVisible();
+  await expect(page.getByTestId('pc-case')).toBeVisible();
   await expect(page.getByTestId('pc-tray')).toHaveAttribute('data-state', 'closed');
   // Стрелки при открытом компьютере не переключают вид; Esc и щелчок мимо — отойти.
   await page.keyboard.press('ArrowUp');

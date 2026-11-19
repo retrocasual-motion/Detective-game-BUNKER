@@ -3,9 +3,11 @@ import { reducedMotion } from '../motion.ts';
 import { useGame } from '../store.ts';
 
 /**
- * Системный блок с дисководом (A-272, AC-2; лоток CD/DVD, 2009 год): справа от монитора. Диск
- * вставили — лоток выезжает, диск ложится, лоток уезжает, раскрутка (звук), индикатор мигает;
- * потом на рабочем столе — значок программы. Диск остаётся в компьютере.
+ * Системный блок с дисководом (A-272, AC-2; PC-A — автор 19.11: «как в 2000-х, под монитор»):
+ * плоский корпус «desktop» под монитором — ниша CD/DVD с лотком, кнопкой выброса и огоньком,
+ * дисковод дискет, кнопка питания, огоньки питания и диска, USB и гнёзда звука, решётка.
+ * Диск вставили — лоток выезжает, диск ложится, лоток уезжает, раскрутка (звук), огонёк
+ * мигает; потом на рабочем столе — значок программы. Диск остаётся в компьютере.
  */
 
 export type TrayState = 'closed' | 'open' | 'loaded' | 'closing' | 'spin';
@@ -91,19 +93,44 @@ export function DiscDrive({ hasDisc }: { hasDisc: boolean }) {
   }, [inserting]);
 
   return (
-    <div className="pc-tower" data-testid="pc-tower" aria-hidden>
-      <div className="pc-bay">
-        <div className="pc-tray" data-testid="pc-tray" data-state={tray}>
-          <div className="pc-tray-disc" />
+    <div className="pc-case" data-testid="pc-case" aria-hidden>
+      <div className="pc-stand" />
+      <div className="pc-case-front">
+        <div className="pc-bays">
+          <div className="pc-bay">
+            <div className="pc-bay-face">
+              <span className="pc-bay-slot" />
+              <span className="pc-bay-label">DVD-ROM</span>
+              <span
+                className={`pc-drive-led${tray === 'spin' ? ' pc-drive-led-on' : ''}`}
+                data-disc={hasDisc}
+              />
+              <span className="pc-eject" />
+            </div>
+            <div className="pc-tray" data-testid="pc-tray" data-state={tray}>
+              <div className="pc-tray-disc" />
+            </div>
+          </div>
+          <div className="pc-floppy">
+            <span className="pc-floppy-slot" />
+            <span className="pc-floppy-button" />
+          </div>
         </div>
-        <span
-          className={`pc-drive-led${tray === 'spin' ? ' pc-drive-led-on' : ''}`}
-          data-disc={hasDisc}
-        />
+        <div className="pc-vents" />
+        <div className="pc-controls">
+          <div className="pc-leds">
+            <span className="pc-led pc-led-power" />
+            <span className="pc-led pc-led-hdd" />
+          </div>
+          <span className="pc-power-button" />
+          <div className="pc-ports">
+            <span className="pc-usb" />
+            <span className="pc-usb" />
+            <span className="pc-jack pc-jack-out" />
+            <span className="pc-jack pc-jack-in" />
+          </div>
+        </div>
       </div>
-      <div className="pc-bay pc-bay-blank" />
-      <div className="pc-tower-power" />
-      <div className="pc-tower-vents" />
     </div>
   );
 }
