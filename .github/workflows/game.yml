@@ -2,8 +2,11 @@ name: game
 
 # Минуты Actions на Free ограничены (R4-02): правка только документации CI не запускает; новый
 # пуш в ту же ветку отменяет прошлый прогон; e2e — только на PR (в main приходит уже проверенное).
+# CI-C (автор 20.11): PR-черновик (draft) CI не запускает — работа идёт черновиком, проверки
+# локально; перед «мержим?» PR переводят в «готов» — один прогон.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       ['game/**', '.github/workflows/game.yml', 'playtest/packs/**', '!game/docs/**', '!**/*.md']
   push:
@@ -21,6 +24,7 @@ defaults:
 
 jobs:
   check:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +42,7 @@ jobs:
       - run: pnpm test
 
   e2e:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -61,6 +65,7 @@ jobs:
           retention-days: 7
 
   docker:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
