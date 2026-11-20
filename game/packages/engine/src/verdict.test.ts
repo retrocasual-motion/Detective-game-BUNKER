@@ -19,8 +19,8 @@ describe('оценка заключения (A-270)', () => {
     expect(s.groups.map((g) => g.solved)).toEqual([true, true]);
   });
 
-  it('мотив — любой материал со смертью прежнего участника; газета тоже', () => {
-    for (const m of ['L619', '15', 'L832', 'L388', 'L957', 'L461', 'L462'])
+  it('мотив — любой материал со смертью прежнего участника; газета и папка A-24 (L991, PT-4) тоже', () => {
+    for (const m of ['L991', 'L619', '15', 'L832', 'L388', 'L957', 'L461', 'L462'])
       expect(scoreVerdict(rubric, [null, { material: m }]).marks[1]).toBe('верно');
     expect(scoreVerdict(rubric, [null, { material: '31' }]).marks[1]).toBe('неверно');
   });
