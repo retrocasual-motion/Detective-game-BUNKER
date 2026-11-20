@@ -1,0 +1,196 @@
+{
+  "duration_api_ms": 157163,
+  "stop_reason": "end_turn",
+  "session_id": "83118a35-b36e-4164-a641-019b3482e456",
+  "total_cost_usd": 0.9383428,
+  "usage": {
+    "input_tokens": 40,
+    "cache_creation_input_tokens": 62207,
+    "cache_read_input_tokens": 636124,
+    "output_tokens": 15652,
+    "output_tokens_details": {
+      "thinking_tokens": 5149
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 62207,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 977,
+        "cache_read_input_tokens": 61538,
+        "cache_creation_input_tokens": 3857,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 3857
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 40,
+      "outputTokens": 15652,
+      "cacheReadInputTokens": 636124,
+      "cacheCreationInputTokens": 62207,
+      "webSearchRequests": 0,
+      "costUSD": 0.9380808,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 5149,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 62207,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 275,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000262,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 254,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "network_error",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 56,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 1 закончен. Я прочитал почти все материалы, кроме актов 10–12 по ограждению: главное по креплению уже есть в заключении эксперта. Раздел «Раунд 1» добавлен в `journal.md`, восемь действий записаны в `actions.md`.\n\n**Главные находки:**\n- **Перед падением наверху кто-то был рядом с Коулом.** По записи радиопоста в 08:44:46 на лестнице слышны шаги вниз, в 08:44:52 наверху возня и металлический скрежет, в 08:45:02 удар внизу.\n- **Коул шантажировал Харта.** В 07:33 он сказал у окна поста: «Харт, ты же не хочешь, чтобы миссис Колдер об этом узнала?» Лист с психологическим интервью Харта был разорван. Верхняя половина осталась на площадке, обгоревшая нижняя («в 1998… за рулём…») нашлась у Харта в кармане.\n- **Ночную тревогу с «ударом», скорее всего, инсценировали.** «Внешнее сообщение» по описанию похоже на голос Эммы Пирс, а на опросе она сказала, что голос не узнала. Настоящий удар был только 13-го около 10:40.\n- **Программа, похоже, прикрывает испытания HEXON BIO.** Комплекс выдают двумя партиями. Есть бланк HEXON BIO «Этап A» 2008 года, подписанный медиком Уолш. Хейл получил запрос с объекта в 09:14 и в 09:34 заказал такси в аэропорт «немедленно».\n- **В показаниях много нестыковок.** Моро утверждает, что слышала бег по лестнице и удар, хотя шла с запада, далеко от площадки. Уолш говорит, что аварийный ключ «пропал», но Пирс сдала его инженеру. Миллер называет дефект устранённым, а эксперт пишет, что трещина плиты старая.\n\n**Подозреваемые сейчас:** Моро 30%, Харт 25%, Пирс 15%, остальные меньше. Уверенность в версии — 25%.\n\n**Действия на следующий раунд:**\n- вставить диск с выгрузкой сервера;\n- пролистать пачку П-02: в ней лишний слой картона;\n- совместить две половины листа;\n- увеличить знак HEXON на бланке: подсказка к ноутбуку — «наш первый знак»;\n- прослушать запись радиопоста с 08:45:40;\n- ввести PIN телефона 0110: я думаю, это телефон Силвы, а 01.10 — день рождения его сестры Аны;\n- открыть сайт vaultline-program.com;\n- открыть номер газеты за 07.10.2008: Том Бернар умер 6 октября 2008 года, во время прошлого заезда.",
+  "ttft_ms": 3589,
+  "type": "result",
+  "duration_ms": 157451,
+  "uuid": "ae2eb607-acf0-4611-b87f-6fbcfa4c3c12",
+  "ttft_stream_ms": 3342,
+  "time_to_request_ms": 2473,
+  "time_to_request_phases_ms": {
+    "other": 2,
+    "system_prompt": 2,
+    "resume_other": 0,
+    "process_user_input": 1,
+    "input_attachments": 4,
+    "input_hooks": 2,
+    "conversation_append": 0,
+    "transcript_persist": 40,
+    "tool_pool_refresh": 2,
+    "init_message": 6,
+    "init_frame_send": 2,
+    "engine_pickup": 1,
+    "loop_entry": 2,
+    "message_prep": 0,
+    "model_config_wait": 1,
+    "autocompact": 1,
+    "request_announcements": 3,
+    "query_setup": 0,
+    "model_gates": 2390,
+    "tool_schema_build": 9,
+    "message_normalization": 0,
+    "client_creation": 3,
+    "request_build": 2
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 8,
+  "time_to_request_cpu_ms": 156,
+  "time_to_request_major_faults": 13920,
+  "input_attachments_detail": {
+    "slowest_producer": "deferred_tools_delta",
+    "slowest_producer_ms": 1,
+    "cpu_ms": 0,
+    "major_faults": 554,
+    "setup_ms": 0,
+    "prompt_producers_ms": 0,
+    "ambient_start_ms": 1,
+    "ambient_wait_ms": 1,
+    "render_ms": 0,
+    "producers": 41,
+    "token_counts": 0
+  },
+  "tool_schema_build_detail": {
+    "betas_ms": 0,
+    "waits_ms": 3,
+    "placement_ms": 3,
+    "render_ms": 3,
+    "after_ms": 0,
+    "other_ms": 0,
+    "tools": 5,
+    "new_schemas": 5
+  },
+  "message_normalization_detail": {
+    "before_ms": 0,
+    "normalize_ms": 0,
+    "images_ms": 0,
+    "post_process_ms": 0,
+    "after_ms": 0,
+    "other_ms": 0,
+    "messages": 8,
+    "wire_messages": 2
+  },
+  "request_build_detail": {
+    "records_ms": 0,
+    "system_ms": 0,
+    "headers_ms": 0,
+    "cache_break_record_ms": 1,
+    "plans_ms": 0,
+    "retry_setup_ms": 0,
+    "sent_build_ms": 1,
+    "record_attempt_ms": 0,
+    "other_ms": 0,
+    "sent_build_safety_context_ms": 0,
+    "sent_build_cache_breakpoints_ms": 0,
+    "sent_build_surrogate_scan_ms": 0
+  },
+  "first_content_frame_ms": 3343,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "credential_expires_at": "2026-12-04T14:35:16.031Z",
+  "_returncode": 0
+}

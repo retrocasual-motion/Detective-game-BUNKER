@@ -1,0 +1,194 @@
+{
+  "duration_api_ms": 491443,
+  "stop_reason": "end_turn",
+  "session_id": "9d75ec19-051d-4556-b061-a5ad2d2ba86a",
+  "total_cost_usd": 2.5840703,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 6363,
+    "cache_read_input_tokens": 378834,
+    "output_tokens": 3340,
+    "output_tokens_details": {
+      "thinking_tokens": 383
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6363,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 904,
+        "cache_read_input_tokens": 128716,
+        "cache_creation_input_tokens": 2116,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2116
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 78,
+      "outputTokens": 51218,
+      "thinkingTokens": 20162,
+      "cacheReadInputTokens": 2689609,
+      "cacheCreationInputTokens": 127644,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 127644,
+      "webSearchRequests": 0,
+      "costUSD": 2.5837458000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 400,
+      "thinkingTokens": 379,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00032450000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "extra_usage_disabled",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 закончен. Раздел «Раунд 5» дописан в журнал, шесть действий записаны в `actions.md`.\n\n**Что дал раунд:**\n- **A-24 — это Томас Бернар.** В учёте VAULTLINE он записан так: 1974 года рождения, механик, женат, есть домашний телефон. Архив проекта VL-31 передан Хейлу, указан адрес хранилища: docs.hexon-bio.com/vl-31.\n- **Ячейка № 845.** Коул арендовал её 20.10.2008, сразу после конца этапа A. В ней два предмета:\n  - «Акт передачи дел этапа A» от 14.11.2008. Хейл передал Коулу все шесть дел с фото и медицинскими листами, листы сверила и подписала Уолш. Отсюда мой вывод: настоящий медлист Бернара подменили «чистым».\n  - Микрокассета «06.10.08». Первый голос, сиплый и монотонный, похож по описанию на Коула: «умер. Внутри, на объекте. Реакция». Второй голос, низкий и веский, похож на Хейла: «Объявлять не будем… Стало плохо в дороге… Семье — эвакуирован. Справку завизирую».\n  \n  Голоса в записи не названы, я опознаю их только по описанию. Если опознание верно, гибель Бернара скрыли по приказу Хейла. Кассету Коул, видимо, хранил как страховку.\n- **Новое о Лее.** Бернар был женат, а в некрологе упомянута только сестра Клэр. Так что Лея может быть его вдовой: портрет в её блокноте явно рисовали по памяти и с теплом. Пока это предположение.\n\n**Подозреваемые:** Лея Моро 45%, Пирс 25%, несчастный случай или падение без умысла 22%, Харт 5%, остальные 3%. Уверенность в версии — 45%.\n\n**Действия на следующий раунд:**\n- позвонить на домашний номер Бернара, чтобы проверить, кем ему приходится Лея;\n- открыть хранилище документов Хейла (docs.hexon-bio.com/vl-31);\n- пролистать пачки П-03 (кабинет координатора), П-06 (радиопост), П-01 (заполненные анкеты) и П-05 (медкабинет). Главная цель — найти пропавшую из папки Коула распечатку «Выписка журнала узла: пользователь 05», которая указала бы на Пирс.\n\nС финалом пока не спешу: сначала нужно подтвердить, кто такая Лея, и найти эту распечатку.",
+  "ttft_ms": 2566,
+  "type": "result",
+  "duration_ms": 31111,
+  "uuid": "6745e88e-0d7e-475d-bdd9-5ffcac2e3fdf",
+  "ttft_stream_ms": 1789,
+  "time_to_request_ms": 642,
+  "time_to_request_phases_ms": {
+    "other": 2,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 2,
+    "input_attachments": 23,
+    "input_hooks": 1,
+    "conversation_append": 1,
+    "transcript_persist": 15,
+    "tool_pool_refresh": 1,
+    "init_message": 7,
+    "init_frame_send": 2,
+    "engine_pickup": 1,
+    "loop_entry": 2,
+    "message_prep": 0,
+    "model_config_wait": 1,
+    "autocompact": 1,
+    "request_announcements": 1,
+    "query_setup": 1,
+    "model_gates": 562,
+    "tool_schema_build": 6,
+    "message_normalization": 5,
+    "client_creation": 1,
+    "request_build": 6
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 1,
+  "time_to_request_cpu_ms": 141,
+  "time_to_request_major_faults": 13349,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 18,
+    "cpu_ms": 63,
+    "major_faults": 3101,
+    "changed_files_reread": 0,
+    "setup_ms": 1,
+    "prompt_producers_ms": 0,
+    "ambient_start_ms": 3,
+    "ambient_wait_ms": 17,
+    "render_ms": 0,
+    "producers": 41,
+    "token_counts": 0
+  },
+  "tool_schema_build_detail": {
+    "betas_ms": 0,
+    "waits_ms": 3,
+    "placement_ms": 1,
+    "render_ms": 2,
+    "after_ms": 0,
+    "other_ms": 0,
+    "tools": 5,
+    "new_schemas": 5
+  },
+  "message_normalization_detail": {
+    "before_ms": 0,
+    "normalize_ms": 4,
+    "images_ms": 0,
+    "post_process_ms": 0,
+    "after_ms": 0,
+    "other_ms": 1,
+    "messages": 291,
+    "wire_messages": 110
+  },
+  "request_build_detail": {
+    "records_ms": 0,
+    "system_ms": 1,
+    "headers_ms": 0,
+    "cache_break_record_ms": 1,
+    "plans_ms": 1,
+    "retry_setup_ms": 0,
+    "sent_build_ms": 2,
+    "record_attempt_ms": 0,
+    "other_ms": 1,
+    "sent_build_safety_context_ms": 0,
+    "sent_build_cache_breakpoints_ms": 0,
+    "sent_build_surrogate_scan_ms": 1
+  },
+  "first_content_frame_ms": 1789,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "credential_expires_at": "2026-12-04T14:35:16.031Z",
+  "_returncode": 0
+}
