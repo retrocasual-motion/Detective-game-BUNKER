@@ -167,13 +167,7 @@ function Page({ page, reload }: { page: SitePage; reload: () => Promise<void> })
           <b>{page.domain}</b>
           {page.header && <span className="site-logo">{page.header}</span>}
         </div>
-        {page.nav.length > 0 && (
-          <nav className="site-nav">
-            {page.nav.map((n) => (
-              <span key={n}>{n}</span>
-            ))}
-          </nav>
-        )}
+        {page.nav.length > 0 && <SiteNav nav={page.nav} body={page.body} />}
       </header>
       <main className="site-main" data-material={page.material}>
         {page.mailbox ? (
@@ -207,6 +201,7 @@ function Page({ page, reload }: { page: SitePage; reload: () => Promise<void> })
                 </p>
               );
             if (id === 'vl-forgot' && page.cabinet) return null;
+            if (id === 'vl-forgot') return <VlForgot key={id} wait={page.wait} />;
             // Почта уже открыта: повторный вход не нужен (F8) — как у кабинета VAULTLINE.
             if (id === 'mb-login' && page.mailOpen)
               return (
@@ -221,15 +216,13 @@ function Page({ page, reload }: { page: SitePage; reload: () => Promise<void> })
                 key={id}
                 id={id}
                 wait={page.wait[id] ?? 0}
-                onDone={async (r, values) => {
+                onDone={async (r) => {
                   if (id === 'vl-login' && r.opened.includes('L620')) location.assign('/cabinet');
                   else if (id === 'mb-login' && r.opened.includes('L453')) location.assign('/mail');
                   else if (r.opened.length || !r.quiet) await reload();
                   return id === 'mb-login' && !r.opened.length
                     ? 'Неверный адрес или пароль.'
-                    : id === 'vl-forgot' && !values.login
-                      ? 'Укажите логин.'
-                      : r.reply;
+                    : r.reply;
                 }}
               />
             );
@@ -307,11 +300,26 @@ function SiteForm({
   const spec = SITE_FORMS[id];
   const [values, setValues] = useState<Record<string, string>>({});
   const [msg, setMsg] = useState('');
+  const [missing, setMissing] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const w = useWait(wait);
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (busy || w.left > 0) return;
+    // Пустое поле — у поля, без сервера: попытка не тратится (UX-4, VF-5).
+    const empty = spec.fields.filter((f) => !(values[f.name] ?? '').trim());
+    if (spec.some ? empty.length === spec.fields.length : empty.length > 0) {
+      setMissing(empty.map((f) => f.name));
+      setMsg(
+        spec.some
+          ? 'Заполните хотя бы одно поле.'
+          : empty.length === 1
+            ? `Заполните поле «${empty[0]?.label}».`
+            : `Заполните поля: ${empty.map((f) => `«${f.label}»`).join(', ')}.`,
+      );
+      return;
+    }
+    setMissing([]);
     setBusy(true);
     const all = { ...extra, ...values };
     const r = await send(id, all);
@@ -337,8 +345,10 @@ function SiteForm({
             autoComplete="off"
             value={values[f.name] ?? ''}
             disabled={w.left > 0}
+            aria-invalid={missing.includes(f.name) || undefined}
             onChange={(e) => {
               setValues((v) => ({ ...v, [f.name]: e.target.value }));
+              setMissing((m) => m.filter((x) => x !== f.name));
               setMsg('');
             }}
           />
@@ -353,6 +363,88 @@ function SiteForm({
           : msg && md(msg)}
       </div>
     </form>
+  );
+}
+
+/**
+ * Разделы сайта в шапке (UX-6, DA-4): раздел, который есть на странице, — ссылка к нему
+ * («Главная» — наверх); раздела на странице нет — просто слово, не вкладка: нажимается только то,
+ * что выглядит нажимаемым.
+ */
+function SiteNav({ nav, body }: { nav: string[]; body: string }) {
+  const heads = [...body.matchAll(/^#{1,3}\s+(.+)$/gm)].map((m) => (m[1] ?? '').trim());
+  const low = (s: string) => s.toLowerCase();
+  const target = (n: string) =>
+    /^главная$/i.test(n)
+      ? 'top'
+      : (heads.find((h) => low(h).startsWith(low(n)) || low(n).startsWith(low(h))) ?? null);
+  const go = (t: string) => {
+    if (t === 'top') {
+      window.scrollTo({ top: 0 });
+      return;
+    }
+    const el = [...document.querySelectorAll('.site-main :is(h1, h2, h3)')].find(
+      (h) => h.textContent?.trim() === t,
+    );
+    el?.scrollIntoView({ block: 'start' });
+  };
+  return (
+    <nav className="site-nav">
+      {nav.map((n) => {
+        const t = target(n);
+        return t ? (
+          <a
+            key={n}
+            href={`#${encodeURIComponent(n)}`}
+            onClick={(e) => {
+              e.preventDefault();
+              go(t);
+            }}
+          >
+            {n}
+          </a>
+        ) : (
+          <span key={n} className="site-nav-off">
+            {n}
+          </span>
+        );
+      })}
+    </nav>
+  );
+}
+
+/**
+ * «Забыли пароль?» VAULTLINE (PW-B, автор 20.11): второй вход — по кодовому слову. Логин →
+ * контрольный вопрос учётной записи → ответ → кабинет. Как у почты (MailForgot).
+ */
+function VlForgot({ wait }: { wait: SitePage['wait'] }) {
+  const [asked, setAsked] = useState<{ login: string; question: string } | null>(null);
+  if (!asked)
+    return (
+      <SiteForm
+        id="vl-forgot"
+        wait={wait['vl-forgot'] ?? 0}
+        onDone={(r, v) => {
+          if (/Контрольный вопрос/.test(r.reply))
+            setAsked({ login: v.login ?? '', question: r.reply });
+          return r.reply;
+        }}
+      />
+    );
+  return (
+    <div className="site-question" data-testid="site-question">
+      <p>{asked.question}</p>
+      <SiteForm
+        id="vl-word"
+        wait={wait['vl-word'] ?? 0}
+        extra={{ login: asked.login }}
+        onDone={(r) => {
+          if (r.opened.includes('L620') || (!r.quiet && /Вход выполнен/.test(r.reply)))
+            location.assign('/cabinet');
+          return r.reply;
+        }}
+      />
+    </div>
   );
 }
 

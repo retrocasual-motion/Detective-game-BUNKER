@@ -53,10 +53,21 @@ body {
   gap: 2px;
   margin-top: 12px;
 }
-.site-nav span {
+.site-nav a {
   padding: 6px 12px;
   background: rgb(255 255 255 / 12%);
+  color: inherit;
   font-size: 13px;
+  text-decoration: none;
+}
+.site-nav a:hover {
+  background: rgb(255 255 255 / 24%);
+}
+/* Раздела на этой странице нет — слово, не вкладка (UX-6). */
+.site-nav-off {
+  padding: 6px 12px;
+  font-size: 13px;
+  opacity: 0.75;
 }
 .site-main {
   padding: 16px 24px 48px;
@@ -103,6 +114,11 @@ body {
   padding: 4px 6px;
   font: inherit;
   border: 1px solid #a9a9a2;
+}
+/* Пустое поле при отправке (UX-4): рамка у самого поля. */
+.site-form input[aria-invalid="true"] {
+  border-color: #b3261e;
+  outline: 1px solid #b3261e;
 }
 .site-form button,
 .site-doc button,

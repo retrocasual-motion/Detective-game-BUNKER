@@ -14,6 +14,7 @@ export function DeskPhone() {
   const open = useGame((g) => g.deskPhone);
   const heard = useCall((c) => c.heard);
   const offHook = useCall((c) => c.offHook);
+  const used = useCall((c) => c.used);
 
   // Ушли от телефона другим путём (поиск, лист, стена, вещь в руках) — отбой и камера к столу (F7).
   const away = useGame(
@@ -37,7 +38,8 @@ export function DeskPhone() {
       if (e.key === 'Tab') tabbed = true;
       if (e.key === 'Enter' && tabbed && e.target instanceof HTMLButtonElement) return;
       const c = useCall.getState();
-      if (e.key === 'Escape') closePhone();
+      // Esc и ↓ — отойти к столу, как стрелка «Стол» внизу (UX-1, KEY-A).
+      if (e.key === 'Escape' || e.key === 'ArrowDown') closePhone();
       else if (/^[0-9*#]$/.test(e.key)) c.press(e.key);
       else if (e.key === 'Backspace') c.erase();
       else if (e.key === 'Enter') c.handset();
@@ -57,7 +59,7 @@ export function DeskPhone() {
     };
   }, [open]);
 
-  if (!open) return null;
+  if (!open || (!heard.length && used)) return null;
   return (
     <section className="dp-heard" data-testid="dp-heard" aria-label="Что слышно в трубке">
       {heard.length ? (
@@ -74,6 +76,7 @@ export function DeskPhone() {
           </div>
         </>
       ) : (
+        // Только до первого нажатия кнопки или трубки (UX-12, LT-3): после — панели нет.
         <div className="dp-hint">
           Наберите номер на кнопках и снимите трубку — или снимите трубку и наберите.
         </div>

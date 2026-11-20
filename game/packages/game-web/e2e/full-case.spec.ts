@@ -603,9 +603,10 @@ test('QA-C: всё дело через интерфейс — от нового 
     await backToGame(page);
   });
 
-  await test.step('VAULTLINE: вход k.walsh/Йен (L620), учёт анкет VL-31 (L618) и A-24/06.10.2008 (L619), хранилище (L735), архив 0417 (L736–L738)', async () => {
+  await test.step('VAULTLINE: вход по кодовому слову k.walsh → «Йен» (L620, PW-B), учёт анкет VL-31 (L618) и A-24/06.10.2008 (L619), хранилище (L735), архив 0417 (L736–L738)', async () => {
     const vl = await siteByLink(page, '02', 'vaultline-program.com');
-    await fill(vl, 'vl-login', { login: 'k.walsh', password: 'Йен' });
+    await fill(vl, 'vl-forgot', { login: 'k.walsh' });
+    await fill(vl, 'vl-word', { answer: 'Йен' });
     await expect(vl).toHaveURL(/\/cabinet$/);
     await opened(page, ['L620']);
     await fill(vl, 'vl-registry', { program: 'VL-31' });

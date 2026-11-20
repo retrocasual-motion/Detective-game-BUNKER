@@ -616,26 +616,14 @@ export function WallView() {
         </>
       );
     } else if (excerpt) {
-      // Выписка (A-272, DB-B): каталожка — слова рукой следователя, внизу мелко источник,
-      // в углу «открыть» — источник на этом месте.
+      // Выписка (A-272, DB-B): каталожка — слова рукой следователя, внизу мелко источник;
+      // щелчок по карточке — источник на этом месте (ссылки «открыть» нет: мелкая и лишняя, UX-13).
       kind = 'excerpt';
       label = `Выписка: ${excerpt.text}`;
       content = (
         <>
           <span className="excerpt-text">{excerpt.text}</span>
           <span className="excerpt-source">{excerpt.source}</span>
-          <button
-            type="button"
-            className="excerpt-open"
-            data-testid={`excerpt-open-${excerpt.id}`}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation();
-              useGame.getState().openExcerpt(excerpt.id);
-            }}
-          >
-            открыть
-          </button>
         </>
       );
     } else if (m) {

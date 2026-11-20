@@ -151,13 +151,15 @@ const SOFT = [
   { id: 'redial', x: CX + 0.1 },
 ] as const;
 const SOFT_Z = CZ - 0.013;
+/** Клавиши под экранчиком: 12 мм в глубину — на малом экране не меньше пальца (UX-14, MS-4). */
+const SOFT_D = 0.012;
 
 function softKeyParts(): Part[] {
   return SOFT.map((s) => ({
     x: s.x,
     z: SOFT_Z,
     w: 0.032,
-    d: 0.009,
+    d: SOFT_D,
     h: 0.005,
     lift: BODY,
     color: 'key',
@@ -176,7 +178,7 @@ export function phoneSpots(look: PhoneLook = PHONE_IDLE) {
   const soft = Object.fromEntries(
     SOFT.map((s) => [
       s.id,
-      { x: s.x, z: SOFT_Z, w: 0.032, d: 0.009, top: BODY + 0.005 } satisfies Spot,
+      { x: s.x, z: SOFT_Z, w: 0.032, d: SOFT_D, top: BODY + 0.005 } satisfies Spot,
     ]),
   ) as Record<'erase' | 'redial', Spot>;
   const hs = handset(look);
@@ -200,5 +202,8 @@ export function phoneSpots(look: PhoneLook = PHONE_IDLE) {
       top: ear.lift + ear.h + 0.0005,
     } satisfies Spot,
     handsetYaw: look.offHook ? LIFT.yaw : 0,
+    // Корпус и задний выступ: щелчок по ним — ничего, не «мимо телефона» (UX-2, UN-3).
+    body: { x: CX, z: CZ, w: DESK_PHONE.w, d: DESK_PHONE.d, top: BODY } satisfies Spot,
+    ridge: { x: CX + 0.0425, z: CZ - 0.05, w: 0.165, d: 0.06, top: BODY + RIDGE } satisfies Spot,
   };
 }

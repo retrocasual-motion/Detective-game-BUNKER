@@ -186,6 +186,19 @@ export function RoomScene({
           onClick={closePhone}
         />
       )}
+      {/* Путь назад виден всегда: стрелка «Стол», как между стеной и столом (UX-1, SP-2). */}
+      {ph.to === 'phone' && (
+        <button
+          type="button"
+          className="nav-arrow nav-down"
+          data-testid="nav-phone-back"
+          aria-label={VIEW_LABELS.desk}
+          onClick={closePhone}
+        >
+          <span className="nav-glyph">˅</span>
+          <span className="nav-label">{VIEW_LABELS.desk}</span>
+        </button>
+      )}
       {/* Телефон следователя — в той же 3D-сцене, поверх нарисованного стола (6a-3, DP-A). */}
       <div ref={phoneWorld} className="world" hidden={flat}>
         <PhoneFace room={room} active={atPhone} />

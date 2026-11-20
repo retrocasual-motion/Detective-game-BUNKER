@@ -49,10 +49,10 @@ test('с сайта: выделить → «На стену» → в игре к
   await expect(card).toHaveCount(1);
   await expect(card).toContainText('Месяц тишины');
   await expect(card).toContainText('vaultline-program.com');
-  // «открыть» — сайт в новой вкладке, слова подсвечены (хеш выписки в адресе).
+  // Щелчок по выписке — сайт во вкладке, слова подсвечены (хеш выписки в адресе; UX-13).
   const [tab] = await Promise.all([
     page.context().waitForEvent('page'),
-    card.locator('.excerpt-open').click(),
+    card.locator('.excerpt-text').click(),
   ]);
   await expect(tab.getByTestId('site')).toBeVisible();
   await expect(tab).toHaveURL(/#x=/);
@@ -84,7 +84,7 @@ test('с компьютера: строка журнала сервера → «
   const card = page.locator('.paper-excerpt');
   await expect(card).toContainText('запрос связи, маршрут 01');
   await expect(card).toContainText('Сервер объекта VL-31 · Журнал событий 13.10');
-  await card.locator('.excerpt-open').click();
+  await card.locator('.excerpt-text').click();
   await expect(page.getByTestId('computer')).toBeVisible();
   await expect(page.getByTestId('srv-log')).toBeVisible();
 });

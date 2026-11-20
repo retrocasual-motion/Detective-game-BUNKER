@@ -98,6 +98,29 @@ test('диск сервера: конверт → вскрыть → диск н
   await expect(icon(page, SERVER)).toBeVisible();
 });
 
+test('диск в руках — щелчок по дисководу за ним вставляет диск (UX-3: путь без удержания)', async ({
+  page,
+}) => {
+  await page.getByTestId('server-disc').click();
+  await page.getByTestId('disc-envelope-open').click();
+  await page.keyboard.press('Escape');
+  const disc = page.getByTestId('server-disc-out');
+  // Вынутый диск не мигает «новым» (UX-8).
+  await expect(disc).not.toHaveClass(/desk-spot-fresh/);
+  await disc.click();
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Диск/);
+  await page.getByTestId('held-drive').click();
+  await expect(page.getByTestId('held')).toHaveCount(0);
+  await expect(disc).toHaveCount(0);
+  await pcUp(page);
+  await expect(icon(page, SERVER)).toBeVisible();
+});
+
+test('клавиатура у монитора — тоже компьютер (UX-10)', async ({ page }) => {
+  await page.getByTestId('computer-keyboard').click();
+  await expect(page.getByTestId('computer')).toBeVisible();
+});
+
 test('вынутый диск после перезагрузки — на столе, не в конверте', async ({ page }) => {
   await page.getByTestId('server-disc').click();
   await page.getByTestId('disc-envelope-open').click();

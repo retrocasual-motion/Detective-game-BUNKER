@@ -22,7 +22,7 @@ export const SITES: readonly Site[] = [
   {
     domain: 'vaultline-program.com',
     label: 'vaultline-program',
-    forms: ['vl-login', 'vl-forgot', 'vl-registry', 'vl-docs'],
+    forms: ['vl-login', 'vl-forgot', 'vl-word', 'vl-registry', 'vl-docs'],
     page: 'L101',
   },
   { domain: 'docs.hexon-bio.com', label: 'docs.hexon-bio', forms: ['hx-archive'], page: 'L735' },
@@ -119,6 +119,11 @@ export function formAction(
       return {
         target: 'vaultline-program.com — вход для сотрудников',
         value: `забыли пароль ${f('login')}`.trim(),
+      };
+    case 'vl-word':
+      return {
+        target: 'vaultline-program.com — вход по кодовому слову',
+        value: join(f('login'), f('answer')),
       };
     case 'vl-registry':
       return {

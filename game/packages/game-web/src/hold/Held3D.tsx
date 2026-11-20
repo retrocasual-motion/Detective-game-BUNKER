@@ -444,6 +444,8 @@ export interface Held3DProps {
   extra?: ReactNode;
   /** Кнопка действия внизу, пока вещь в руках («Вставить диск в компьютер», A-272). */
   action?: ReactNode;
+  /** Цель на столе за вещью (дисковод для диска в руках, UX-3): своя разметка, поверх сцены. */
+  overlay?: ReactNode;
   children: ReactNode;
 }
 
@@ -461,6 +463,7 @@ export default function Held3D({
   screenMenu = false,
   extra,
   action,
+  overlay,
   children,
 }: Held3DProps) {
   const screenEl = useRef<HTMLDivElement>(null);
@@ -685,6 +688,7 @@ export default function Held3D({
           {action}
         </div>
       )}
+      {overlay}
       <button
         type="button"
         className="tool tool-close held-close"

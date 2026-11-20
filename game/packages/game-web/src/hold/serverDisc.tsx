@@ -1,4 +1,9 @@
+import { useMemo } from 'react';
 import { DoubleSide } from 'three';
+import { roomFor } from '../room/camera.ts';
+import { deskObjects, screenRect } from '../room/decor.ts';
+import { insertServerDisc } from '../room/drive.ts';
+import { useViewport } from '../room/useViewport.ts';
 import { useGame } from '../store.ts';
 import Held3D from './Held3D.tsx';
 import { Plate, useTexture } from './shapes.tsx';
@@ -8,7 +13,8 @@ import { paintTexture } from './texture.ts';
  * Конверт «Прил. 7 · Сервер VL-31» с диском (A-272, AC-2; автор 19.11): в руках — заклеенный
  * конверт, «Вскрыть конверт» — в руках диск, его крутят и читают надпись. Отложили — диск лежит
  * на столе; вставляет его игрок сам: зажать на столе и дотащить до дисковода под монитором
- * (DD-A, `room/drive.ts`). Кнопки «Вставить» нет. Надписи — только из канона: на конверте
+ * (DD-A, `room/drive.ts`) — или, держа диск в руках, щёлкнуть по дисководу за ним (UX-3, DA-2: путь
+ * без удержания кнопки). Кнопки «Вставить» нет. Надписи — только из канона: на конверте
  * маркером «Прил. 7 · Сервер VL-31» (файл 52), диск — «Прил. 7 · Сервер VL-31» (L214).
  */
 
@@ -122,6 +128,35 @@ function Disc() {
   );
 }
 
+/**
+ * Дисковод за диском в руках (UX-3): стол виден за вещью — щелчок по дисководу вставляет диск.
+ * Без подписи и подсветки до наведения: догадаться — дело игрока (DD-A).
+ */
+function DriveTarget() {
+  const vp = useViewport();
+  const r = useMemo(() => {
+    const room = roomFor(vp);
+    const drive = deskObjects(room, () => '#000000').find((o) => o.key === 'drive');
+    return drive ? screenRect(drive, room.poses.desk, room) : null;
+  }, [vp]);
+  if (!r) return null;
+  return (
+    <button
+      type="button"
+      className="held-drive"
+      data-testid="held-drive"
+      aria-label="Дисковод компьютера"
+      title="Дисковод компьютера"
+      style={{ left: r.left, top: r.top, width: r.width, height: r.height }}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={() => {
+        useGame.getState().hold(null);
+        void insertServerDisc();
+      }}
+    />
+  );
+}
+
 export function ServerDiscHeld() {
   const out = useGame((g) => !!g.state?.discOut);
   const close = () => useGame.getState().hold(null);
@@ -132,6 +167,7 @@ export function ServerDiscHeld() {
       half={out ? [1.2, 1.2] : [1.5, 1.1]}
       label={out ? `Диск «${LABEL}»` : `Конверт «${LABEL}»`}
       onClose={close}
+      overlay={out ? <DriveTarget /> : undefined}
       action={
         out ? undefined : (
           <div className="held-action">
