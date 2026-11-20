@@ -3,7 +3,8 @@
 version: v3.4-2026-11-18
 built-from: v3.3-2026-10-29 (со всеми правками по 17.11) + A-272 (входы вместо запросов); своды 01–04 на ветке story/access-redesign
 built-by: Claude (detective-architect), ветка story/access-redesign
-approved-by-author: no
+approved-by-author: yes
+approved-note: Артём 20.11 — «Утверждаю, погнали. Вариант который рекомендуешь» (PT-A: experienced и casual, Opus, до 8 раундов, потолок 25 условных USD на профиль); после аудита F, правок утечек и A-274.
 date: 2026-11-18
 based-on: v3.3-2026-10-29
 
