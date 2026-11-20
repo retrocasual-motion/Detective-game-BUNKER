@@ -116,13 +116,13 @@ export function authRoutes(app: Hono<any>, deps: AuthDeps) {
     });
   }
 
-  /** Кто вошёл: почта и куда идут ответы; без входа — 401. */
+  /** Кто вошёл: почта; без входа — 401. */
   app.get('/api/me', async (c) => {
     if (auth === 'off') return c.json({ auth: 'off' });
     const pid = await sessionPlayer(db, getCookie(c, SESSION_COOKIE), now());
     const [p] = pid ? await db.select().from(players).where(eq(players.id, pid)) : [];
     if (!p) return c.json({ auth: 'link' }, 401);
-    return c.json({ auth: 'link', email: p.email, channel: mailer ? p.mailChannel : 'internal' });
+    return c.json({ auth: 'link', email: p.email });
   });
 
   /** Ввести почту → письмо со ссылкой для входа. */

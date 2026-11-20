@@ -1,0 +1,140 @@
+/* Телефон следователя на столе (6a-3, DP-A): сам телефон объёмный — нарисован на столе брусками
+   (`model.ts` → `decor.ts`); здесь — плоские слои на верхах брусков в 3D-сцене комнаты: текст
+   экранчика, цифры на кнопках, зоны щелчка клавиш и трубки. */
+.dp-spot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.dp-active {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* Экранчик: текст на стекле (стекло нарисовано на столе). */
+.dp-lcd {
+  box-sizing: border-box;
+  padding: 4px 10px;
+  color: var(--color-dp-lcd-ink);
+  font-family: ui-monospace, Consolas, monospace;
+  cursor: default;
+}
+.dp-lcd-top {
+  display: flex;
+  gap: 12px;
+  font-size: 14px;
+  opacity: 0.85;
+}
+.dp-line {
+  margin-left: auto;
+}
+.dp-line-on {
+  font-weight: 700;
+}
+.dp-lcd-state {
+  font-size: 17px;
+}
+.dp-lcd-number {
+  font-size: 28px;
+  line-height: 1.05;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.dp-lcd-soft {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 3px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  border-top: 1px solid currentcolor;
+}
+
+/* Цифры на кнопках (кнопки — бруски на столе). */
+.dp-key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-dp-key-ink);
+  line-height: 1;
+}
+.dp-digit {
+  font-size: 20px;
+  font-weight: 700;
+}
+.dp-letters {
+  font-size: 9px;
+  letter-spacing: 1px;
+  opacity: 0.7;
+  min-height: 9px;
+}
+
+/* Наведение — тонкая рамка: видно, что нажимается. */
+.dp-active.dp-key:hover,
+.dp-active.dp-soft:hover,
+.dp-active.dp-hs:hover,
+.dp-active:focus-visible {
+  outline: 2px solid var(--color-focus, #f0c040);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+.dp-hs {
+  border-radius: 24px;
+}
+
+/* Отойти от телефона: щелчок по столу вокруг (под телефоном). */
+.dp-away {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+
+/* Что слышно в трубке — внизу экрана, под телефоном. */
+.dp-heard {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  z-index: 30;
+  translate: -50% 0;
+  width: min(640px, 90vw);
+  max-height: 24vh;
+  overflow: auto;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--color-dp-heard);
+  color: var(--color-dp-heard-ink);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.dp-heard p {
+  margin: 4px 0;
+}
+.dp-heard-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.7;
+}
+.dp-heard-keys {
+  opacity: 0.65;
+  font-family: ui-monospace, Consolas, monospace;
+}
+.dp-heard-note,
+.dp-hint {
+  font-size: 12px;
+  opacity: 0.65;
+}
+.dp-hint {
+  text-align: center;
+  font-size: 13px;
+}

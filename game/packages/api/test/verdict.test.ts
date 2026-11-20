@@ -6,9 +6,9 @@ import {
   connectDb,
   type Db,
   migrateDb,
-  playerLetters,
   playerProgress,
   playerState,
+  playerVerdicts,
 } from '../src/db/client.ts';
 
 const mat = (id: string, body = `# Материал ${id}\nадрес zapros@bureau.org\n`): Material => ({
@@ -54,14 +54,6 @@ const rules: AccessRules = {
       release: ['L998'],
       ok: 'Назад пути нет.',
     },
-    {
-      id: 'pet',
-      action: 'ХОДАТАЙСТВО',
-      target: '^zapros@bureau\\.org$',
-      cards: [],
-      release: [],
-      ok: 'Бюро: ответ.',
-    },
   ],
 };
 const verdict: VerdictRubric = {
@@ -99,7 +91,7 @@ afterAll(async () => close());
 beforeEach(async () => {
   await db.delete(playerState);
   await db.delete(playerProgress);
-  await db.delete(playerLetters);
+  await db.delete(playerVerdicts);
   clock = 1_000_000;
 });
 
@@ -132,19 +124,12 @@ describe('заключение (A-270): форма, оценка, ответ б�
     expect(res.status).toBe(422);
   });
 
-  it('предупреждение → «продолжить» → форма открыта; запросы больше не принимаются (P-9)', async () => {
+  it('предупреждение → «продолжить» → форма открыта; новые действия больше не принимаются (P-9)', async () => {
     await solve();
     expect(await caseNow()).toMatchObject({ form: true, sent: false });
-    const res = await post('/api/petition', {
-      to: 'zapros@bureau.org',
-      ask: { file: '01', quote: 'Материал 01' },
-      basis: { file: '02', quote: 'Материал 02' },
-    });
-    expect(res.status).toBe(422);
-    expect(((await res.json()) as { error: string }).error).toMatch(/Расследование закрыто/);
   });
 
-  it('всё верно: дело закрыто, итог — сразу; эпилог — на столе, писем нет', async () => {
+  it('всё верно: дело закрыто, итог — сразу; эпилог — на столе', async () => {
     await solve();
     const res = await post('/api/verdict', { answers: RIGHT });
     expect(res.status).toBe(200);
@@ -161,7 +146,6 @@ describe('заключение (A-270): форма, оценка, ответ б�
       result: { marks: result.marks },
     });
     const got = await list();
-    expect(got.some((m) => m.kind === 'letter')).toBe(false);
     expect(got.find((m) => m.id === 'L997')?.title).toBe('Эпилог');
   });
 

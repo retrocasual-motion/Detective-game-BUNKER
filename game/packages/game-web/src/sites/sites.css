@@ -1,0 +1,219 @@
+/* Сайты дела (A-272): функциональный вид 2009 года — светлая страница, шапка, разделы, формы.
+   Финальный вид каждого сайта — отдельной задачей автора. */
+
+:root {
+  color-scheme: light;
+}
+body {
+  margin: 0;
+  background: #e9e9e4;
+  color: #1d1d1b;
+  font:
+    15px / 1.5 Tahoma,
+    Verdana,
+    "Segoe UI",
+    sans-serif;
+}
+.site-loading,
+.site-plain {
+  max-width: 720px;
+  margin: 64px auto;
+  padding: 0 16px;
+}
+.site {
+  max-width: 960px;
+  margin: 0 auto;
+  background: #fff;
+  min-height: 100vh;
+  box-shadow: 0 0 0 1px #c9c9c2;
+}
+.site-head {
+  padding: 14px 24px 0;
+  background: linear-gradient(#34506e, #22384f);
+  color: #f1f1ec;
+}
+.site-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.site-brand b {
+  font-size: 22px;
+  letter-spacing: 0.02em;
+}
+.site-logo {
+  font-size: 12px;
+  opacity: 0.75;
+  font-style: italic;
+}
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: 12px;
+}
+.site-nav span {
+  padding: 6px 12px;
+  background: rgb(255 255 255 / 12%);
+  font-size: 13px;
+}
+.site-main {
+  padding: 16px 24px 48px;
+}
+.site-main h2 {
+  margin: 24px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #d4d4cc;
+  font-size: 18px;
+  color: #22384f;
+}
+.site-main table {
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+.site-main th,
+.site-main td {
+  padding: 3px 8px;
+  border: 1px solid #c9c9c2;
+  text-align: left;
+  vertical-align: top;
+}
+.site-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px 14px;
+  margin: 10px 0;
+  padding: 12px 14px;
+  background: #f3f3ef;
+  border: 1px solid #d4d4cc;
+}
+.site-form-title {
+  flex-basis: 100%;
+}
+.site-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+.site-form input {
+  min-width: 180px;
+  padding: 4px 6px;
+  font: inherit;
+  border: 1px solid #a9a9a2;
+}
+.site-form button,
+.site-doc button,
+.site-mail button {
+  padding: 4px 14px;
+  font: inherit;
+  cursor: pointer;
+}
+.site-msg {
+  & p {
+    margin: 0;
+  }
+  flex-basis: 100%;
+  min-height: 1.2em;
+  margin: 0;
+  color: #7a2a18;
+}
+.site-in {
+  padding: 8px 12px;
+  background: #eef3e8;
+  border: 1px solid #c7d6b6;
+}
+.site-question {
+  margin: 10px 0;
+}
+.site-docs {
+  margin-top: 24px;
+}
+.site-doc {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border: 1px solid #d4d4cc;
+}
+.site-doc > button {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: #22384f;
+  font-weight: bold;
+  text-decoration: underline;
+}
+.site-link {
+  color: #1d4f91;
+}
+.site-mail {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+.site-mail aside {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+}
+.site-mail aside .on {
+  font-weight: bold;
+}
+.site-mail-ro {
+  font-size: 12px;
+  color: #6a6a64;
+}
+.site-mail-main {
+  flex: 1;
+  min-width: 0;
+}
+.site-mail-main table {
+  width: 100%;
+}
+.site-mail-main tr {
+  cursor: pointer;
+}
+.site-mail-main tr.on {
+  background: #dfe8f2;
+}
+.site-letter {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid #d4d4cc;
+}
+.site-letter-meta {
+  color: #6a6a64;
+  font-size: 13px;
+}
+
+/* Выписка на стену (A-272, DB-B): кнопка у выделения; подсветка места, где открыли выписку. */
+.site-to-wall {
+  position: absolute;
+  translate: -50% 0;
+  z-index: 10;
+  padding: 3px 12px;
+  border: none;
+  border-radius: 4px;
+  background: #22384f;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 30%);
+}
+.site-pinned {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  translate: -50% 0;
+  margin: 0;
+  padding: 8px 16px;
+  border-radius: 4px;
+  background: #22384f;
+  color: #fff;
+}
+::highlight(case-find) {
+  background-color: #e8c95a;
+  color: #1d1d1d;
+}

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useSelectionPetition } from '../device/deviceView.tsx';
+import { useFindOnScreen, useSelectionCard } from '../device/deviceView.tsx';
 import { useGame } from '../store.ts';
 import { Desktop } from './Desktop.tsx';
 import { buildLaptop } from './files.ts';
@@ -24,7 +24,8 @@ export function LaptopLive() {
   // Сеанс: после первого входа ключ не нужен — экран приветствия и «Войти» (правка автора 10.11).
   const [session, setSession] = useState(false);
   const unlocked = !!lap && session;
-  const { onUp, button } = useSelectionPetition('laptop-to-petition');
+  const { onUp, button } = useSelectionCard('laptop-to-folder', 'laptop');
+  useFindOnScreen('.held-screen', true);
   const [w, h] = LAPTOP_PX;
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: выделение текста мышью в окнах ноутбука

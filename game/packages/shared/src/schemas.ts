@@ -8,7 +8,7 @@ export const ZOOM_MAX = 3;
  * Каким предметом материал лежит на столе (TECH_PLAN 4.2, UX-A1): форма по типу, не по значимости.
  * sheet — лист на бланке; stapled — скреплённые листы; half — половина листа; photos — отпечатки;
  * pack — пачка сканов; notebook — тетрадь; disc — диск в конверте; bag — пакет вещдоков;
- * letter — ответ на запрос (письмо в конверте, этап 3).
+ * folded — лист, сложенный вдвое (подлинник акта из ячейки, A-272): сгиб виден.
  */
 export const MaterialKindSchema = z.enum([
   'sheet',
@@ -19,16 +19,15 @@ export const MaterialKindSchema = z.enum([
   'notebook',
   'disc',
   'bag',
-  'letter',
+  'folded',
 ]);
 export type MaterialKind = z.infer<typeof MaterialKindSchema>;
 
 export const MaterialSchema = z.object({
   /**
-   * 01…51 — стартовые; L101…L999 — закрытые (открываются действиями игрока); M001… — ответы
-   * на запросы (письма, этап 3).
+   * 01…52 — стартовые; L101…L999 — закрытые (открываются действиями игрока).
    */
-  id: z.string().regex(/^(\d{2}|L\d{3}|M\d{3})$/),
+  id: z.string().regex(/^(\d{2}|L\d{3})$/),
   title: z.string().min(1),
   placement: z.enum(['desk', 'evidence']),
   kind: MaterialKindSchema,
@@ -79,24 +78,37 @@ export const NoteSchema = z.object({
 export type Note = z.infer<typeof NoteSchema>;
 
 /**
- * Карточка запроса (K-A): выделенная строка материала или материал целиком (тогда
- * цитата — его название). У карточки нет типов, меток и подсветки (P-1).
+ * Выписка на стену (A-272, AC-6; DB-B): выделенные слова с сайта, из почты, с экрана устройства —
+ * карточкой-каталожкой рукой следователя; внизу источник, «открыть» — источник на этом месте.
+ * Материал — откуда выписано (для формы заключения и P-10: только открытое игроком).
+ */
+export const ExcerptPlaceSchema = z.object({
+  kind: z.enum(['site', 'pc', 'laptop', 'phone', 'camera']),
+  /** Сайт: адрес с путём (`vaultline-program.com/cabinet`). */
+  address: z.string().max(300).optional(),
+  /** Веб-почта: номер письма. */
+  letter: z.number().int().min(1).max(999).optional(),
+});
+export const ExcerptSchema = z.object({
+  id: z.string().regex(/^x:[\w-]{1,64}$/),
+  text: z.string().min(1).max(600),
+  material: z.string().regex(/^(\d{2}|L\d{3})$/),
+  source: z.string().max(160),
+  place: ExcerptPlaceSchema,
+});
+export type WallExcerpt = z.infer<typeof ExcerptSchema>;
+
+/**
+ * Карточка (K-A): выделенная строка материала или материал целиком (тогда цитата — его
+ * название) — опора в форме заключения (FM-A). У карточки нет типов, меток и подсветки (P-1).
+ * M001… — письма-ответы на запросы, снятые A-272: номер остаётся допустимым, чтобы старое
+ * сохранение с такой карточкой читалось (карточка просто не найдёт материала).
  */
 export const CardSchema = z.object({
   file: z.string().regex(/^(\d{2}|L\d{3}|M\d{3})$/),
   quote: z.string().min(1).max(2000),
 });
 export type Card = z.infer<typeof CardSchema>;
-
-/** Черновик запроса (4.11): Кому, Прошу, На основании. Номер дела ставится сам. */
-export const DraftSchema = z.object({
-  id: z.string().min(1).max(64),
-  to: z.string().max(200).nullable(),
-  ask: CardSchema.nullable(),
-  basis: CardSchema.nullable(),
-});
-export type Draft = z.infer<typeof DraftSchema>;
-export type DraftField = 'to' | 'ask' | 'basis';
 
 /**
  * Ответ на вопрос формы заключения (A-270; FM-A): человек (id карточки или «nobody»), карточка
@@ -115,9 +127,6 @@ export const VERDICT_QUESTIONS = 5;
 export const VerdictSchema = z.object({
   answers: z.array(VerdictAnswerSchema).length(VERDICT_QUESTIONS),
 });
-
-/** Сколько черновиков сразу (уголков папки рядом). */
-export const MAX_DRAFTS = 4;
 
 /** Виды: стол (от первого лица) и стена (рабочая поверхность) — решение автора 08.11. */
 export const ViewSchema = z.enum(['desk', 'wall']);
@@ -169,16 +178,10 @@ export const PlayerStateSchema = z.object({
     threads: z.array(ThreadSchema),
     notes: z.array(NoteSchema),
   }),
-  /** Черновики запросов (этап 3); в старом сохранении их нет — пусто. */
-  drafts: z.array(DraftSchema).max(MAX_DRAFTS).default([]),
-  /**
-   * Корзина у стола (TR-A, решение автора 09.11): выброшенные письма-ответы. Письмо остаётся в
-   * деле (карточки из него работают), но не стоит во «Входящих» и не висит на стене.
-   */
-  trash: z
-    .array(z.string().regex(/^M\d{3}$/))
-    .max(999)
-    .default([]),
+  /** Диск сервера вынут из конверта 52 и лежит на столе (A-272, DD-A); вставлен — L214 открыт. */
+  discOut: z.boolean().optional(),
+  /** Выписки на стене (A-272, DB-B). Нет поля — выписок нет. */
+  excerpts: z.array(ExcerptSchema).max(300).optional(),
   /**
    * Вскрытые конверты архива (A-260). Нет поля — сохранение из времени до конвертов: всё уже
    * на стене, конверты считаются вскрытыми (openedOf).

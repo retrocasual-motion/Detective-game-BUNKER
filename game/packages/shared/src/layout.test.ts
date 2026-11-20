@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { sealedIds } from './archive.ts';
 import {
+  addExcerpt,
   arrangeWall,
   BOARD_PAD,
   boardCamera,
@@ -14,6 +15,7 @@ import {
   openAll,
   openContainer,
   reconcile,
+  removeExcerpt,
   upgradeState,
   WALL_BOUNDS,
 } from './layout.ts';
@@ -29,7 +31,7 @@ const mat = (id: string, placement: Material['placement'] = 'desk'): Material =>
   sourceFile: `${id}__x.md`,
 });
 // Как в контенте: 01…51 без 16 (лента объявлений снята, A-262).
-const starting: Material[] = Array.from({ length: 51 }, (_, i) => String(i + 1).padStart(2, '0'))
+const starting: Material[] = Array.from({ length: 52 }, (_, i) => String(i + 1).padStart(2, '0'))
   .filter((id) => id !== '16')
   .map((id) => mat(id, ['24', '47', '48', '49', '50'].includes(id) ? 'evidence' : 'desk'));
 
@@ -72,18 +74,23 @@ describe('defaultState', () => {
 });
 
 describe('«Входящие» на столе', () => {
-  const withL = [...starting, mat('L101'), mat('L102')];
+  const withL = [...starting, mat('L945'), mat('L946')];
 
   it('открытое по ходу дела само на стену не вешается — ждёт во «Входящих», свежее первым', () => {
     const s = defaultState(withL);
     expect(s.wall.items.some((i) => i.id.startsWith('L'))).toBe(false);
-    expect(inboxIds(s, withL)).toEqual(['L102', 'L101']);
+    expect(inboxIds(s, withL)).toEqual(['L946', 'L945']);
   });
 
   it('повешенное на стену из «Входящих» уходит', () => {
     const s = defaultState(withL);
-    s.wall.items.push({ id: 'L101', x: 5, y: 5, z: 999, rot: 0 });
-    expect(inboxIds(reconcile(s, withL), withL)).toEqual(['L102']);
+    s.wall.items.push({ id: 'L945', x: 5, y: 5, z: 999, rot: 0 });
+    expect(inboxIds(reconcile(s, withL), withL)).toEqual(['L946']);
+  });
+
+  it('сайты дела (A-272) во «Входящие» не ложатся: они в браузере игрока', () => {
+    const web = [...withL, mat('L101'), mat('L620')];
+    expect(inboxIds(defaultState(web), web)).toEqual(['L946', 'L945']);
   });
 });
 
@@ -158,7 +165,8 @@ describe('upgradeState', () => {
     const got = upgradeState(v4, starting);
     expect(got?.view).toBe('wall');
     expect(got?.wall.items.find((i) => i.id === '03')).toMatchObject({ x: 2000, y: 1500 });
-    expect(got?.wall.items).toHaveLength(starting.length + PERSONS.length);
+    // Все стартовые, кроме конверта с диском (52, A-272), — на стене.
+    expect(got?.wall.items).toHaveLength(starting.length - 1 + PERSONS.length);
     expect(got?.wall.threads).toHaveLength(1);
   });
 
@@ -175,8 +183,8 @@ describe('край доски', () => {
 });
 
 describe('разложить по порядку (служебная кнопка)', () => {
-  it('стартовые — на начальные места, письма и записки — рядами правее сетки (WB-C); нити остаются', () => {
-    const mats = [...starting, mat('L214'), mat('M001')];
+  it('стартовые — на начальные места, пришедшее и записки — рядами правее сетки (WB-C); нити остаются', () => {
+    const mats = [...starting, mat('L214'), mat('L215')];
     const base = defaultState(mats);
     const moved: PlayerState = {
       ...base,
@@ -185,7 +193,7 @@ describe('разложить по порядку (служебная кнопк�
         camera: { x: 999, y: 999, zoom: 1.5 },
         items: [
           ...base.wall.items.map((i) => ({ ...i, x: i.x + 777, y: -i.y, rot: 40 })),
-          { id: 'M001', x: 5, y: 5, z: 90, rot: 0 },
+          { id: 'L215', x: 5, y: 5, z: 90, rot: 0 },
           { id: 'L214', x: 6, y: 6, z: 91, rot: 0 },
           { id: 'n1', x: 7, y: 7, z: 92, rot: 0 },
         ],
@@ -199,31 +207,25 @@ describe('разложить по порядку (служебная кнопк�
     const right = Math.max(...base.wall.items.map((i) => i.x)) + CARD_W;
     expect(at('L214')?.x).toBeGreaterThan(right);
     expect(at('n1')?.x ?? 0).toBeLessThanOrEqual(WALL_BOUNDS.right - CARD_W);
-    expect(at('L214')?.x).toBeLessThan(at('M001')?.x ?? 0);
-    expect(at('M001')?.x).toBeLessThan(at('n1')?.x ?? 0);
+    expect(at('L214')?.x).toBeLessThan(at('L215')?.x ?? 0);
+    expect(at('L215')?.x).toBeLessThan(at('n1')?.x ?? 0);
     expect(s.wall.threads).toEqual(moved.wall.threads);
     expect(s.wall.notes).toEqual(moved.wall.notes);
     expect(s.wall.camera).toEqual(moved.wall.camera);
   });
 });
 
-describe('корзина (TR-A)', () => {
-  const withM = [...starting, mat('L101'), mat('M001'), mat('M002')];
-  const s = defaultState(withM);
-
-  it('выброшенное письмо не стоит во «Входящих»', () => {
-    expect(inboxIds({ ...s, trash: ['M001'] }, withM)).toEqual(['M002', 'L101']);
-  });
-
-  it('reconcile: в корзине только свои письма-ответы без повторов; со стены выброшенное снято', () => {
+describe('конверт с диском сервера (A-272)', () => {
+  it('52 на стене не висит: ни со старта, ни из старого сохранения, ни при «всё вскрыто»', () => {
+    const s = defaultState(starting);
+    expect(s.wall.items.some((i) => i.id === '52')).toBe(false);
     const hung = {
       ...s,
-      wall: { ...s.wall, items: [...s.wall.items, { id: 'M001', x: 0, y: 0, z: 999, rot: 0 }] },
-      trash: ['M001', 'M001', 'L101', 'M404'],
+      wall: { ...s.wall, items: [...s.wall.items, { id: '52', x: 0, y: 0, z: 1, rot: 0 }] },
     };
-    const got = reconcile(hung, withM);
-    expect(got.trash).toEqual(['M001']);
-    expect(got.wall.items.some((i) => i.id === 'M001')).toBe(false);
+    expect(reconcile(hung, starting).wall.items.some((i) => i.id === '52')).toBe(false);
+    const legacy = { ...s, opened: undefined };
+    expect(reconcile(legacy, starting).wall.items.some((i) => i.id === '52')).toBe(false);
   });
 });
 
@@ -332,5 +334,42 @@ describe('старое сохранение на большой доске (WB-C
     const first = reconcile(far, starting).wall.items[0];
     expect(first?.x).toBeLessThanOrEqual(WALL_BOUNDS.right - 80);
     expect(first?.y).toBeLessThanOrEqual(WALL_BOUNDS.bottom - 80);
+  });
+});
+
+describe('выписки на стене (A-272, DB-B)', () => {
+  const withL = [...starting, mat('L620')];
+  const x = {
+    id: 'x:1',
+    text: 'Текущий этап — по номеру программы',
+    material: 'L620',
+    source: 'vaultline-program.com · Кабинет',
+    place: { kind: 'site' as const, address: 'vaultline-program.com/cabinet' },
+  };
+
+  it('выписка — на свободное место стены; повтор не добавляется; снимается вместе с нитями', () => {
+    const s = addExcerpt(defaultState(withL), x);
+    const at = s.wall.items.find((i) => i.id === 'x:1');
+    expect(at).toBeDefined();
+    expect(
+      s.wall.items.filter((i) => i.id !== 'x:1').some((i) => i.x === at?.x && i.y === at?.y),
+    ).toBe(false);
+    expect(addExcerpt(s, x)).toBe(s);
+    const tied = {
+      ...s,
+      wall: { ...s.wall, threads: [{ id: 't', from: 'x:1', to: '01', label: '' }] },
+    };
+    const off = removeExcerpt(tied, 'x:1');
+    expect(off.excerpts).toEqual([]);
+    expect(off.wall.items.some((i) => i.id === 'x:1')).toBe(false);
+    expect(off.wall.threads).toEqual([]);
+  });
+
+  it('reconcile: выписка из материала, которого нет, снимается; своя — остаётся', () => {
+    const s = addExcerpt(defaultState(withL), x);
+    expect(reconcile(s, withL).wall.items.some((i) => i.id === 'x:1')).toBe(true);
+    const gone = reconcile(s, starting);
+    expect(gone.wall.items.some((i) => i.id === 'x:1')).toBe(false);
+    expect(gone.excerpts).toEqual([]);
   });
 });

@@ -44,7 +44,7 @@ describe('unwrapLines', () => {
 
 describe('unwrapLines на настоящем пакете игрока', () => {
   const here = dirname(fileURLToPath(import.meta.url));
-  const dir = join(here, '../../../../../playtest/packs/v3.3-2026-10-29/player');
+  const dir = join(here, '../../../../../playtest/packs/v3.4-2026-11-18/player');
   const read = (name: string) => readFileSync(join(dir, name), 'utf8').replace(/\r\n?/g, '\n');
   const file = (prefix: string) => {
     const name = readdirSync(dir).find((f) => f.startsWith(prefix));

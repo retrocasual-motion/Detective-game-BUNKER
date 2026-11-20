@@ -113,37 +113,6 @@ test('приложения: переписка с голосовым, конта
   await expect(page.getByTestId('phone-screen-voicemail')).toBeVisible();
 });
 
-test('выделил номер — «В запрос»: карточка из телефона; папка поверх телефона', async ({
-  page,
-}) => {
-  await phoneUp(page);
-  await typeCode(page, '0110');
-  await page.getByTestId('phone-app-Contacts').click();
-  await page.getByTestId('phone-contact-Clínica San Rafael').click();
-  const card = page.getByTestId('phone-contact-card');
-  await card.evaluate((el) => {
-    const word = '+7 926 555-01-90';
-    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-      const i = (n.textContent ?? '').indexOf(word);
-      if (i < 0) continue;
-      const r = document.createRange();
-      r.setStart(n, i);
-      r.setEnd(n, i + word.length);
-      window.getSelection()?.removeAllRanges();
-      window.getSelection()?.addRange(r);
-      return;
-    }
-  });
-  const box = await card.boundingBox();
-  if (!box) throw new Error('нет карточки');
-  await page.mouse.move(box.x + 40, box.y + 40);
-  await page.mouse.up();
-  await page.getByTestId('phone-to-petition').click();
-  await expect(page.getByTestId('phone-view')).toBeVisible();
-  await expect(page.getByTestId('petition-card').first()).toContainText('+7 926 555-01-90');
-});
-
 test('вплотную — та же вещь (WM-B): щелчок мимо телефона — снова в руках; кнопка «домой» — на корпусе', async ({
   page,
 }) => {

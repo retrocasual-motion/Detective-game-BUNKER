@@ -1,21 +1,13 @@
-import type { PcWindow } from '@bunker/shared';
+import { type PcWindow, SERVER_LOG_ID } from '@bunker/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ddmmyyyy, gameNow, hhmm } from '../clock.ts';
-import { useFreeArea, useSelectionPetition } from '../device/deviceView.tsx';
+import { useFindOnScreen, useFreeArea, useSelectionCard } from '../device/deviceView.tsx';
 import { FileIcon } from '../laptop/apps.tsx';
 import { DesktopIcon, gridAt, settle, snapToGrid, Window } from '../laptop/Desktop.tsx';
 import '../laptop/laptop.css';
 import { useGame } from '../store.ts';
-import {
-  ArchiveBox,
-  DocWindow,
-  IncomingFolder,
-  Mail,
-  PasswordBox,
-  PcBrowser,
-  Terminal,
-} from './apps.tsx';
-import { attachments, type Incoming } from './content.ts';
+import { DocWindow, PcBrowser } from './apps.tsx';
+import { ServerApp } from './ServerApp.tsx';
 import './pc.css';
 
 /** Экран монитора, логические px. */
@@ -23,11 +15,12 @@ const SCREEN_W = 1280;
 const SCREEN_H = 800;
 const BEZEL = 30;
 
-type Kind = 'incoming' | 'terminal' | 'browser' | 'doc' | 'mbx' | 'enc';
+type Kind = 'terminal' | 'browser' | 'doc';
+const KNOWN_KINDS: ReadonlySet<string> = new Set<Kind>(['terminal', 'browser', 'doc']);
 interface Win {
   id: string;
   kind: Kind;
-  /** Документ (doc), вкладка терминала (terminal) — материал. */
+  /** Документ (doc), раздел программы сервера (terminal) — материал. */
   ref?: string;
 }
 interface Placed {
@@ -42,39 +35,42 @@ interface Placed {
 }
 
 type Icon = { key: string; name: string; type: string; win: Win };
-/** Постоянные значки; зашифрованные вложения добавляются своими файлами (правка автора 11.11). */
-const ICONS: Icon[] = [
-  {
-    key: 'incoming',
-    name: 'Поступления',
-    type: 'folder',
-    win: { id: 'incoming', kind: 'incoming' },
-  },
-  {
-    key: 'terminal',
-    name: 'Экспорт сервера VL-31',
-    type: 'server',
-    win: { id: 'terminal', kind: 'terminal' },
-  },
-  { key: 'browser', name: 'Браузер', type: 'browser', win: { id: 'browser', kind: 'browser' } },
-];
+/**
+ * Значки рабочего стола. «Поступлений» нет: запросов и ответов нет (A-272). Программа сервера
+ * появляется, когда вставлен диск «Прил. 7» (AC-2); вид окна — 'terminal' (как в сохранениях).
+ */
+const BROWSER: Icon = {
+  key: 'browser',
+  name: 'Браузер',
+  type: 'browser',
+  win: { id: 'browser', kind: 'browser' },
+};
+const SERVER: Icon = {
+  key: 'terminal',
+  name: 'Сервер объекта VL-31',
+  type: 'server',
+  win: { id: 'terminal', kind: 'terminal' },
+};
+const ICONS: Icon[] = [SERVER, BROWSER];
 
 /**
  * Компьютер следователя (4c-3; решения автора 11.11 — CO-A, DI-A, TM-A; вид — полицейский):
  * рабочее место специалиста Окружного бюро расследований. Та же мини-ОС, что у ноутбука, —
- * свой рабочий стол: герб бюро на обоях, служебная полоса, «Поступления», «Экспорт сервера
- * VL-31», браузер. Окна и значки сохраняются (`state.pc`). Esc или щелчок мимо монитора —
+ * свой рабочий стол: герб бюро на обоях, служебная полоса, браузер; диск «Прил. 7» вставлен —
+ * «Сервер объекта VL-31» (A-272). Дисковод — на столе под монитором (`room/drive.ts`). Окна и значки сохраняются (`state.pc`). Esc или щелчок мимо монитора —
  * отойти от компьютера.
  */
 export function PcView() {
   const open = useGame((g) => g.computerOpen);
   const material = useGame((g) => g.pcMaterial);
   const area = useFreeArea();
+  // Экран — во всё свободное место (дисковод — на столе под монитором, здесь его нет; автор 19.11).
   const scale = Math.min(
     (area.width - 40) / (SCREEN_W + BEZEL * 2),
     (area.height - 40) / (SCREEN_H + BEZEL * 2 + 18),
   );
-  const { onUp, button } = useSelectionPetition('pc-to-petition');
+  const { onUp, button } = useSelectionCard('pc-to-folder', 'pc');
+  useFindOnScreen('.pc-screen', open);
 
   useEffect(() => {
     if (!open) return;
@@ -113,7 +109,14 @@ export function PcView() {
         >
           <PcDesktop material={material} />
         </div>
+        {/* Подбородок ЖК-монитора 2000-х: кнопки меню и огонёк питания. */}
         <div className="pc-monitor-chin" aria-hidden>
+          <span className="pc-chin-buttons">
+            <span />
+            <span />
+            <span />
+            <span />
+          </span>
           <span className="pc-power" />
         </div>
       </div>
@@ -159,28 +162,21 @@ const fromSaved = (w: PcWindow): Placed => ({
 
 function PcDesktop({ material }: { material: string | null }) {
   const saved = useGame.getState().state?.pc;
-  const [wins, setWins] = useState<Placed[]>(() => (saved?.windows ?? []).map(fromSaved));
+  // Окна старых сохранений (до A-272: «Поступления», почта, конверты) — не показываются (F10).
+  const [wins, setWins] = useState<Placed[]>(() =>
+    (saved?.windows ?? []).filter((w) => KNOWN_KINDS.has(w.kind)).map(fromSaved),
+  );
   const [iconPos, setIconPos] = useState<Record<string, { x: number; y: number }>>(() =>
     settle(
-      // Все сохранённые значки, и вложений тоже (их нет в постоянном списке).
-      [...new Set([...ICONS.map((i) => i.key), ...Object.keys(saved?.icons ?? {})])],
+      ICONS.map((i) => i.key),
       saved?.icons ?? {},
     ),
   );
   const materials = useGame((g) => g.materials);
-  // Вложение ответа — свой файл на рабочем столе: замок, пока пароль не введён (правка автора 11.11).
-  const icons = useMemo<Icon[]>(
-    () => [
-      ...ICONS,
-      ...attachments(materials).map((a) => ({
-        key: `att-${a.id}`,
-        name: a.file,
-        type: a.unlocked ? (a.id === 'mbx' ? 'mail' : 'folder') : 'lock',
-        win: { id: a.id, kind: a.id },
-      })),
-    ],
-    [materials],
-  );
+  // Значок программы — когда диск в компьютере и вставка доиграла.
+  const inserting = useGame((g) => g.discInserting);
+  const disc = materials.some((m) => m.id === SERVER_LOG_ID) && !inserting;
+  const icons = useMemo(() => (disc ? ICONS : [BROWSER]), [disc]);
   // Значки, которые игрок не двигал, — в свободные клетки сетки по порядку.
   const auto = useMemo(() => {
     const placed = icons.flatMap((i) =>
@@ -199,7 +195,7 @@ function PcDesktop({ material }: { material: string | null }) {
   const [selIcon, setSelIcon] = useState<string | null>(null);
   const [startOpen, setStartOpen] = useState(false);
   const z = useRef(wins.reduce((m, p) => Math.max(m, p.z), 1));
-  const has = (id: string) => materials.some((m) => m.id === id);
+  const _has = (id: string) => materials.some((m) => m.id === id);
   const title = (id: string) => materials.find((m) => m.id === id)?.title ?? id;
   const started = useGame((g) => g.state?.started);
   const [now, setNow] = useState(() => gameNow(started));
@@ -231,8 +227,6 @@ function PcDesktop({ material }: { material: string | null }) {
       const same = list.find((p) => p.win.id === win.id);
       if (same) return list.map((p) => (p === same ? { ...p, win, z: z.current, min: false } : p));
       const k = list.length % 6;
-      // Пароль — маленьким окном; открытый ящик или архив — обычным.
-      const small = (win.kind === 'mbx' && !has('L453')) || (win.kind === 'enc' && !has('L736'));
       return [
         ...list,
         {
@@ -240,8 +234,8 @@ function PcDesktop({ material }: { material: string | null }) {
           x: win.kind === 'terminal' ? 110 : 170 + k * 28,
           y: win.kind === 'terminal' ? 40 : 60 + k * 26,
           // Терминал — большим окном, не во весь экран (правка автора 11.11); размер меняют за край.
-          w: small ? 460 : win.kind === 'terminal' ? 1060 : win.kind === 'mbx' ? 1000 : 780,
-          h: small ? 300 : win.kind === 'terminal' ? 640 : 600,
+          w: win.kind === 'terminal' ? 1060 : 780,
+          h: win.kind === 'terminal' ? 640 : 600,
           z: z.current,
           min: false,
           max: false,
@@ -249,21 +243,13 @@ function PcDesktop({ material }: { material: string | null }) {
       ];
     });
   };
-  const openIncoming = (it: Incoming) =>
-    openWin({ id: `doc:${it.material}`, kind: 'doc', ref: it.material });
   // Из поиска — сразу туда, где лежит материал.
   // biome-ignore lint/correctness/useExhaustiveDependencies: только при входе с материалом
   useEffect(() => {
     if (!material) return;
     if (/^L(21[45]|38[789]|390)$/.test(material))
       openWin({ id: 'terminal', kind: 'terminal', ref: material });
-    else if (material === 'L453') openWin({ id: 'mbx', kind: 'mbx' });
-    else if (
-      /^L73[678]$/.test(material) ||
-      /^L83\d$/.test(material) ||
-      material === 'L452' ||
-      material === 'L735'
-    )
+    else if (/^L73[5678]$/.test(material) || /^L83\d$/.test(material) || material === 'L453')
       openWin({ id: `doc:${material}`, kind: 'doc', ref: material });
   }, [material]);
 
@@ -276,33 +262,13 @@ function PcDesktop({ material }: { material: string | null }) {
   };
   const top = wins.reduce((m, p) => (!p.min && p.z > m ? p.z : m), 0);
   const winTitle = (w: Win) =>
-    w.kind === 'incoming'
-      ? 'Поступления'
-      : w.kind === 'terminal'
-        ? 'Экспорт сервера VL-31'
-        : w.kind === 'browser'
-          ? 'Браузер'
-          : w.kind === 'mbx'
-            ? has('L453')
-              ? 'Почта — экспорт ящика e.pierce.uk@mailbridge.net'
-              : 'mailbox_export_e.pierce.uk.mbx'
-            : w.kind === 'enc'
-              ? 'VL-31_project_archive.enc'
-              : title(w.ref ?? '');
+    w.kind === 'terminal'
+      ? 'Сервер объекта VL-31'
+      : w.kind === 'browser'
+        ? 'Браузер'
+        : title(w.ref ?? '');
   const winIcon = (w: Win) =>
-    w.kind === 'incoming'
-      ? 'folder'
-      : w.kind === 'terminal'
-        ? 'server'
-        : w.kind === 'browser'
-          ? 'browser'
-          : w.kind === 'doc'
-            ? 'doc'
-            : w.kind === 'mbx' && has('L453')
-              ? 'mail'
-              : w.kind === 'enc' && has('L736')
-                ? 'folder'
-                : 'lock';
+    w.kind === 'terminal' ? 'server' : w.kind === 'browser' ? 'browser' : 'doc';
 
   return (
     <div className="lap-desktop pc-desktop" data-testid="pc-desktop">
@@ -344,7 +310,8 @@ function PcDesktop({ material }: { material: string | null }) {
       </div>
 
       {wins.map((p) =>
-        p.min ? null : (
+        // Окно программы без диска (сохранение до A-272) — не показывать.
+        p.min || (p.win.kind === 'terminal' && !disc) ? null : (
           <Window
             key={p.win.id}
             p={p}
@@ -358,36 +325,12 @@ function PcDesktop({ material }: { material: string | null }) {
             onResize={(w, h) => patch(p.win.id, { w, h })}
             onClose={() => close(p.win.id)}
           >
-            {p.win.kind === 'incoming' ? (
-              <IncomingFolder open={openIncoming} />
-            ) : p.win.kind === 'terminal' ? (
-              <Terminal key={p.win.ref ?? ''} start={p.win.ref} />
+            {p.win.kind === 'terminal' ? (
+              <ServerApp key={p.win.ref ?? ''} start={p.win.ref} />
             ) : p.win.kind === 'browser' ? (
               <PcBrowser />
-            ) : p.win.kind === 'doc' ? (
-              <DocWindow id={p.win.ref ?? ''} />
-            ) : p.win.kind === 'mbx' ? (
-              has('L453') ? (
-                <Mail />
-              ) : (
-                <PasswordBox
-                  label="Пароль ящика"
-                  field="экспорт ящика"
-                  file="mailbox_export_e.pierce.uk.mbx"
-                  open={false}
-                  onOpen={() => patch(p.win.id, { w: 900, h: 560 })}
-                />
-              )
-            ) : has('L736') ? (
-              <ArchiveBox openDoc={(id) => openWin({ id: `doc:${id}`, kind: 'doc', ref: id })} />
             ) : (
-              <PasswordBox
-                label="Пароль архива"
-                field="архив проекта"
-                file="VL-31_project_archive.enc"
-                open={false}
-                onOpen={() => patch(p.win.id, { w: 620, h: 360 })}
-              />
+              <DocWindow id={p.win.ref ?? ''} />
             )}
           </Window>
         ),
@@ -398,7 +341,7 @@ function PcDesktop({ material }: { material: string | null }) {
           <div className="lap-start-user pc-start-user">Специалист · дело № 09-1128</div>
           <div className="lap-start-cols">
             <div className="lap-start-left">
-              {ICONS.map((i) => (
+              {icons.map((i) => (
                 <button key={i.key} type="button" onClick={() => openWin(i.win)}>
                   <FileIcon type={i.type} size={24} /> {i.name}
                 </button>

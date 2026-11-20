@@ -28,11 +28,16 @@ import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
 import { useInputMode } from '../input.ts';
 import { reducedMotion } from '../motion.ts';
-import { wholeCard } from '../petition/drafts.ts';
-import { overFolder, petitionFieldAt } from '../petition/fieldAt.ts';
-import { usePetition } from '../petition/petition-store.ts';
 import { useViewport } from '../room/useViewport.ts';
 import { shownCamera, useGame } from '../store.ts';
+import {
+  folderFieldAt,
+  overFolder,
+  quoteCard,
+  toVerdict,
+  useCardDrop,
+  wholeCard,
+} from '../verdict/cards.ts';
 import { useVerdict, verdictActive } from '../verdict/verdict-store.ts';
 import { FOLDER_SHEETS, folderOnWall } from '../viewer/bundles.ts';
 import { useCameraTween } from './useCameraTween.ts';
@@ -42,7 +47,6 @@ import {
   addNote,
   addThread,
   editNote,
-  isLetter,
   labelThread,
   moveItem,
   moveItems,
@@ -159,13 +163,13 @@ const JOIN_PAUSE_MS = 450;
 
 export function WallView() {
   const wall = useGame((g) => g.state?.wall);
+  const excerptList = useGame((g) => g.state?.excerpts);
   const trackpad = useInputMode() === 'trackpad';
   // Со стола доска видна целиком (правка автора 09.11); у стены — камера игрока.
   const atDesk = useGame((g) => g.state?.view === 'desk');
   const vp = useViewport();
   const materials = useGame((g) => g.materials);
   const updateState = useGame((g) => g.updateState);
-  const throwAway = useGame((g) => g.throwAway);
   const openViewer = useGame((g) => g.openViewer);
   // Найдено поиском (SR-D): подсвечено; камера доски плывёт к нему (wallFly).
   const foundId = useGame((g) => g.foundId);
@@ -362,7 +366,7 @@ export function WallView() {
     (id: string, x: number, y: number, at: { x: number; y: number }) => {
       setLive(null);
       setGhost(null);
-      usePetition.getState().setDrag(false, null);
+      useCardDrop.getState().setOver(false);
       // Тянули выделенную — едут все выделенные (MS-D).
       const group = selectedRef.current;
       if (group.size > 1 && group.has(id)) {
@@ -370,18 +374,23 @@ export function WallView() {
         if (was) updateState(moveItems([...group], x - was.x, y - was.y));
         return;
       }
-      // Лист отпустили на поле открытой папки — карточка «материал целиком» (K-A), лист
-      // остаётся на стене, где висел.
-      const f = petitionFieldAt(at.x, at.y);
+      // Лист отпустили на поле открытой формы заключения — карточка «материал целиком» (K-A),
+      // лист остаётся на стене, где висел.
+      const f = folderFieldAt(at.x, at.y) && verdictActive();
       // Карточку человека отпустили на форму заключения (A-270): ответ «кто», карточка — на стене.
       if (f && id.startsWith('p:') && verdictActive()) {
         useVerdict.getState().addPerson(id);
         return;
       }
       const m = useGame.getState().materials.find((mm) => mm.id === id);
-      if (f && f !== 'to' && m) {
-        usePetition.getState().setActiveField(f);
-        usePetition.getState().addCard(wholeCard(m));
+      if (f && m) {
+        toVerdict(wholeCard(m));
+        return;
+      }
+      // Выписка — опора в форме заключения (A-272, FM-A: «материал или выдержка»).
+      const ex = useGame.getState().state?.excerpts?.find((x) => x.id === id);
+      if (f && ex) {
+        toVerdict(quoteCard(ex.material, ex.text));
         return;
       }
       updateState(moveItem(id, x, y));
@@ -389,23 +398,23 @@ export function WallView() {
     },
     [updateState, snapJoin],
   );
-  // Лист тянут над открытой папкой запроса: над ней идёт его призрак (поверх папки), поле
+  // Лист тянут над открытой формой заключения: над ней идёт его призрак (поверх папки), поле
   // под курсором подсвечено (правка автора 09.11).
   const [ghost, setGhost] = useState<{ id: string; x: number; y: number } | null>(null);
   const onLive = useCallback(
     (id: string, dx: number, dy: number, at?: { x: number; y: number }) => {
       setLive(dx === 0 && dy === 0 ? null : { id, dx, dy });
-      const pet = usePetition.getState();
+      const drag = useCardDrop.getState();
       // Над формой заключения тянут и карточку человека (A-270).
-      const material = !id.includes(':') || (id.startsWith('p:') && verdictActive());
+      const material =
+        !id.includes(':') || id.startsWith('x:') || (id.startsWith('p:') && verdictActive());
       const group = selectedRef.current.size > 1 && selectedRef.current.has(id);
-      if (!at || !useGame.getState().petitionOpen || !material || group || (dx === 0 && dy === 0)) {
-        pet.setDrag(false, null);
+      if (!at || !useGame.getState().folderOpen || !material || group || (dx === 0 && dy === 0)) {
+        drag.setOver(false);
         setGhost(null);
         return;
       }
-      const f = petitionFieldAt(at.x, at.y);
-      pet.setDrag(true, f === 'to' ? null : f);
+      drag.setOver(folderFieldAt(at.x, at.y));
       setGhost(overFolder(at.x, at.y) ? { id, x: at.x, y: at.y } : null);
     },
     [],
@@ -413,6 +422,7 @@ export function WallView() {
   const activate = useCallback(
     (id: string) => {
       if (id.startsWith('n:')) setEditingNote(id);
+      else if (id.startsWith('x:')) useGame.getState().openExcerpt(id);
       else if (id.startsWith('F:')) {
         // Папка из пачки — её листы из описи (RD-A, DS-A до отдельного документа).
         const f = folderOnWall(id, useGame.getState().materials);
@@ -478,6 +488,7 @@ export function WallView() {
     });
   };
 
+  const unpinExcerpt = useCallback((id: string) => useGame.getState().unpinExcerpt(id), []);
   const deleteNote = useCallback(
     (id: string) => {
       const s = useGame.getState().state;
@@ -508,6 +519,7 @@ export function WallView() {
 
   const byId = new Map(materials.map((m) => [m.id, m]));
   const notes = new Map(wall.notes.map((n) => [n.id, n]));
+  const excerpts = new Map((excerptList ?? []).map((x) => [x.id, x]));
   // Нити идут за вещью сразу, пока её тянут; тянут выделенную — за всеми выделенными.
   const shown = frame ? frame.hit : selected;
   const groupDrag = !!live && selected.size > 1 && selected.has(live.id);
@@ -566,6 +578,7 @@ export function WallView() {
     let width: number | undefined;
     let toolbar: ReactNode = null;
     const folder = item.id.startsWith('F:') ? folderOnWall(item.id, materials) : null;
+    const excerpt = excerpts.get(item.id);
     const piece = pieceOf(item.id);
     if (piece) {
       // Обрывок, вынутый из материала (SRC-A): рваный край сверху — той же линией, что низ
@@ -600,6 +613,29 @@ export function WallView() {
         <>
           <span className="folder-sticker">{folder.code}</span>
           <span className="card-title">Папка из пачки {folder.bundle}</span>
+        </>
+      );
+    } else if (excerpt) {
+      // Выписка (A-272, DB-B): каталожка — слова рукой следователя, внизу мелко источник,
+      // в углу «открыть» — источник на этом месте.
+      kind = 'excerpt';
+      label = `Выписка: ${excerpt.text}`;
+      content = (
+        <>
+          <span className="excerpt-text">{excerpt.text}</span>
+          <span className="excerpt-source">{excerpt.source}</span>
+          <button
+            type="button"
+            className="excerpt-open"
+            data-testid={`excerpt-open-${excerpt.id}`}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              useGame.getState().openExcerpt(excerpt.id);
+            }}
+          >
+            открыть
+          </button>
         </>
       );
     } else if (m) {
@@ -695,8 +731,8 @@ export function WallView() {
         onDrop={drop}
         onLive={onLive}
         pin={pin}
-        onDelete={note ? deleteNote : isLetter(item.id) ? throwAway : undefined}
-        deleteLabel={note ? undefined : 'В корзину'}
+        onDelete={note ? deleteNote : excerpt ? unpinExcerpt : undefined}
+        deleteLabel={excerpt ? 'Снять выписку' : undefined}
         hidden={ghost?.id === item.id}
         selected={shown.has(item.id)}
         found={foundId === item.id || fresh.has(item.id)}
@@ -841,7 +877,7 @@ export function WallView() {
       {ghost &&
         createPortal(
           <div
-            className={`drag-ghost drag-ghost-paper${usePetition.getState().dropTarget ? ' ghost-ok' : ''}`}
+            className={`drag-ghost drag-ghost-paper${useCardDrop.getState().over ? ' ghost-ok' : ''}`}
             data-testid="drag-ghost"
             style={{ translate: `${ghost.x}px ${ghost.y}px` }}
           >

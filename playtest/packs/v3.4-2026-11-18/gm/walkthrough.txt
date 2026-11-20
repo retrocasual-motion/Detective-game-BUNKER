@@ -100,6 +100,11 @@
 АДРЕС | браузер | vaultline-program.com => повтор
 АДРЕС | браузер | https://www.hexon-bio.com/archive => L163
 АДРЕС | браузер | fieldworks-radio.com => L177
+# Сайты без замков (NF-B, A-273): оператор, производитель, поставщик, бюро.
+АДРЕС | браузер | pinecell-mobile.com => L178
+АДРЕС | браузер | northcare-nutrition.com => L179
+АДРЕС | браузер | coltonsupply.com => L180
+АДРЕС | браузер | okrug-bureau.org => L181
 ПАРОЛЬ | ноутбук | 5-1-2-3-6-9-8-7-4 => L560, L561, L562, L563, L564, L565
 АДРЕС | браузер | the-signal-news.com => L296
 

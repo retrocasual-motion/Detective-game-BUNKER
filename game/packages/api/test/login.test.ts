@@ -7,7 +7,6 @@ import {
   type Db,
   loginTokens,
   migrateDb,
-  playerLetters,
   playerProgress,
   playerState,
   players,
@@ -33,22 +32,7 @@ const LETTER_01 = [
 ].join('\n');
 const materials = [mat('01', LETTER_01), mat('02', '# 02\nкоды 05, 07\n')];
 const locked = [mat('L101', '# L101\nприложение\n')];
-const rules: AccessRules = {
-  version: 1,
-  attempt_limit: { ХОДАТАЙСТВО: 3 },
-  address_book: true,
-  rules: [
-    {
-      id: 'pet',
-      action: 'ХОДАТАЙСТВО',
-      target: '^zapros@bureau\\.org$',
-      cards: [[{ file: '^01$', quote: 'материал' }]],
-      release: ['L101'],
-      ok: 'Бюро: направляем приложение.',
-      again: 'Уже направлено.',
-    },
-  ],
-};
+const rules: AccessRules = { version: 1, rules: [] };
 const engine = {
   locked,
   content: {
@@ -70,8 +54,7 @@ beforeAll(async () => {
 });
 afterAll(async () => close());
 beforeEach(async () => {
-  for (const t of [playerState, playerProgress, playerLetters, players, sessions, loginTokens])
-    await db.delete(t);
+  for (const t of [playerState, playerProgress, players, sessions, loginTokens]) await db.delete(t);
   clock = 1_000_000;
   mailer = createMailer({
     transport: 'memory',
@@ -87,7 +70,6 @@ const app = () =>
     production: false,
     engine,
     now: () => clock,
-    mailDelayMs: 60_000,
     auth: 'link',
     mailer,
     publicUrl: URL_,
@@ -144,7 +126,7 @@ describe('вход по ссылке (6a-1)', () => {
     const a = app();
     const cookie = await login(a);
     const me = await (await get(a, '/api/me', cookie)).json();
-    expect(me).toEqual({ auth: 'link', email: 'det@example.com', channel: 'real' });
+    expect(me).toEqual({ auth: 'link', email: 'det@example.com' });
     expect((await get(a, '/api/materials', cookie)).status).toBe(200);
     const subjects = mailer.outbox.map((l) => l.subject);
     expect(subjects).toEqual(['Вход в дело № 09-1128', 'Дело № 09-1128 — возобновление']);
@@ -217,82 +199,6 @@ describe('вход по ссылке (6a-1)', () => {
   });
 });
 
-describe('ответ на запрос — на почту (ML-A, M-C)', () => {
-  const petition = (a: ReturnType<typeof app>, cookie: string) =>
-    a.request('/api/petition', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', cookie },
-      body: JSON.stringify({
-        to: 'zapros@bureau.org',
-        ask: { file: '01', quote: 'материал' },
-        basis: { file: '01', quote: 'материал' },
-      }),
-    });
-  const ids = async (a: ReturnType<typeof app>, cookie: string) =>
-    ((await (await get(a, '/api/materials', cookie)).json()) as Material[]).map((m) => m.id);
-
-  it('письмо уходит в срок; в дело — только по «Добавить в дело»', async () => {
-    const a = app();
-    const cookie = await login(a);
-    const sent = mailer.outbox.length;
-    expect(await (await petition(a, cookie)).json()).toEqual({
-      n: 1,
-      delayMs: 60_000,
-      toMail: true,
-    });
-    expect(await a.sweepMail()).toBe(0);
-
-    clock += 60_000;
-    expect(await a.sweepMail()).toBe(1);
-    expect(await a.sweepMail()).toBe(0);
-    const reply = mailer.outbox[sent];
-    expect(reply?.subject).toBe('Ответ на запрос № 1 — zapros@bureau.org');
-    expect(reply?.text).toContain('Бюро: направляем приложение.');
-    // На почте — да, в деле — ещё нет; клиент заглядывает, пока ждёт.
-    expect(await ids(a, cookie)).toEqual(['01', '02']);
-    expect(await (await get(a, '/api/mail/pending', cookie)).json()).toEqual({
-      inMs: [],
-      waiting: 1,
-    });
-
-    const add = /http:\/\/game\.test(\/api\/case\/add\?l=\S+)/.exec(reply?.text ?? '')?.[1] ?? '';
-    // Ссылку открывают и с телефона — без входа; открыть — ещё не добавить (сканеры почты, R1-01).
-    const page = await a.request(add);
-    expect(page.status).toBe(200);
-    expect(await page.text()).toContain('Добавить в дело?');
-    expect(await ids(a, cookie)).toEqual(['01', '02']);
-    const l = new URL(add, 'http://x').searchParams.get('l') ?? '';
-    const done = await press(a, '/api/case/add', 'l', l);
-    expect(done.status).toBe(200);
-    expect(await done.text()).toContain('Добавлено в дело');
-    expect(await ids(a, cookie)).toEqual(['01', '02', 'L101', 'M001']);
-    expect(await (await a.request(add)).text()).toContain('Добавлено в дело');
-    expect((await a.request('/api/case/add?l=nope-nope-nope-nope-nope')).status).toBe(404);
-  });
-
-  it('«письмо не пришло»: канал «во Входящие» — ответы сразу в деле', async () => {
-    const a = app();
-    const cookie = await login(a);
-    await petition(a, cookie);
-    clock += 60_000;
-    const ch = await a.request('/api/me/channel', {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json', cookie },
-      body: JSON.stringify({ channel: 'internal' }),
-    });
-    expect(ch.status).toBe(204);
-    expect(await ids(a, cookie)).toEqual(['01', '02', 'L101', 'M001']);
-    expect(await a.sweepMail()).toBe(0);
-    // Обратно на почту — уже доставленное остаётся в деле.
-    await a.request('/api/me/channel', {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json', cookie },
-      body: JSON.stringify({ channel: 'real' }),
-    });
-    expect(await ids(a, cookie)).toEqual(['01', '02', 'L101', 'M001']);
-  });
-});
-
 describe('письма входа и служебные маршруты (R1-02, R4-08)', () => {
   const ask = (a: ReturnType<typeof app>, email: string) =>
     a.request('/api/login', {
@@ -323,7 +229,6 @@ describe('письма входа и служебные маршруты (R1-02,
       production: true,
       engine,
       now: () => clock,
-      mailDelayMs: 60_000,
       auth: 'link',
       mailer,
       publicUrl: URL_,

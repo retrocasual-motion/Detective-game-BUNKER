@@ -1,8 +1,13 @@
 import type { ContainerId, View } from '@bunker/shared';
 import { type ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCall } from '../deskphone/call.ts';
+import { closePhone } from '../deskphone/DeskPhone.tsx';
+import { PhoneFace } from '../deskphone/PhoneFace.tsx';
 import { reducedMotion } from '../motion.ts';
+import { useGame } from '../store.ts';
 import {
   boardOps,
+  type CameraSpot,
   easeCamera,
   lerpPose,
   type Pose,
@@ -12,7 +17,8 @@ import {
   toCss,
 } from './camera.ts';
 import { DeskHotspots } from './DeskHotspots.tsx';
-import { drawObjects, drawRoom, type Epilogue } from './decor.ts';
+import { type Bank, type DiscOnDesk, drawObjects, drawRoom, type Epilogue } from './decor.ts';
+import { DRIVE_IDLE, type DriveLook } from './drive.ts';
 import { NavArrows } from './NavArrows.tsx';
 import { useViewport } from './useViewport.ts';
 import { VIEW_LABELS } from './views.ts';
@@ -20,7 +26,7 @@ import { VIEW_LABELS } from './views.ts';
 interface Phase {
   /** Откуда едет камера — поза, а не вид: новый переход посреди старого начинается с места. */
   from: Pose;
-  to: View;
+  to: CameraSpot;
   moving: boolean;
 }
 
@@ -33,12 +39,16 @@ interface RoomSceneProps {
   wall: ReactNode;
   /** «Входящие» на столе: что стоит в лотке, свежее — первым. */
   inbox: string[];
-  /** Сколько писем в корзине (комки). */
-  trash: number;
   /** Вскрытые конверты архива (A-260). */
   opened: readonly ContainerId[];
   /** Эпилог после заключения — конвертом на столе. */
   epilogue?: Epilogue;
+  /** Диск сервера на столе (A-272). */
+  disc?: DiscOnDesk;
+  /** Дисковод под монитором: кадр вставки. */
+  drive?: DriveLook;
+  /** Коробка из банка (A-272). */
+  bank?: Bank;
 }
 
 /**
@@ -54,38 +64,52 @@ export function RoomScene({
   hideNav,
   wall,
   inbox,
-  trash,
   opened,
   epilogue = 'none',
+  disc = 'none',
+  bank = 'none',
+  drive = DRIVE_IDLE,
 }: RoomSceneProps) {
   const vp = useViewport();
   const room = useMemo(() => roomFor(vp), [vp]);
-  const [ph, setPh] = useState<Phase>({ from: room.poses[view], to: view, moving: false });
+  // Телефон на столе крупно (6a-3): камера подлетает к нему — третья поза, не вид комнаты.
+  const phoneOpen = useGame((g) => g.deskPhone);
+  // Телефон на столе объёмный: снятая трубка и утопленная кнопка рисуются на холсте.
+  const offHook = useCall((c) => c.offHook);
+  const pressed = useCall((c) => c.pressed);
+  const spot: CameraSpot = view === 'desk' && phoneOpen ? 'phone' : view;
+  const [ph, setPh] = useState<Phase>({ from: room.poses[spot], to: spot, moving: false });
   const world = useRef<HTMLDivElement>(null);
+  const phoneWorld = useRef<HTMLDivElement>(null);
   const back = useRef<HTMLCanvasElement>(null);
   const front = useRef<HTMLCanvasElement>(null);
   /** Где камера сейчас (в том числе посреди перехода). */
-  const live = useRef<Pose>(room.poses[view]);
+  const live = useRef<Pose>(room.poses[spot]);
 
   const apply = (pose: Pose | null) => {
     if (pose) live.current = pose;
-    if (world.current) world.current.style.transform = pose ? toCss(poseOps(pose, room.p)) : 'none';
+    const css = pose ? toCss(poseOps(pose, room.p)) : 'none';
+    if (world.current) world.current.style.transform = css;
+    if (phoneWorld.current) phoneWorld.current.style.transform = css;
     if (pose && back.current) drawRoom(back.current, pose, room);
     if (pose && front.current)
-      drawObjects(front.current, pose, room, inbox, trash, opened, epilogue);
+      drawObjects(front.current, pose, room, inbox, opened, epilogue, disc, bank, drive, {
+        offHook,
+        pressed,
+      });
   };
 
   useLayoutEffect(() => {
     setPh((cur) =>
-      cur.to === view
+      cur.to === spot
         ? cur
         : {
             from: cur.moving ? live.current : room.poses[cur.to],
-            to: view,
+            to: spot,
             moving: !reducedMotion(),
           },
     );
-  }, [view, room]);
+  }, [spot, room]);
 
   const flat = !ph.moving && ph.to === 'wall';
 
@@ -114,12 +138,14 @@ export function RoomScene({
   }, [ph.moving, ph.from, ph.to]);
 
   const atDesk = !ph.moving && ph.to === 'desk';
+  const atPhone = !ph.moving && ph.to === 'phone';
 
   return (
     <div
       className="scene"
       data-testid="scene"
-      data-view={ph.to}
+      data-view={ph.to === 'phone' ? 'desk' : ph.to}
+      data-spot={ph.to}
       data-moving={ph.moving}
       style={{ perspective: `${room.p}px` }}
     >
@@ -151,11 +177,31 @@ export function RoomScene({
         </div>
       </div>
       <canvas ref={front} className="scene-decor scene-front" hidden={flat} />
+      {atPhone && (
+        <button
+          type="button"
+          className="dp-away"
+          data-testid="deskphone-close"
+          aria-label="Отойти от телефона"
+          onClick={closePhone}
+        />
+      )}
+      {/* Телефон следователя — в той же 3D-сцене, поверх нарисованного стола (6a-3, DP-A). */}
+      <div ref={phoneWorld} className="world" hidden={flat}>
+        <PhoneFace room={room} active={atPhone} />
+      </div>
       {atDesk && (
-        <DeskHotspots room={room} inbox={inbox} trash={trash} opened={opened} epilogue={epilogue} />
+        <DeskHotspots
+          room={room}
+          inbox={inbox}
+          opened={opened}
+          epilogue={epilogue}
+          disc={disc}
+          bank={bank}
+        />
       )}
       {/* Стрелки видны и во время перехода: щелчок сразу ведёт к новой цели (MOVE-A). */}
-      {!hideNav && <NavArrows view={ph.to} onGo={onGo} />}
+      {!hideNav && <NavArrows view={ph.to === 'phone' ? 'desk' : ph.to} onGo={onGo} />}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import {
+  addExcerpt,
   boardCamera,
   CARD_H,
   CARD_W,
@@ -8,6 +9,7 @@ import {
   deviceOf,
   FOLDER_DOCS,
   folderItemId,
+  isWeb,
   type Join,
   type Material,
   openAll,
@@ -18,17 +20,20 @@ import {
   pieceItemId,
   pieceOf,
   reconcile,
+  removeExcerpt,
   sealedIds,
   type View,
   WALL_BOUNDS,
+  type WallExcerpt,
 } from '@bunker/shared';
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import { getMaterials, getPendingMail, getState, postAction, putState } from './api.ts';
+import { ackExcerpts, getExcerpts, getMaterials, getState, postAction, putState } from './api.ts';
 import { clampToBounds } from './canvas/math.ts';
 import { todayKey } from './clock.ts';
 import { createSaver } from './save.ts';
-import { type Binned, binLetter, moveItem, takeLetter, unbinLetter } from './wall/wall-actions.ts';
+import { openSite } from './site.ts';
+import { moveItem } from './wall/wall-actions.ts';
 
 const screen = () => ({ width: window.innerWidth, height: window.innerHeight });
 
@@ -39,7 +44,7 @@ export const shownCamera = (s: PlayerState) =>
 /** Найденное поиском показывается не мельче этого (карточка ~100 px, заголовок читается). */
 const REVEAL_ZOOM = 0.6;
 
-/** Часть экрана, не закрытая панелью поиска (справа) и папкой запроса (слева). */
+/** Часть экрана, не закрытая панелью поиска (справа) и папкой заключения (слева). */
 function freeArea(vp: { width: number; height: number }) {
   const panel = document.querySelector('.search-panel')?.getBoundingClientRect();
   const folder = document.querySelector('.petition-open .petition-folder')?.getBoundingClientRect();
@@ -50,9 +55,6 @@ function freeArea(vp: { width: number; height: number }) {
     bottom: vp.height,
   };
 }
-
-/** Сколько можно «Вернуть» выброшенное письмо, мс. */
-const UNDO_MS = 6000;
 
 /** Что в руках: конверт или коробка архива — или изъятое устройство (по номеру материала). */
 export type Held = { type: 'container'; id: ContainerId } | { type: 'device'; id: string };
@@ -66,16 +68,32 @@ interface GameStore {
   saveStatus: SaveStatus;
   /** Материал, открытый в просмотрщике (null — закрыт). */
   viewerId: string | null;
-  /** Открыта папка запроса. */
-  petitionOpen: boolean;
+  /** Открыта папка формы заключения («Решить дело»). */
+  folderOpen: boolean;
   /** Блокнот следователя выдвинут (DV-A). */
   notebookOpen: boolean;
+  /** Выписка — на стену (A-272, DB-B): в поле версии, светится как новое. */
+  pinExcerpt(x: WallExcerpt): void;
+  /** Снять выписку со стены. */
+  unpinExcerpt(id: string): void;
+  /** «Открыть» у выписки: источник на этом месте (сайт — во вкладке, устройство — в руках). */
+  openExcerpt(id: string): void;
+  /** Вскрыли конверт 52: диск вынут — лежит на столе (сохраняется, A-272). */
+  takeDiscOut(): void;
+  /** Диск дотащили до дисковода: на столе играет вставка (лоток, раскрутка; DD-A). */
+  discInserting: boolean;
+  insertDisc(): void;
+  /** Вставка доиграла — компьютер с новым значком программы. */
+  discInserted(): void;
   setNotebookOpen(open: boolean): void;
   /** Сервер не ответил при загрузке — игра повторяет запрос. */
   loadFailed: boolean;
   /** Последнее поступление в дело (записка «Поступило»). */
   arrival: { ids: string[]; at: number } | null;
   dismissArrival(): void;
+  /** Камера у телефона следователя на столе (6a-3, DP-A): кнопки нажимаются прямо на нём. */
+  deskPhone: boolean;
+  setDeskPhone(open: boolean): void;
   /** Компьютер следователя открыт крупно (щелчок по монитору на столе). */
   computerOpen: boolean;
   setComputerOpen(open: boolean): void;
@@ -84,9 +102,6 @@ interface GameStore {
   openPc(material: string | null): void;
   /** Вскрыть конверт архива или коробку (A-260): содержимое — на стену группой. */
   openContainer(id: ContainerId): void;
-  /** Окно корзины у стола открыто (TR-A). */
-  trashOpen: boolean;
-  setTrashOpen(open: boolean): void;
   /**
    * Вещь в руках (этап 4a): конверт, коробка или устройство — крупно, вертеть мышью, колесо —
    * ближе к точке под курсором, щелчок по самой вещи — вскрыть или включить.
@@ -119,11 +134,6 @@ interface GameStore {
   hold(h: Held | null): void;
   /** Открыть материал листом (экран устройства в 4a). */
   readMaterial(materialId: string): void;
-  /** Только что выброшенное письмо — его можно «Вернуть» несколько секунд. */
-  binned: Binned | null;
-  /** Письмо-ответ — в корзину (со стены или из «Входящих»); остальное не выбрасывается. */
-  throwAway(id: string): void;
-  undoThrow(): void;
   /** Повесить лист из «Входящих» на стену — в середину видимой части стены. */
   pinToWall(materialId: string): void;
   /** Движок открыл материалы: в дело и во «Входящие» на столе (правка автора 09.11). */
@@ -151,13 +161,6 @@ interface GameStore {
    * найденное руками, — светится, пока игрок не взялся за стену или не ушёл к столу от неё.
    */
   freshWall: string[];
-  /** Через ms заглянуть, не пришёл ли ответ на запрос (MAIL-B: письмо во «Входящие»). */
-  checkMailIn(ms: number): void;
-  /**
-   * Настоящая почта (6a-1): ответы ждут «Добавить в дело» в письме — заглядывать на сервер,
-   * пока ждут (и сразу, когда игрок вернулся к окну игры).
-   */
-  watchMail(): void;
   load(): Promise<void>;
   /** Дослать сохранение сейчас (перед «Новым делом»: иначе уход со страницы вернёт старое). */
   flushSave(): Promise<void>;
@@ -166,7 +169,7 @@ interface GameStore {
   resumeSaving(): void;
   /** Дело открыли в другой вкладке: здесь не сохраняется (R2-02). */
   elsewhere: boolean;
-  setPetitionOpen(open: boolean): void;
+  setFolderOpen(open: boolean): void;
   /** Открыть материал; из поиска — с найденным словом (k — какое совпадение показать). */
   openViewer(materialId: string, find?: { q: string; k: number }, excerpt?: Excerpt): void;
   /**
@@ -208,10 +211,6 @@ export type Excerpt = { title: string; from: number; to: number; section?: strin
 
 const onWallNow = (s: PlayerState | null) => new Set((s?.wall.items ?? []).map((i) => i.id));
 
-/** Как часто заглядывать, пока ответ ждёт «Добавить в дело» в письме, мс. */
-const MAIL_WATCH_MS = 4000;
-let mailWatch: ReturnType<typeof setInterval> | null = null;
-
 export const useGame = create<GameStore>((set, get) => {
   const saver = createSaver(putState, 500, (saveStatus) => set({ saveStatus }));
   if (typeof window !== 'undefined') {
@@ -222,6 +221,44 @@ export const useGame = create<GameStore>((set, get) => {
       const s = get().saveStatus;
       if (s === 'error' || s === 'saving') e.preventDefault();
     });
+    // Выписки с сайтов (A-272, DB-B): ждут на сервере — повесить, сохранить, убрать из очереди.
+    const takeExcerpts = async () => {
+      const list = await getExcerpts();
+      if (!list.length) return;
+      for (const x of list) get().pinExcerpt(x);
+      await saver.flush();
+      // Подтвердить серверу — только когда стена с выписками сохранена (F10): иначе выписки
+      // остаются в очереди и придут снова при следующем возвращении во вкладку.
+      if (get().saveStatus !== 'saved') return;
+      await ackExcerpts(list.map((x) => x.id));
+    };
+    // Игрок вернулся из вкладки сайта (A-272): открытое там — в игре (коробка банка, кабинет).
+    let lookedAt = 0;
+    let lookLater: ReturnType<typeof setTimeout> | null = null;
+    const look = () => {
+      const now = Date.now();
+      if (document.hidden || !get().state || get().elsewhere) return;
+      // Не чаще раза в 1,5 с; вернулись раньше — проверить чуть позже, а не пропустить: иначе
+      // открытое на сайте (коробка банка) появится лишь при следующем возвращении.
+      if (now - lookedAt < 1500) {
+        if (!lookLater)
+          lookLater = setTimeout(
+            () => {
+              lookLater = null;
+              look();
+            },
+            1500 - (now - lookedAt),
+          );
+        return;
+      }
+      lookedAt = now;
+      getMaterials()
+        .then((m) => get().addReleased(m))
+        .then(() => takeExcerpts())
+        .catch(() => undefined);
+    };
+    window.addEventListener('focus', look);
+    document.addEventListener('visibilitychange', look);
     // Одна вкладка с делом (R2-02): новая говорит «я здесь» — прежняя досылает своё и перестаёт
     // сохранять, иначе её старое состояние (таймер письма и т. п.) затёрло бы работу в новой.
     if ('BroadcastChannel' in window) {
@@ -251,13 +288,14 @@ export const useGame = create<GameStore>((set, get) => {
     saveStatus: 'saved',
     elsewhere: false,
     viewerId: null,
-    petitionOpen: false,
+    folderOpen: false,
     notebookOpen: false,
+    discInserting: false,
     loadFailed: false,
     arrival: null,
     computerOpen: false,
+    deskPhone: false,
     pcMaterial: null,
-    trashOpen: false,
     held: null,
     laptop: null,
     phone: null,
@@ -272,10 +310,13 @@ export const useGame = create<GameStore>((set, get) => {
     freshWall: [],
     foundId: null,
     wallFly: 0,
-    binned: null,
 
     dismissArrival() {
       set({ arrival: null });
+    },
+
+    setDeskPhone(open) {
+      set({ deskPhone: open, held: null, viewerId: null });
     },
 
     setComputerOpen(open) {
@@ -341,26 +382,6 @@ export const useGame = create<GameStore>((set, get) => {
 
     readMaterial(materialId) {
       set({ viewerId: materialId, find: null });
-    },
-
-    setTrashOpen(open) {
-      set({ trashOpen: open });
-    },
-
-    throwAway(id) {
-      const s = get().state;
-      if (!s || s.trash.includes(id)) return;
-      const taken = takeLetter(id, s);
-      get().updateState(binLetter(id));
-      if (!get().state?.trash.includes(id)) return;
-      set({ binned: taken });
-      setTimeout(() => set((g) => (g.binned === taken ? { binned: null } : g)), UNDO_MS);
-    },
-
-    undoThrow() {
-      const b = get().binned;
-      if (b) get().updateState(unbinLetter(b));
-      set({ binned: null });
     },
 
     pinToWall(materialId) {
@@ -432,7 +453,11 @@ export const useGame = create<GameStore>((set, get) => {
       const fresh = released.filter((m) => !known.has(m.id));
       if (fresh.length === 0) return;
       const all = [...materials, ...fresh];
-      set({ materials: all, arrival: { ids: fresh.map((m) => m.id), at: Date.now() } });
+      // Записка «Поступило» — о том, что легло в лоток; сайты, файлы устройств и содержимое
+      // невскрытой коробки из банка — на своих местах (коробка сама подсвечена на столе).
+      const boxed = state ? sealedIds(state) : new Set<string>();
+      const ids = fresh.map((m) => m.id).filter((id) => deviceOf(id) === null && !boxed.has(id));
+      set(ids.length ? { materials: all, arrival: { ids, at: Date.now() } } : { materials: all });
       if (state) get().updateState((s) => reconcile(s, all));
     },
 
@@ -440,8 +465,44 @@ export const useGame = create<GameStore>((set, get) => {
       set({ notebookOpen: open });
     },
 
-    setPetitionOpen(open) {
-      set({ petitionOpen: open });
+    pinExcerpt(x) {
+      const before = onWallNow(get().state);
+      get().updateState((s) => addExcerpt(s, x));
+      markNew(before);
+    },
+
+    unpinExcerpt(id) {
+      get().updateState((s) => removeExcerpt(s, id));
+    },
+
+    openExcerpt(id) {
+      const x = get().state?.excerpts?.find((e) => e.id === id);
+      if (!x) return;
+      const find = { q: x.text, k: 0 };
+      if (x.place.kind === 'site') {
+        const hash = `#x=${encodeURIComponent(x.text)}${x.place.letter ? `&l=${x.place.letter}` : ''}`;
+        openSite(x.place.address ?? '', window, hash);
+        return;
+      }
+      if (x.place.kind === 'pc') get().openPc(x.material);
+      else if (x.place.kind === 'laptop') get().openLaptop(x.material);
+      else if (x.place.kind === 'phone') get().openPhone(x.material);
+      else get().openCamera();
+      set({ find });
+    },
+
+    takeDiscOut() {
+      get().updateState((s) => (s.discOut ? s : { ...s, discOut: true }));
+    },
+    insertDisc() {
+      set({ discInserting: true, held: null });
+    },
+    discInserted() {
+      set({ discInserting: false, computerOpen: true, pcMaterial: null });
+    },
+
+    setFolderOpen(open) {
+      set({ folderOpen: open });
     },
 
     openViewer(materialId, find, excerpt) {
@@ -552,42 +613,6 @@ export const useGame = create<GameStore>((set, get) => {
       set({ searchOpen: open });
     },
 
-    checkMailIn(ms) {
-      setTimeout(async () => {
-        try {
-          get().addReleased(await getMaterials());
-        } catch {
-          // Сервер не ответил — заглянем ещё раз чуть позже.
-          get().checkMailIn(3000);
-        }
-      }, Math.max(0, ms) + 300);
-    },
-
-    watchMail() {
-      if (mailWatch) return;
-      // Не чаще одного опроса сразу и не в скрытой вкладке (R2-08): вернулся к окну — focus.
-      let busy = false;
-      const look = async () => {
-        if (busy || document.hidden || get().elsewhere) return;
-        busy = true;
-        try {
-          get().addReleased(await getMaterials());
-          const { waiting } = await getPendingMail();
-          if (waiting) return;
-        } catch {
-          return;
-        } finally {
-          busy = false;
-        }
-        if (mailWatch) clearInterval(mailWatch);
-        mailWatch = null;
-        window.removeEventListener('focus', onFocus);
-      };
-      const onFocus = () => void look();
-      mailWatch = setInterval(() => void look(), MAIL_WATCH_MS);
-      window.addEventListener('focus', onFocus);
-    },
-
     flushSave() {
       return saver.flush();
     },
@@ -612,13 +637,6 @@ export const useGame = create<GameStore>((set, get) => {
             new URLSearchParams(window.location.search).get('opened') === 'all'
           )
             get().updateState((s) => openAll(s, materials));
-          // Письма, которые ещё в пути (запрос отправили до перезагрузки).
-          getPendingMail()
-            .then(({ inMs, waiting }) => {
-              for (const ms of inMs) get().checkMailIn(ms);
-              if (waiting) get().watchMail();
-            })
-            .catch(() => undefined);
           return;
         } catch {
           set({ loadFailed: true });
@@ -653,13 +671,14 @@ export const useGame = create<GameStore>((set, get) => {
 
 /**
  * Материалы, которые игрок видит: без невскрытых конвертов архива (A-260). По ним — поиск по
- * делу (A-196: «по открытым текстам») и адресная книга запроса.
+ * делу (A-196: «по открытым текстам»).
  */
 export function useVisibleMaterials(): Material[] {
   const materials = useGame((g) => g.materials);
   const key = useGame((g) => (g.state ? openedOf(g.state).join(',') : ''));
   return useMemo(() => {
     const sealed = sealedIds({ opened: (key ? key.split(',') : []) as ContainerId[] });
-    return materials.filter((m) => !sealed.has(m.id));
+    // Сайты — не материалы дела: поиск по делу их не находит (A-272, S5-A).
+    return materials.filter((m) => !sealed.has(m.id) && !isWeb(m.id));
   }, [materials, key]);
 }

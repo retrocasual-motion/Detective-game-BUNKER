@@ -185,23 +185,31 @@ export function Envelope({
   );
 }
 
-export function Box({ items, onOpen }: { items: Item[]; onOpen: () => void }) {
+/**
+ * Коробка с пломбой: «Личные вещи» (A-260) или коробка вещдоков из банка (A-272, AC-4) — надпись
+ * на передней стенке, опись на крышке.
+ */
+export function Box({
+  items,
+  onOpen,
+  title = 'Личные вещи',
+  note = 'Изъято с объекта · 7 пакетов',
+}: {
+  items: Item[];
+  onOpen: () => void;
+  title?: string;
+  note?: string;
+}) {
   const front = useTexture(
     () =>
       paintTexture(2.6, 1.3, BOX, ({ ctx, w, h, text }) => {
         ctx.fillStyle = INK;
-        text('Дело № 09-1128', w * 0.06, h * 0.1, w * 0.8, '56px Georgia, serif', 66);
-        text('Личные вещи', w * 0.06, h * 0.3, w * 0.8, '700 120px Georgia, serif', 130);
-        text(
-          'Изъято с объекта · 7 пакетов',
-          w * 0.06,
-          h * 0.62,
-          w * 0.8,
-          '54px Georgia, serif',
-          64,
-        );
+        // Надписи — левее пломбы (она у правого края стенки), не под ней.
+        text('Дело № 09-1128', w * 0.06, h * 0.1, w * 0.76, '56px Georgia, serif', 66);
+        const y = text(title, w * 0.06, h * 0.3, w * 0.76, '700 110px Georgia, serif', 120);
+        text(note, w * 0.06, Math.max(y + 10, h * 0.62), w * 0.76, '54px Georgia, serif', 64);
       }),
-    [],
+    [title, note],
   );
   const lid = useTexture(
     () => paintTexture(2.5, 1.7, '#9a8462', (p) => paintList(p, items, p.h * 0.08)),
@@ -222,8 +230,8 @@ export function Box({ items, onOpen }: { items: Item[]; onOpen: () => void }) {
       <group position={[0, 0.735, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <Plate w={2.5} h={1.7} z={0} map={lid} />
       </group>
-      {/* Пломба — лента на передней стенке: щелчок срывает. */}
-      <group position={[0, 0.45, 0.92]} ref={tape.anchor}>
+      {/* Пломба — лента у правого края передней стенки (не на надписи): щелчок срывает. */}
+      <group position={[1.08, 0.45, 0.92]} ref={tape.anchor}>
         <mesh {...tape.handlers}>
           <boxGeometry args={[0.22, 0.55, 0.02]} />
           <meshStandardMaterial

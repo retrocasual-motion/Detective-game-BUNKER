@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,8 +23,6 @@ export const env = {
   pgPort: Number(e.PG_PORT ?? 5433),
   /** Собранный клиент; задаётся в Docker (в разработке клиент отдаёт Vite). */
   webDist: e.WEB_DIST ? fromRoot(e.WEB_DIST) : undefined,
-  /** Задержка ответа на запрос, мс (DELAY-A; пока 12 с — для проверки автором). */
-  mailDelayMs: Number(e.MAIL_DELAY_MS ?? 12_000),
   /** Вход (6a-1): `link` — по ссылке на почту; `off` — один игрок без входа, как раньше. */
   auth: (e.AUTH === 'off' ? 'off' : 'link') as 'off' | 'link',
   /**
@@ -38,4 +37,12 @@ export const env = {
   mailFromName: e.MAIL_FROM_NAME ?? 'Окружное бюро расследований',
   /** Адрес игры для ссылок в письмах: в разработке — Vite, в Docker — сам сервер. */
   publicUrl: (e.PUBLIC_URL ?? 'http://localhost:5173').replace(/\/$/, ''),
+  /**
+   * Ключ подписи пропусков на сайты дела (A-272): сайты — на своих поддоменах, игрок приходит
+   * по ссылке из игры. В production без ключа — случайный при каждом запуске (пропуска
+   * сбрасываются при перезапуске; игрок снова откроет сайт из дела).
+   */
+  siteSecret:
+    e.SITE_SECRET ??
+    (e.NODE_ENV === 'production' ? randomBytes(32).toString('hex') : 'bunker-dev-site-secret'),
 };

@@ -1,9 +1,9 @@
 *
 !game/
-!playtest/packs/v3.3-2026-10-29/player/
-!playtest/packs/v3.3-2026-10-29/locked/
-!playtest/packs/v3.3-2026-10-29/gm/access.json
-!playtest/packs/v3.3-2026-10-29/gm/verdict.json
+!playtest/packs/v3.4-2026-11-18/player/
+!playtest/packs/v3.4-2026-11-18/locked/
+!playtest/packs/v3.4-2026-11-18/gm/access.json
+!playtest/packs/v3.4-2026-11-18/gm/verdict.json
 game/**/node_modules
 game/**/dist
 game/.data

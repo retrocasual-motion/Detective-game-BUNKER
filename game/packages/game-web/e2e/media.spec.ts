@@ -45,21 +45,20 @@ test('голосовая почта Хейла (21) — плеер со спис
 test('сайт hexon-bio.com (L163): страница читается, старый фильм — плеером на своём месте', async ({
   page,
 }) => {
-  const input = page.getByTestId('dev-line-input');
-  if (!(await input.isVisible())) await page.getByTestId('dev-line-tab').click();
-  await input.fill('АДРЕС | браузер | hexon-bio.com');
-  await page.getByTestId('dev-line-run').click();
-  await page.getByTestId('dev-line-tab').click();
-  await page.getByTestId('inbox-L163').click();
-  const viewer = page.getByTestId('viewer');
+  // Сайт настоящий (A-272): вкладка браузера, фильм — плеером на странице.
+  const r = await page.request.post('/api/site/open', { data: { address: 'hexon-bio.com' } });
+  const { url } = (await r.json()) as { url: string };
+  const tab = await page.context().newPage();
+  await tab.goto(url);
+  const viewer = tab.getByTestId('site');
   await expect(viewer).toContainText('Руководство');
   await expect(viewer).toContainText('Контакты');
   await expect(viewer.getByTestId('media-player')).toBeVisible();
   // 0:10 из 0:24 — строка с человеком в лаборатории (шкала — ниже по странице).
-  const bar = page.getByTestId('media-bar');
+  const bar = tab.getByTestId('media-bar');
   await bar.scrollIntoViewIfNeeded();
   const box = await bar.boundingBox();
   if (!box) throw new Error('нет шкалы');
   await bar.click({ position: { x: (box.width * 10) / 24, y: box.height / 2 } });
-  await expect(page.getByTestId('media-caption')).toContainText('Р. Хейл');
+  await expect(tab.getByTestId('media-caption')).toContainText('Р. Хейл');
 });

@@ -15,10 +15,10 @@ const playerDir = join(here, DEFAULT_PLAYER_DIR);
 describe('buildStartingMaterials', () => {
   const materials = buildStartingMaterials(playerDir);
 
-  it('собирает 50 стартовых материалов 01…51 — без 16 (лента объявлений снята, A-262)', () => {
-    expect(materials).toHaveLength(50);
+  it('собирает 51 стартовый материал 01…52 — без 16 (лента объявлений снята, A-262; 52 — конверт сервера, A-272)', () => {
+    expect(materials).toHaveLength(51);
     expect(materials.map((m) => m.id)).toEqual(
-      Array.from({ length: 51 }, (_, i) => String(i + 1).padStart(2, '0')).filter(
+      Array.from({ length: 52 }, (_, i) => String(i + 1).padStart(2, '0')).filter(
         (id) => id !== '16',
       ),
     );
@@ -56,12 +56,12 @@ describe('buildStartingMaterials', () => {
     expect(new Set(materials.map((m) => m.kind)).size).toBe(8);
   });
 
-  it('серверный контент: 74 закрытых материала L… и правила (P-10 — только для сервера)', () => {
+  it('серверный контент: 78 закрытых материалов L… и правила (P-10 — только для сервера)', () => {
     const server = buildServerContent(join(here, DEFAULT_PACK_DIR));
-    expect(server.locked).toHaveLength(74);
+    expect(server.locked).toHaveLength(78);
     expect(server.locked.every((m) => /^L\d{3}$/.test(m.id))).toBe(true);
     expect(server.locked.find((m) => m.id === 'L462')?.kind).toBe('disc');
-    expect((server.rules as { rules: unknown[] }).rules.length).toBe(160);
+    expect((server.rules as { rules: unknown[] }).rules.length).toBe(129);
   });
 
   it('повторная сборка даёт тот же результат', () => {

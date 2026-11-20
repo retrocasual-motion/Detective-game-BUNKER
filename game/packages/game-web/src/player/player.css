@@ -144,3 +144,35 @@
   background: linear-gradient(#c9ccd0, #8a8e93);
   box-shadow: inset 0 -2px 0 rgb(0 0 0 / 25%);
 }
+
+/* «Свойства файла» у записи (F3): кнопка и табличка свойств. */
+.mp-props-box {
+  margin: 8px 0;
+}
+.mp-props-btn {
+  padding: 4px 10px;
+  border: 1px solid currentcolor;
+  border-radius: var(--radius, 4px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.mp-props {
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius, 4px);
+  background: rgb(0 0 0 / 18%);
+  font-size: 13px;
+  overflow-x: auto;
+}
+.mp-props table {
+  border-collapse: collapse;
+}
+.mp-props th,
+.mp-props td {
+  padding: 2px 8px;
+  text-align: left;
+  border-bottom: 1px solid rgb(127 127 127 / 30%);
+}

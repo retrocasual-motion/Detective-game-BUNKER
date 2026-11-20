@@ -54,30 +54,9 @@ export function bureauLetter(to: string, m01: Material, caseLink: string): OutLe
 }
 
 /**
- * Ответ на запрос (7.1, M-C): текст письма-ответа и кнопка «Добавить в дело» — она кладёт
- * письмо и вложения во «Входящие» на столе. Тема сразу говорит, от кого и на какой запрос.
- */
-export function replyLetter(
-  to: string,
-  letter: { n: number; body: string },
-  addLink: string,
-): OutLetter {
-  const from = /^\*\*От:\*\* (.+)$/m.exec(letter.body)?.[1] ?? '';
-  const body = letter.body.replace(/^# .*\n+/, '').replace(/\*\*(От|Кому|Вложения):\*\*/g, '$1:');
-  const text = `${body}\n\nДобавить в дело: ${addLink}`;
-  return {
-    to,
-    subject: `Ответ на запрос № ${letter.n}${from ? ` — ${from}` : ''}`,
-    text,
-    html: letterHtml(body, [{ label: 'Добавить в дело', href: addLink }]),
-  };
-}
-
-/** Страница после «Добавить в дело» и других ссылок из письма — простая, без игры. */
-/**
- * Страница с одной кнопкой-формой (POST). Ссылки из писем открывают её, а действие (вход,
- * «Добавить в дело») — только по нажатию: почтовые сканеры (Safe Links, антивирусы) открывают
- * ссылки раньше человека и тратили одноразовый вход или добавляли письмо сами (R1-01).
+ * Страница с одной кнопкой-формой (POST). Ссылка входа из письма открывает её, а вход — только
+ * по нажатию: почтовые сканеры (Safe Links, антивирусы) открывают
+ * ссылки раньше человека и тратили одноразовый вход (R1-01).
  */
 export function formPage(
   title: string,
@@ -88,6 +67,7 @@ export function formPage(
   return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta name="referrer" content="no-referrer"><title>${esc(title)}</title></head><body style="font-family:Georgia,serif;max-width:560px;margin:48px auto;padding:0 16px;color:#222"><h1 style="font-size:22px">${esc(title)}</h1><p>${esc(text)}</p><form method="post" action="${esc(form.action)}"><input type="hidden" name="${esc(form.field)}" value="${esc(form.value)}"><button type="submit" style="font:inherit;font-size:18px;padding:8px 20px;cursor:pointer">${esc(form.button)}</button></form></body></html>`;
 }
 
+/** Простая страница со ссылкой (вход не удался и т. п.), без игры. */
 export function notePage(title: string, text: string, link?: { label: string; href: string }) {
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
   return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${esc(title)}</title></head><body style="font-family:Georgia,serif;max-width:560px;margin:48px auto;padding:0 16px;color:#222"><h1 style="font-size:22px">${esc(title)}</h1><p>${esc(text)}</p>${link ? `<p><a href="${esc(link.href)}">${esc(link.label)}</a></p>` : ''}</body></html>`;

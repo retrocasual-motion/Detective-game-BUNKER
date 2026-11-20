@@ -29,6 +29,22 @@
   --color-lamp-light: rgb(255 214 140 / 22%);
   --color-box: #8a7656;
   --color-phone: #2a2a2a;
+  /* Телефон следователя крупно (6a-3): корпус, трубка, экранчик, кнопки. */
+  --color-dp-body: #262729;
+  --color-dp-body-top: #3a3b3e;
+  --color-dp-cradle: #18191a;
+  --color-dp-handset: #2c2d30;
+  --color-dp-holes: #0d0d0e;
+  --color-dp-bezel: #141516;
+  --color-dp-lcd: #a9b7a0;
+  --color-dp-lcd-ink: #1d2618;
+  --color-dp-key: #c9cbc8;
+  --color-dp-key-top: #e1e2df;
+  --color-dp-key-shadow: #7d7f7c;
+  --color-dp-key-ink: #1f2022;
+  --color-dp-led-off: #4a4c4f;
+  --color-dp-heard: rgb(236 230 210 / 96%);
+  --color-dp-heard-ink: #222;
   --color-tray: #5c4a36;
   /* Конверты архива, крышка коробки, печать, газета (A-260, 09.11). */
   --color-archive-envelope: #b58f5a;
@@ -44,7 +60,17 @@
   --color-note: #efe3a8;
   --color-person-shape: #6f6f6f;
   --color-monitor: #2f3033;
+  /* Системный блок 2000-х (A-272, PC-A): бежево-серый пластик, ниши дисководов, кнопка, огонёк. */
+  --color-pc-case: #2f3033; /* как монитор (автор 19.11) */
+  --color-pc-bay: #18191b;
+  --color-pc-button: #4a4c50;
+  --color-pc-led: #67c766;
+  --color-pc-led-busy: #f2a628;
   --color-screen: #1d2a2f;
+  /* Включённый монитор на столе: как рабочий стол бюро (pc.css), панель задач, отсвет. */
+  --color-pc-screen-on: #1f4a80;
+  --color-pc-screen-bar: #0c1a2e;
+  --color-pc-screen-glow: rgb(110 160 230 / 22%);
   --color-screen-text: #cfd8dc;
   --color-screen-icon: #8fa3ad;
   --color-screen-window: #d9d9d9;

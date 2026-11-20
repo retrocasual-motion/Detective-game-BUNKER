@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { allFiles, buildLaptop, findFile, type Laptop } from './files.ts';
 
-const pack = '../../../playtest/packs/v3.3-2026-10-29';
+const pack = '../../../playtest/packs/v3.4-2026-11-18';
 const read = (dir: string, prefix: string) => {
   const { readdirSync } = require('node:fs') as typeof import('node:fs');
   const f = readdirSync(`${pack}/${dir}`).find((x: string) => x.startsWith(prefix));

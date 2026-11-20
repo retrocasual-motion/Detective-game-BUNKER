@@ -1,17 +1,19 @@
-import { CARD_W, type ContainerId } from '@bunker/shared';
+import { CARD_W, type ContainerId, SERVER_DISC_ID } from '@bunker/shared';
 import { useMemo } from 'react';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
-import { wholeCard } from '../petition/drafts.ts';
-import { petitionFieldAt } from '../petition/fieldAt.ts';
-import { usePetition } from '../petition/petition-store.ts';
 import { shownCamera, useGame } from '../store.ts';
-import { markEpilogueRead } from '../verdict/verdict-store.ts';
-import { isLetter, moveItem } from '../wall/wall-actions.ts';
+import { folderFieldAt, toVerdict, useCardDrop, wholeCard } from '../verdict/cards.ts';
+import { markEpilogueRead, verdictActive } from '../verdict/verdict-store.ts';
+import { moveItem } from '../wall/wall-actions.ts';
 import { type Room, screenToBoard } from './camera.ts';
-import { deskObjects, type Epilogue, screenRect } from './decor.ts';
+import { type Bank, type DiscOnDesk, deskObjects, type Epilogue, screenRect } from './decor.ts';
+import { insertServerDisc } from './drive.ts';
 
 const noColor = () => '#000000';
+
+/** Вещи, которые стоят на других (их зона щелчка — поверх). */
+const ON_TOP = new Set(['bank-box', 'cassette']);
 
 /**
  * Щелчок по предмету на столе (вид «Стол» в покое): монитор — компьютер следователя крупно;
@@ -30,35 +32,35 @@ function grow(r: { left: number; top: number; width: number; height: number }) {
 export function DeskHotspots({
   room,
   inbox,
-  trash,
   opened,
   epilogue = 'none',
+  disc = 'none',
+  bank = 'none',
 }: {
   room: Room;
   inbox: string[];
-  trash: number;
   opened: readonly ContainerId[];
   epilogue?: Epilogue;
+  disc?: DiscOnDesk;
+  bank?: Bank;
 }) {
   const openViewer = useGame((g) => g.openViewer);
   const setComputerOpen = useGame((g) => g.setComputerOpen);
   const updateState = useGame((g) => g.updateState);
   const spots = useMemo(
     () =>
-      deskObjects(room, noColor, inbox, trash, opened, epilogue).map((o) => ({
-        o,
-        r: screenRect(o, room.poses.desk, room),
-      })),
-    [room, inbox, trash, opened, epilogue],
+      deskObjects(room, noColor, inbox, opened, epilogue, disc, bank)
+        .map((o) => ({
+          o,
+          r: screenRect(o, room.poses.desk, room),
+        }))
+        // Что стоит на другом (коробка банка, проигрыватель — на коробе с пачками), — поверх:
+        // щелчок достаётся ему (F9).
+        .sort((a, b) => Number(ON_TOP.has(a.o.key)) - Number(ON_TOP.has(b.o.key))),
+    [room, inbox, opened, epilogue, disc, bank],
   );
-  // Письмо-ответ из лотка можно бросить прямо в корзину (TR-A).
-  const bin = spots.find((s) => s.o.key === 'trash')?.r;
-  const overBin = (pt: { x: number; y: number }) =>
-    !!bin &&
-    pt.x >= bin.left &&
-    pt.x <= bin.left + bin.width &&
-    pt.y >= bin.top &&
-    pt.y <= bin.top + bin.height;
+  // Дисковод под монитором (A-272): сюда отпускают диск.
+  const driveAt = spots.find((x) => x.o.key === 'drive')?.r;
   return (
     <div className="desk-hotspots">
       {spots.map(({ o, r }) =>
@@ -67,13 +69,32 @@ export function DeskHotspots({
             key={o.key}
             type="button"
             className={`desk-spot${o.fresh ? ' desk-spot-fresh' : ''}`}
-            data-testid={o.hotspot.kind === 'computer' ? 'computer-monitor' : o.testId}
+            data-testid={o.hotspot.kind === 'computer' && !o.testId ? 'computer-monitor' : o.testId}
             aria-label={o.label}
             title={o.label}
             style={grow(r)}
             onPointerDown={(e) => {
               const h = o.hotspot;
-              // Письмо из «Входящих» можно утащить прямо на доску (правка автора 09.11).
+              // Вынутый диск (A-272, DD-A): зажать и дотащить до дисковода под монитором — он
+              // вставится сам; щелчок без сдвига — диск в руки (прочитать надпись).
+              if (h?.kind === 'disc' && disc === 'out') {
+                e.preventDefault();
+                const overDrive = (pt: { x: number; y: number }) =>
+                  !!driveAt &&
+                  pt.x >= driveAt.left &&
+                  pt.x <= driveAt.left + driveAt.width &&
+                  pt.y >= driveAt.top - 30 &&
+                  pt.y <= driveAt.top + driveAt.height + 20;
+                startGhostDrag(e.nativeEvent, {
+                  label: 'Диск «Прил. 7»',
+                  className: 'drag-ghost-disc',
+                  canDrop: overDrive,
+                  onDrop: () => void insertServerDisc(),
+                  onClick: () => useGame.getState().hold({ type: 'device', id: SERVER_DISC_ID }),
+                });
+                return;
+              }
+              // Лист из «Входящих» можно утащить прямо на доску (правка автора 09.11).
               if (h?.kind !== 'material' || !o.key.startsWith('inbox-')) return;
               e.preventDefault();
               const id = h.id;
@@ -81,26 +102,18 @@ export function DeskHotspots({
                 label: id,
                 className: 'drag-ghost-paper',
                 canDrop: (pt) => {
-                  const f = petitionFieldAt(pt.x, pt.y);
-                  usePetition
-                    .getState()
-                    .setDrag(useGame.getState().petitionOpen, f === 'to' ? null : f);
-                  if (f) return f !== 'to';
-                  if (overBin(pt)) return isLetter(id);
+                  const f = folderFieldAt(pt.x, pt.y) && verdictActive();
+                  useCardDrop.getState().setOver(f);
+                  if (f) return true;
                   return screenToBoard(pt, room.poses.desk, room) !== null;
                 },
-                onEnd: () => usePetition.getState().setDrag(false, null),
+                onEnd: () => useCardDrop.getState().setOver(false),
                 onDrop: (pt) => {
-                  // В поле открытой папки — карточка «письмо целиком» (K-A); письмо остаётся в лотке.
-                  const f = petitionFieldAt(pt.x, pt.y);
+                  // В поле открытой формы заключения — карточка «лист целиком» (K-A); лист
+                  // остаётся в лотке.
                   const m = useGame.getState().materials.find((mm) => mm.id === id);
-                  if (f && m) {
-                    usePetition.getState().setActiveField(f);
-                    usePetition.getState().addCard(wholeCard(m));
-                    return;
-                  }
-                  if (overBin(pt)) {
-                    if (isLetter(id)) useGame.getState().throwAway(id);
+                  if (folderFieldAt(pt.x, pt.y) && verdictActive() && m) {
+                    toVerdict(wholeCard(m));
                     return;
                   }
                   const b = screenToBoard(pt, room.poses.desk, room);
@@ -115,12 +128,17 @@ export function DeskHotspots({
             }}
             onClick={(e) => {
               const h = o.hotspot;
-              // Письмо мышью открывает перетаскивание (щелчок без сдвига — там же); здесь —
+              // Лист мышью открывает перетаскивание (щелчок без сдвига — там же); здесь —
               // только клавиатура.
               if (o.key.startsWith('inbox-') && e.detail > 0) return;
               if (h?.kind === 'computer') setComputerOpen(true);
-              else if (h?.kind === 'trash') useGame.getState().setTrashOpen(true);
-              else if (h?.kind === 'container')
+              else if (h?.kind === 'deskphone') useGame.getState().setDeskPhone(true);
+              else if (h?.kind === 'disc') {
+                // Вынутый диск мышью — перетаскивание (щелчок без сдвига — там же); здесь —
+                // клавиатура.
+                if (!(disc === 'out' && e.detail > 0))
+                  useGame.getState().hold({ type: 'device', id: SERVER_DISC_ID });
+              } else if (h?.kind === 'container')
                 useGame.getState().hold({ type: 'container', id: h.id });
               else if (h) {
                 // Эпилог открыт — подсветка снята.
@@ -130,7 +148,9 @@ export function DeskHotspots({
             }}
           >
             {o.tag && (
-              <span className={`device-tag${o.tagInside ? ' device-tag-inside' : ''}`}>
+              <span
+                className={`device-tag${o.tagInside ? ' device-tag-inside' : ''}${o.tagLine ? ' device-tag-line' : ''}`}
+              >
                 {o.tag}
               </span>
             )}

@@ -51,7 +51,36 @@ export interface Room {
   deskNear: number;
   deskLeft: number;
   deskRight: number;
-  poses: Record<View, Pose>;
+  /** Позы камеры: вид «Стол», «Стена» и вплотную к телефону следователя (6a-3). */
+  poses: Record<CameraSpot, Pose>;
+}
+
+/** Куда смотрит камера: виды комнаты и телефон на столе крупно. */
+export type CameraSpot = View | 'phone';
+
+/**
+ * Телефон следователя на столе (6a-3, DP-A; RS-A): центр (x, z), ширина, глубина, высота корпуса,
+ * доли p (метры). Верх корпуса — плоскость с кнопками (DOM в той же 3D-сцене, что доска).
+ */
+export const DESK_PHONE = { x: 0.61, z: 0.64, w: 0.26, d: 0.16, h: 0.07 };
+
+/**
+ * Камера вплотную к телефону (автор 20.11: «камера подлетает к телефону на столе»): взгляд сверху
+ * под углом, телефон — около 60 % ширины экрана, чуть выше середины (внизу — что слышно).
+ */
+function phonePose(vp: Viewport, p: number, deskY: number): Pose {
+  const pitch = 58;
+  const dist = (DESK_PHONE.w * p) / (0.6 * vp.width);
+  const a = rad(pitch);
+  // Смотрим в точку чуть ближе к игроку середины телефона — он встаёт выше центра кадра.
+  const tx = DESK_PHONE.x * p;
+  const ty = deskY - DESK_PHONE.h * p;
+  const tz = (DESK_PHONE.z + 0.035) * p;
+  return {
+    eye: [tx, ty - Math.sin(a) * dist * p, tz + Math.cos(a) * dist * p],
+    rx: pitch,
+    ry: 0,
+  };
 }
 
 const rad = (d: number) => (d * Math.PI) / 180;
@@ -63,8 +92,9 @@ export function roomFor(vp: Viewport): Room {
   const boardHalfH = (BOARD_SCALE * vp.height) / 2;
   const deskY = boardHalfH + 0.12 * p;
   const deskNear = 0.9 * p;
-  // Глаз сидящего: над столом, чуть позади ближнего края.
-  const eye: Pose['eye'] = [0, deskY - 0.48 * p, deskNear + 0.3 * p];
+  // Глаз сидящего: над столом на 50 см, на 45 см позади ближнего края (откинулся на стуле) —
+  // виден почти весь стол, ближние вещи не раздуты перспективой (RS-A, автор 19.11).
+  const eye: Pose['eye'] = [0, deskY - 0.5 * p, deskNear + 0.45 * p];
   // Взгляд вниз ровно настолько, чтобы верх доски был у верхнего края экрана.
   const halfFov = deg(Math.atan(vp.height / 2 / p));
   const toBoardTop = deg(Math.atan((eye[1] + boardHalfH) / eye[2]));
@@ -81,6 +111,7 @@ export function roomFor(vp: Viewport): Room {
     poses: {
       desk: { eye, rx, ry: 0 },
       wall: { eye: [0, 0, BOARD_SCALE * p], rx: 0, ry: 0 },
+      phone: phonePose(vp, p, deskY),
     },
   };
 }
@@ -100,14 +131,19 @@ export function poseOps({ eye, rx, ry }: Pose, p: number): Op[] {
   ];
 }
 
-/** Промежуточная поза: t = 0 … 1. */
-export const lerpPose = (a: Pose, b: Pose, t: number): Pose => ({
-  eye: [0, 1, 2].map(
-    (i) => (a.eye[i] ?? 0) + ((b.eye[i] ?? 0) - (a.eye[i] ?? 0)) * t,
-  ) as Pose['eye'],
-  rx: a.rx + (b.rx - a.rx) * t,
-  ry: a.ry + (b.ry - a.ry) * t,
-});
+/** Промежуточная поза: t = 0 … 1 (на концах — ровно сами позы, без погрешности сложения). */
+export const lerpPose = (a: Pose, b: Pose, t: number): Pose =>
+  t <= 0
+    ? a
+    : t >= 1
+      ? b
+      : {
+          eye: [0, 1, 2].map(
+            (i) => (a.eye[i] ?? 0) + ((b.eye[i] ?? 0) - (a.eye[i] ?? 0)) * t,
+          ) as Pose['eye'],
+          rx: a.rx + (b.rx - a.rx) * t,
+          ry: a.ry + (b.ry - a.ry) * t,
+        };
 
 /**
  * Плавный разгон и торможение камеры — синусом (правка автора 10.11): пиковая скорость в

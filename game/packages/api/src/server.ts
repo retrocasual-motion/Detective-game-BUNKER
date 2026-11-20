@@ -43,10 +43,10 @@ const app = createApp({
   isReady: () => ready,
   webDist: env.webDist,
   engine,
-  mailDelayMs: env.mailDelayMs,
   auth: env.auth,
   mailer,
   publicUrl: env.publicUrl,
+  siteSecret: env.siteSecret,
 });
 serve({ fetch: app.fetch, port: env.apiPort }, (info) => {
   console.log(
@@ -62,12 +62,9 @@ if (env.auth === 'link' && mailer) {
   console.log(
     `api: вход по ссылке; письма — ${env.mailTransport === 'mailpit' ? `Mailpit ${env.mailpitUrl}` : 'в памяти'}`,
   );
-  // Ответы на запросы, чей срок доставки наступил, — на почту игрока (и после перезапуска).
-  setInterval(
-    () =>
-      void app
-        .sweepMail()
-        .catch((e: Error) => console.error(`почта: проход не удался — ${e.message}`)),
-    5000,
-  ).unref();
 }
+// Раз в час — убрать истёкшие сессии и ссылки входа (R1-14). Сбой базы не роняет сервер (R4-03).
+setInterval(
+  () => void app.purge().catch((e: Error) => console.error(`чистка: не удалась — ${e.message}`)),
+  3_600_000,
+).unref();

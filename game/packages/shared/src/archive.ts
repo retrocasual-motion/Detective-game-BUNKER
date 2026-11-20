@@ -8,7 +8,7 @@ import type { PlayerState } from './schemas.ts';
  * названием конверта.
  */
 
-export type ContainerId = 'protocols' | 'scene' | 'bunker' | 'personal';
+export type ContainerId = 'protocols' | 'scene' | 'bunker' | 'personal' | 'bank';
 
 export interface Container {
   id: ContainerId;
@@ -40,19 +40,39 @@ export const CONTAINERS: readonly Container[] = [
     devices: ['29'],
   },
   { id: 'personal', label: 'Личные вещи', files: range(40, 46) },
+  /**
+   * Коробка из банка (A-272, AC-4): появляется на столе после формы «Сообщить о смерти
+   * арендатора» (L460 открыт). Опись и лист акта — на стену; микрокассета с проигрывателем бюро
+   * (L462) — на стол, слушают на проигрывателе.
+   */
+  {
+    id: 'bank',
+    label: 'Front Range Savings · ячейка № 845 · вскрыта 17.11.2009',
+    files: ['L460', 'L461'],
+    devices: ['L462'],
+  },
 ];
 
 export const CONTAINER_IDS = CONTAINERS.map((c) => c.id) as [ContainerId, ...ContainerId[]];
 
-/** Изъятые вещи (24, 47–50 и коробка пачек 29): берут в руки, а не читают листом. */
+/** Изъятые вещи (24, 47–50, коробка пачек 29, кассета с проигрывателем L462): берут в руки. */
 export const DEVICE_IDS: ReadonlySet<string> = new Set(CONTAINERS.flatMap((c) => c.devices ?? []));
 
 /** Газета на столе — бумажный номер (E44, A-260): видна, но на стене со старта не висит. */
 export const NEWSPAPER_ID = '15';
 /** Сайт газеты — только архив номеров, закладка браузера на компьютере следователя (E44, A-262). */
 export const BOOKMARK_IDS = ['17'] as const;
-/** Есть у игрока со старта, но не на стене: газета на столе и закладки браузера. */
-export const OFF_WALL_IDS = new Set<string>([NEWSPAPER_ID, ...BOOKMARK_IDS]);
+/**
+ * Конверт «Прил. 7 · Сервер VL-31» с диском (A-272, AC-2): лежит на столе, пока диск не вставлен
+ * в дисковод компьютера; на стену не попадает никогда — это носитель, а не лист.
+ */
+export const SERVER_DISC_ID = '52';
+/** Журналы сервера (L214) открываются, когда диск вставлен: по ним видно, что он в компьютере. */
+export const SERVER_LOG_ID = 'L214';
+/** Не висят на стене ни при каком сохранении. */
+export const NEVER_ON_WALL = new Set<string>([SERVER_DISC_ID]);
+/** Есть у игрока со старта, но не на стене: газета на столе, закладки браузера, конверт с диском. */
+export const OFF_WALL_IDS = new Set<string>([NEWSPAPER_ID, ...BOOKMARK_IDS, SERVER_DISC_ID]);
 
 /** Что лежит в конверте — материалы и устройства. */
 export const containerContents = (c: Container) => [...c.files, ...(c.devices ?? [])];
@@ -63,6 +83,10 @@ export const containerContents = (c: Container) => [...c.files, ...(c.devices ??
  */
 export const openedOf = (s: Pick<PlayerState, 'opened'>): readonly ContainerId[] =>
   s.opened ?? CONTAINER_IDS;
+
+/** Коробка банка на столе: её содержимое открыто движком (A-272). */
+export const BANK_BOX_ID: ContainerId = 'bank';
+export const BANK_LIST_ID = 'L460';
 
 export const isOpened = (s: Pick<PlayerState, 'opened'>, id: ContainerId) =>
   openedOf(s).includes(id);

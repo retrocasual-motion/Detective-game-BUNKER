@@ -2,8 +2,11 @@ name: game
 
 # Минуты Actions на Free ограничены (R4-02): правка только документации CI не запускает; новый
 # пуш в ту же ветку отменяет прошлый прогон; e2e — только на PR (в main приходит уже проверенное).
+# CI-C (автор 20.11): PR-черновик (draft) CI не запускает — работа идёт черновиком, проверки
+# локально; перед «мержим?» PR переводят в «готов» — один прогон.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       ['game/**', '.github/workflows/game.yml', 'playtest/packs/**', '!game/docs/**', '!**/*.md']
   push:
@@ -21,6 +24,7 @@ defaults:
 
 jobs:
   check:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +42,7 @@ jobs:
       - run: pnpm test
 
   e2e:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -61,6 +65,7 @@ jobs:
           retention-days: 7
 
   docker:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -68,9 +73,11 @@ jobs:
       - name: Игра отвечает так же, как на сервере
         run: |
           curl -fsS localhost:8787/api/health | grep -q '"ok":true'
-          # Стартовых материалов 50: лента объявлений газеты (16) снята, A-262.
-          test "$(curl -fsS localhost:8787/api/materials | jq length)" = 50
+          # Стартовых материалов 51: 01…52 без 16 (лента газеты снята, A-262; 52 — конверт сервера, A-272).
+          test "$(curl -fsS localhost:8787/api/materials | jq length)" = 51
           curl -fsS localhost:8787/ | grep -q 'id="root"'
+          # Сайт дела (A-272): хост сайта — своя страница сборки.
+          curl -fsS -H 'Host: vaultline-program.localhost:8787' localhost:8787/ | grep -q 'id="site"'
       - name: Пакета игрока в образе нет (P-10)
         run: |
           docker compose exec -T app sh -c 'test ! -d /app/playtest'

@@ -1,16 +1,25 @@
-import { type ContainerId, EPILOGUE_ID, inboxIds, openedOf } from '@bunker/shared';
+import {
+  BANK_BOX_ID,
+  BANK_LIST_ID,
+  type ContainerId,
+  EPILOGUE_ID,
+  inboxIds,
+  openedOf,
+  SERVER_LOG_ID,
+} from '@bunker/shared';
 import { useEffect, useMemo } from 'react';
 
 import { ArrivalNote } from './desk/ArrivalNote.tsx';
 import { Notebook } from './desk/Notebook.tsx';
 import { PlacedNote } from './desk/PlacedNote.tsx';
-import { ThrowToast, TrashView } from './desk/TrashBin.tsx';
+import { DeskPhone } from './deskphone/DeskPhone.tsx';
 import { DevActionLine } from './dev/DevActionLine.tsx';
 import { HeldView } from './hold/HeldView.tsx';
 import { Credits, MainMenu, MenuTab } from './menu/MainMenu.tsx';
 import { PcView } from './pc/PcView.tsx';
-import { PetitionCorner } from './petition/PetitionCorner.tsx';
 import { PenView } from './player/PenView.tsx';
+import type { Bank, DiscOnDesk } from './room/decor.ts';
+import { useDriveAnimation } from './room/drive.ts';
 import { RoomScene } from './room/RoomScene.tsx';
 import { KEY_DIR, NAV } from './room/views.ts';
 import { SearchPanel } from './search/SearchPanel.tsx';
@@ -33,15 +42,35 @@ export function App() {
   const viewerId = useGame((g) => g.viewerId);
   const computerOpen = useGame((g) => g.computerOpen);
   // Вещь в руках, компьютер или ручка вплотную — их слой закрывает верхние кнопки.
-  const holding = useGame((g) => g.held !== null || g.computerOpen || !!g.pen);
+  const holding = useGame((g) => g.held !== null || g.computerOpen || !!g.pen || g.deskPhone);
   const loadFailed = useGame((g) => g.loadFailed);
   // Только то, что видно игроку: каждое «сохраняю → сохранено» не перерисовывает комнату (R3-06).
   const saveProblem = useGame((g) =>
     g.saveStatus === 'error' || g.saveStatus === 'rejected' ? g.saveStatus : null,
   );
   const elsewhere = useGame((g) => g.elsewhere);
-  // После «Решить дело» папка запроса уступает место форме заключения (P-9).
+  // После «Решить дело» — форма заключения (P-9).
   const closed = useVerdict((v) => v.status.form || v.status.sent);
+  // Диск сервера на столе (A-272): в конверте; вынут — лежит сам (DD-A); вставлен — журналы открыты.
+  const disc = useGame(
+    (g): DiscOnDesk =>
+      g.materials.some((m) => m.id === SERVER_LOG_ID) || g.discInserting
+        ? 'none'
+        : g.state?.discOut
+          ? 'out'
+          : 'envelope',
+  );
+  // Дисковод под монитором: кадры вставки — на столе.
+  const drive = useDriveAnimation();
+  // Коробка из банка (A-272): пришла (опись открыта формой банка) — на столе; вскрыта — кассета.
+  const bank = useGame(
+    (g): Bank =>
+      !g.materials.some((m) => m.id === BANK_LIST_ID)
+        ? 'none'
+        : g.state && openedOf(g.state).includes(BANK_BOX_ID)
+          ? 'open'
+          : 'box',
+  );
   // Эпилог после заключения — конвертом на столе; пока не открыт — подсвечен (автор 17.11).
   const epilogue = useGame((g) =>
     !g.materials.some((m) => m.id === EPILOGUE_ID)
@@ -64,7 +93,7 @@ export function App() {
       if (!dir || isTyping(e.target)) return;
       const g = useGame.getState();
       // Вещь в руках — стрелки её (меню фотоаппарата), не комнаты (R3-01).
-      if (g.viewerId || g.computerOpen || g.held || !g.state) return;
+      if (g.viewerId || g.computerOpen || g.held || g.deskPhone || !g.state) return;
       const to = NAV[g.state.view][dir];
       if (to) setView(to);
     };
@@ -76,7 +105,6 @@ export function App() {
   // Строкой: новый массив на каждое изменение стора перерисовывал бы комнату без нужды.
   const inboxKey = useGame((g) => (g.state ? inboxIds(g.state, g.materials).join(',') : ''));
   const inbox = useMemo(() => (inboxKey ? inboxKey.split(',') : []), [inboxKey]);
-  const trash = useGame((g) => g.state?.trash.length ?? 0);
   // Строкой — по той же причине, что и «Входящие».
   const openedKey = useGame((g) => (g.state ? openedOf(g.state).join(',') : ''));
   const opened = useMemo(
@@ -112,9 +140,11 @@ export function App() {
         hideNav={viewerId !== null || computerOpen || holding}
         wall={wall}
         inbox={inbox}
-        trash={trash}
         opened={opened}
         epilogue={epilogue}
+        disc={disc}
+        drive={drive}
+        bank={bank}
       />
       {saveProblem === 'error' && (
         <div className="save-error" data-testid="save-error" role="status">
@@ -151,13 +181,12 @@ export function App() {
       <ArrivalNote />
       <PlacedNote />
       <PcView />
+      <DeskPhone />
       <PenView />
-      <TrashView />
       <HeldView />
       <SearchPanel />
-      <ThrowToast />
       {viewerId && <Viewer key={viewerId} materialId={viewerId} />}
-      {closed ? <VerdictCorner /> : <PetitionCorner />}
+      {closed && <VerdictCorner />}
       <MenuTab />
       <SolveCase />
       <EpilogueNote />

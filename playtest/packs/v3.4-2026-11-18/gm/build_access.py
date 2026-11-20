@@ -110,10 +110,10 @@ site("url-mailbridge", r"mailbridge\.net", ["L249"], "Открыт сайт mail
 site("url-sentinel", r"sentinel-labs\.net", ["L272"], "Открыт сайт sentinel-labs.net.")
 site("url-signal", r"the-signal-news\.com", ["L296"], "Открыт сайт the-signal-news.com.")
 site("url-newspaper", r"silverridge-chronicle\.com", [], "Сайт газеты: архив номеров — в закладках браузера (файл 17); сегодняшний номер — на столе (файл 15). Выпуск архива открывается по дате.")
-site("url-pinecell", r"pinecell-mobile\.com", [], "Pinecell Mobile: тарифы, покрытие.")
-site("url-northcare", r"northcare-nutrition\.com", [], "NorthCare Nutrition: продукты для питания в особых условиях. Справки по партиям — горячая линия на упаковке.")
-site("url-colton", r"coltonsupply\.com", [], "Colton Supply: изготовление крепежа и металлоизделий по чертежам заказчика. Статус заказа — по телефону поставщика.")
-site("url-bureau", r"okrug-bureau\.org", [], "Окружное бюро расследований: новости, приёмная.")
+site("url-pinecell", r"pinecell-mobile\.com", ["L178"], "Открыт сайт pinecell-mobile.com.")  # NF-B, A-273: тарифы, покрытие, запросы органов
+site("url-northcare", r"northcare-nutrition\.com", ["L179"], "Открыт сайт northcare-nutrition.com.")  # NF-B, A-273 (NC-B): справки по партиям — номер горячей линии на сайте
+site("url-colton", r"coltonsupply\.com", ["L180"], "Открыт сайт coltonsupply.com.")  # NF-B, A-273 (CS-B): статус заказа — по телефону на сайте
+site("url-bureau", r"okrug-bureau\.org", ["L181"], "Открыт сайт okrug-bureau.org.")  # NF-B, A-273: новости, приёмная
 site("url-frontrange", r"frontrange-savings\.com", ["L130"], "Открыт сайт frontrange-savings.com.")  # A-250 п. 3, A-272: главная, «Сейфовые ячейки» с формой «Сообщить о смерти арендатора»
 
 # ---------- ЗВОНОК ----------

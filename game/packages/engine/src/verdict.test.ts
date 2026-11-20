@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { answerFits, scoreVerdict, type VerdictRubric } from './verdict.ts';
 
 const rubric = JSON.parse(
-  readFileSync('../../../playtest/packs/v3.3-2026-10-29/gm/verdict.json', 'utf8'),
+  readFileSync('../../../playtest/packs/v3.4-2026-11-18/gm/verdict.json', 'utf8'),
 ) as VerdictRubric;
 
 describe('оценка заключения (A-270)', () => {

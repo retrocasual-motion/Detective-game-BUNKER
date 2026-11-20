@@ -52,7 +52,7 @@ test('при 1366×768 нет горизонтальной прокрутки, �
     () => document.documentElement.scrollWidth > window.innerWidth,
   );
   expect(overflow).toBe(false);
-  for (const id of ['nav-up', 'petition-corner']) {
+  for (const id of ['nav-up', 'solve-case']) {
     await expect(page.getByTestId(id)).toBeInViewport();
   }
   await toWall(page);

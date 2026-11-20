@@ -1,15 +1,6 @@
 import type { Progress } from '@bunker/engine';
 import type { PlayerState } from '@bunker/shared';
-import {
-  bigint,
-  integer,
-  jsonb,
-  pgTable,
-  primaryKey,
-  text,
-  timestamp,
-  uniqueIndex,
-} from 'drizzle-orm/pg-core';
+import { bigint, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const playerState = pgTable('player_state', {
   playerId: text('player_id').primaryKey(),
@@ -31,45 +22,19 @@ export const playerProgress = pgTable('player_progress', {
 });
 
 /**
- * Ответы на запросы (этап 3, MAIL-B): бумажное письмо ложится во «Входящие» на столе через
- * задержку (T-11-A). До `deliverAt` ни письмо, ни его вложения в браузер не уходят (P-10).
+ * Итог отправленного заключения (A-270): ответы и отметки по вопросам — ответ бюро на экране и
+ * после перезагрузки. До A-272 хранился строкой в таблице писем-ответов (`player_letters`).
  */
-export const playerLetters = pgTable(
-  'player_letters',
-  {
-    playerId: text('player_id').notNull(),
-    /** Номер запроса у игрока: 1, 2, 3… — он же номер письма M001… */
-    n: integer('n').notNull(),
-    title: text('title').notNull(),
-    body: text('body').notNull(),
-    /** Вложения — закрытые материалы, открытые этим запросом. */
-    released: jsonb('released').$type<string[]>().notNull(),
-    sentAt: timestamp('sent_at', { withTimezone: true }).notNull(),
-    deliverAt: timestamp('deliver_at', { withTimezone: true }).notNull(),
-    /**
-     * Настоящая почта (6a-1, ML-A): ключ ссылки «Добавить в дело» из письма, когда письмо
-     * ушло на почту игрока и когда игрок добавил его в дело. Без `addedAt` письмо у игрока в
-     * игре не появляется, пока канал почты — настоящий.
-     */
-    token: text('token'),
-    mailedAt: timestamp('mailed_at', { withTimezone: true }),
-    addedAt: timestamp('added_at', { withTimezone: true }),
-  },
-  (t) => [
-    primaryKey({ columns: [t.playerId, t.n] }),
-    // «Добавить в дело» ищет письмо по ключу — без индекса читалась вся таблица (R1-14).
-    uniqueIndex('player_letters_token').on(t.token),
-  ],
-);
+export const playerVerdicts = pgTable('player_verdicts', {
+  playerId: text('player_id').primaryKey(),
+  result: jsonb('result').notNull(),
+  sentAt: timestamp('sent_at', { withTimezone: true }).notNull().defaultNow(),
+});
 
-/**
- * Игроки (6a-1): вход по ссылке на почту (T-14-A). `mailChannel` — куда идут ответы на запросы
- * (6.6, P-14): `real` — на почту игрока, `internal` — сразу во «Входящие» на столе.
- */
+/** Игроки (6a-1): вход по ссылке на почту (T-14-A). */
 export const players = pgTable('players', {
   id: text('id').primaryKey(),
   email: text('email').notNull().unique(),
-  mailChannel: text('mail_channel').$type<'real' | 'internal'>().notNull().default('real'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -87,5 +52,16 @@ export const sessions = pgTable('sessions', {
   hash: text('hash').primaryKey(),
   playerId: text('player_id').notNull(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Выписки с сайтов дела (A-272, DB-B): сайт — другая вкладка и другой домен, стену игрока он не
+ * трогает; выписка ждёт здесь, пока вкладка игры её не заберёт (вернулся к игре).
+ */
+export const pendingExcerpts = pgTable('pending_excerpts', {
+  id: text('id').primaryKey(),
+  playerId: text('player_id').notNull(),
+  data: jsonb('data').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });

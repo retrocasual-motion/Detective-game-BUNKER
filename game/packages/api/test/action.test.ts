@@ -13,11 +13,10 @@ const mat = (id: string): Material => ({
   sourceFile: `${id}__x.md`,
 });
 const materials = ['01', '02'].map(mat);
-const locked = [mat('L101'), mat('L999')];
+const locked = [mat('L945'), mat('L999')];
 const rules: AccessRules = {
   version: 1,
   attempt_limit: { ПАРОЛЬ: 3 },
-  address_book: true,
   final_form: { release: 'L999' },
   rules: [
     {
@@ -25,18 +24,10 @@ const rules: AccessRules = {
       action: 'ПАРОЛЬ',
       target: 'сейф',
       accept: ['^верно$'],
-      release: ['L101'],
+      release: ['L945'],
       ok: 'Открыто.',
       fail: 'Неверно.',
       again: 'Уже выдано.',
-    },
-    {
-      id: 'pet',
-      action: 'ХОДАТАЙСТВО',
-      target: '^zapros@bureau\\.org$',
-      cards: [[{ file: '^01$', quote: 'материал' }]],
-      release: [],
-      ok: 'Бюро ответило.',
     },
   ],
 };
@@ -86,23 +77,23 @@ describe('движок правил на сервере', () => {
     const body = (await res.json()) as { result: string; reply: string; released: Material[] };
     expect(body.result).toBe('успех');
     expect(body.reply).toBe('Открыто.');
-    expect(body.released.map((m) => m.id)).toEqual(['L101']);
-    expect(await ids()).toEqual(['01', '02', 'L101']);
+    expect(body.released.map((m) => m.id)).toEqual(['L945']);
+    expect(await ids()).toEqual(['01', '02', 'L945']);
   });
 
   it('открытый материал ждёт во «Входящих» на столе — на стену сам не вешается', async () => {
     await post('/api/action', { action: 'ПАРОЛЬ', target: 'сейф', value: 'верно' });
     const state = (await (await app().request('/api/state')).json()) as PlayerState;
-    expect(state.wall.items.some((i) => i.id === 'L101')).toBe(false);
-    expect(inboxIds(state, [...materials, mat('L101')])).toEqual(['L101']);
+    expect(state.wall.items.some((i) => i.id === 'L945')).toBe(false);
+    expect(inboxIds(state, [...materials, mat('L945')])).toEqual(['L945']);
   });
 
-  it('неверный ввод — ответ правила; пять неверных — лимит на 2 минуты (LK-A), отсчёт в ответе', async () => {
-    for (let i = 0; i < 5; i++) {
+  it('неверный ввод — ответ правила; три неверных — лимит пакета, пауза 2 минуты (AC-5), отсчёт в ответе', async () => {
+    for (let i = 0; i < 3; i++) {
       const r = await post('/api/action', { action: 'ПАРОЛЬ', target: 'сейф', value: 'нет' });
       const body = (await r.json()) as { result: string; wait: number };
       expect(body.result).toBe('отказ');
-      expect(body.wait).toBe(i < 4 ? 0 : 2 * 60 * 1000);
+      expect(body.wait).toBe(i < 2 ? 0 : 2 * 60 * 1000);
     }
     const r = await post('/api/action', { action: 'ПАРОЛЬ', target: 'сейф', value: 'верно' });
     const body = (await r.json()) as { result: string; wait: number };
@@ -112,25 +103,13 @@ describe('движок правил на сервере', () => {
 
   it('клиент не может повесить на стену неоткрытый материал (P-10)', async () => {
     const s = defaultState(materials);
-    s.wall.items.push({ id: 'L101', x: 0, y: 0, z: 99, rot: 0 });
+    s.wall.items.push({ id: 'L945', x: 0, y: 0, z: 99, rot: 0 });
     const res = await app().request('/api/state', {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(s),
     });
     expect(res.status).toBe(400);
-  });
-
-  it('запрос карточками: ответ правила', async () => {
-    const res = await post('/api/action', {
-      action: 'ХОДАТАЙСТВО',
-      target: 'zapros@bureau.org',
-      cards: [
-        { file: '01', quote: 'Материал 01' },
-        { file: '02', quote: 'Материал 02' },
-      ],
-    });
-    expect(((await res.json()) as { result: string; reply: string }).reply).toBe('Бюро ответило.');
   });
 
   it('ЗВОНОК и неверный формат — 400', async () => {
@@ -177,20 +156,7 @@ describe('доставка и гонки', () => {
       post('/api/action', { action: 'ПАРОЛЬ', target: 'сейф', value: 'верно' }, a),
       a.request('/api/materials'),
     ]);
-    expect(await ids()).toEqual(['01', '02', 'L101']);
-  });
-
-  it('карточка с «л101» — тот же файл L101', async () => {
-    await post('/api/action', { action: 'ПАРОЛЬ', target: 'сейф', value: 'верно' });
-    const res = await post('/api/action', {
-      action: 'ХОДАТАЙСТВО',
-      target: 'zapros@bureau.org',
-      cards: [
-        { file: '01', quote: 'Материал 01' },
-        { file: 'л101', quote: 'Материал L101' },
-      ],
-    });
-    expect(((await res.json()) as { reply: string }).reply).toBe('Бюро ответило.');
+    expect(await ids()).toEqual(['01', '02', 'L945']);
   });
 
   it('в production: ФИНАЛ и СТОП не принимаются, вида итога в ответе нет', async () => {

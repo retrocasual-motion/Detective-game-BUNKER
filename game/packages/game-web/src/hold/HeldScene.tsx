@@ -1,4 +1,10 @@
-import { CONTAINERS, type ContainerId, containerContents, folderItemId } from '@bunker/shared';
+import {
+  CONTAINERS,
+  type ContainerId,
+  containerContents,
+  folderItemId,
+  SERVER_DISC_ID,
+} from '@bunker/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
 import { CAMERA_PX, CameraScreen, CameraSheet } from '../camera/CameraScreen.tsx';
@@ -21,9 +27,11 @@ import {
   sheetPages,
 } from '../viewer/bundles.ts';
 import { CAMERA_FOCUS, CameraDevice } from './cameraModel.tsx';
+import { CASSETTE_ID, CassetteHeld } from './cassette.tsx';
 import Held3D, { afterLeaving, type Focus } from './Held3D.tsx';
 import { Folder, PaperStack, PapersBox } from './papers.tsx';
 import { RADIO_FOCUS, type RadioPart, RadioStand, SCREEN_PX } from './radioStand.tsx';
+import { ServerDiscHeld } from './serverDisc.tsx';
 import { Box, Device, Envelope } from './shapes.tsx';
 
 /** Вещь в руках со сценой three.js — отдельный кусок сборки (грузится, когда вещь взяли). */
@@ -44,15 +52,23 @@ export default function HeldThing({ held }: { held: Held }) {
         useGame.getState().openContainer(held.id);
         setOpened(true);
       });
-    const box = held.id === 'personal';
+    const box = held.id === 'personal' || held.id === 'bank';
     return (
       <Held3D
         mode={box ? 'free' : 'flip'}
         half={[1.6, 1.2]}
-        label={box ? 'Коробка «Личные вещи»' : `Конверт «${c.label}»`}
+        label={box ? `Коробка «${c.label}»` : `Конверт «${c.label}»`}
         onClose={close}
       >
-        {box ? (
+        {held.id === 'bank' ? (
+          // Коробка вещдоков из банка (A-272, L460): бирка бюро, ячейка вскрыта в банке.
+          <Box
+            items={items}
+            onOpen={open}
+            title="Front Range Savings"
+            note="Ячейка № 845 · вскрыта 17.11.2009"
+          />
+        ) : box ? (
           <Box items={items} onOpen={open} />
         ) : (
           <Envelope title={c.label} items={items} onOpen={open} />
@@ -62,6 +78,8 @@ export default function HeldThing({ held }: { held: Held }) {
   }
 
   if (held.id === PAPERS_ID) return <Papers />;
+  if (held.id === SERVER_DISC_ID) return <ServerDiscHeld />;
+  if (held.id === CASSETTE_ID) return <CassetteHeld />;
   if (held.id === '50') return <RadioHeld title={titles.get('50') ?? '50'} close={close} />;
 
   const title = titles.get(held.id) ?? held.id;

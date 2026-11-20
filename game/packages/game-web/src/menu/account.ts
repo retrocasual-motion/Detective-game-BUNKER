@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getMe, logout, type Me, setMailChannel, setOnSignedOut } from '../api.ts';
+import { getMe, logout, type Me, setOnSignedOut } from '../api.ts';
 
 /**
  * Кто играет (6a-1): вход по ссылке на почту. Пока сервер не сказал «вошёл» — экран входа,
@@ -9,7 +9,6 @@ interface AccountStore {
   status: 'checking' | 'in' | 'out' | 'offline';
   me: Me | null;
   check(): Promise<void>;
-  setChannel(channel: 'real' | 'internal'): Promise<void>;
   logout(): Promise<void>;
 }
 
@@ -28,14 +27,6 @@ export const useAccount = create<AccountStore>((set, get) => ({
       set({ status: get().status === 'checking' ? 'offline' : get().status });
       await new Promise((r) => setTimeout(r, 1000));
     }
-  },
-
-  async setChannel(channel) {
-    const me = get().me;
-    if (me?.auth !== 'link' || !me.email) return;
-    // Сразу на экране; сервер не принял — вернуть как было.
-    set({ me: { ...me, channel } });
-    await setMailChannel(channel).catch(() => set({ me }));
   },
 
   async logout() {

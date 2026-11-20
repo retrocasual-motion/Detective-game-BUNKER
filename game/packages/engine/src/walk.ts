@@ -5,12 +5,10 @@
  * Используется в автотестах движка; в игру не входит.
  */
 import { act, type Content, markSeen } from './engine.ts';
-import { strip } from './text.ts';
 import {
   ACTIONS,
   type ActionInput,
   type ActionName,
-  type Card,
   DEFAULT_CONFIG,
   emptyProgress,
   type Result,
@@ -21,9 +19,6 @@ const ACTION_RE = new RegExp(
   'u',
 );
 const EXPECT_RE = /^(.*?)\s*=>\s*(.*?)\s*$/u;
-const CARD_SPLIT_RE = /(?:^|[;|\s])(?:на\s+)?основани[еия]\s*[:—-]/iu;
-const CARD_HEAD_RE =
-  /^\s*(?:файл\s*№?\s*)?(?<id>[lл]\s*\d{3}|\d{2}|почт[\p{L}\p{N}_]*)(?:__\S*?)?(?:\.md)?(?=[\s,:;·—«"'(-]|$)\s*[,:;·—-]*\s*(?<q>.*)$/iu;
 const RESULTS = new Set<string>([
   'ответ',
   'отказ',
@@ -38,36 +33,6 @@ const RESULTS = new Set<string>([
   'не оформлено',
 ]);
 
-/** «прошу: 04, «строка» ; основание: 06, «строка»» → две карточки (как parse_petition + parse_card). */
-export function parsePetition(value: string): [Card, Card] | undefined {
-  const m = CARD_SPLIT_RE.exec(value);
-  if (!m) return undefined;
-  const a = strip(
-    value
-      .slice(0, m.index)
-      .replace(/^\s*прошу\s*[:—-]?\s*/iu, '')
-      .trim(),
-    ' ;|',
-  );
-  const b = strip(value.slice(m.index + m[0].length).trim(), ' ;|');
-  if (!a || !b) return undefined;
-  return [parseCard(a), parseCard(b)];
-}
-
-function parseCard(text: string): Card {
-  const m = CARD_HEAD_RE.exec(text);
-  if (!m?.groups) return { file: '', quote: '' };
-  const rawId = (m.groups.id ?? '').replace(/\s+/gu, '');
-  const head = rawId[0] ?? '';
-  const file = rawId.toLowerCase().startsWith('почт')
-    ? 'почта'
-    : 'lLлЛ'.includes(head)
-      ? `L${rawId.slice(1)}`
-      : rawId;
-  const quote = strip((m.groups.q ?? '').trim(), ' «»"\'“”„.;,');
-  return { file, quote };
-}
-
 /** «ДЕЙСТВИЕ | ЦЕЛЬ | ЗНАЧЕНИЕ» → действие (служебная строка разработки, E2-CHECK-A). */
 export function parseActionLine(line: string): ActionInput | null {
   // Строку можно скопировать из сквозного прохода целиком: «=> ожидание» и «# …» отрезаются.
@@ -78,9 +43,7 @@ export function parseActionLine(line: string): ActionInput | null {
   if (!ACTIONS.includes(action)) return null;
   const target = m[2] ?? '';
   const value = m[3] ?? '';
-  return action === 'ХОДАТАЙСТВО'
-    ? { action, target, value, cards: parsePetition(value) }
-    : { action, target, value };
+  return { action, target, value };
 }
 
 export interface WalkLine {
@@ -137,10 +100,7 @@ export function walk(content: Content, script: string): WalkReport {
     const action = m[1] as ActionName;
     const target = m[2] ?? '';
     const value = m[3] ?? '';
-    const input =
-      action === 'ХОДАТАЙСТВО'
-        ? { action, target, value, cards: parsePetition(value) }
-        : { action, target, value };
+    const input = { action, target, value };
     const r = act(content, progress, input, now, DEFAULT_CONFIG, { autoSeen: false });
     progress = r.progress;
     const { result, rule, released: opened } = r.outcome;

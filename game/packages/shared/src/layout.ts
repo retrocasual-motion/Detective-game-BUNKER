@@ -2,6 +2,7 @@ import {
   CONTAINERS,
   type ContainerId,
   containerContents,
+  NEVER_ON_WALL,
   OFF_WALL_IDS,
   openedOf,
   sealedIds,
@@ -15,6 +16,7 @@ import {
   type PlayerState,
   PlayerStateSchema,
   STATE_VERSION,
+  type WallExcerpt,
   type WallItem,
   ZOOM_MIN,
 } from './schemas.ts';
@@ -79,8 +81,8 @@ export interface Bounds {
   bottom: number;
 }
 
-/** Пришло по ходу дела (закрытый материал L… или письмо-ответ M…), а не стартовое (01…51). */
-export const isReleased = (m: Pick<Material, 'id'>) => /^[LM]/.test(m.id);
+/** Пришло по ходу дела (закрытый материал L…), а не стартовое (01…52). */
+export const isReleased = (m: Pick<Material, 'id'>) => /^L/.test(m.id);
 
 /** Псевдослучайное число 0…1 по номеру и «оси» — без состояния, всегда одинаковое. */
 function noise(k: number, axis: number): number {
@@ -121,13 +123,14 @@ export function startSlot(id: string, materials: Material[]): { x: number; y: nu
 export function inboxIds(state: PlayerState, materials: Material[]): string[] {
   const hidden = new Set([
     ...state.wall.items.map((i) => i.id),
-    ...(state.trash ?? []),
     // Вынутая папка висит на стене папкой — её материал не во «Входящих» (DS-A).
     ...(state.taken ?? []).flatMap((t) => FOLDER_DOCS[t] ?? []),
     // Файлы устройств — на устройстве (LW-A).
     ...Object.values(DEVICE_MATERIALS).flat(),
     // Предупреждение и форма заключения — окна «Решить дело», не материалы дела (A-270).
     ...FORM_MATERIALS,
+    // Коробка из банка не вскрыта — её содержимое в ней, не в лотке (A-272).
+    ...sealedIds(state),
   ]);
   return materials
     .filter((m) => isReleased(m) && !hidden.has(m.id))
@@ -141,8 +144,6 @@ export function defaultState(materials: Material[]): PlayerState {
       version: STATE_VERSION,
       view: 'desk',
       wall: { camera: DEFAULT_WALL_CAMERA, items: [], threads: [], notes: [] },
-      drafts: [],
-      trash: [],
       // Новое дело (A-260): конверты на столе ещё опечатаны.
       opened: [],
     },
@@ -254,17 +255,17 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
     ...(state.taken ?? []).map(folderItemId),
     // Обрывки, вынутые из материалов (SRC-A): «S:42/1».
     ...(state.pieces ?? []).map(pieceItemId),
+    // Выписки (A-272): только из материалов, что у игрока есть.
+    ...excerptsOf(state, materials).map((x) => x.id),
   ]);
   // Половины, сложенные в один лист (MG-A), на стене не висят — висит совмещённый.
   const parts = joinedParts(state.joined);
 
-  // Корзина — только свои письма-ответы, без повторов; выброшенное на стене не висит.
-  const trash = [...new Set(state.trash ?? [])].filter((id) => /^M/.test(id) && known.has(id));
-  const binned = new Set(trash);
   const seen = new Set<string>();
   const items: WallItem[] = state.wall.items
     .filter((i) => {
-      if (!known.has(i.id) || seen.has(i.id) || binned.has(i.id) || parts.has(i.id)) return false;
+      if (!known.has(i.id) || seen.has(i.id) || parts.has(i.id) || NEVER_ON_WALL.has(i.id))
+        return false;
       seen.add(i.id);
       return true;
     })
@@ -279,7 +280,13 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
   const sealed = sealedIds(state);
   const legacy = state.opened === undefined;
   for (const id of [...PERSONS.map((p) => p.id), ...startingIds(materials)]) {
-    if (seen.has(id) || sealed.has(id) || parts.has(id) || (!legacy && OFF_WALL_IDS.has(id)))
+    if (
+      seen.has(id) ||
+      sealed.has(id) ||
+      parts.has(id) ||
+      (!legacy && OFF_WALL_IDS.has(id)) ||
+      NEVER_ON_WALL.has(id)
+    )
       continue;
     const slot = startSlot(id, materials);
     if (!slot) continue;
@@ -291,17 +298,56 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
     (t) => seen.has(t.from) && seen.has(t.to) && t.from !== t.to,
   );
 
-  // Карточка черновика ссылается только на то, что у игрока есть.
-  const ids = new Set(materials.map((m) => m.id));
-  const card = <T extends { file: string } | null>(c: T): T | null =>
-    c && !ids.has(c.file) ? null : c;
-  const drafts = (state.drafts ?? []).map((d) => ({
-    ...d,
-    ask: card(d.ask),
-    basis: card(d.basis),
-  }));
+  const excerpts = excerptsOf(state, materials).filter((x) => seen.has(x.id));
+  return {
+    ...state,
+    wall: { ...state.wall, items, threads, notes: kept },
+    ...(state.excerpts ? { excerpts } : {}),
+  };
+}
 
-  return { ...state, wall: { ...state.wall, items, threads, notes: kept }, drafts, trash };
+/** Выписки из материалов, что у игрока есть, без повторов. */
+export function excerptsOf(state: PlayerState, materials: Material[]): WallExcerpt[] {
+  const have = new Set(materials.map((m) => m.id));
+  const seen = new Set<string>();
+  return (state.excerpts ?? []).filter((x) => {
+    if (!have.has(x.material) || seen.has(x.id)) return false;
+    seen.add(x.id);
+    return true;
+  });
+}
+
+/**
+ * Выписка — на стену (A-272, DB-B): в поле версии — на свободное место доски, не в ряды «как
+ * пришло»; уже есть такая (то же место, тот же текст) — без повтора.
+ */
+export function addExcerpt(state: PlayerState, x: WallExcerpt): PlayerState {
+  const list = state.excerpts ?? [];
+  if (list.some((e) => e.id === x.id)) return state;
+  const at = freeBlock(state.wall.items, () => CARD_W, CARD_W, CARD_H) ?? onWall(0, GRID_TOP);
+  const z = state.wall.items.reduce((m, i) => Math.max(m, i.z), 0) + 1;
+  return {
+    ...state,
+    excerpts: [...list, x],
+    wall: {
+      ...state.wall,
+      items: [...state.wall.items, { id: x.id, ...onWall(at.x, at.y), z, rot: hangTilt(x.id) }],
+    },
+  };
+}
+
+/** Снять выписку со стены — вместе с нитями. */
+export function removeExcerpt(state: PlayerState, id: string): PlayerState {
+  if (!(state.excerpts ?? []).some((x) => x.id === id)) return state;
+  return {
+    ...state,
+    excerpts: (state.excerpts ?? []).filter((x) => x.id !== id),
+    wall: {
+      ...state.wall,
+      items: state.wall.items.filter((i) => i.id !== id),
+      threads: state.wall.threads.filter((t) => t.from !== id && t.to !== id),
+    },
+  };
 }
 
 /** Папка, вынутая из пачки, на стене: «F:П-02/18» (taken «П-02/18»). */
@@ -324,6 +370,31 @@ export const FOLDER_DOCS: Readonly<Record<string, string>> = { 'П-02/18': 'L991
  */
 export const FORM_MATERIALS: readonly string[] = ['L998', 'L999', 'L997'];
 
+/** Материалы настоящих сайтов (A-272): страницы и то, что открыто на них. */
+export const WEB_MATERIALS: readonly string[] = [
+  'L101',
+  'L130',
+  'L163',
+  'L177',
+  // Сайты без замков (NF-B, A-273): оператор, производитель, поставщик, бюро.
+  'L178',
+  'L179',
+  'L180',
+  'L181',
+  'L249',
+  'L272',
+  'L296',
+  'L453',
+  'L618',
+  'L619',
+  'L620',
+  'L735',
+  'L736',
+  'L737',
+  'L738',
+];
+export const isWeb = (id: string) => WEB_MATERIALS.includes(id);
+
 export const DEVICE_MATERIALS: Readonly<Record<string, readonly string[]>> = {
   // L947 — крупный план картинки учётной записи на экране входа.
   '47': ['L560', 'L561', 'L562', 'L563', 'L564', 'L565', 'L947'],
@@ -331,26 +402,12 @@ export const DEVICE_MATERIALS: Readonly<Record<string, readonly string[]>> = {
   '48': ['L540', 'L949'],
   // Камера инженера (A-268): время съёмки и крупные детали кадров — на экране самой камеры.
   '24': ['L905', 'L973'],
-  // Компьютер следователя (4c-3, DI-A): ответы бюро с вложениями, журналы сервера (TM-A),
-  // экспорт ящика, архив проекта и выпуски газеты из архива номеров.
-  pc: [
-    'L214',
-    'L215',
-    'L387',
-    'L388',
-    'L389',
-    'L390',
-    'L452',
-    'L453',
-    'L735',
-    'L736',
-    'L737',
-    'L738',
-    'L831',
-    'L832',
-    'L833',
-    'L834',
-  ],
+  // Компьютер следователя (4c-3, DI-A): программа «Сервер объекта VL-31» (диск, A-272) и
+  // выпуски газеты из архива номеров.
+  pc: ['L214', 'L215', 'L387', 'L388', 'L389', 'L390', 'L831', 'L832', 'L833', 'L834'],
+  // Настоящие сайты дела (A-272, AC-3): страницы, кабинет, хранилище, веб-почта — в браузере
+  // игрока, не в деле: на стол и стену не ложатся, поиск по делу их не находит (S5-A).
+  web: WEB_MATERIALS,
 };
 export const deviceOf = (materialId: string) =>
   Object.keys(DEVICE_MATERIALS).find((d) => DEVICE_MATERIALS[d]?.includes(materialId)) ?? null;

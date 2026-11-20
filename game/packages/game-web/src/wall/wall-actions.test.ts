@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   addNote,
   addThread,
-  binLetter,
   editNote,
   moveItem,
   moveItems,
@@ -12,10 +11,7 @@ import {
   restoreNote,
   restoreThread,
   styleNote,
-  takeLetter,
   takeNote,
-  takeOutOfBin,
-  unbinLetter,
 } from './wall-actions.ts';
 
 const base = (): PlayerState => defaultState([]);
@@ -108,30 +104,5 @@ describe('нити', () => {
     const t = s.wall.threads[0];
     if (!t) throw new Error('нет нити');
     expect(restoreThread(t)(removeThread(t.id)(s)).wall.threads).toEqual(s.wall.threads);
-  });
-});
-
-describe('корзина (TR-A)', () => {
-  it('выбрасывается только письмо-ответ: со стены вместе с нитями; «Вернуть» — на место', () => {
-    let s = moveItem('M001', 100, 100)(base());
-    s = moveItem('01', 400, 100)(s);
-    s = addThread('M001', '01')(s);
-    expect(binLetter('01')(s)).toBe(s);
-    const taken = takeLetter('M001', s);
-    const out = binLetter('M001')(s);
-    expect(out.trash).toEqual(['M001']);
-    expect(out.wall.items.some((i) => i.id === 'M001')).toBe(false);
-    expect(out.wall.threads).toEqual([]);
-    const back = unbinLetter(taken)(out);
-    expect(back.trash).toEqual([]);
-    expect(back.wall.items.find((i) => i.id === 'M001')).toEqual(taken.item);
-    expect(back.wall.threads).toHaveLength(1);
-  });
-
-  it('«Достать» позже — только из корзины (во «Входящие», не на стену)', () => {
-    const out = binLetter('M002')(base());
-    const back = takeOutOfBin('M002')(out);
-    expect(back.trash).toEqual([]);
-    expect(back.wall.items.some((i) => i.id === 'M002')).toBe(false);
   });
 });
