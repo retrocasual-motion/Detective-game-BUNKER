@@ -1,0 +1,194 @@
+{
+  "duration_api_ms": 454484,
+  "stop_reason": "end_turn",
+  "session_id": "6e882ff9-1678-437c-b3a3-0b25db283b49",
+  "total_cost_usd": 2.3147317999999997,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 6662,
+    "cache_read_input_tokens": 334184,
+    "output_tokens": 3703,
+    "output_tokens_details": {
+      "thinking_tokens": 251
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6662,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 727,
+        "cache_read_input_tokens": 113739,
+        "cache_creation_input_tokens": 2655,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2655
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 84,
+      "outputTokens": 45297,
+      "thinkingTokens": 13071,
+      "cacheReadInputTokens": 2512689,
+      "cacheCreationInputTokens": 113206,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 113206,
+      "webSearchRequests": 0,
+      "costUSD": 2.3144617999999997,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 291,
+      "thinkingTokens": 270,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00027000000000000006,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "extra_usage_disabled",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 6 записан: журнал дополнен, в `actions.md` 2 действия.\n\n**Что дали ответы архива:**\n- **Участник A-24 — Томас Бернар.** По учёту анкет: 1974 года рождения, механик, женат, выбыл 06.10.2008. Это тот самый Том Бернар из газеты.\n- **В ячейке Коула лежала микрокассета «06.10.08».** Сиплый голос, похожий на Коула, докладывает: «умер. Внутри, на объекте. Реакция, похоже». Низкий бархатный голос, похожий на Хейла, приказывает скрыть смерть: «Объявлять не будем… Стало плохо в дороге… Семье — эвакуирован. Справку завизирую». Похоже, Коул записал разговор как страховку.\n- **Там же — акт передачи дел этапа A от 14.11.2008.** Папку A-24 с медицинским листом передал Хейл и принял Коул, листы сверила Уолш. Архив проекта теперь у Хейла: docs.hexon-bio.com/vl-31.\n- **Поиск документа «Справка о выбытии участника» не дал ничего:** в текущем учёте не значится.\n\n**Подозреваемые:** Моро 35%, Пирс 25%, Харт 15%, Силва 10%, Миллер 10%, другое 5%. Уверенность в версии — 45%. Мотив Моро стал самым сильным. Моя догадка — она вдова Тома: в газете о жене ни слова, а она рисовала его лицо. Против неё по-прежнему только косвенное: была в 6 м от площадки, неправду о маршруте, копия настоящего бланка и спрятанная папка. Прямых улик о том, кто был с Коулом на площадке, пока нет.\n\n**Действия на следующий раунд:**\n- открыть архив проекта docs.hexon-bio.com/vl-31;\n- позвонить на домашний номер Тома Бернара — проверить, кем ему приходится Моро.\n\nЕсли ещё раунд-два не будет ничего прямого по самому падению, перейду к решению дела.",
+  "ttft_ms": 3046,
+  "type": "result",
+  "duration_ms": 35847,
+  "uuid": "ca44b8f5-cac7-470b-85c6-daa279e357e7",
+  "ttft_stream_ms": 2221,
+  "time_to_request_ms": 645,
+  "time_to_request_phases_ms": {
+    "other": 3,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 2,
+    "input_attachments": 25,
+    "input_hooks": 1,
+    "conversation_append": 1,
+    "transcript_persist": 7,
+    "tool_pool_refresh": 1,
+    "init_message": 7,
+    "init_frame_send": 2,
+    "engine_pickup": 1,
+    "loop_entry": 2,
+    "message_prep": 0,
+    "model_config_wait": 1,
+    "autocompact": 0,
+    "request_announcements": 2,
+    "query_setup": 0,
+    "model_gates": 575,
+    "tool_schema_build": 4,
+    "message_normalization": 5,
+    "client_creation": 1,
+    "request_build": 4
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 6,
+  "time_to_request_cpu_ms": 172,
+  "time_to_request_major_faults": 12338,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 20,
+    "cpu_ms": 94,
+    "major_faults": 4559,
+    "changed_files_reread": 0,
+    "setup_ms": 1,
+    "prompt_producers_ms": 0,
+    "ambient_start_ms": 3,
+    "ambient_wait_ms": 19,
+    "render_ms": 0,
+    "producers": 41,
+    "token_counts": 0
+  },
+  "tool_schema_build_detail": {
+    "betas_ms": 0,
+    "waits_ms": 1,
+    "placement_ms": 1,
+    "render_ms": 2,
+    "after_ms": 0,
+    "other_ms": 0,
+    "tools": 5,
+    "new_schemas": 5
+  },
+  "message_normalization_detail": {
+    "before_ms": 0,
+    "normalize_ms": 4,
+    "images_ms": 0,
+    "post_process_ms": 0,
+    "after_ms": 0,
+    "other_ms": 1,
+    "messages": 284,
+    "wire_messages": 119
+  },
+  "request_build_detail": {
+    "records_ms": 0,
+    "system_ms": 1,
+    "headers_ms": 0,
+    "cache_break_record_ms": 1,
+    "plans_ms": 0,
+    "retry_setup_ms": 0,
+    "sent_build_ms": 2,
+    "record_attempt_ms": 0,
+    "other_ms": 0,
+    "sent_build_safety_context_ms": 0,
+    "sent_build_cache_breakpoints_ms": 0,
+    "sent_build_surrogate_scan_ms": 1
+  },
+  "first_content_frame_ms": 2221,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "credential_expires_at": "2026-12-04T14:35:16.031Z",
+  "_returncode": 0
+}

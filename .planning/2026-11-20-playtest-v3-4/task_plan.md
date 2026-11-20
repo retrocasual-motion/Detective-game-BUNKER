@@ -6,10 +6,10 @@
 сообщению автора 20.11; 2 прогона detective-playtester; два отчёта автору.
 
 ## Next Step
-Ждать окончания прогонов experienced-ac86 и casual-475c; затем metrics/compare, cleanup, отчёты.
+Решение автора по PT-1…PT-4 (вводная/диск, почта, архив, рубрика L991); затем правки пакета и повторный прогон по его слову; PR «мержим?».
 
 ## Current Phase
-Phase 3
+Phase 4 (готово, ждём автора)
 
 ## Phases
 
@@ -29,13 +29,13 @@ Phase 3
 ### Phase 3: detective-playtester (автор 20.11: «Утверждаю, погнали. Вариант который рекомендуешь» — PT-A)
 - [x] Прочитать SKILL.md playtester; проверка готовности; PACK.md approved-by-author: yes
 - [x] probe на Windows — ok (канарейка не утекла; своды, CLAUDE.md закрыты)
-- [ ] 2 прогона: experienced-ac86, casual-475c (Opus, до 8 раундов, 4/раунд, потолок 25)
-- **Status:** in_progress
+- [x] 2 прогона: casual-475c — ФИНАЛ Р11 (24,21), experienced-ac86 — потолок 25 на Р10 без ФИНАЛ (24,67)
+- **Status:** complete
 
 ### Phase 4: Отчёты
-- [ ] Что сделано и проверено
-- [ ] Подробный отчёт по playtester
-- **Status:** pending
+- [x] Что сделано и проверено
+- [x] Подробный отчёт по playtester — playtest/runs/2026-11-20-v3.4-2026-11-18/REPORT.md; ANALYSIS.md и feedback/ в папках прогонов
+- **Status:** complete
 
 ## Decisions Made
 | Decision | Rationale |

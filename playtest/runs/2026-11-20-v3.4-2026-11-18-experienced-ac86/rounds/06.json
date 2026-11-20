@@ -1,0 +1,194 @@
+{
+  "duration_api_ms": 536062,
+  "stop_reason": "end_turn",
+  "session_id": "38214641-9fde-4258-91a3-a9389238a40d",
+  "total_cost_usd": 2.689326199999999,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 6513,
+    "cache_read_input_tokens": 496672,
+    "output_tokens": 3733,
+    "output_tokens_details": {
+      "thinking_tokens": 242
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 6513,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1126,
+        "cache_read_input_tokens": 126433,
+        "cache_creation_input_tokens": 1712,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1712
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 84,
+      "outputTokens": 55229,
+      "thinkingTokens": 20287,
+      "cacheReadInputTokens": 2922306,
+      "cacheCreationInputTokens": 124957,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 124957,
+      "webSearchRequests": 0,
+      "costUSD": 2.689033199999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 337,
+      "thinkingTokens": 316,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000293,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "extra_usage_disabled",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 6 закончен: журнал дописан, три действия записаны в `actions.md`. Прошлое дело теперь в основном понятно, а на вопрос, кто был с Коулом на площадке, по-прежнему нет твёрдого доказательства. Уверенность в версии — 40%.\n\n**Что выяснилось:**\n- **Участник A-24 — Томас Бернар.** В учёте сайта VAULTLINE: 1974 года рождения, механик, женат, выбыл 06.10.2008. Это совпадает с Томом Бернаром из газеты.\n- **Его смерть скрыли.** Ячейка № 845 оказалась арендована Коулом, её вскрыли по моему сообщению о смерти арендатора. Внутри лежала микрокассета «06.10.08».\n  - Мужской сиплый монотонный голос (похож на Коула) говорит: «умер. Внутри, на объекте. Реакция, похоже».\n  - Низкий бархатный голос по телефону (похож на Хейла) отвечает: «Объявлять не будем… Стало плохо в дороге… Семье — эвакуирован. Справку завизирую».\n  - Коул отвечает: «Хорошо. Сделаю».\n\n  Видимо, Коул хранил эту запись как страховку.\n- **Акт передачи дел из той же ячейки.** 14.11.2008 Хейл передал Коулу шесть дел этапа A, медицинские листы «сверила» Уолш. Вместе с прошлыми находками картина такая:\n  - у Бернара была аллергия на коровье молоко, но в бланке её переписали на «аллергии нет»;\n  - Миллер получил 3 000 «премии»;\n  - в сокрытии участвовали Хейл, Коул, Уолш и Миллер.\n- **У Моро появился сильный личный мотив.** Она рисовала лицо Бернара, держала в руках копию бланка с правдой об аллергии и прятала его дело у себя в комнате анкет. Кем она ему приходится, не подтверждено. В некрологе указана только сестра Клэр, жена не упомянута.\n- **Ящик Пирс закрыт.** Для него не настроено восстановление по контрольному вопросу, так что этот путь отпал.\n\n**Подозреваемые сейчас:**\n\n| Кто | % |\n|---|---|\n| Моро | 35 |\n| Пирс | 30 |\n| Силва | 12 |\n| Миллер | 6 |\n| Уолш и Сато вместе | 4 |\n| Харт | 3 |\n| Несчастный случай или другое | 10 |\n\nМоро вышла вперёд из-за мотива и из-за того, что она, похоже, лжёт о том, где была. Пирс остаётся близкой альтернативой: из папки, которую она забрала у тела, исчезла распечатка о «пользователе 05».\n\n**Действия на следующий раунд:**\n- открыть хранилище архива проекта HEXON (docs.hexon-bio.com/vl-31). В докладе Коула сказано «заперт партией», возможно, пароль — 0417;\n- позвонить на домашний номер Бернара, чтобы понять, кем ему приходится Моро;\n- найти в документах программы «Распоряжение № 14/08», на которое ссылается акт передачи дел.",
+  "ttft_ms": 2537,
+  "type": "result",
+  "duration_ms": 35584,
+  "uuid": "92c5b77e-3915-4c83-a2aa-3740b28e4770",
+  "ttft_stream_ms": 1756,
+  "time_to_request_ms": 687,
+  "time_to_request_phases_ms": {
+    "other": 2,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 2,
+    "input_attachments": 22,
+    "input_hooks": 1,
+    "conversation_append": 1,
+    "transcript_persist": 16,
+    "tool_pool_refresh": 1,
+    "init_message": 6,
+    "init_frame_send": 2,
+    "engine_pickup": 1,
+    "loop_entry": 2,
+    "message_prep": 0,
+    "model_config_wait": 1,
+    "autocompact": 1,
+    "request_announcements": 1,
+    "query_setup": 0,
+    "model_gates": 612,
+    "tool_schema_build": 5,
+    "message_normalization": 4,
+    "client_creation": 2,
+    "request_build": 4
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 11,
+  "time_to_request_cpu_ms": 140,
+  "time_to_request_major_faults": 12997,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 17,
+    "cpu_ms": 31,
+    "major_faults": 3031,
+    "changed_files_reread": 0,
+    "setup_ms": 1,
+    "prompt_producers_ms": 0,
+    "ambient_start_ms": 3,
+    "ambient_wait_ms": 16,
+    "render_ms": 0,
+    "producers": 41,
+    "token_counts": 0
+  },
+  "tool_schema_build_detail": {
+    "betas_ms": 0,
+    "waits_ms": 1,
+    "placement_ms": 1,
+    "render_ms": 2,
+    "after_ms": 0,
+    "other_ms": 1,
+    "tools": 5,
+    "new_schemas": 5
+  },
+  "message_normalization_detail": {
+    "before_ms": 0,
+    "normalize_ms": 4,
+    "images_ms": 0,
+    "post_process_ms": 0,
+    "after_ms": 0,
+    "other_ms": 0,
+    "messages": 287,
+    "wire_messages": 116
+  },
+  "request_build_detail": {
+    "records_ms": 0,
+    "system_ms": 1,
+    "headers_ms": 0,
+    "cache_break_record_ms": 1,
+    "plans_ms": 0,
+    "retry_setup_ms": 0,
+    "sent_build_ms": 1,
+    "record_attempt_ms": 1,
+    "other_ms": 0,
+    "sent_build_safety_context_ms": 0,
+    "sent_build_cache_breakpoints_ms": 0,
+    "sent_build_surrogate_scan_ms": 1
+  },
+  "first_content_frame_ms": 1756,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "credential_expires_at": "2026-12-04T14:35:16.031Z",
+  "_returncode": 0
+}

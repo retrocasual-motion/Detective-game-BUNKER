@@ -1,0 +1,194 @@
+{
+  "duration_api_ms": 229415,
+  "stop_reason": "end_turn",
+  "session_id": "6e882ff9-1678-437c-b3a3-0b25db283b49",
+  "total_cost_usd": 1.2147012,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 9215,
+    "cache_read_input_tokens": 340161,
+    "output_tokens": 5360,
+    "output_tokens_details": {
+      "thinking_tokens": 1216
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 9215,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 844,
+        "cache_read_input_tokens": 71573,
+        "cache_creation_input_tokens": 2323,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2323
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 52,
+      "outputTokens": 22282,
+      "thinkingTokens": 7221,
+      "cacheReadInputTokens": 1014596,
+      "cacheCreationInputTokens": 70708,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 70708,
+      "webSearchRequests": 0,
+      "costUSD": 1.2144312,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 291,
+      "thinkingTokens": 270,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00027000000000000006,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "extra_usage_disabled",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 10,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 2 записан: журнал дополнен, в `actions.md` 7 новых действий.\n\n**Что дали ответы архива:**\n- **Телефон в столе Коула — Силвы.** Код 0110 подошёл. Коул, видимо, забрал телефон около 09.10. Силва к тому же понимает язык Коула и Пирс намного лучше, чем показал на допросе («английский — немного»). В голосовом сестре он пересказывает их разговор: «запись», «учения», «день объявления», а медик и инженер не должны знать. Значит, тревогу 12.10 подстроили Коул и Пирс, а Пирс на допросе солгала, что не узнала голос.\n- **У Силвы сильный мотив.** Операцию сестре нужно было оплатить до 14.10, а Коул отложил ему выплату и забрал телефон.\n- **Миллер получил деньги от Коула.** По квитанции 13.10.2008 Коул внёс 3 000 на счёт Л. Миллер — через неделю после смерти Тома Бернара. Похоже на плату за молчание о прошлом заезде.\n- **В пачке чистых анкет спрятана папка A-24.** Этой папки не хватает в шкафу Коула, а комната анкет — рабочее место Моро.\n- **Лист анкеты Харта совмещён.** Подпись «…арт» подтверждает, что это его лист.\n\n**Ничего не дали:** знак HEXON на скане не разобрать, а конверт с диском при увеличении ничего не показал.\n\n**Подозреваемые:** Моро 25%, Силва 25%, Харт 15%, Миллер 15%, Пирс или Уолш 10%, несчастный случай 10%. В версии по-прежнему уверен на 35%. Наверху, скорее всего, была ссора из-за бумаг, и Коул упал на неотремонтированную стойку. Кто был с ним — Моро или Силва — пока не ясно.\n\n**Действия на следующий раунд:**\n- пролистать папку A-24 и рассмотреть фото в ней;\n- открыть сайт hexon-bio.com (там может быть знак — подсказка к ноутбуку: «наш первый знак»);\n- нажать «Забыли пароль» для логина k.walsh на сайте VAULTLINE;\n- пролистать пачку П-09 из кабинета Коула;\n- дослушать запись радиопоста с 08:45:40;\n- попробовать открыть свойства диска.",
+  "ttft_ms": 2889,
+  "type": "result",
+  "duration_ms": 54513,
+  "uuid": "f863c6ca-6c7b-4cd2-ba3a-d65ec6b7d093",
+  "ttft_stream_ms": 2273,
+  "time_to_request_ms": 683,
+  "time_to_request_phases_ms": {
+    "other": 2,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 2,
+    "input_attachments": 16,
+    "input_hooks": 1,
+    "conversation_append": 1,
+    "transcript_persist": 13,
+    "tool_pool_refresh": 1,
+    "init_message": 7,
+    "init_frame_send": 2,
+    "engine_pickup": 1,
+    "loop_entry": 2,
+    "message_prep": 0,
+    "model_config_wait": 1,
+    "autocompact": 1,
+    "request_announcements": 1,
+    "query_setup": 1,
+    "model_gates": 617,
+    "tool_schema_build": 4,
+    "message_normalization": 3,
+    "client_creation": 2,
+    "request_build": 4
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 3,
+  "time_to_request_cpu_ms": 141,
+  "time_to_request_major_faults": 11214,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 11,
+    "cpu_ms": 15,
+    "major_faults": 2092,
+    "changed_files_reread": 0,
+    "setup_ms": 1,
+    "prompt_producers_ms": 0,
+    "ambient_start_ms": 3,
+    "ambient_wait_ms": 10,
+    "render_ms": 0,
+    "producers": 41,
+    "token_counts": 0
+  },
+  "tool_schema_build_detail": {
+    "betas_ms": 0,
+    "waits_ms": 1,
+    "placement_ms": 0,
+    "render_ms": 3,
+    "after_ms": 0,
+    "other_ms": 0,
+    "tools": 5,
+    "new_schemas": 5
+  },
+  "message_normalization_detail": {
+    "before_ms": 0,
+    "normalize_ms": 3,
+    "images_ms": 0,
+    "post_process_ms": 0,
+    "after_ms": 0,
+    "other_ms": 0,
+    "messages": 165,
+    "wire_messages": 65
+  },
+  "request_build_detail": {
+    "records_ms": 0,
+    "system_ms": 1,
+    "headers_ms": 0,
+    "cache_break_record_ms": 1,
+    "plans_ms": 0,
+    "retry_setup_ms": 0,
+    "sent_build_ms": 1,
+    "record_attempt_ms": 1,
+    "other_ms": 0,
+    "sent_build_safety_context_ms": 0,
+    "sent_build_cache_breakpoints_ms": 0,
+    "sent_build_surrogate_scan_ms": 0
+  },
+  "first_content_frame_ms": 2273,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "credential_expires_at": "2026-12-04T14:35:16.031Z",
+  "_returncode": 0
+}
