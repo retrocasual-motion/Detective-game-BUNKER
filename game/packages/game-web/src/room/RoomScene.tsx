@@ -1,13 +1,13 @@
 import type { ContainerId, View } from '@bunker/shared';
 import { type ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCall } from '../deskphone/call.ts';
 import { closePhone } from '../deskphone/DeskPhone.tsx';
-import { FACE_W, PhoneFace } from '../deskphone/PhoneFace.tsx';
+import { PhoneFace } from '../deskphone/PhoneFace.tsx';
 import { reducedMotion } from '../motion.ts';
 import { useGame } from '../store.ts';
 import {
   boardOps,
   type CameraSpot,
-  DESK_PHONE,
   easeCamera,
   lerpPose,
   type Pose,
@@ -74,6 +74,9 @@ export function RoomScene({
   const room = useMemo(() => roomFor(vp), [vp]);
   // Телефон на столе крупно (6a-3): камера подлетает к нему — третья поза, не вид комнаты.
   const phoneOpen = useGame((g) => g.deskPhone);
+  // Телефон на столе объёмный: снятая трубка и утопленная кнопка рисуются на холсте.
+  const offHook = useCall((c) => c.offHook);
+  const pressed = useCall((c) => c.pressed);
   const spot: CameraSpot = view === 'desk' && phoneOpen ? 'phone' : view;
   const [ph, setPh] = useState<Phase>({ from: room.poses[spot], to: spot, moving: false });
   const world = useRef<HTMLDivElement>(null);
@@ -90,7 +93,10 @@ export function RoomScene({
     if (phoneWorld.current) phoneWorld.current.style.transform = css;
     if (pose && back.current) drawRoom(back.current, pose, room);
     if (pose && front.current)
-      drawObjects(front.current, pose, room, inbox, opened, epilogue, disc, bank, drive);
+      drawObjects(front.current, pose, room, inbox, opened, epilogue, disc, bank, drive, {
+        offHook,
+        pressed,
+      });
   };
 
   useLayoutEffect(() => {
@@ -133,11 +139,6 @@ export function RoomScene({
 
   const atDesk = !ph.moving && ph.to === 'desk';
   const atPhone = !ph.moving && ph.to === 'phone';
-  // Верх телефона — плоскостью на корпусе: левый дальний угол, 26 см = FACE_W логических px.
-  const k = (DESK_PHONE.w * room.p) / FACE_W;
-  const phonePlace = `translate3d(${(DESK_PHONE.x - DESK_PHONE.w / 2) * room.p}px, ${
-    room.deskY - DESK_PHONE.h * room.p
-  }px, ${(DESK_PHONE.z - DESK_PHONE.d / 2) * room.p}px) rotateX(90deg) scale(${k})`;
 
   return (
     <div
@@ -187,9 +188,7 @@ export function RoomScene({
       )}
       {/* Телефон следователя — в той же 3D-сцене, поверх нарисованного стола (6a-3, DP-A). */}
       <div ref={phoneWorld} className="world" hidden={flat}>
-        <div className="dp-place" style={{ transform: phonePlace }}>
-          <PhoneFace active={atPhone} />
-        </div>
+        <PhoneFace room={room} active={atPhone} />
       </div>
       {atDesk && (
         <DeskHotspots

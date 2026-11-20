@@ -1,6 +1,18 @@
 import { CONTAINER_IDS, CONTAINERS, type ContainerId, EPILOGUE_ID } from '@bunker/shared';
-import { DESK_PHONE, type Pose, type Room, toCamera, toScreen, type Vec3 } from './camera.ts';
+import { type PartColor, PHONE_IDLE, type PhoneLook, phoneParts } from '../deskphone/model.ts';
+import { type Pose, type Room, toCamera, toScreen, type Vec3 } from './camera.ts';
 import { DRIVE_IDLE, type DriveLook } from './drive.ts';
+
+/** Цвета частей телефона на столе (6a-3). */
+const PHONE_COLOR: Record<PartColor, string> = {
+  body: '--color-dp-body',
+  ridge: '--color-dp-body-top',
+  handset: '--color-dp-handset',
+  key: '--color-dp-key',
+  bezel: '--color-dp-bezel',
+  lcd: '--color-dp-lcd',
+  cradle: '--color-dp-cradle',
+};
 
 /**
  * Серый декор комнаты и предметы на столе (черновик «Стены», 08.11) — на холстах своей
@@ -83,6 +95,8 @@ export interface DeskObject {
   discs?: Disc[];
   /** Куда щёлкать, если предмет частью накрыт другим (конверты внахлёст): видимая полоска. */
   hit?: Box[];
+  /** Части рисуются в заданном порядке — снизу вверх (телефон: корпус, выступ, кнопки, трубка). */
+  ordered?: boolean;
 }
 
 /** Плоский круг на высоте lift над столом: диск с тёмной втулкой. */
@@ -243,6 +257,8 @@ export function deskObjects(
   bank: Bank = 'none',
   /** Дисковод под монитором: кадр вставки диска. */
   drive: DriveLook = DRIVE_IDLE,
+  /** Телефон на столе: снята ли трубка, какая кнопка утоплена (6a-3). */
+  phone: PhoneLook = PHONE_IDLE,
 ): DeskObject[] {
   const { p, deskY } = r;
   const box = (
@@ -561,18 +577,21 @@ export function deskObjects(
       label: 'Телефон следователя — позвонить',
       hotspot: { kind: 'deskphone' },
       testId: 'desk-phone',
+      ordered: true,
       boxes: [
-        // Офисный телефон 20 × 19 см, трубка 21 см.
-        // Справа, ближе к игроку (автор 19.11): корпус 26 × 16 см; верх — кнопки, экранчик и
-        // трубка — DOM в 3D-сцене поверх корпуса (`deskphone/PhoneFace.tsx`, DP-A).
-        box(
-          DESK_PHONE.x,
-          DESK_PHONE.z,
-          DESK_PHONE.w,
-          DESK_PHONE.d,
-          DESK_PHONE.h,
-          col('--color-dp-body'),
-        ),
+        // Справа, ближе к игроку (автор 19.11): корпус 26 × 16 см, объёмный (DP-A, автор 20.11) —
+        // корпус, выступ под экранчиком, рычаг, трубка, кнопки (`deskphone/model.ts`); цифры и
+        // текст экранчика — плоско поверх (`PhoneFace`).
+        ...phoneParts(phone).map((pt) => {
+          const b = box(pt.x, pt.z, pt.w, pt.d, pt.h, col(PHONE_COLOR[pt.color]), pt.lift);
+          return pt.yaw && pt.pivot
+            ? {
+                ...b,
+                yaw: (pt.yaw * Math.PI) / 180,
+                pivot: [pt.pivot[0] * p, pt.pivot[1] * p] as [number, number],
+              }
+            : b;
+        }),
       ],
     },
     // Эпилог (автор 17.11): после заключения — конверт посередине стола, ближе к игроку; пока не
@@ -847,17 +866,18 @@ export function drawObjects(
   disc: DiscOnDesk = 'none',
   bank: Bank = 'none',
   drive: DriveLook = DRIVE_IDLE,
+  phone: PhoneLook = PHONE_IDLE,
 ): void {
   const ctx = prepare(canvas, r);
   if (!ctx) return;
   const col = colors(canvas);
   for (const o of sortObjects(
-    deskObjects(r, col, inbox, opened, epilogue, disc, bank, drive),
+    deskObjects(r, col, inbox, opened, epilogue, disc, bank, drive, phone),
     pose.eye,
   )) {
-    const boxes = [...o.boxes].sort(
-      (a, b) => dist(center(b), pose.eye) - dist(center(a), pose.eye),
-    );
+    const boxes = o.ordered
+      ? o.boxes
+      : [...o.boxes].sort((a, b) => dist(center(b), pose.eye) - dist(center(a), pose.eye));
     for (const b of boxes)
       for (const poly of boxPolys(b, pose.eye, shade)) fill(ctx, poly, pose, r);
     for (const d of o.discs ?? []) for (const poly of discPolys(d)) fill(ctx, poly, pose, r);

@@ -27,6 +27,8 @@ interface CallState {
   /** Что слышно (реплики линии и «Набрано: …»). */
   heard: string[];
   talkFrom: number;
+  /** Кнопка, утопленная прямо сейчас (на столе — ниже на мгновение). */
+  pressed: string | null;
   press(k: string): void;
   handset(): void;
   redial(): void;
@@ -53,6 +55,7 @@ const digits = (s: string) => s.replace(/\D/g, '').length;
 const sleep = (t: number) => new Promise((r) => setTimeout(r, t));
 
 let tone: (() => void) | null = null;
+let pressTimer: ReturnType<typeof setTimeout> | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
 /** Номер звонка: ответ сервера на оборванный звонок не применяется. */
 let callNo = 0;
@@ -111,9 +114,13 @@ export const useCall = create<CallState>((set, get) => {
     menu: false,
     heard: [],
     talkFrom: 0,
+    pressed: null,
 
     press(k) {
       dtmf(k);
+      set({ pressed: k });
+      if (pressTimer) clearTimeout(pressTimer);
+      pressTimer = setTimeout(() => set({ pressed: null }), 160);
       const s = get();
       if (s.phase === 'connected') {
         if (!s.menu) return;

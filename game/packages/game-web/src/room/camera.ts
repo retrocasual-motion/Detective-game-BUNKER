@@ -69,7 +69,7 @@ export const DESK_PHONE = { x: 0.61, z: 0.64, w: 0.26, d: 0.16, h: 0.07 };
  * под углом, телефон — около 60 % ширины экрана, чуть выше середины (внизу — что слышно).
  */
 function phonePose(vp: Viewport, p: number, deskY: number): Pose {
-  const pitch = 50;
+  const pitch = 58;
   const dist = (DESK_PHONE.w * p) / (0.6 * vp.width);
   const a = rad(pitch);
   // Смотрим в точку чуть ближе к игроку середины телефона — он встаёт выше центра кадра.
