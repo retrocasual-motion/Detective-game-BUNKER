@@ -42,6 +42,11 @@ export const SITES: readonly Site[] = [
   { domain: 'fieldworks-radio.com', label: 'fieldworks-radio', forms: [], page: 'L177' },
   { domain: 'sentinel-labs.net', label: 'sentinel-labs', forms: [], page: 'L272' },
   { domain: 'the-signal-news.com', label: 'the-signal-news', forms: [], page: 'L296' },
+  // Сайты без замков (NF-B, A-273; TECH_PLAN 4.13): читать; телефоны NorthCare и Colton — на них.
+  { domain: 'pinecell-mobile.com', label: 'pinecell-mobile', forms: [], page: 'L178' },
+  { domain: 'northcare-nutrition.com', label: 'northcare-nutrition', forms: [], page: 'L179' },
+  { domain: 'coltonsupply.com', label: 'coltonsupply', forms: [], page: 'L180' },
+  { domain: 'okrug-bureau.org', label: 'okrug-bureau', forms: [], page: 'L181' },
 ];
 
 /** Адрес, как его набрали или нашли в тексте: сайт реестра и путь. */

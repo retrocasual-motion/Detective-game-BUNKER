@@ -186,3 +186,21 @@ test.describe('коробка из банка (A-272, AC-4)', () => {
     await expect(page.getByTestId('media-caption')).toContainText('Объявлять не будем');
   });
 });
+
+test('сайты без замков (NF-B, A-273): оператор, производитель, поставщик, бюро — по адресу; телефоны NorthCare и Colton — на сайте', async ({
+  page,
+}) => {
+  const pages: [string, string][] = [
+    ['pinecell-mobile.com', 'lawful@pinecell-mobile.com'],
+    ['northcare-nutrition.com', '+7 800 555-31-20'],
+    ['coltonsupply.com', '+7 495 555-18-44'],
+    ['okrug-bureau.org', 'duty@okrug-bureau.org'],
+  ];
+  for (const [address, text] of pages) {
+    const tab = await site(page, address);
+    await expect(tab.getByTestId('site'), address).toContainText(text);
+    await tab.close();
+  }
+  // На стол, стену и в поиск сайты не попадают (S5-A).
+  await expect(sheet(page, 'L179')).toHaveCount(0);
+});

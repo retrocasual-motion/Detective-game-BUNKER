@@ -35,12 +35,12 @@ describe('правила пакета', () => {
 });
 
 describe('сквозные проходы пакета — как эталон playtest.py walk', () => {
-  it('walkthrough.txt: 163 действия без несовпадений, открыто 74 из 74', () => {
+  it('walkthrough.txt: 167 действий без несовпадений, открыто 78 из 78', () => {
     const r = walk(content, script('walkthrough.txt'));
     expect(report(r)).toBe('');
-    expect(r.actions).toBe(163);
+    expect(r.actions).toBe(167);
     expect(r.released.length).toBe(content.locked.size);
-    expect(content.locked.size).toBe(74);
+    expect(content.locked.size).toBe(78);
   });
 
   for (const name of ['walkthrough_a263.txt']) {
