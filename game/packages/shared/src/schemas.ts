@@ -180,6 +180,8 @@ export const PlayerStateSchema = z.object({
   }),
   /** Диск сервера вынут из конверта 52 и лежит на столе (A-272, DD-A); вставлен — L214 открыт. */
   discOut: z.boolean().optional(),
+  /** Микрокассета L462 вставлена в проигрыватель бюро (UX-17): при новом взятии — уже внутри. */
+  cassetteIn: z.boolean().optional(),
   /** Выписки на стене (A-272, DB-B). Нет поля — выписок нет. */
   excerpts: z.array(ExcerptSchema).max(300).optional(),
   /**

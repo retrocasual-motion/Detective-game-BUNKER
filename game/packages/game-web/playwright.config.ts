@@ -1,7 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 import { E2E } from './e2e/env.ts';
 
-const viewport = { width: 1366, height: 768 };
+// Экран тестов: по умолчанию 1366×768; другой — E2E_VIEWPORT=1920x1080 (проверка на разных экранах).
+const [vw, vh] = (process.env.E2E_VIEWPORT ?? '1366x768').split('x').map(Number);
+const viewport = { width: vw || 1366, height: vh || 768 };
 
 export default defineConfig({
   testDir: './e2e',

@@ -921,6 +921,9 @@ def parse_journal(text):
                     pm = re.search(r"(\d+(?:[.,]\d+)?)", cells[1])
                     if pm:
                         sus[cells[0]] = float(pm.group(1).replace(",", "."))
+            if not sus:  # PT-8: строкой «Моро 45, Пирс 25, …» вместо таблицы
+                for nm, pc in re.findall(r"([A-ZА-ЯЁ][^\s,;()\d|]*(?:[ /][A-ZА-ЯЁ][^\s,;()\d|]*)*)\s*[—:–-]?\s*(\d+(?:[.,]\d+)?)\s*%?", m.group(1)):
+                    sus[nm] = float(pc.replace(",", "."))
         cm = re.search(r"###\s*Уверенность в версии:?\s*(\d+)", body)
         rounds[n] = {"suspects": sus, "confidence": int(cm.group(1)) if cm else None}
     return rounds

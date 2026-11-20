@@ -46,15 +46,24 @@ export function useDriveAnimation(): DriveLook {
       setLook(DRIVE_IDLE);
       return;
     }
-    const k = reducedMotion() ? 0.15 : 1;
+    // «Уменьшить движение» — лоток не ездит: сразу диск внутри, огонёк и раскрутка (UX-16, AC-4).
+    if (reducedMotion()) {
+      spinUpSound(500);
+      setLook({ out: 0, disc: false, led: true });
+      const t = setTimeout(() => {
+        setLook(DRIVE_IDLE);
+        useGame.getState().discInserted();
+      }, 500);
+      return () => clearTimeout(t);
+    }
     const start = performance.now();
     let raf = 0;
     let sound = false;
     const frame = (now: number) => {
-      const t = (now - start) / k;
+      const t = now - start;
       if (t >= T.close && !sound) {
         sound = true;
-        spinUpSound(reducedMotion() ? 500 : T.spin - T.close);
+        spinUpSound(T.spin - T.close);
       }
       if (t >= T.spin) {
         setLook(DRIVE_IDLE);

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useGame } from '../store.ts';
 import Held3D, { afterLeaving } from './Held3D.tsx';
 import { Plate, Tag, useTexture } from './shapes.tsx';
@@ -60,7 +59,8 @@ function Player({ inserted }: { inserted: boolean }) {
 }
 
 export function CassetteHeld() {
-  const [inserted, setInserted] = useState(false);
+  // Вставлена — так и лежит: при новом взятии кассета уже в проигрывателе (UX-17, SP-4).
+  const inserted = useGame((g) => !!g.state?.cassetteIn);
   const close = () => useGame.getState().hold(null);
   const listen = () =>
     afterLeaving(() => {
@@ -81,7 +81,7 @@ export function CassetteHeld() {
             className="tool held-action-btn"
             data-testid="cassette-insert"
             onClick={() => {
-              setInserted(true);
+              useGame.getState().insertCassette();
               listen();
             }}
           >

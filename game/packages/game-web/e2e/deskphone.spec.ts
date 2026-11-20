@@ -79,6 +79,33 @@ test('чужой номер — «не обслуживается»; «Повт�
   await expect(page.getByTestId('scene')).toHaveAttribute('data-spot', 'desk');
 });
 
+test('у телефона: стрелка «Стол» назад; щелчок по корпусу ничего не сбрасывает; подсказка — до первого нажатия (UX-1, 2, 12)', async ({
+  page,
+}) => {
+  await phoneUp(page);
+  await expect(page.locator('.dp-hint')).toBeVisible();
+  await dial(page, '8');
+  await expect(page.locator('.dp-hint')).toHaveCount(0);
+  await page.getByTestId('dp-handset').click();
+  await expect(page.getByTestId('dp-lcd')).toContainText('Гудок');
+  // Корпус между кнопками и трубкой — «немой»: трубка снята, камера у телефона.
+  const body = await page.getByTestId('dp-body').boundingBox();
+  if (!body) throw new Error('нет корпуса');
+  await page.mouse.click(body.x + body.width * 0.42, body.y + body.height * 0.7);
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-spot', 'phone');
+  await expect(page.getByTestId('dp-handset')).toHaveAttribute('aria-pressed', 'true');
+  // Стрелка «Стол» внизу — отойти (и отбой).
+  await page.getByTestId('nav-phone-back').click();
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-spot', 'desk');
+});
+
+test('короткий номер — после паузы линия отвечает, а не тишина (UX-5)', async ({ page }) => {
+  await phoneUp(page);
+  await page.getByTestId('dp-handset').click();
+  await dial(page, '911');
+  await expect(heard(page)).toContainText('Номер не обслуживается', { timeout: 6000 });
+});
+
 test('все линии пакета отвечают по своим номерам (TECH_PLAN 4.14)', async ({ page }) => {
   const lines: [string, string, boolean][] = [
     ['+7 800 555-31-20', 'NorthCare', true],

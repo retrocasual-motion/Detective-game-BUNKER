@@ -80,6 +80,8 @@ interface GameStore {
   openExcerpt(id: string): void;
   /** Вскрыли конверт 52: диск вынут — лежит на столе (сохраняется, A-272). */
   takeDiscOut(): void;
+  /** Кассета L462 вставлена в проигрыватель (сохраняется, UX-17). */
+  insertCassette(): void;
   /** Диск дотащили до дисковода: на столе играет вставка (лоток, раскрутка; DD-A). */
   discInserting: boolean;
   insertDisc(): void;
@@ -493,6 +495,9 @@ export const useGame = create<GameStore>((set, get) => {
 
     takeDiscOut() {
       get().updateState((s) => (s.discOut ? s : { ...s, discOut: true }));
+    },
+    insertCassette() {
+      get().updateState((s) => (s.cassetteIn ? s : { ...s, cassetteIn: true }));
     },
     insertDisc() {
       set({ discInserting: true, held: null });

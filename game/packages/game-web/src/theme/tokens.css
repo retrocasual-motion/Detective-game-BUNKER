@@ -45,6 +45,8 @@
   --color-dp-led-off: #4a4c4f;
   --color-dp-heard: rgb(236 230 210 / 96%);
   --color-dp-heard-ink: #222;
+  /* Подписи под телефоном: без прозрачности, контраст ≥ 4.5 к фону панели (UX-15). */
+  --color-dp-heard-dim: #4a4a4a;
   --color-tray: #5c4a36;
   /* Конверты архива, крышка коробки, печать, газета (A-260, 09.11). */
   --color-archive-envelope: #b58f5a;

@@ -337,6 +337,8 @@ export function deskObjects(
   // Коробка из банка — на коробе с пачками, если он уже на столе.
   const onPapers = opened.includes('bunker') ? PAPERS_H : 0;
   const [BX, BZ] = PAPERS_AT;
+  // Проигрыватель с кассетой (UX-9): справа, между газетой и лампой, за телефоном не прячется.
+  const [CS_X, CS_Z] = [0.86, 0.3];
   // Экран включён (автор 19.11): синий рабочий стол бюро и панель задач внизу — видно, что
   // компьютер работает и на него можно нажать.
   monitor.screen = col('--color-pc-screen-on');
@@ -456,7 +458,7 @@ export function deskObjects(
               tag: 'Диск «Прил. 7»',
               tagInside: true,
               testId: 'server-disc-out',
-              fresh: true,
+              // Не мигает: подсветка «новое» — подсказка «ещё не доделано» (UX-8, Z-2).
             },
           ]
         : []),
@@ -479,7 +481,8 @@ export function deskObjects(
           },
         ]
       : []),
-    // Кассета и проигрыватель микрокассет бюро (L462) — из коробки банка, за ноутбуком.
+    // Кассета и проигрыватель микрокассет бюро (L462) — из коробки банка; на столе справа, у лампы:
+    // на коробе 29 их было не видно — одна бирка (UX-9, HI-1).
     ...(bank === 'open'
       ? [
           {
@@ -487,9 +490,9 @@ export function deskObjects(
             label: 'Проигрыватель микрокассет бюро и кассета «06.10.08»',
             boxes: [
               // Проигрыватель микрокассет 11 × 6 × 2,2 см и микрокассета 5 × 3,3 см.
-              box(BX - 0.03, BZ, 0.11, 0.06, 0.022, col('--color-device'), onPapers),
-              box(BX - 0.05, BZ, 0.04, 0.03, 0.003, col('--color-device-edge'), onPapers + 0.022),
-              box(BX + 0.07, BZ, 0.05, 0.033, 0.007, col('--color-newspaper'), onPapers),
+              box(CS_X, CS_Z, 0.11, 0.06, 0.022, col('--color-device')),
+              box(CS_X - 0.02, CS_Z, 0.04, 0.03, 0.003, col('--color-device-edge'), 0.022),
+              box(CS_X - 0.1, CS_Z, 0.05, 0.033, 0.007, col('--color-newspaper')),
             ],
             hotspot: { kind: 'material' as const, id: 'L462' },
             tag: 'Кассета · L462',
@@ -568,9 +571,12 @@ export function deskObjects(
     },
     {
       key: 'keyboard',
-      label: 'Клавиатура',
+      label: 'Компьютер следователя',
       // 44 × 15 см — перед монитором, повёрнута с ним к следователю; лоток выезжает левее.
       boxes: turn([box(-0.34, 0.68, 0.44, 0.15, 0.03, edge)], 18, -0.34, 0.68),
+      // Клавиатура у руки — щелчок открывает компьютер, как монитор и дисковод (UX-10, DA-4).
+      hotspot: { kind: 'computer' },
+      testId: 'computer-keyboard',
     },
     {
       key: 'phone',

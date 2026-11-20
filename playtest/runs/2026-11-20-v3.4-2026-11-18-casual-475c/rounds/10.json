@@ -1,0 +1,194 @@
+{
+  "duration_api_ms": 558699,
+  "stop_reason": "end_turn",
+  "session_id": "6e882ff9-1678-437c-b3a3-0b25db283b49",
+  "total_cost_usd": 3.0114645999999996,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 4188,
+    "cache_read_input_tokens": 394864,
+    "output_tokens": 2204,
+    "output_tokens_details": {
+      "thinking_tokens": 68
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4188,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 599,
+        "cache_read_input_tokens": 133160,
+        "cache_creation_input_tokens": 1398,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1398
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 112,
+      "outputTokens": 55599,
+      "thinkingTokens": 14215,
+      "cacheReadInputTokens": 4239033,
+      "cacheCreationInputTokens": 131370,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 131370,
+      "webSearchRequests": 0,
+      "costUSD": 3.0111945999999996,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 291,
+      "thinkingTokens": 270,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00027000000000000006,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "extra_usage_disabled",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 7,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 10 записан: журнал дополнен. В `actions.md` одно действие — подтверждаю переход к форме заключения (`РЕШИТЬ | дело | продолжить`). После этого новые материалы и действия будут недоступны.\n\n**Что дали ответы архива:**\n- **Почту e.pierce.uk открыть не удалось.** Восстановление пароля по контрольному вопросу для этого ящика не настроено. Кто такой «пользователь 05», так и не доказано.\n- **Sentinel Labs** — фирма, которая занимается «исследованиями поведения человека в кризисных условиях». Похоже, пользователь 05 сливал туда данные испытаний.\n- **Газета от 14.12.1987 объясняет, откуда взялась программа.** В ТЦ «Пайн-Плаза» от ложной паники погибли 10 человек, среди них Эмили Хейл, 9 лет. На фото — мужчина с ямочкой на подбородке, похожий на Хейла. Видимо, Хейл потерял дочь в давке, и отсюда препарат «против паники». Сам Хейл погиб 13.10.2009 в панической давке на шоссе.\n\n**Почему решаю сейчас:** второй раунд подряд ничего нового о самом падении, а оставшиеся пути (диск сервера и почта Пирс) закрыты.\n\n**Подозреваемые:** Моро 45%, Пирс 25%, Миллер 10%, Харт 8%, Силва 7%, другое 5%. Уверенность в версии — 50%. Фон собран хорошо, но то, что на площадке была именно Моро, держится только на косвенных уликах.\n\nВ следующем раунде прочитаю форму заключения и отвечу на её пункты.",
+  "ttft_ms": 2913,
+  "type": "result",
+  "duration_ms": 22216,
+  "uuid": "f4ccd292-d483-4b04-9930-c4b251184f9f",
+  "ttft_stream_ms": 2061,
+  "time_to_request_ms": 637,
+  "time_to_request_phases_ms": {
+    "other": 3,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 2,
+    "input_attachments": 23,
+    "input_hooks": 2,
+    "conversation_append": 1,
+    "transcript_persist": 17,
+    "tool_pool_refresh": 1,
+    "init_message": 7,
+    "init_frame_send": 2,
+    "engine_pickup": 1,
+    "loop_entry": 2,
+    "message_prep": 0,
+    "model_config_wait": 1,
+    "autocompact": 1,
+    "request_announcements": 2,
+    "query_setup": 0,
+    "model_gates": 556,
+    "tool_schema_build": 4,
+    "message_normalization": 5,
+    "client_creation": 2,
+    "request_build": 4
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 3,
+  "time_to_request_cpu_ms": 172,
+  "time_to_request_major_faults": 13750,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 18,
+    "cpu_ms": 46,
+    "major_faults": 3356,
+    "changed_files_reread": 0,
+    "setup_ms": 1,
+    "prompt_producers_ms": 0,
+    "ambient_start_ms": 3,
+    "ambient_wait_ms": 17,
+    "render_ms": 0,
+    "producers": 41,
+    "token_counts": 0
+  },
+  "tool_schema_build_detail": {
+    "betas_ms": 0,
+    "waits_ms": 1,
+    "placement_ms": 1,
+    "render_ms": 2,
+    "after_ms": 0,
+    "other_ms": 0,
+    "tools": 5,
+    "new_schemas": 5
+  },
+  "message_normalization_detail": {
+    "before_ms": 0,
+    "normalize_ms": 4,
+    "images_ms": 0,
+    "post_process_ms": 1,
+    "after_ms": 0,
+    "other_ms": 0,
+    "messages": 362,
+    "wire_messages": 161
+  },
+  "request_build_detail": {
+    "records_ms": 0,
+    "system_ms": 1,
+    "headers_ms": 0,
+    "cache_break_record_ms": 1,
+    "plans_ms": 1,
+    "retry_setup_ms": 0,
+    "sent_build_ms": 1,
+    "record_attempt_ms": 0,
+    "other_ms": 0,
+    "sent_build_safety_context_ms": 0,
+    "sent_build_cache_breakpoints_ms": 0,
+    "sent_build_surrogate_scan_ms": 1
+  },
+  "first_content_frame_ms": 2061,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "credential_expires_at": "2026-12-04T14:35:16.031Z",
+  "_returncode": 0
+}

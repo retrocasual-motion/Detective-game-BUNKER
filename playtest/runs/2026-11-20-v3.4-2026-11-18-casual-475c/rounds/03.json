@@ -1,0 +1,194 @@
+{
+  "duration_api_ms": 290970,
+  "stop_reason": "end_turn",
+  "session_id": "6e882ff9-1678-437c-b3a3-0b25db283b49",
+  "total_cost_usd": 1.5106305999999998,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 11575,
+    "cache_read_input_tokens": 393947,
+    "output_tokens": 6225,
+    "output_tokens_details": {
+      "thinking_tokens": 1452
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 11575,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 971,
+        "cache_read_input_tokens": 85051,
+        "cache_creation_input_tokens": 420,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 420
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 62,
+      "outputTokens": 28507,
+      "thinkingTokens": 8673,
+      "cacheReadInputTokens": 1408543,
+      "cacheCreationInputTokens": 82283,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 82283,
+      "webSearchRequests": 0,
+      "costUSD": 1.5103605999999998,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 291,
+      "thinkingTokens": 270,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00027000000000000006,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "extra_usage_disabled",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 11,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 3 записан: журнал дополнен, в `actions.md` 7 действий.\n\n**Что нашёл:**\n- **Папка A-24 — дело участника прошлого заезда 2008 года** со штампом «Выбыл досрочно». Это та папка, которой не хватает в шкафу Коула.\n- **Медицинский бланк этого участника подменили.**\n  - На ксерокопии в A-24 записано: «аллергия на коровье молоко, госпитализация, исключить молочное из питания и препаратов».\n  - Бланк с тем же номером 0589/08 из папки Коула — «аллергии нет, допущен».\n- **Копию сделала медик Уолш.** На ней её отметка «К.У.», её почерк и метка копира; копир стоит в медкабинете. У Уолш в сумке лежит пустой конверт с надписью «22.09.08» — это дата того осмотра.\n- **След ведёт к Моро.** Копия сложена вчетверо и вся в графитовой пыли, а Моро рисует графитовыми карандашами. Папка спрятана в её комнате анкет. Лицо на фото из A-24 совпадает с последним рисунком в её блокноте.\n- **Ключ кабинета Коула пропал из медкабинета.** Аварийный дубликат с крючка 3 исчез — им можно было открыть кабинет и вынести папку.\n- **Нашёл вероятный ключ к ноутбуку.** Подсказка — «наш первый знак», а у HEXON старый знак рисуется как 5-1-2-3-6-9-8-7-4.\n\n**Версия (уверенность 45%):** Моро, возможно, родственница погибшего участника 2008 года; это пока догадка. Утром она столкнулась с Коулом на площадке у комнаты анкет, и началась возня за бумаги. Коул упал на стойку, которую Миллер так и не починил. Потом Моро ушла к медику и выдумала маршрут. Неясно главное — толкнула она его нарочно или это несчастный случай в драке. Ещё не понимаю, почему наверху оказался лист анкеты Харта.\n\n**Подозреваемые:** Моро 40%, Силва 15%, Харт 15%, Миллер 10%, Уолш или Пирс 10%, другое 10%.\n\n**Действия на следующий раунд:**\n- графический ключ ноутбука;\n- рассмотреть роман Уолш — для контрольного вопроса «Любимый герой?» на сайте VAULTLINE;\n- рассмотреть коробки комплекса и позвонить на горячую линию NorthCare по партии 0417;\n- пролистать пачки П-05 и П-04;\n- открыть номер газеты за 07.10.2008 — искать некролог Тома Бернара.\n\nДиск приложения 7 бросил после двух неудачных попыток.",
+  "ttft_ms": 2851,
+  "type": "result",
+  "duration_ms": 62309,
+  "uuid": "88c0e955-358d-4665-b3b3-055bd63de122",
+  "ttft_stream_ms": 1937,
+  "time_to_request_ms": 667,
+  "time_to_request_phases_ms": {
+    "other": 3,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 2,
+    "input_attachments": 30,
+    "input_hooks": 1,
+    "conversation_append": 0,
+    "transcript_persist": 6,
+    "tool_pool_refresh": 1,
+    "init_message": 7,
+    "init_frame_send": 2,
+    "engine_pickup": 1,
+    "loop_entry": 2,
+    "message_prep": 0,
+    "model_config_wait": 1,
+    "autocompact": 1,
+    "request_announcements": 1,
+    "query_setup": 0,
+    "model_gates": 596,
+    "tool_schema_build": 4,
+    "message_normalization": 3,
+    "client_creation": 2,
+    "request_build": 3
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 9,
+  "time_to_request_cpu_ms": 266,
+  "time_to_request_major_faults": 12248,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 24,
+    "cpu_ms": 126,
+    "major_faults": 5068,
+    "changed_files_reread": 0,
+    "setup_ms": 1,
+    "prompt_producers_ms": 0,
+    "ambient_start_ms": 3,
+    "ambient_wait_ms": 24,
+    "render_ms": 0,
+    "producers": 41,
+    "token_counts": 0
+  },
+  "tool_schema_build_detail": {
+    "betas_ms": 0,
+    "waits_ms": 1,
+    "placement_ms": 0,
+    "render_ms": 3,
+    "after_ms": 0,
+    "other_ms": 0,
+    "tools": 5,
+    "new_schemas": 5
+  },
+  "message_normalization_detail": {
+    "before_ms": 0,
+    "normalize_ms": 3,
+    "images_ms": 0,
+    "post_process_ms": 0,
+    "after_ms": 0,
+    "other_ms": 0,
+    "messages": 194,
+    "wire_messages": 80
+  },
+  "request_build_detail": {
+    "records_ms": 0,
+    "system_ms": 1,
+    "headers_ms": 0,
+    "cache_break_record_ms": 1,
+    "plans_ms": 0,
+    "retry_setup_ms": 0,
+    "sent_build_ms": 1,
+    "record_attempt_ms": 0,
+    "other_ms": 0,
+    "sent_build_safety_context_ms": 0,
+    "sent_build_cache_breakpoints_ms": 0,
+    "sent_build_surrogate_scan_ms": 0
+  },
+  "first_content_frame_ms": 1937,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "credential_expires_at": "2026-12-04T14:35:16.031Z",
+  "_returncode": 0
+}

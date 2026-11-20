@@ -1,5 +1,5 @@
 import { CARD_W, type ContainerId, SERVER_DISC_ID } from '@bunker/shared';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
 import { shownCamera, useGame } from '../store.ts';
@@ -13,7 +13,16 @@ import { insertServerDisc } from './drive.ts';
 const noColor = () => '#000000';
 
 /** Вещи, которые стоят на других (их зона щелчка — поверх). */
-const ON_TOP = new Set(['bank-box', 'cassette']);
+const ON_TOP = new Set(['bank-box']);
+/**
+ * Вещи, чья зона щелчка — под остальными: клавиатура повёрнута, её прямоугольник шире её самой и
+ * накрывал ручку 49 (UX-10).
+ */
+const UNDER = new Set(['keyboard']);
+const layer = (key: string) => (UNDER.has(key) ? 0 : ON_TOP.has(key) ? 2 : 1);
+
+/** Дисковод не принял диск (нет связи, движок отказал) — коротко, на самом дисководе (UX-11). */
+const DRIVE_REFUSED = 'Лоток не открылся — попробуйте ещё раз.';
 
 /**
  * Щелчок по предмету на столе (вид «Стол» в покое): монитор — компьютер следователя крупно;
@@ -56,11 +65,17 @@ export function DeskHotspots({
         }))
         // Что стоит на другом (коробка банка, проигрыватель — на коробе с пачками), — поверх:
         // щелчок достаётся ему (F9).
-        .sort((a, b) => Number(ON_TOP.has(a.o.key)) - Number(ON_TOP.has(b.o.key))),
+        .sort((a, b) => layer(a.o.key) - layer(b.o.key)),
     [room, inbox, opened, epilogue, disc, bank],
   );
   // Дисковод под монитором (A-272): сюда отпускают диск.
   const driveAt = spots.find((x) => x.o.key === 'drive')?.r;
+  const [refused, setRefused] = useState(false);
+  const insert = async () => {
+    if (await insertServerDisc()) return;
+    setRefused(true);
+    setTimeout(() => setRefused(false), 2500);
+  };
   return (
     <div className="desk-hotspots">
       {spots.map(({ o, r }) =>
@@ -89,7 +104,7 @@ export function DeskHotspots({
                   label: 'Диск «Прил. 7»',
                   className: 'drag-ghost-disc',
                   canDrop: overDrive,
-                  onDrop: () => void insertServerDisc(),
+                  onDrop: () => void insert(),
                   onClick: () => useGame.getState().hold({ type: 'device', id: SERVER_DISC_ID }),
                 });
                 return;
@@ -165,6 +180,16 @@ export function DeskHotspots({
             <span className="device-tag">{o.tag}</span>
           </div>
         ) : null,
+      )}
+      {refused && driveAt && (
+        <div
+          className="drive-refused"
+          role="status"
+          data-testid="drive-refused"
+          style={{ left: driveAt.left, top: driveAt.top - 34, width: driveAt.width }}
+        >
+          {DRIVE_REFUSED}
+        </div>
       )}
     </div>
   );

@@ -29,6 +29,8 @@ interface CallState {
   talkFrom: number;
   /** Кнопка, утопленная прямо сейчас (на столе — ниже на мгновение). */
   pressed: string | null;
+  /** Игрок уже нажимал кнопки или трубку — подсказка «как звонить» больше не нужна (UX-12). */
+  used: boolean;
   press(k: string): void;
   handset(): void;
   redial(): void;
@@ -38,7 +40,7 @@ interface CallState {
 
 /** Длина набора на экранчике. */
 const MAX = 16;
-/** Номер не короче — иначе звонок не идёт. */
+/** Номер не короче — набор идёт сам через паузу; короче — после долгой паузы (UX-5). */
 const MIN = 7;
 
 const ms = () => {
@@ -46,6 +48,8 @@ const ms = () => {
   return {
     ring: fast ? 250 : 3200,
     autoDial: fast ? 500 : 3000,
+    // Недонабранный номер: ждём дольше — вдруг игрок ещё набирает; потом линия отвечает (UX-5).
+    shortDial: fast ? 800 : 5000,
     keysSend: fast ? 500 : 2500,
     busy: fast ? 300 : 3000,
   };
@@ -73,7 +77,7 @@ function clearTimer() {
 
 export const useCall = create<CallState>((set, get) => {
   const place = async (n: string) => {
-    if (digits(n) < MIN) return;
+    if (!digits(n)) return;
     lastNumber = n;
     const my = ++callNo;
     clearTimer();
@@ -115,10 +119,11 @@ export const useCall = create<CallState>((set, get) => {
     heard: [],
     talkFrom: 0,
     pressed: null,
+    used: false,
 
     press(k) {
       dtmf(k);
-      set({ pressed: k });
+      set({ pressed: k, used: true });
       if (pressTimer) clearTimeout(pressTimer);
       pressTimer = setTimeout(() => set({ pressed: null }), 160);
       const s = get();
@@ -151,7 +156,10 @@ export const useCall = create<CallState>((set, get) => {
         // Трубка снята: гудок стих с первой цифрой; пауза — номер пошёл.
         if (s.phase === 'dialtone') setTone(null);
         clearTimer();
-        if (digits(nd) >= MIN) timer = setTimeout(() => void place(nd), ms().autoDial);
+        // Короткий набор — тоже звонок, но после долгой паузы: линия ответит «не обслуживается»,
+        // а не тишина без конца (UX-5, VF-1).
+        const wait = digits(nd) >= MIN ? ms().autoDial : ms().shortDial;
+        if (digits(nd)) timer = setTimeout(() => void place(nd), wait);
       }
     },
 
@@ -161,11 +169,15 @@ export const useCall = create<CallState>((set, get) => {
         get().hangUp();
         return;
       }
-      set({ offHook: true });
+      set({ offHook: true, used: true });
       if (digits(s.dialed) >= MIN) void place(s.dialed);
       else {
         set({ phase: 'dialtone' });
         setTone('dial');
+        // Набрано меньше номера и трубку сняли — ждём остальные цифры, потом звонок (UX-5).
+        const nd = s.dialed;
+        clearTimer();
+        if (digits(nd)) timer = setTimeout(() => void place(nd), ms().shortDial);
       }
     },
 

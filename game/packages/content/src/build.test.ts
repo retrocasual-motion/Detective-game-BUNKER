@@ -61,7 +61,7 @@ describe('buildStartingMaterials', () => {
     expect(server.locked).toHaveLength(78);
     expect(server.locked.every((m) => /^L\d{3}$/.test(m.id))).toBe(true);
     expect(server.locked.find((m) => m.id === 'L462')?.kind).toBe('disc');
-    expect((server.rules as { rules: unknown[] }).rules.length).toBe(129);
+    expect((server.rules as { rules: unknown[] }).rules.length).toBe(130);
   });
 
   it('повторная сборка даёт тот же результат', () => {

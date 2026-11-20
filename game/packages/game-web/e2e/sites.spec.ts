@@ -58,15 +58,29 @@ test('неизвестный адрес — «Страница не найден
   await other.close();
 });
 
-test('VAULTLINE: подсказка, вход Кейт, учёт анкет A-24, документы → адрес хранилища → архив 0417', async ({
+test('VAULTLINE: вход по кодовому слову (PW-B), учёт анкет A-24, документы → адрес хранилища → архив 0417', async ({
   page,
 }) => {
   const vl = await site(page, 'vaultline-program.com');
   await fill(vl, 'vl-login', { login: 'k.walsh', password: 'нет' });
   await expect(vl.getByTestId('site-vl-login-msg')).toHaveText('Неверный логин или пароль.');
-  await fill(vl, 'vl-forgot', { login: 'k.walsh' });
-  await expect(vl.getByTestId('site-vl-forgot-msg')).toContainText('любимый герой');
+  // Пустое поле — у поля, без сервера: попытка не тратится (UX-4).
+  await vl.getByTestId('site-vl-forgot-submit').click();
+  await expect(vl.getByTestId('site-vl-forgot-msg')).toHaveText('Заполните поле «Логин».');
+  await expect(vl.getByTestId('site-vl-forgot-login')).toHaveAttribute('aria-invalid', 'true');
+  // Чужой логин — учётной записи нет; пароль-имя героя — не пароль (PW-B).
+  await fill(vl, 'vl-forgot', { login: 'e.pierce' });
+  await expect(vl.getByTestId('site-vl-forgot-msg')).toHaveText('Учётная запись не найдена.');
   await fill(vl, 'vl-login', { login: 'k.walsh', password: 'Йен' });
+  await expect(vl.getByTestId('site-vl-login-msg')).toHaveText('Неверный логин или пароль.');
+  // «Забыли пароль?» — вход по кодовому слову: контрольный вопрос → ответ → кабинет.
+  await vl.getByTestId('site-vl-forgot-login').fill('');
+  await fill(vl, 'vl-forgot', { login: 'k.walsh' });
+  await expect(vl.getByTestId('site-question')).toContainText('Контрольный вопрос: «Любимый герой?»');
+  await fill(vl, 'vl-word', { answer: 'Мэтт' });
+  await expect(vl.getByTestId('site-vl-word-msg')).toHaveText('Ответ неверный.');
+  await vl.getByTestId('site-vl-word-answer').fill('');
+  await fill(vl, 'vl-word', { answer: 'Йен' });
   await expect(vl).toHaveURL(/\/cabinet$/);
   await expect(vl.getByTestId('site')).toContainText('Учёт анкет');
   // Учёт анкет: без даты — подсказка; с датой — анкета A-24.
@@ -123,11 +137,14 @@ test('почта: «Забыли пароль?» → контрольный во
   await expect(mb.getByTestId('site-mb-login-submit')).toHaveCount(0);
 });
 
-test('банк: форма «Сообщить о смерти арендатора» — без даты отказ, верно — ячейка вскрыта', async ({
+test('банк: форма «Сообщить о смерти арендатора» — без даты не уходит, неверно — отказ, верно — ячейка вскрыта', async ({
   page,
 }) => {
   const fr = await site(page, 'frontrange-savings.com');
+  // Пустая дата — у поля, без сервера: попытка не тратится (UX-4).
   await fill(fr, 'fr-death', { box: '845', surname: 'Коул' });
+  await expect(fr.getByTestId('site-fr-death-msg')).toHaveText('Заполните поле «Дата смерти».');
+  await fill(fr, 'fr-death', { date: '14.10.2009' });
   await expect(fr.getByTestId('site-fr-death-msg')).toHaveText(
     'Ячейка с такими данными не найдена.',
   );

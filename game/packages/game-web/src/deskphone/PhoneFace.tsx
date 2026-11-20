@@ -27,7 +27,7 @@ const LETTERS: Record<string, string> = {
 const keyId = (k: string) => (k === '*' ? 'star' : k === '#' ? 'hash' : k);
 
 /** Логическая ширина слоя (px) — по ней шрифты; в сцене слой сжат до размера зоны. */
-const LOGICAL = { lcd: 340, key: 56, soft: 64, handset: 70 } as const;
+const LOGICAL = { lcd: 340, key: 56, soft: 64, handset: 70, body: 260 } as const;
 
 /** Слой на верхе бруска: центр зоны, плашмя, повёрнут вместе с трубкой. */
 function place(room: Room, s: Spot, logicalW: number, yaw = 0): CSSProperties {
@@ -68,6 +68,17 @@ export function PhoneFace({ room, active }: { room: Room; active: boolean }) {
 
   return (
     <>
+      {/* Корпус «немой»: щелчок между кнопками не вешает трубку и не уводит камеру (UX-2, UN-3).
+          Первыми — под кнопками. */}
+      {(['body', 'ridge'] as const).map((part) => (
+        <div
+          key={part}
+          className={cls('dp-body')}
+          data-testid={`dp-${part}`}
+          aria-hidden
+          style={place(room, spots[part], LOGICAL.body)}
+        />
+      ))}
       <div
         className={cls('dp-lcd')}
         data-testid="dp-lcd"

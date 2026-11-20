@@ -8,6 +8,7 @@
 export type SiteFormId =
   | 'vl-login'
   | 'vl-forgot'
+  | 'vl-word'
   | 'vl-registry'
   | 'vl-docs'
   | 'hx-archive'
@@ -29,6 +30,11 @@ export interface SiteForm {
   title?: string;
   fields: SiteField[];
   submit: string;
+  /**
+   * Пустое поле не отправляется (UX-4, VF-5): игрок видит это у поля, попытка не тратится.
+   * `some` — хватает одного заполненного поля (учёт анкет: программа — или код и дата).
+   */
+  some?: boolean;
 }
 
 export const SITE_FORMS: Readonly<Record<SiteFormId, SiteForm>> = {
@@ -44,7 +50,13 @@ export const SITE_FORMS: Readonly<Record<SiteFormId, SiteForm>> = {
     id: 'vl-forgot',
     title: 'Забыли пароль?',
     fields: [{ name: 'login', label: 'Логин' }],
-    submit: 'Показать подсказку',
+    submit: 'Войти по кодовому слову',
+  },
+  // PW-B (автор 20.11): второй вход — ответ на контрольный вопрос учётной записи.
+  'vl-word': {
+    id: 'vl-word',
+    fields: [{ name: 'answer', label: 'Кодовое слово' }],
+    submit: 'Войти',
   },
   'vl-registry': {
     id: 'vl-registry',
@@ -54,6 +66,7 @@ export const SITE_FORMS: Readonly<Record<SiteFormId, SiteForm>> = {
       { name: 'date', label: 'Дата выбытия', placeholder: 'ДД.ММ.ГГГГ' },
     ],
     submit: 'Найти',
+    some: true,
   },
   'vl-docs': {
     id: 'vl-docs',
