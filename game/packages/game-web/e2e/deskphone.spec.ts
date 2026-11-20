@@ -102,3 +102,19 @@ test('все линии пакета отвечают по своим номер
     'Возвращено на склад 26.10.2009',
   );
 });
+
+test('у телефона: печать в поиске — не телефону; поиск уводит от телефона — отбой (F7)', async ({
+  page,
+}) => {
+  await phoneUp(page);
+  await page.getByTestId('dp-handset').click();
+  await expect(page.getByTestId('dp-lcd')).toContainText('Гудок');
+  // Поиск у телефона — Ctrl+F (вкладка «Поиск» спрятана, как у всех вещей вблизи).
+  await page.keyboard.press('Control+f');
+  await expect(page.getByTestId('search-input')).toBeFocused();
+  await page.keyboard.type('555');
+  await expect(page.getByTestId('search-input')).toHaveValue('555');
+  // Поиск открыт — телефон оставлен: трубка положена, камера у стола.
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-spot', 'desk');
+  await expect(page.getByTestId('dp-number')).toHaveText('—');
+});

@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { issueOf, mailbox, normalizeDate } from './content.ts';
+import { dateForEngine, issueOf, mailbox, normalizeDate } from './content.ts';
 
 const dir = '../../../playtest/packs/v3.4-2026-11-18/locked';
 const mat = (id: string) => {
@@ -25,6 +25,10 @@ describe('компьютер следователя — из канона', () =
     expect(normalizeDate('14-10-2009')).toBe('14.10.2009');
     expect(normalizeDate('6/10/2009')).toBe('06.10.2009');
     expect(normalizeDate('вчера')).toBeNull();
+    // F6: американская запись — второе число больше 12.
+    expect(normalizeDate('10/14/2009')).toBe('14.10.2009');
+    expect(dateForEngine('10/14/2009', '14.10.2009')).toBe('10/14/2009');
+    expect(dateForEngine('14.10.2009', '14.10.2009')).toBe('14.10.2009');
     expect(issueOf([mat('L833')], '14.10.2009')?.id).toBe('L833');
   });
 });

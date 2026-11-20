@@ -147,7 +147,9 @@ export function DevActionLine() {
               <div className="dev-reading-tools">
                 <button
                   type="button"
-                  onClick={() => void navigator.clipboard?.writeText(readingTsv(reading))}
+                  onClick={() =>
+                    void navigator.clipboard?.writeText(readingTsv(reading)).catch(() => undefined)
+                  }
                 >
                   Скопировать таблицу
                 </button>

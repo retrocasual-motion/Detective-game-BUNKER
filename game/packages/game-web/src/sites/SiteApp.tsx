@@ -18,7 +18,6 @@ import { highlightFind } from '../search/highlight.ts';
 type Resp = SitePage | { anon: true; domain: string } | { notFound: string };
 
 const json = { 'content-type': 'application/json' };
-const ME = 'e.pierce.uk@mailbridge.net';
 
 const md = (text: string) => (
   <Markdown remarkPlugins={[remarkGfm, remarkSites]} components={NO_LINKS}>
@@ -208,6 +207,14 @@ function Page({ page, reload }: { page: SitePage; reload: () => Promise<void> })
                 </p>
               );
             if (id === 'vl-forgot' && page.cabinet) return null;
+            // Почта уже открыта: повторный вход не нужен (F8) — как у кабинета VAULTLINE.
+            if (id === 'mb-login' && page.mailOpen)
+              return (
+                <p key={id} className="site-in" data-testid="site-in">
+                  Вы вошли · <a href="/mail">Почта</a>
+                </p>
+              );
+            if (id === 'mb-forgot' && page.mailOpen) return null;
             if (id === 'mb-forgot') return <MailForgot key={id} wait={page.wait} />;
             return (
               <SiteForm
@@ -420,8 +427,11 @@ function Docs({
 /** Веб-почта Mailbridge 2009 года (L453): «Входящие» и «Отправленные», только чтение. */
 function WebMail({ body, letter }: { body: string; letter: number | null }) {
   const letters = useMemo(() => mailbox(body), [body]);
+  // Адрес ящика — из заголовка самого ящика (его отдаёт сервер, когда почта открыта); в коде
+  // страницы адреса нет (P-10: это цель пароля почты).
+  const me = /^# Почта (\S+@\S+)/m.exec(body)?.[1] ?? '';
   const [box, setBox] = useState<'in' | 'out'>('in');
-  const sent = (l: Letter) => l.from.includes(ME);
+  const sent = (l: Letter) => !!me && l.from.includes(me);
   const list = letters.filter((l) => (box === 'out' ? sent(l) : !sent(l)));
   const [sel, setSel] = useState<number | null>(letter);
   const cur = letters.find((l) => l.n === sel) ?? null;
@@ -430,7 +440,7 @@ function WebMail({ body, letter }: { body: string; letter: number | null }) {
   return (
     <div className="site-mail" data-testid="site-mail" data-material="L453">
       <aside>
-        <b>{ME}</b>
+        <b>{me}</b>
         <button
           type="button"
           className={box === 'in' ? 'on' : undefined}

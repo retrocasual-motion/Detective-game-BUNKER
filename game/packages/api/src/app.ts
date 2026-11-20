@@ -512,10 +512,16 @@ export function createApp({
     const body = (await c.req.json().catch(() => null)) as { address?: unknown } | null;
     const address = typeof body?.address === 'string' ? body.address.trim().slice(0, 300) : '';
     if (!address) return c.json({ error: 'нет адреса' }, 400);
-    const r = await runAction(pid, { action: 'АДРЕС', target: 'браузер', value: address });
-    if (!r) return c.notFound();
     const at = siteOf(address);
-    if (r.quiet || !at) return c.json({ reply: r.reply });
+    // Уже открытый сайт — без движка (F2): после «Решить дело» новые действия закрыты, а
+    // перечитать открытое можно (P-9).
+    const known = at ? (await loadProgress(pid)).released.includes(at.site.page) : false;
+    if (!known) {
+      const r = await runAction(pid, { action: 'АДРЕС', target: 'браузер', value: address });
+      if (!r) return c.notFound();
+      if (r.quiet || !at) return c.json({ reply: r.reply });
+    }
+    if (!at) return c.notFound();
     const pass = signPass(siteSecret, pid, now() + 10 * 60_000);
     return c.json({ url: `${siteUrl(publicUrl, at.site, at.path)}?enter=${pass}` });
   });
@@ -543,12 +549,16 @@ export function createApp({
     const pid = sitePlayer(c);
     if (!pid) return c.json({ anon: true, domain: site.domain });
     const path = (c.req.query('path') ?? '/').slice(0, 200);
-    const r = await runAction(pid, {
-      action: 'АДРЕС',
-      target: 'браузер',
-      value: `${site.domain}${path === '/' ? '' : path}`,
-    });
-    if (!r || r.quiet) return c.json({ notFound: r?.reply ?? 'Страница не найдена (404).' });
+    // Сайт уже открыт — страница без движка (F2): перечитать открытое можно и с открытой формой
+    // заключения (P-9); первое открытие — через движок (АДРЕС).
+    if (!(await loadProgress(pid)).released.includes(site.page)) {
+      const r = await runAction(pid, {
+        action: 'АДРЕС',
+        target: 'браузер',
+        value: `${site.domain}${path === '/' ? '' : path}`,
+      });
+      if (!r || r.quiet) return c.json({ notFound: r?.reply ?? 'Страница не найдена (404).' });
+    }
     const progress = await loadProgress(pid);
     const has = (id: string) => progress.released.includes(id);
     const mat = (id: string) => lockedById.get(id);
@@ -583,6 +593,7 @@ export function createApp({
       ...(mailbox ? { mailbox } : {}),
       // Логин — только тому, кто уже вошёл (он сам его ввёл); в коде страницы его нет (P-10).
       ...(site.label === 'vaultline-program' ? { cabinet: has('L620') ? 'k.walsh' : null } : {}),
+      ...(site.label === 'mailbridge' ? { mailOpen: has('L453') } : {}),
       wait,
     };
     return c.json(page);

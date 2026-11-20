@@ -12,6 +12,9 @@ import { insertServerDisc } from './drive.ts';
 
 const noColor = () => '#000000';
 
+/** Вещи, которые стоят на других (их зона щелчка — поверх). */
+const ON_TOP = new Set(['bank-box', 'cassette']);
+
 /**
  * Щелчок по предмету на столе (вид «Стол» в покое): монитор — компьютер следователя крупно;
  * изъятое устройство — «взять в руки» (OPEN-A: тот же просмотр, что у карточки на стене).
@@ -46,10 +49,14 @@ export function DeskHotspots({
   const updateState = useGame((g) => g.updateState);
   const spots = useMemo(
     () =>
-      deskObjects(room, noColor, inbox, opened, epilogue, disc, bank).map((o) => ({
-        o,
-        r: screenRect(o, room.poses.desk, room),
-      })),
+      deskObjects(room, noColor, inbox, opened, epilogue, disc, bank)
+        .map((o) => ({
+          o,
+          r: screenRect(o, room.poses.desk, room),
+        }))
+        // Что стоит на другом (коробка банка, проигрыватель — на коробе с пачками), — поверх:
+        // щелчок достаётся ему (F9).
+        .sort((a, b) => Number(ON_TOP.has(a.o.key)) - Number(ON_TOP.has(b.o.key))),
     [room, inbox, opened, epilogue, disc, bank],
   );
   // Дисковод под монитором (A-272): сюда отпускают диск.

@@ -24,7 +24,8 @@ const TARGET = '52__конверт_прил_7_сервер.md';
 /** Вставить диск (движок); не вышло (нет связи) — false, диск остаётся на столе. */
 export async function insertServerDisc(): Promise<boolean> {
   const r = await postAction('ОСМОТР', TARGET, 'вставить диск в дисковод').catch(() => null);
-  if (!r) return false;
+  // Нет связи или движок отказал (форма заключения открыта, F10) — диск остаётся на столе.
+  if (!r || (r.quiet && !r.released.length)) return false;
   const g = useGame.getState();
   g.insertDisc();
   if (r.released.length) g.addFound(r.released, 'pc', []);

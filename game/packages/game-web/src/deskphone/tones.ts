@@ -57,8 +57,8 @@ export type ToneKind = 'dial' | 'ring' | 'busy';
 export function startTone(kind: ToneKind): () => void {
   const a = audio();
   if (!a) return () => undefined;
+  const level = kind === 'busy' ? 0.03 : 0.035;
   const g = a.createGain();
-  g.gain.value = kind === 'busy' ? 0.03 : 0.035;
   g.connect(a.destination);
   const [f1, f2, on, off] =
     kind === 'dial'
@@ -66,15 +66,32 @@ export function startTone(kind: ToneKind): () => void {
       : kind === 'ring'
         ? [440, 480, 2000, 4000]
         : [480, 620, 500, 500];
-  let t = a.currentTime;
-  // Расписание вперёд на минуту — дольше тон не звучит (гудок висит, пока не начнут набор).
-  while (t < a.currentTime + 60) {
-    pair(a, f1, f2, t, on, g);
-    t += (on + off) / 1000;
+  // Два непрерывных генератора; гудки и паузы — громкостью (F10: не сотни генераторов вперёд).
+  const t0 = a.currentTime;
+  const end = t0 + 60;
+  const oscs = [f1, f2].map((f) => {
+    const o = a.createOscillator();
+    o.frequency.value = f;
+    o.connect(g);
+    o.start(t0);
+    o.stop(end);
+    return o;
+  });
+  g.gain.setValueAtTime(0, t0);
+  for (let t = t0; t < end; t += (on + off) / 1000) {
+    g.gain.setValueAtTime(level, t);
+    if (off) g.gain.setValueAtTime(0, t + on / 1000);
   }
   return () => {
     g.gain.cancelScheduledValues(a.currentTime);
     g.gain.setValueAtTime(0, a.currentTime);
+    for (const o of oscs) {
+      try {
+        o.stop();
+      } catch {
+        // уже остановлен
+      }
+    }
     setTimeout(() => g.disconnect(), 100);
   };
 }

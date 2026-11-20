@@ -47,5 +47,15 @@ export const issueOf = (materials: readonly Mat[], date: string) =>
 export function normalizeDate(s: string): string | null {
   const m = /^\s*(\d{1,2})\s*[./-]\s*(\d{1,2})\s*[./-]\s*(\d{4})\s*$/.exec(s);
   if (!m) return null;
-  return `${(m[1] ?? '').padStart(2, '0')}.${(m[2] ?? '').padStart(2, '0')}.${m[3]}`;
+  let [d, mo] = [m[1] ?? '', m[2] ?? ''];
+  // Американская запись «месяц/день/год» (F6): второе число больше 12 — это день.
+  if (Number(mo) > 12 && Number(d) <= 12) [d, mo] = [mo, d];
+  return `${d.padStart(2, '0')}.${mo.padStart(2, '0')}.${m[3]}`;
 }
+
+/**
+ * Что отправить движку: набрано через «/» — как есть (пакет понимает и «день/месяц», и
+ * «месяц/день»), иначе — ДД.ММ.ГГГГ.
+ */
+export const dateForEngine = (typed: string, normal: string) =>
+  typed.includes('/') ? typed.replace(/\s+/g, '') : normal;

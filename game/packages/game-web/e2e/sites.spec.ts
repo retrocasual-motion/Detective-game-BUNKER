@@ -117,6 +117,10 @@ test('почта: «Забыли пароль?» → контрольный во
   await expect(mb.getByTestId('site-letter')).toContainText('j.mercer@sentinel-labs.net');
   await mb.getByTestId('site-mail-out').click();
   await expect(mb.getByTestId('site-letter-8')).toContainText('Re: B');
+  // Вернулся на главную позже — «Вы вошли», без формы входа (F8).
+  await mb.goto(new URL('/', mb.url()).toString());
+  await expect(mb.getByTestId('site-in')).toContainText('Вы вошли');
+  await expect(mb.getByTestId('site-mb-login-submit')).toHaveCount(0);
 });
 
 test('банк: форма «Сообщить о смерти арендатора» — без даты отказ, верно — ячейка вскрыта', async ({

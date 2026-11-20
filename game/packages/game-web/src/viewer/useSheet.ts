@@ -29,6 +29,12 @@ export interface Zoom {
   ty: number;
 }
 
+/**
+ * Как назвать материал движку при крупном плане, если его номер правило не узнаёт (F5): папка
+ * A-24, вынутая из пачки П-02 (L991), — правило крупного плана папки (L956) ищет «A-24 / П-02».
+ */
+const ZOOM_TARGET: Record<string, string> = { L991: 'L991 · папка A-24, пачка П-02' };
+
 export function useSheet(
   materialId: string | null,
   refs: {
@@ -205,7 +211,7 @@ export function useSheet(
       : null;
     const next = part?.dataset.osmotrTarget
       ? { target: part.dataset.osmotrTarget, value: part.dataset.osmotrValue ?? 'увеличить' }
-      : { target: materialId, value: 'увеличить' };
+      : { target: ZOOM_TARGET[materialId] ?? materialId, value: 'увеличить' };
     setFocus((cur) => (cur && cur.target === next.target && cur.value === next.value ? cur : next));
   }, [near, zoom, materialId]);
   useEffect(() => {

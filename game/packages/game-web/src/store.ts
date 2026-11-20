@@ -227,13 +227,30 @@ export const useGame = create<GameStore>((set, get) => {
       if (!list.length) return;
       for (const x of list) get().pinExcerpt(x);
       await saver.flush();
+      // Подтвердить серверу — только когда стена с выписками сохранена (F10): иначе выписки
+      // остаются в очереди и придут снова при следующем возвращении во вкладку.
+      if (get().saveStatus !== 'saved') return;
       await ackExcerpts(list.map((x) => x.id));
     };
     // Игрок вернулся из вкладки сайта (A-272): открытое там — в игре (коробка банка, кабинет).
     let lookedAt = 0;
+    let lookLater: ReturnType<typeof setTimeout> | null = null;
     const look = () => {
       const now = Date.now();
-      if (document.hidden || !get().state || get().elsewhere || now - lookedAt < 1500) return;
+      if (document.hidden || !get().state || get().elsewhere) return;
+      // Не чаще раза в 1,5 с; вернулись раньше — проверить чуть позже, а не пропустить: иначе
+      // открытое на сайте (коробка банка) появится лишь при следующем возвращении.
+      if (now - lookedAt < 1500) {
+        if (!lookLater)
+          lookLater = setTimeout(
+            () => {
+              lookLater = null;
+              look();
+            },
+            1500 - (now - lookedAt),
+          );
+        return;
+      }
       lookedAt = now;
       getMaterials()
         .then((m) => get().addReleased(m))

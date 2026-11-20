@@ -8,7 +8,7 @@ import { formatWait, OFFLINE, useFieldWait } from '../lock.ts';
 import { NO_LINKS, remarkSites } from '../paperLinks.tsx';
 import { openSite } from '../site.ts';
 import { useGame } from '../store.ts';
-import { forScreen, issueOf, normalizeDate } from './content.ts';
+import { dateForEngine, forScreen, issueOf, normalizeDate } from './content.ts';
 
 /**
  * Программы компьютера следователя (4c-3; CO-A, DI-A): браузер с архивом номеров газеты (дата
@@ -67,7 +67,7 @@ export function PcBrowser() {
       return;
     }
     if (wait > 0) return;
-    const r = await enter(field, d);
+    const r = await enter(field, dateForEngine(date, d));
     const issue = r?.released[0] ?? issueOf(useGame.getState().materials, d);
     if (issue) {
       setPage({ kind: 'doc', id: issue.id });

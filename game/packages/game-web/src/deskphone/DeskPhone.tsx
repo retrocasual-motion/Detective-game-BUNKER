@@ -15,9 +15,27 @@ export function DeskPhone() {
   const heard = useCall((c) => c.heard);
   const offHook = useCall((c) => c.offHook);
 
+  // Ушли от телефона другим путём (поиск, лист, стена, вещь в руках) — отбой и камера к столу (F7).
+  const away = useGame(
+    (g) =>
+      g.deskPhone &&
+      (g.state?.view !== 'desk' ||
+        g.searchOpen ||
+        g.viewerId !== null ||
+        g.computerOpen ||
+        g.held !== null),
+  );
+  useEffect(() => {
+    if (away) closePhone();
+  }, [away]);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
+      // Ввод в поле (поиск, записка) — не телефону; Enter на кнопке — нажать её (F7).
+      if (typing(e.target)) return;
+      if (e.key === 'Tab') tabbed = true;
+      if (e.key === 'Enter' && tabbed && e.target instanceof HTMLButtonElement) return;
       const c = useCall.getState();
       if (e.key === 'Escape') closePhone();
       else if (/^[0-9*#]$/.test(e.key)) c.press(e.key);
@@ -26,8 +44,17 @@ export function DeskPhone() {
       else return;
       e.preventDefault();
     };
+    // Мышь — снова «Enter = трубка»; до кнопки дошли клавишей Tab — Enter нажимает её (F7).
+    let tabbed = false;
+    const onPointer = () => {
+      tabbed = false;
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('pointerdown', onPointer);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('pointerdown', onPointer);
+    };
   }, [open]);
 
   if (!open) return null;
@@ -54,6 +81,13 @@ export function DeskPhone() {
     </section>
   );
 }
+
+const typing = (t: EventTarget | null) =>
+  t instanceof HTMLElement &&
+  (t.isContentEditable ||
+    t.tagName === 'INPUT' ||
+    t.tagName === 'TEXTAREA' ||
+    t.tagName === 'SELECT');
 
 /** Отойти от телефона: отбой и камера — обратно к столу. */
 export function closePhone() {

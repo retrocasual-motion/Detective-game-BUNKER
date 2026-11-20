@@ -4,6 +4,7 @@ import { useGame } from '../store.ts';
 import { clock, ticksFor } from './record.ts';
 import { captionNow, useRecorder } from './recorder.ts';
 import './radio.css';
+import { FileProps } from '../player/FileProps.tsx';
 
 /**
  * Регистратор радиопоста — разметка поверх модели (этап 4d-1; решения автора 12.11 — PL-A, ST-A,
@@ -301,6 +302,7 @@ function RecorderSheet() {
           )}
         </div>
         <div className="rl2-photos">
+          <FileProps id="50" />
           <span className="rl2-photos-title">Стойка — снимки следствия</span>
           {photos.map((p, k) => (
             <button

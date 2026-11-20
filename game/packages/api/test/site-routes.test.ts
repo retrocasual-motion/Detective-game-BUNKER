@@ -38,6 +38,7 @@ const locked = [
 const rules: AccessRules = {
   version: 1,
   attempt_limit: { ПАРОЛЬ: 3 },
+  final_form: { release: 'L999', return_allowed: false, after_reply: 'Форма заключения открыта.' },
   rules: [
     {
       id: 'url-vl',
@@ -133,6 +134,24 @@ describe('сайты дела на сервере (A-272)', () => {
     };
     expect(no.url).toBeUndefined();
     expect(no.reply).toBeTruthy();
+  });
+
+  it('открытый сайт читается и после «Решить дело»: форма открыта — новые действия закрыты, перечитать можно (F2)', async () => {
+    const a = app();
+    expect((await page(a)).notFound).toBeUndefined();
+    // Форма заключения открыта (L999): движок отвечает «форма открыта» на любые действия.
+    const [row] = await db.select().from(playerProgress);
+    if (!row) throw new Error('нет прогресса игрока');
+    await db
+      .update(playerProgress)
+      .set({ progress: { ...row.progress, released: [...row.progress.released, 'L999'] } });
+    const p = await page(a);
+    expect(p.notFound).toBeUndefined();
+    expect(p.body).toContain('Вход для сотрудников');
+    const open = (await (
+      await json(a, '/api/site/open', { address: 'vaultline-program.com' })
+    ).json()) as { url?: string };
+    expect(open.url).toBeTruthy();
   });
 
   it('страница: шапка, разделы, форма меткой; хост игры — не сайт', async () => {

@@ -16,6 +16,7 @@ const SCREEN_H = 800;
 const BEZEL = 30;
 
 type Kind = 'terminal' | 'browser' | 'doc';
+const KNOWN_KINDS: ReadonlySet<string> = new Set<Kind>(['terminal', 'browser', 'doc']);
 interface Win {
   id: string;
   kind: Kind;
@@ -161,7 +162,10 @@ const fromSaved = (w: PcWindow): Placed => ({
 
 function PcDesktop({ material }: { material: string | null }) {
   const saved = useGame.getState().state?.pc;
-  const [wins, setWins] = useState<Placed[]>(() => (saved?.windows ?? []).map(fromSaved));
+  // Окна старых сохранений (до A-272: «Поступления», почта, конверты) — не показываются (F10).
+  const [wins, setWins] = useState<Placed[]>(() =>
+    (saved?.windows ?? []).filter((w) => KNOWN_KINDS.has(w.kind)).map(fromSaved),
+  );
   const [iconPos, setIconPos] = useState<Record<string, { x: number; y: number }>>(() =>
     settle(
       ICONS.map((i) => i.key),

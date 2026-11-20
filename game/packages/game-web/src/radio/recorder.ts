@@ -198,6 +198,13 @@ export const useRecorder = create<Recorder>((set, get) => {
     },
     setPhoto(k) {
       set({ photo: k });
+      // Снимок стойки вплотную — крупный план фото (L906, F4): как «увеличить» у листа 50.
+      if (k !== null && !useGame.getState().materials.some((m) => m.id === 'L906'))
+        void postAction('ОСМОТР', '50', 'увеличить')
+          .then((r) => {
+            if (r.released.length) useGame.getState().addFound(r.released, '50', []);
+          })
+          .catch(() => undefined);
     },
     turnKnob(d) {
       // Стрелка ходит в пределах шкалы (риски — от 0,1 до 0,96 её ширины).

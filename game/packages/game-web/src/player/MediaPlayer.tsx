@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { NO_LINKS } from '../paperLinks.tsx';
+import { FileProps } from './FileProps.tsx';
 import { type Media, mmss, parseMedia, rowAt } from './media.ts';
 import './player.css';
 
@@ -11,6 +12,9 @@ import './player.css';
  * нет (K8): для файлов — расшифровка текущего файла, для таблиц по времени — строка той точки,
  * где стоит перемотка. `pen` — ручка-диктофон без дисплея: имени файла на ней не видно.
  */
+/** Записи дела со свойствами файла (A-251, F3); фильм на сайте HEXON — без свойств. */
+const PROPS_FILES = new Set(['13', '14', '21', '49']);
+
 export function MediaPlayer({
   materialId,
   body,
@@ -115,6 +119,7 @@ export function MediaPlayer({
           {mmss(t)} / {mmss(dur)}
         </span>
       </div>
+      {PROPS_FILES.has(materialId) && <FileProps id={materialId} />}
       <div className="mp-caption" data-testid="media-caption" data-material={materialId}>
         <div className="mp-note">
           Звука в сборке пока нет —{' '}
