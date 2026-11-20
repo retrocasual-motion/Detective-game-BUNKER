@@ -1,5 +1,5 @@
 import { CONTAINER_IDS, CONTAINERS, type ContainerId, EPILOGUE_ID } from '@bunker/shared';
-import { type Pose, type Room, toCamera, toScreen, type Vec3 } from './camera.ts';
+import { DESK_PHONE, type Pose, type Room, toCamera, toScreen, type Vec3 } from './camera.ts';
 import { DRIVE_IDLE, type DriveLook } from './drive.ts';
 
 /**
@@ -563,9 +563,16 @@ export function deskObjects(
       testId: 'desk-phone',
       boxes: [
         // Офисный телефон 20 × 19 см, трубка 21 см.
-        // Справа, ближе к игроку (автор 19.11).
-        box(0.61, 0.64, 0.2, 0.19, 0.07, col('--color-phone')),
-        box(0.555, 0.64, 0.055, 0.21, 0.04, col('--color-phone'), 0.07),
+        // Справа, ближе к игроку (автор 19.11): корпус 26 × 16 см; верх — кнопки, экранчик и
+        // трубка — DOM в 3D-сцене поверх корпуса (`deskphone/PhoneFace.tsx`, DP-A).
+        box(
+          DESK_PHONE.x,
+          DESK_PHONE.z,
+          DESK_PHONE.w,
+          DESK_PHONE.d,
+          DESK_PHONE.h,
+          col('--color-dp-body'),
+        ),
       ],
     },
     // Эпилог (автор 17.11): после заключения — конверт посередине стола, ближе к игроку; пока не

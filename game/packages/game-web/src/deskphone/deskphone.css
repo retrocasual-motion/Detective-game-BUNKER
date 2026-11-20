@@ -1,39 +1,35 @@
-/* Телефон следователя крупно (6a-3): офисный телефон конца 2000-х, лежит на столе — вид чуть
-   сверху. Камера «подъезжает» из его места на столе. */
-.deskphone-view {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-}
-
-.dp-stage {
+/* Телефон следователя (6a-3, DP-A): верх корпуса лежит плоскостью на столе в 3D-сцене комнаты
+   (`RoomScene`, слой `world-phone`); камера подлетает — кнопки нажимаются прямо на нём. */
+.dp-place {
   position: absolute;
-  transform-origin: 50% 50%;
-  perspective: 1400px;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
 }
-.dp-stage.dp-in {
-  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-:root[data-motion="reduce"] .dp-stage.dp-in {
-  transition: none;
-}
-
 .dp-phone {
+  position: relative;
+  border-radius: 34px 34px 40px 40px;
+  background: linear-gradient(to bottom, var(--color-dp-body-top), var(--color-dp-body));
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 8%);
+}
+.dp-active {
+  pointer-events: auto;
+}
+/* Отойти от телефона: щелчок по столу вокруг (под телефоном). */
+.dp-away {
   position: absolute;
   inset: 0;
-  border-radius: 34px 34px 46px 46px;
-  background: linear-gradient(to bottom, var(--color-dp-body-top), var(--color-dp-body));
-  box-shadow:
-    0 30px 60px rgb(0 0 0 / 55%),
-    inset 0 2px 0 rgb(255 255 255 / 8%);
-  transform: rotateX(20deg);
+  border: 0;
+  background: transparent;
+  cursor: default;
 }
 
 /* Рычаг: углубление под трубку. */
 .dp-cradle {
   position: absolute;
   left: 26px;
-  top: 26px;
+  top: 25px;
   width: 196px;
   height: 418px;
   border-radius: 40px;
@@ -96,9 +92,9 @@
   outline: 2px solid var(--color-focus, #f0c040);
   outline-offset: 2px;
 }
-/* Трубку сняли: поднята к игроку и в сторону. */
+/* Трубку сняли: поднята над рычагом — к игроку и в сторону, ближе к камере. */
 .dp-off .dp-handset {
-  transform: translate(-90px, -70px) rotate(-18deg) scale(1.06);
+  transform: translate(-70px, 50px) rotate(-14deg) scale(1.1);
   filter: drop-shadow(0 26px 22px rgb(0 0 0 / 55%));
 }
 :root[data-motion="reduce"] .dp-handset {
@@ -120,14 +116,14 @@
 .dp-panel {
   position: absolute;
   left: 248px;
-  top: 24px;
+  top: 22px;
   right: 24px;
-  bottom: 24px;
+  bottom: 22px;
 }
 
 .dp-lcd {
   position: absolute;
-  left: 0;
+  left: 79px;
   top: 0;
   width: 330px;
   height: 128px;
@@ -142,7 +138,7 @@
 .dp-lcd-top {
   display: flex;
   gap: 12px;
-  font-size: 13px;
+  font-size: 15px;
   opacity: 0.85;
 }
 .dp-line {
@@ -152,11 +148,12 @@
   font-weight: 700;
 }
 .dp-lcd-state {
-  margin-top: 6px;
-  font-size: 15px;
+  margin-top: 4px;
+  font-size: 19px;
 }
 .dp-lcd-number {
-  font-size: 24px;
+  font-size: 30px;
+  line-height: 1.1;
   letter-spacing: 1px;
   white-space: nowrap;
   overflow: hidden;
@@ -168,21 +165,21 @@
   bottom: 4px;
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 15px;
   border-top: 1px solid currentcolor;
   padding-top: 2px;
 }
 
 .dp-softkeys {
   position: absolute;
-  left: 12px;
+  left: 91px;
   top: 140px;
   width: 318px;
   display: flex;
   justify-content: space-between;
 }
 .dp-softkeys button {
-  width: 70px;
+  width: 96px;
   height: 18px;
   border: 0;
   border-radius: 9px;
@@ -193,11 +190,11 @@
 
 .dp-keypad {
   position: absolute;
-  left: 24px;
-  top: 178px;
+  left: 107px;
+  top: 176px;
   display: grid;
   grid-template-columns: repeat(3, 82px);
-  gap: 10px 14px;
+  gap: 8px 14px;
 }
 .dp-key {
   height: 52px;
@@ -214,8 +211,7 @@
   line-height: 1;
 }
 .dp-key:active,
-.dp-softkeys button:active,
-.dp-fkey:active {
+.dp-softkeys button:active {
   /* Кнопка утоплена — без сдвига (сдвиг под наклоном уводит отпускание мыши мимо кнопки). */
   box-shadow: inset 0 2px 4px var(--color-dp-key-shadow);
   filter: brightness(0.92);
@@ -231,47 +227,15 @@
   min-height: 10px;
 }
 
-.dp-func {
-  position: absolute;
-  right: 0;
-  top: 190px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.dp-fkey {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 128px;
-  height: 40px;
-  padding: 0 10px;
-  border: 0;
-  border-radius: 10px;
-  background: var(--color-dp-key);
-  box-shadow: 0 4px 0 var(--color-dp-key-shadow);
-  color: var(--color-dp-key-ink);
-  font-size: 12px;
-  cursor: pointer;
-}
-.dp-led {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-dp-led-off);
-  flex: none;
-}
-.dp-fkey-on .dp-led {
-  background: var(--color-pc-led);
-  box-shadow: 0 0 6px var(--color-pc-led);
-}
-
-/* Что слышно в трубке — под телефоном. */
+/* Что слышно в трубке — внизу экрана, под телефоном. */
 .dp-heard {
-  position: absolute;
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  z-index: 30;
   translate: -50% 0;
   width: min(640px, 90vw);
-  max-height: 30vh;
+  max-height: 24vh;
   overflow: auto;
   padding: 10px 14px;
   border-radius: 8px;

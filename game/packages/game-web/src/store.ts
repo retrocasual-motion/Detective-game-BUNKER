@@ -91,9 +91,9 @@ interface GameStore {
   /** Последнее поступление в дело (записка «Поступило»). */
   arrival: { ids: string[]; at: number } | null;
   dismissArrival(): void;
-  /** Телефон следователя крупно (6a-3): откуда на экране он «подъехал» — прямоугольник на столе. */
-  deskPhone: { left: number; top: number; width: number; height: number } | null;
-  setDeskPhone(from: { left: number; top: number; width: number; height: number } | null): void;
+  /** Камера у телефона следователя на столе (6a-3, DP-A): кнопки нажимаются прямо на нём. */
+  deskPhone: boolean;
+  setDeskPhone(open: boolean): void;
   /** Компьютер следователя открыт крупно (щелчок по монитору на столе). */
   computerOpen: boolean;
   setComputerOpen(open: boolean): void;
@@ -277,7 +277,7 @@ export const useGame = create<GameStore>((set, get) => {
     loadFailed: false,
     arrival: null,
     computerOpen: false,
-    deskPhone: null,
+    deskPhone: false,
     pcMaterial: null,
     held: null,
     laptop: null,
@@ -298,8 +298,8 @@ export const useGame = create<GameStore>((set, get) => {
       set({ arrival: null });
     },
 
-    setDeskPhone(from) {
-      set({ deskPhone: from, held: null, viewerId: null });
+    setDeskPhone(open) {
+      set({ deskPhone: open, held: null, viewerId: null });
     },
 
     setComputerOpen(open) {

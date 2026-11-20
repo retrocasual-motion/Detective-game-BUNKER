@@ -42,7 +42,7 @@ export function App() {
   const viewerId = useGame((g) => g.viewerId);
   const computerOpen = useGame((g) => g.computerOpen);
   // Вещь в руках, компьютер или ручка вплотную — их слой закрывает верхние кнопки.
-  const holding = useGame((g) => g.held !== null || g.computerOpen || !!g.pen || !!g.deskPhone);
+  const holding = useGame((g) => g.held !== null || g.computerOpen || !!g.pen || g.deskPhone);
   const loadFailed = useGame((g) => g.loadFailed);
   // Только то, что видно игроку: каждое «сохраняю → сохранено» не перерисовывает комнату (R3-06).
   const saveProblem = useGame((g) =>

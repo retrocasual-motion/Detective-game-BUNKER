@@ -9,7 +9,9 @@ import { expect, test } from './fixtures.ts';
 
 async function phoneUp(page: Page) {
   await page.getByTestId('desk-phone').click();
-  await expect(page.getByTestId('deskphone')).toBeVisible();
+  // Камера у телефона на столе (DP-A): кнопки — прямо на нём.
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-spot', 'phone');
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-moving', 'false');
 }
 
 async function dial(page: Page, digits: string) {
@@ -55,21 +57,26 @@ test('снять трубку — гудок; набор с клавиатуры
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('dp-lcd')).toContainText('Наберите номер');
   await page.keyboard.press('Escape');
-  await expect(page.getByTestId('deskphone')).toHaveCount(0);
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-spot', 'desk');
+  await expect(heard(page)).toHaveCount(0);
 });
 
-test('чужой номер — «не обслуживается»; «Повтор» набирает последний номер', async ({ page }) => {
+test('чужой номер — «не обслуживается»; «Повтор» — последний номер на экранчик, трубка — звонок', async ({
+  page,
+}) => {
   await phoneUp(page);
   await dial(page, '84951234567');
-  await page.getByTestId('dp-call').click();
+  await page.getByTestId('dp-handset').click();
   await expect(heard(page)).toContainText('Номер не обслуживается');
   await page.getByTestId('dp-handset').click();
+  await expect(page.getByTestId('dp-number')).toHaveText('—');
   await page.getByTestId('dp-redial').click();
   await expect(page.getByTestId('dp-number')).toHaveText('84951234567');
+  await page.getByTestId('dp-handset').click();
   await expect(heard(page)).toContainText('Номер не обслуживается');
-  // Щелчок мимо телефона — отойти (и отбой).
-  await page.getByTestId('deskphone-close').click({ position: { x: 10, y: 10 } });
-  await expect(page.getByTestId('deskphone')).toHaveCount(0);
+  // Щелчок по столу вокруг телефона — отойти (и отбой).
+  await page.getByTestId('deskphone-close').click({ position: { x: 10, y: 300 } });
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-spot', 'desk');
 });
 
 test('все линии пакета отвечают по своим номерам (TECH_PLAN 4.14)', async ({ page }) => {
