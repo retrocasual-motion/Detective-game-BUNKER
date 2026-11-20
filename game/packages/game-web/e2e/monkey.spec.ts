@@ -142,13 +142,20 @@ test(`обезьянка: ${STEPS} случайных действий (зерн
     await cur.waitForTimeout(60);
     // Игра жива: на экране комната, меню, вход или титры — не пустая страница.
     if (i % 50 === 49) {
+      // Игра жива: комната, меню, вход или титры. Ждём до 3 с — «Новое дело» перезагружает
+      // страницу, миг без экрана — не белый экран.
       const alive = await page
         .locator(
           '[data-testid="room"], [data-testid="main-menu"], [data-testid="login"], [data-testid="credits"]',
         )
-        .count()
-        .catch(() => 0);
-      if (!alive) problems.push(`шаг ${i}: на экране игры ничего (белый экран?)`);
+        .first()
+        .waitFor({ state: 'attached', timeout: 3000 })
+        .then(() => true)
+        .catch(() => false);
+      if (!alive) {
+        problems.push(`шаг ${i}: на экране игры ничего (белый экран?)`);
+        await page.screenshot({ path: test.info().outputPath(`alive-${i}.png`) }).catch(() => {});
+      }
     }
   }
   if (problems.length) {
