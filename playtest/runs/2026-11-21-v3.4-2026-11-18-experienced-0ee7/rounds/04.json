@@ -1,0 +1,194 @@
+{
+  "duration_api_ms": 461026,
+  "stop_reason": "end_turn",
+  "session_id": "9d75ec19-051d-4556-b061-a5ad2d2ba86a",
+  "total_cost_usd": 2.3905754999999997,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 7528,
+    "cache_read_input_tokens": 478462,
+    "output_tokens": 3587,
+    "output_tokens_details": {
+      "thinking_tokens": 363
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 7528,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 988,
+        "cache_read_input_tokens": 122603,
+        "cache_creation_input_tokens": 1866,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1866
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 72,
+      "outputTokens": 47878,
+      "thinkingTokens": 19779,
+      "cacheReadInputTokens": 2310775,
+      "cacheCreationInputTokens": 121281,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 121281,
+      "webSearchRequests": 0,
+      "costUSD": 2.390251,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 400,
+      "thinkingTokens": 379,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00032450000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "extra_usage_disabled",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 10,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 закончен. Раздел «Раунд 4» в журнале, четыре действия записаны в `actions.md`.\n\n**Что дал раунд:**\n- **Блокнот Леи.** На рисунке 14 на двери кабинета Коула висит листок «РЕЖИМ ТРЕВОГИ». Значит, Лея рисовала в комнате анкет уже после объявления тревоги в 21:43 12.10. На странице 15 тот же вид брошен на середине: линия косяка оборвана и смазана, рисование прервано внезапно. Это расходится с её словами, что утром она сидела у себя в жилом блоке. Но точного времени рисунка нет, так что это мой вывод, а не доказательство.\n- **Мика Сато — это «С. Грей».** Это внештатный автор The Signal, главный редактор там — Фрэнк Бейкер. Так совпадают её заметки «перед отправкой Фрэнку», надпись в её книге «С. — проверяй источники. Фрэнк» и статья 2008 года о погибшем участнике.\n- **Ключ № 845 «DO NOT DUPLICATE»** из куртки Коула, судя по правилам Front Range Savings, может быть от сейфовой ячейки. В банке есть форма «Сообщить о смерти арендатора».\n- **Два бланка осмотра A-24** архив совмещать не стал, сравнил сам. Номер, дата, рост, вес, давление и подпись совпадают. Различаются только три графы: аллергия, особые отметки и допуск.\n- **Без результата:** сайт NorthCare и крупный план листа с площадки ничего нового не дали. Увеличение ключа № 845 тоже ничего не добавило, а ключи кабинета архив повторно не показал — сослался на уже выданные материалы.\n\n**Подозреваемые сейчас:**\n\n| Кто | % |\n|---|---|\n| Лея Моро | 40 |\n| Пирс | 30 |\n| Несчастный случай или падение без умысла | 20 |\n| Харт | 7 |\n| Остальные | 3 |\n\nУверенность в версии осталась на 40%. Схема в целом ясна: испытание препарата, инсценированная тревога, гибель участника A-24 в 2008 году и подделанный бланк. Нерешённым остаётся главное: кто был на площадке с Коулом.\n\n**Действия на следующий раунд:**\n- поиск в кабинете Уолш на сайте VAULTLINE в разделе «Учёт анкет»: участник A-24 с датой выбытия 06.10.2008 (жду имя, чтобы проверить его связь с Леей);\n- там же — поиск по текущему этапу программы VL-31;\n- поиск документа «Опись A-24» в разделе «Документы программы»;\n- форма банка о смерти арендатора: ячейка 845, Коул, 13.10.2009.",
+  "ttft_ms": 3904,
+  "type": "result",
+  "duration_ms": 36084,
+  "uuid": "d44721fa-5a19-41db-94e4-e1e019241f9a",
+  "ttft_stream_ms": 3125,
+  "time_to_request_ms": 506,
+  "time_to_request_phases_ms": {
+    "other": 3,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 2,
+    "input_attachments": 25,
+    "input_hooks": 1,
+    "conversation_append": 1,
+    "transcript_persist": 16,
+    "tool_pool_refresh": 1,
+    "init_message": 7,
+    "init_frame_send": 2,
+    "engine_pickup": 1,
+    "loop_entry": 2,
+    "message_prep": 1,
+    "model_config_wait": 0,
+    "autocompact": 1,
+    "request_announcements": 2,
+    "query_setup": 0,
+    "model_gates": 424,
+    "tool_schema_build": 6,
+    "message_normalization": 4,
+    "client_creation": 2,
+    "request_build": 4
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 4,
+  "time_to_request_cpu_ms": 172,
+  "time_to_request_major_faults": 13474,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 19,
+    "cpu_ms": 16,
+    "major_faults": 3584,
+    "changed_files_reread": 0,
+    "setup_ms": 1,
+    "prompt_producers_ms": 0,
+    "ambient_start_ms": 3,
+    "ambient_wait_ms": 19,
+    "render_ms": 0,
+    "producers": 41,
+    "token_counts": 0
+  },
+  "tool_schema_build_detail": {
+    "betas_ms": 0,
+    "waits_ms": 2,
+    "placement_ms": 1,
+    "render_ms": 3,
+    "after_ms": 0,
+    "other_ms": 0,
+    "tools": 5,
+    "new_schemas": 5
+  },
+  "message_normalization_detail": {
+    "before_ms": 0,
+    "normalize_ms": 4,
+    "images_ms": 0,
+    "post_process_ms": 0,
+    "after_ms": 0,
+    "other_ms": 0,
+    "messages": 264,
+    "wire_messages": 98
+  },
+  "request_build_detail": {
+    "records_ms": 0,
+    "system_ms": 1,
+    "headers_ms": 0,
+    "cache_break_record_ms": 1,
+    "plans_ms": 0,
+    "retry_setup_ms": 0,
+    "sent_build_ms": 2,
+    "record_attempt_ms": 0,
+    "other_ms": 0,
+    "sent_build_safety_context_ms": 0,
+    "sent_build_cache_breakpoints_ms": 0,
+    "sent_build_surrogate_scan_ms": 1
+  },
+  "first_content_frame_ms": 3125,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "credential_expires_at": "2026-12-04T14:35:16.031Z",
+  "_returncode": 0
+}

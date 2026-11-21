@@ -6,7 +6,7 @@
 сообщению автора 20.11; 2 прогона detective-playtester; два отчёта автору.
 
 ## Next Step
-Слито в main (автор 21.11: «мерджи»). Повторный прогон RT-A — только по слову автора.
+RT-A готов: PR с отчётом — «мержим?»; решение автора по PT-9 (почта, ответ без адреса).
 
 ## Current Phase
 Phase 7 (готово)
@@ -73,4 +73,10 @@ Phase 7 (готово)
 - [x] walk 175/0/78; lint 0; unit зелёные; e2e sites, full-case, pc
 - [x] A-275: DECISIONS_LOG, 03 §7, PACK.md, game/docs/DECISIONS.md, REPORT.md
 - [x] PR и слияние в main
+- **Status:** complete
+
+### Phase 8: Повторный прогон RT-A (автор 21.11: «Погнали. Запускай»)
+- [x] experienced-0ee7: ФИНАЛ Р9, 5/5, 22,62; casual-c24d: ФИНАЛ Р11, 5/5, 24,55
+- [x] REPORT.md (playtest/runs/2026-11-21-v3.4-2026-11-18/), ANALYSIS.md по прогонам
+- [x] Находка PT-9 (почта: ответ без адреса → pw-mail-other)
 - **Status:** complete

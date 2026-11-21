@@ -1,0 +1,194 @@
+{
+  "duration_api_ms": 645850,
+  "stop_reason": "end_turn",
+  "session_id": "9d75ec19-051d-4556-b061-a5ad2d2ba86a",
+  "total_cost_usd": 3.4389987000000004,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 3241,
+    "cache_read_input_tokens": 460099,
+    "output_tokens": 2593,
+    "output_tokens_details": {
+      "thinking_tokens": 223
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3241,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 724,
+        "cache_read_input_tokens": 153966,
+        "cache_creation_input_tokens": 1960,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1960
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 102,
+      "outputTokens": 66606,
+      "thinkingTokens": 23685,
+      "cacheReadInputTokens": 4421211,
+      "cacheCreationInputTokens": 152738,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 152738,
+      "webSearchRequests": 0,
+      "costUSD": 3.438674200000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 400,
+      "thinkingTokens": 379,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00032450000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "extra_usage_disabled",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Я отправил заключение строкой ФИНАЛ в `actions.md`. Разделы «Раунд 9» и «Заключение» с обоснованием дописаны в журнал.\n\n| Пункт | Ответ | На чём основан |\n|---|---|---|\n| 1. Кто действовал | Лея Моро | у всех остальных алиби по терминалам и радио, у неё нет |\n| 2. Почему | ей хотелось расквитаться с Коулом или добиться у него правды о гибели мужа | L991 — папка A-24 с копией настоящего медлиста её мужа Томаса Бернара: аллергия на молоко |\n| 3. Как | убили не специально, без умысла | стычка на площадке, ограждение не отремонтировано |\n| 4. Для чего программа | испытание на людях препарата X-17 «против паники» из молочного белка, под видом витаминов и с ложной тревогой | L736 — досье X-17 |\n| 5. Кто стоит за программой и закрыл группу | Ричард Хейл, глава HEXON BIO | офис запер объект в 09:24, за час с лишним до настоящего удара |\n\n**Уверенность.** В целом по версии — 60%. По пунктам 4 и 5 — около 90%: они подтверждены документами из архива HEXON, журналом сервера и записями. Слабые места — пункты 1 и 3:\n- **Кто был на площадке.** Прямого доказательства, что это была Лея, нет. Против неё сходятся косвенные улики:\n  - она единственная, у кого есть и мотив, и возможность без алиби;\n  - она солгала, где была;\n  - её рисунок с видом на дверь Коула брошен на середине;\n  - медик Уолш не записала её приход.\n  \n  Пирс тоже успевала дойти от своего терминала до площадки за 18 секунд, и у неё был свой мотив.\n- **Умысел.** По записи радиопоста видно, что была борьба, а эксперт не нашёл признаков подготовленного повреждения. Поэтому я выбрал «без умысла», но и намеренный толчок полностью исключить нельзя.",
+  "ttft_ms": 2697,
+  "type": "result",
+  "duration_ms": 27629,
+  "uuid": "0ddca59f-901f-4d94-af6b-b3583091a718",
+  "ttft_stream_ms": 1917,
+  "time_to_request_ms": 680,
+  "time_to_request_phases_ms": {
+    "other": 3,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 2,
+    "input_attachments": 16,
+    "input_hooks": 1,
+    "conversation_append": 1,
+    "transcript_persist": 17,
+    "tool_pool_refresh": 1,
+    "init_message": 7,
+    "init_frame_send": 2,
+    "engine_pickup": 0,
+    "loop_entry": 3,
+    "message_prep": 0,
+    "model_config_wait": 1,
+    "autocompact": 1,
+    "request_announcements": 2,
+    "query_setup": 0,
+    "model_gates": 603,
+    "tool_schema_build": 7,
+    "message_normalization": 5,
+    "client_creation": 2,
+    "request_build": 5
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 13,
+  "time_to_request_cpu_ms": 140,
+  "time_to_request_major_faults": 15031,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 10,
+    "cpu_ms": 31,
+    "major_faults": 2664,
+    "changed_files_reread": 0,
+    "setup_ms": 1,
+    "prompt_producers_ms": 0,
+    "ambient_start_ms": 3,
+    "ambient_wait_ms": 9,
+    "render_ms": 0,
+    "producers": 41,
+    "token_counts": 0
+  },
+  "tool_schema_build_detail": {
+    "betas_ms": 0,
+    "waits_ms": 3,
+    "placement_ms": 1,
+    "render_ms": 3,
+    "after_ms": 0,
+    "other_ms": 0,
+    "tools": 5,
+    "new_schemas": 5
+  },
+  "message_normalization_detail": {
+    "before_ms": 0,
+    "normalize_ms": 5,
+    "images_ms": 0,
+    "post_process_ms": 0,
+    "after_ms": 0,
+    "other_ms": 0,
+    "messages": 374,
+    "wire_messages": 146
+  },
+  "request_build_detail": {
+    "records_ms": 0,
+    "system_ms": 1,
+    "headers_ms": 0,
+    "cache_break_record_ms": 1,
+    "plans_ms": 1,
+    "retry_setup_ms": 0,
+    "sent_build_ms": 2,
+    "record_attempt_ms": 0,
+    "other_ms": 0,
+    "sent_build_safety_context_ms": 0,
+    "sent_build_cache_breakpoints_ms": 0,
+    "sent_build_surrogate_scan_ms": 1
+  },
+  "first_content_frame_ms": 1917,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "credential_expires_at": "2026-12-04T14:35:16.031Z",
+  "_returncode": 0
+}

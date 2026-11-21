@@ -1,0 +1,194 @@
+{
+  "duration_api_ms": 225829,
+  "stop_reason": "end_turn",
+  "session_id": "83118a35-b36e-4164-a641-019b3482e456",
+  "total_cost_usd": 1.2773302,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 15020,
+    "cache_read_input_tokens": 356437,
+    "output_tokens": 7375,
+    "output_tokens_details": {
+      "thinking_tokens": 2501
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 15020,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 967,
+        "cache_read_input_tokens": 77594,
+        "cache_creation_input_tokens": 2821,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2821
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 50,
+      "outputTokens": 23027,
+      "thinkingTokens": 7650,
+      "cacheReadInputTokens": 992561,
+      "cacheCreationInputTokens": 77227,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 77227,
+      "webSearchRequests": 0,
+      "costUSD": 1.2770682,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 275,
+      "thinkingTokens": 254,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000262,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "extra_usage_disabled",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 11,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 2 закончен. Раздел «Раунд 2» добавлен в `journal.md`, новые действия записаны в `actions.md`.\n\n**Что дал раунд:**\n- **Алиби на момент удара (08:45:02) по журналу сервера и терминалу технической:**\n  - Уолш в 08:45:05 сделала отметку в медкарте с терминала медкабинета.\n  - Миллер в 08:44:35 и 08:45:30 нажимал кнопки на панелях в технической.\n  - В 08:44:39 и 08:45:20 кто-то пытался позвонить наружу с кухни без кода. Думаю, это Силва звонил сестре Ане, но в журнале имени нет.\n  - У Пирс, Харта и Моро алиби нет. Пирс в 08:43:10 отправила сводку и до площадки успевала за ~18 секунд. Харт после 08:43:18 успевал дойти с радиопоста за ~42 секунды.\n- **Коул утром проверял учётку Пирс.** В 08:02 он выгрузил её сеанс, дважды менял параметры её учётной записи, а в 08:30–08:40 был у неё. Пирс называет эту встречу «ничего особенного». Кроме того, учётка Пирс за заезд трижды отправляла выгрузки не в офис, а по другому маршруту, 14.\n- **Телефон в столе Коула — это телефон Силвы, PIN 0110 подошёл.** В голосовом от 08.10 Силва рассказывает сестре, что подслушал разговор Эммы и Адама о записи, «симуляции» и «дне объявления», а медик и инженер не должны были знать. Это подтверждает, что ночная тревога с «ударом» была инсценировкой.\n- **Пропавшая из шкафа Коула папка A-24 нашлась.** Она спрятана среди чистых бланков в комнате анкет, где работает Моро. В ней фотография и ксерокопия бланка.\n- **Не сработало:** знак HEXON на скане не разобрать, выпусков газеты за 2008 год в цифровом архиве нет, на записи 08:45:40 слышен только эфир.\n\n**Подозреваемые:** Пирс 35%, Харт 25%, Моро 20%, остальные почти исключены по терминалам. Уверенность в версии — 30%.\n\n**Действия на следующий раунд:**\n- пролистать папку A-24 и увеличить фото и ксерокопию из неё;\n- открыть на сервере сеансы пользователей 05 (Пирс) и 01;\n- открыть сайт hexon-bio.com, чтобы найти знак для ноутбука («наш первый знак»);\n- нажать «Забыли пароль» на сайте VAULTLINE для логина k.walsh — он записан на обложке медицинского журнала.",
+  "ttft_ms": 2562,
+  "type": "result",
+  "duration_ms": 69436,
+  "uuid": "0661a05e-71a8-4a2e-b780-be187569c6c6",
+  "ttft_stream_ms": 1923,
+  "time_to_request_ms": 676,
+  "time_to_request_phases_ms": {
+    "other": 2,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 2,
+    "input_attachments": 17,
+    "input_hooks": 1,
+    "conversation_append": 1,
+    "transcript_persist": 14,
+    "tool_pool_refresh": 1,
+    "init_message": 6,
+    "init_frame_send": 3,
+    "engine_pickup": 0,
+    "loop_entry": 2,
+    "message_prep": 0,
+    "model_config_wait": 1,
+    "autocompact": 1,
+    "request_announcements": 1,
+    "query_setup": 0,
+    "model_gates": 608,
+    "tool_schema_build": 6,
+    "message_normalization": 3,
+    "client_creation": 1,
+    "request_build": 5
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 12,
+  "time_to_request_cpu_ms": 110,
+  "time_to_request_major_faults": 11286,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 11,
+    "cpu_ms": 32,
+    "major_faults": 2267,
+    "changed_files_reread": 0,
+    "setup_ms": 1,
+    "prompt_producers_ms": 0,
+    "ambient_start_ms": 3,
+    "ambient_wait_ms": 11,
+    "render_ms": 0,
+    "producers": 41,
+    "token_counts": 0
+  },
+  "tool_schema_build_detail": {
+    "betas_ms": 0,
+    "waits_ms": 3,
+    "placement_ms": 0,
+    "render_ms": 3,
+    "after_ms": 0,
+    "other_ms": 0,
+    "tools": 5,
+    "new_schemas": 5
+  },
+  "message_normalization_detail": {
+    "before_ms": 0,
+    "normalize_ms": 3,
+    "images_ms": 0,
+    "post_process_ms": 0,
+    "after_ms": 0,
+    "other_ms": 0,
+    "messages": 160,
+    "wire_messages": 62
+  },
+  "request_build_detail": {
+    "records_ms": 0,
+    "system_ms": 1,
+    "headers_ms": 0,
+    "cache_break_record_ms": 1,
+    "plans_ms": 0,
+    "retry_setup_ms": 0,
+    "sent_build_ms": 2,
+    "record_attempt_ms": 0,
+    "other_ms": 1,
+    "sent_build_safety_context_ms": 0,
+    "sent_build_cache_breakpoints_ms": 0,
+    "sent_build_surrogate_scan_ms": 0
+  },
+  "first_content_frame_ms": 1923,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "credential_expires_at": "2026-12-04T14:35:16.031Z",
+  "_returncode": 0
+}

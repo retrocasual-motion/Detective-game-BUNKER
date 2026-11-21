@@ -1,0 +1,194 @@
+{
+  "duration_api_ms": 367865,
+  "stop_reason": "end_turn",
+  "session_id": "83118a35-b36e-4164-a641-019b3482e456",
+  "total_cost_usd": 1.9434790000000002,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 13743,
+    "cache_read_input_tokens": 390323,
+    "output_tokens": 6926,
+    "output_tokens_details": {
+      "thinking_tokens": 2099
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13743,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1130,
+        "cache_read_input_tokens": 102446,
+        "cache_creation_input_tokens": 4818,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 4818
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 68,
+      "outputTokens": 37440,
+      "thinkingTokens": 12316,
+      "cacheReadInputTokens": 1807685,
+      "cacheCreationInputTokens": 104076,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 104076,
+      "webSearchRequests": 0,
+      "costUSD": 1.943217,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 275,
+      "thinkingTokens": 254,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000262,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "extra_usage_disabled",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 13,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 4 закончен. «Раунд 4» дописан в `journal.md`, новые действия — в `actions.md`. Ноутбук открылся по старому знаку HEXON с их сайта, и в нём много нового.\n\n**Что нашлось:**\n- **Фальшивую тревогу записали заранее, 15.09.2009.** В папке «Тревога» три дубля «внешнего сообщения». Читает женский голос, по описанию как у Пирс, а мужской басовитый голос, похоже Коула, ею руководит. Значит, Пирс солгала, что не узнала голос.\n- **Секрет Харта.** В 1998 году в Германии Харт пьяным разбил машину, погиб его сослуживец Д. Колдер, и Харт свалил вину на погибшего. Коул открывал этот файл 10.10 и потом шантажировал Харта «миссис Колдер».\n- **У Харта, похоже, есть алиби.** В интервью он говорит, что его успокаивает Лондон, Всемирная служба. На записи поста в 08:44:20–08:44:31 станции перебираются, и приёмник останавливается на «…Лондон…». Если станции переключал Харт вручную, к падению в 08:45:02 он до площадки не успевал: дорога занимает не меньше 42 секунд.\n- **Махинации Коула:**\n  - он снял 4×4 200 наличными «за обслуживание связи Fieldworks Radio», хотя, по словам Миллера, связь никто не обслуживал. Харт раньше работал в Fieldworks и, вероятно, это раскусил;\n  - 13.10.2008, через неделю после смерти A-24, Коул внёс 3 000 наличными на счёт «Л. Миллер». Квитанция лежит в бумажнике Миллера.\n- **Пирс грозило разоблачение.** Утром 13.10 Коул готовил доклад Хейлу, где среди прочего описал три отправки данных Пирс на её личный ящик. В 08:06 он распечатал выписку по её учётной записи. В описи папки, которую Пирс забрала у тела, этой выписки нет. Видимо, Пирс её изъяла.\n\n**Подозреваемые:** Пирс 35% и Моро 35%, Харт 12%, несчастный случай 8%, Уолш 5%, остальные 5%. Уверенность в версии — 40%. Пока не могу выбрать между Пирс (её собирались сдать Хейлу, в 08:43 она была в 18 секундах от площадки) и Моро (месть за Тома, комната анкет напротив кабинета, алиби только со слов Уолш).\n\n**Действия на следующий раунд:**\n- восстановить пароль почты Пирс (e.pierce.uk@mailbridge.net). Если спросят о первом питомце, ответ — бигль Тоффи;\n- открыть страницу сейфовых ячеек Front Range Savings: в куртке Коула был ключ № 845;\n- увеличить любовный роман Уолш и закладку в нём. Нужен ответ на её контрольный вопрос «Любимый герой?»;\n- увеличить кадр 3 камеры инженера, где у тела лежит папка;\n- прослушать запись поста с 08:44:20, чтобы понять, ручной ли был перебор станций.",
+  "ttft_ms": 3638,
+  "type": "result",
+  "duration_ms": 67629,
+  "uuid": "0e3df2dd-ef2f-4923-8299-e05b8b673af5",
+  "ttft_stream_ms": 2859,
+  "time_to_request_ms": 644,
+  "time_to_request_phases_ms": {
+    "other": 3,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 2,
+    "input_attachments": 25,
+    "input_hooks": 1,
+    "conversation_append": 1,
+    "transcript_persist": 7,
+    "tool_pool_refresh": 1,
+    "init_message": 7,
+    "init_frame_send": 2,
+    "engine_pickup": 1,
+    "loop_entry": 2,
+    "message_prep": 0,
+    "model_config_wait": 1,
+    "autocompact": 0,
+    "request_announcements": 2,
+    "query_setup": 0,
+    "model_gates": 572,
+    "tool_schema_build": 6,
+    "message_normalization": 4,
+    "client_creation": 1,
+    "request_build": 5
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 6,
+  "time_to_request_cpu_ms": 108,
+  "time_to_request_major_faults": 12432,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 20,
+    "cpu_ms": 46,
+    "major_faults": 4544,
+    "changed_files_reread": 0,
+    "setup_ms": 1,
+    "prompt_producers_ms": 0,
+    "ambient_start_ms": 3,
+    "ambient_wait_ms": 19,
+    "render_ms": 0,
+    "producers": 41,
+    "token_counts": 0
+  },
+  "tool_schema_build_detail": {
+    "betas_ms": 0,
+    "waits_ms": 2,
+    "placement_ms": 1,
+    "render_ms": 3,
+    "after_ms": 0,
+    "other_ms": 0,
+    "tools": 5,
+    "new_schemas": 5
+  },
+  "message_normalization_detail": {
+    "before_ms": 0,
+    "normalize_ms": 3,
+    "images_ms": 0,
+    "post_process_ms": 1,
+    "after_ms": 0,
+    "other_ms": 0,
+    "messages": 222,
+    "wire_messages": 92
+  },
+  "request_build_detail": {
+    "records_ms": 0,
+    "system_ms": 1,
+    "headers_ms": 0,
+    "cache_break_record_ms": 1,
+    "plans_ms": 0,
+    "retry_setup_ms": 0,
+    "sent_build_ms": 2,
+    "record_attempt_ms": 1,
+    "other_ms": 0,
+    "sent_build_safety_context_ms": 0,
+    "sent_build_cache_breakpoints_ms": 0,
+    "sent_build_surrogate_scan_ms": 1
+  },
+  "first_content_frame_ms": 2859,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "credential_expires_at": "2026-12-04T14:35:16.031Z",
+  "_returncode": 0
+}

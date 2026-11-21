@@ -1,0 +1,194 @@
+{
+  "duration_api_ms": 618953,
+  "stop_reason": "end_turn",
+  "session_id": "9d75ec19-051d-4556-b061-a5ad2d2ba86a",
+  "total_cost_usd": 3.2691669,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 4204,
+    "cache_read_input_tokens": 449928,
+    "output_tokens": 1961,
+    "output_tokens_details": {
+      "thinking_tokens": 151
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4204,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 644,
+        "cache_read_input_tokens": 151465,
+        "cache_creation_input_tokens": 1220,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 1220
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 96,
+      "outputTokens": 64013,
+      "thinkingTokens": 23462,
+      "cacheReadInputTokens": 3961112,
+      "cacheCreationInputTokens": 149497,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 149497,
+      "webSearchRequests": 0,
+      "costUSD": 3.2688424000000005,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 400,
+      "thinkingTokens": 379,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.00032450000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "extra_usage_disabled",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 8 закончен. В `actions.md` записано одно действие: `РЕШИТЬ | дело | продолжить`. После него форма заключения откроется, и вернуться к расследованию будет нельзя. Раздел «Раунд 8» дописан в журнал.\n\n**Что дал выпуск газеты от 14.12.1987.** В торговом центре «Пайн-Плаза» сработала ложная тревога «пожар», и на лестнице началась давка. Огня не было, но погибли десять человек, среди них девятилетняя Эмили Хейл. На фото у входа сидит мужчина с ямочкой на подбородке; по описанию он похож на молодого Хейла. Отсюда, по-видимому, и замысел Хейла:\n- препарат X-17 «против паники»;\n- сценарий опыта «тревога и единственная лестница»;\n- в досье X-17 есть запись «00 — Р. Х., 2006» — похоже, раннюю пробу вещества Хейл провёл на себе.\n\nЭто мотив руководителя всей программы, а не ответ на вопрос, кто был на площадке с Коулом.\n\n**Почему подтверждаю переход к форме.** Новых шагов, которые указали бы на этого человека, я больше не вижу. Запись радиопоста в момент стычки голосов не дала. Все пачки бумаг пролистаны, устройства открыты, сайты проверены.\n\n**Подозреваемые без изменений:**\n\n| Кто | % |\n|---|---|\n| Лея Моро | 55 |\n| Пирс | 20 |\n| Падение без второго человека | 20 |\n| Остальные | 5 |\n\nУверенность в версии — 60%. Слабое место прежнее: прямого доказательства, что на площадке была Лея, а не Пирс, нет. Когда форма появится в `case/`, отвечу на её пункты строкой ФИНАЛ.",
+  "ttft_ms": 2841,
+  "type": "result",
+  "duration_ms": 20675,
+  "uuid": "0d89edc3-86e4-45b1-93ed-11cf5646df57",
+  "ttft_stream_ms": 2062,
+  "time_to_request_ms": 637,
+  "time_to_request_phases_ms": {
+    "other": 3,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 2,
+    "input_attachments": 31,
+    "input_hooks": 1,
+    "conversation_append": 1,
+    "transcript_persist": 10,
+    "tool_pool_refresh": 1,
+    "init_message": 7,
+    "init_frame_send": 2,
+    "engine_pickup": 1,
+    "loop_entry": 2,
+    "message_prep": 0,
+    "model_config_wait": 1,
+    "autocompact": 1,
+    "request_announcements": 2,
+    "query_setup": 0,
+    "model_gates": 553,
+    "tool_schema_build": 6,
+    "message_normalization": 5,
+    "client_creation": 2,
+    "request_build": 5
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 4,
+  "time_to_request_cpu_ms": 126,
+  "time_to_request_major_faults": 16208,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 26,
+    "cpu_ms": 48,
+    "major_faults": 5887,
+    "changed_files_reread": 0,
+    "setup_ms": 1,
+    "prompt_producers_ms": 0,
+    "ambient_start_ms": 3,
+    "ambient_wait_ms": 25,
+    "render_ms": 0,
+    "producers": 41,
+    "token_counts": 0
+  },
+  "tool_schema_build_detail": {
+    "betas_ms": 0,
+    "waits_ms": 3,
+    "placement_ms": 1,
+    "render_ms": 2,
+    "after_ms": 0,
+    "other_ms": 0,
+    "tools": 5,
+    "new_schemas": 5
+  },
+  "message_normalization_detail": {
+    "before_ms": 0,
+    "normalize_ms": 4,
+    "images_ms": 0,
+    "post_process_ms": 1,
+    "after_ms": 0,
+    "other_ms": 0,
+    "messages": 357,
+    "wire_messages": 137
+  },
+  "request_build_detail": {
+    "records_ms": 0,
+    "system_ms": 1,
+    "headers_ms": 0,
+    "cache_break_record_ms": 1,
+    "plans_ms": 1,
+    "retry_setup_ms": 0,
+    "sent_build_ms": 2,
+    "record_attempt_ms": 0,
+    "other_ms": 0,
+    "sent_build_safety_context_ms": 0,
+    "sent_build_cache_breakpoints_ms": 0,
+    "sent_build_surrogate_scan_ms": 1
+  },
+  "first_content_frame_ms": 2062,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "credential_expires_at": "2026-12-04T14:35:16.031Z",
+  "_returncode": 0
+}

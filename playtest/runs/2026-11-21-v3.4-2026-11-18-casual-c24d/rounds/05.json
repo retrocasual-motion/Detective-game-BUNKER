@@ -1,0 +1,194 @@
+{
+  "duration_api_ms": 408320,
+  "stop_reason": "end_turn",
+  "session_id": "83118a35-b36e-4164-a641-019b3482e456",
+  "total_cost_usd": 2.178669,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 8109,
+    "cache_read_input_tokens": 440330,
+    "output_tokens": 4111,
+    "output_tokens_details": {
+      "thinking_tokens": 593
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 8109,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 916,
+        "cache_read_input_tokens": 113010,
+        "cache_creation_input_tokens": 2363,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2363
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 76,
+      "outputTokens": 41551,
+      "thinkingTokens": 12909,
+      "cacheReadInputTokens": 2248015,
+      "cacheCreationInputTokens": 112185,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 112185,
+      "webSearchRequests": 0,
+      "costUSD": 2.178407,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 1245,
+      "outputTokens": 275,
+      "thinkingTokens": 254,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.000262,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "extra_usage_disabled",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "safety_stops": 0,
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "Раунд 5 закончен. «Раунд 5» дописан в `journal.md`, пять действий — в `actions.md`. Ни одну из прошлых версий раунд не подтвердил окончательно, но две вещи прояснились.\n\n**Новое:**\n- **Ключ:** аварийный дубликат ключа от кабинета (красная бирка «МЕДКАБ. · 3») висел на поясе у самого Коула, это видно на кадре 3. Значит, его взял Коул, а Пирс просто сняла с тела оба ключа. Это подозрение с неё снимается.\n- **Ограждение:**\n  - Плиту 10.10 на самом деле не меняли. На кадре 6 от 13.10 видны старые анкеры с целой серой краской, без следов инструмента, и излом в старой ржавчине.\n  - Значит, «фото после» в отчёте Миллера, где новая плита и новые болты, — подложное или снято в другом месте.\n  - 03.10 Коул сам запретил закрывать лестницу («Отклонено… Укрепить»). Стойка держалась только на хомуте с полосой, а полоса разорвана в сторону проёма.\n  - Миллер солгал следствию, что дефект устранён, а Коул такой отчёт «принял».\n- **Копия бланка A-24:** пустой конверт Уолш «22.09.08» был как раз под сложенный вчетверо лист. Скорее всего, в нём лежала та самая копия бланка, которая потом оказалась у Моро.\n- **Нерешённое:** по перебору станций в 08:44:20 так и не понятно, крутили приёмник руками или он искал сам. Поэтому алиби Харта остаётся под вопросом.\n\n**Подозреваемые:** Моро 35%, Пирс 30%, несчастный случай 15%, Харт 10%, остальные 10%. Уверенность в версии — 40%. Картина вокруг падения ясна. Неясно главное: кто был с Коулом на площадке, Моро или Пирс.\n\n**Действия на следующий раунд:**\n- ответить «Тоффи» на вопрос почты Пирс о кличке первой собаки;\n- ответить «Йен» на вопрос «Любимый герой?» для учётной записи Уолш на сайте VAULTLINE. Это имя героя из аннотации её романа;\n- сообщить банку о смерти арендатора ячейки: № 845, Коул, 13.10.2009;\n- позвонить поставщику плиты Colton Supply и спросить про заказ CS-2291;\n- позвонить на горячую линию NorthCare и спросить про партию 0417, чтобы понять, где препарат, а где плацебо.",
+  "ttft_ms": 2754,
+  "type": "result",
+  "duration_ms": 41158,
+  "uuid": "45a5230a-5f63-4c9d-af8e-fccf2e7649a2",
+  "ttft_stream_ms": 1975,
+  "time_to_request_ms": 642,
+  "time_to_request_phases_ms": {
+    "other": 3,
+    "system_prompt": 1,
+    "resume_other": 0,
+    "process_user_input": 2,
+    "input_attachments": 31,
+    "input_hooks": 1,
+    "conversation_append": 1,
+    "transcript_persist": 8,
+    "tool_pool_refresh": 1,
+    "init_message": 8,
+    "init_frame_send": 3,
+    "engine_pickup": 1,
+    "loop_entry": 2,
+    "message_prep": 0,
+    "model_config_wait": 1,
+    "autocompact": 1,
+    "request_announcements": 2,
+    "query_setup": 1,
+    "model_gates": 558,
+    "tool_schema_build": 6,
+    "message_normalization": 4,
+    "client_creation": 2,
+    "request_build": 5
+  },
+  "turn_start_resume_kind": "none",
+  "process_turn_index": 0,
+  "time_to_request_loop_lag_ms": 2,
+  "time_to_request_cpu_ms": 93,
+  "time_to_request_major_faults": 13215,
+  "input_attachments_detail": {
+    "slowest_producer": "changed_files",
+    "slowest_producer_ms": 25,
+    "cpu_ms": 31,
+    "major_faults": 5171,
+    "changed_files_reread": 0,
+    "setup_ms": 1,
+    "prompt_producers_ms": 0,
+    "ambient_start_ms": 3,
+    "ambient_wait_ms": 25,
+    "render_ms": 0,
+    "producers": 41,
+    "token_counts": 0
+  },
+  "tool_schema_build_detail": {
+    "betas_ms": 0,
+    "waits_ms": 3,
+    "placement_ms": 0,
+    "render_ms": 3,
+    "after_ms": 0,
+    "other_ms": 0,
+    "tools": 5,
+    "new_schemas": 5
+  },
+  "message_normalization_detail": {
+    "before_ms": 0,
+    "normalize_ms": 3,
+    "images_ms": 1,
+    "post_process_ms": 0,
+    "after_ms": 0,
+    "other_ms": 0,
+    "messages": 255,
+    "wire_messages": 104
+  },
+  "request_build_detail": {
+    "records_ms": 0,
+    "system_ms": 1,
+    "headers_ms": 0,
+    "cache_break_record_ms": 1,
+    "plans_ms": 1,
+    "retry_setup_ms": 0,
+    "sent_build_ms": 2,
+    "record_attempt_ms": 0,
+    "other_ms": 0,
+    "sent_build_safety_context_ms": 0,
+    "sent_build_cache_breakpoints_ms": 0,
+    "sent_build_surrogate_scan_ms": 1
+  },
+  "first_content_frame_ms": 1975,
+  "queued_turn_count": 0,
+  "result_index": 0,
+  "credential_expires_at": "2026-12-04T14:35:16.031Z",
+  "_returncode": 0
+}
