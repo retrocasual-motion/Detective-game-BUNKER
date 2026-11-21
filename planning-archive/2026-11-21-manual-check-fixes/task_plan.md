@@ -5,10 +5,10 @@
 проверены тестами и Playwright, ветка dev/manual-check-fixes → PR → «мержим?».
 
 ## Next Step
-Phase 7: Playwright по затронутым частям, затем PR.
+Готово: PR #92 слит по слову автора («мерджи», 22.11).
 
 ## Current Phase
-Phase 7
+всё сделано
 
 ## Phases
 
@@ -46,9 +46,9 @@ Phase 7
 - **Status:** complete
 
 ### Phase 7: Проверка и PR
-- [ ] unit, lint, typecheck, Playwright; walk пакета
-- [ ] PR, CI, «мержим?»
-- **Status:** in_progress
+- [x] unit, lint, typecheck, Playwright; walk пакета
+- [x] PR #92; CI не запущен GitHub (оплата аккаунта), автор знает; слит по «мерджи»
+- **Status:** complete
 
 ## Decisions Made
 | Decision | Rationale |
