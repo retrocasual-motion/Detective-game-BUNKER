@@ -216,6 +216,7 @@ test('колесо — ближе к точке под курсором: она 
   page,
 }) => {
   await sheet(page, '43').click(STRIP);
+  await page.getByTestId('bag-open').click();
   const paper = page.getByTestId('viewer-paper');
   const word = paper.getByText(/Э. Пирс|Пирс/).first();
   const before = await word.boundingBox();

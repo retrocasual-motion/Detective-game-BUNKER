@@ -297,7 +297,7 @@ test.describe('новое дело', () => {
     await expect(page.getByTestId('device-29')).toHaveCount(0);
     await page.getByTestId('container-bunker').click();
     await page.getByTestId('envelope-open').click();
-    await page.getByTestId('envelope-stay').click();
+    await page.keyboard.press('Escape');
     await expect(page.getByTestId('device-29')).toHaveCount(1);
   });
 });

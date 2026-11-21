@@ -9,11 +9,16 @@ import { expect, STRIP, sheet, test, toWall } from './fixtures.ts';
 
 /** Вынуть обрывок из листа 42: он ушёл на стену и, когда лист закрыт, светится. */
 async function takePiece(page: Page) {
+  // Пакет личных вещей со стены — в руки (EB-A); щелчок по пакету — опись листом.
   await sheet(page, '42').click(STRIP);
+  await page.getByTestId('bag-open').click();
   await expect(page.getByTestId('viewer')).toHaveAttribute('aria-label', 'Личные вещи Н. Харта');
   await page.getByTestId('sheet-piece').click();
   await expect(page.getByTestId('sheet-piece-gone')).toBeVisible();
   await expect(sheet(page, 'S:42/1')).toHaveCount(0);
+  // Закрыли лист — снова пакет в руках; положили — обрывок на стене.
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('held')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(sheet(page, 'S:42/1')).toHaveAttribute('data-found', 'true');
 }

@@ -4,12 +4,13 @@ import { expect, savedPut, sheet, test, toWall } from './fixtures.ts';
 // Новое дело, как у игрока: конверты архива опечатаны (A-260).
 test.use({ sealed: true });
 
-/** Взять конверт со стола, вскрыть, остаться у стола. */
+/** Взять конверт со стола, вскрыть (в руках — вскрытый, OP-D), положить. */
 async function openEnvelope(page: Page, id: string) {
   await page.getByTestId(`container-${id}`).click();
   await page.getByTestId('envelope-open').click();
-  await page.getByTestId('envelope-stay').click();
-  await expect(page.getByTestId('envelope-view')).toBeHidden();
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /» · вскрыт/);
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('held')).toBeHidden();
 }
 
 /** Протянуть мышью по вещи в руках (вращать). */
@@ -63,18 +64,30 @@ test('щелчок по конверту — он в руках: протяну�
   await expect(sheet(page, '30')).toHaveCount(0);
 });
 
-test('«Вскрыть» — документы карточками, «всё на стене»; «Перейти к стене» — группа под названием; после перезагрузки так же', async ({
+test('«Вскрыть» — вскрытый конверт в руках, содержимое на ребре (OP-D): вынуть лист — читать, закрыть — снова конверт; положить — группа на стене; после перезагрузки так же', async ({
   page,
 }) => {
   await page.getByTestId('container-protocols').click();
   const saved = savedPut(page);
   await page.getByTestId('envelope-open').click();
   await saved;
-  await expect(page.getByTestId('envelope-opened')).toContainText('Протокол опроса · Н. Харт');
-  await expect(page.getByTestId('envelope-done')).toContainText('«Протоколы опроса»');
-  await page.getByTestId('envelope-to-wall').click();
-  await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'wall');
-  await expect(page.getByTestId('scene')).toHaveAttribute('data-moving', 'false');
+  const held = page.getByTestId('held');
+  await expect(held).toHaveAttribute('aria-label', 'Конверт «Протоколы опроса» · вскрыт');
+  // Окна со списком и выбора «стол или стена» больше нет.
+  await expect(page.getByTestId('envelope-view')).toHaveCount(0);
+  for (const id of ['30', '33', '36'])
+    await expect(page.getByTestId(`unpack-${id}`)).toHaveCount(1);
+  // Ярлыки тесные: мышь берёт саму вещь (как конверты в коробе 29), кнопка — клавиатуре и тестам.
+  await page.getByTestId('unpack-33').dispatchEvent('click');
+  await expect(page.getByTestId('viewer')).toContainText('Сато');
+  await expect(held).toBeHidden();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('viewer')).toBeHidden();
+  await expect(held).toHaveAttribute('aria-label', 'Конверт «Протоколы опроса» · вскрыт');
+  await page.keyboard.press('Escape');
+  await expect(held).toBeHidden();
+  await expect(page.getByTestId('container-protocols')).toHaveCount(0);
+  await toWall(page);
   for (const id of ['30', '33', '36']) await expect(sheet(page, id)).toBeVisible();
   await expect(page.getByTestId('wall-n:archive-protocols')).toContainText('Протоколы опроса');
   // Всё, что пришло из конверта, светится (правка автора 10.11) — пока не взялись за стену.
@@ -100,6 +113,38 @@ test('«Осмотр места происшествия и изъятое» п�
   await toWall(page);
   await expect(sheet(page, '48')).toBeAttached();
   await expect(sheet(page, '45')).toBeAttached();
+});
+
+test('«Личные вещи» — семь пакетов (EB-A): пакет в руках, ярлык «чьи»; щелчок — опись листом, закрыли — пакет, положили — коробка; со стены — пакет в руки', async ({
+  page,
+}) => {
+  await page.getByTestId('container-personal').click();
+  await page.getByTestId('envelope-open').click();
+  const held = page.getByTestId('held');
+  await expect(held).toHaveAttribute('aria-label', 'Коробка «Личные вещи» · вскрыта');
+  for (let n = 40; n <= 46; n++) await expect(page.getByTestId(`unpack-${n}`)).toHaveCount(1);
+  await expect(page.getByTestId('unpack-40')).toHaveAttribute('aria-label', /Взять пакет/);
+  // Мышью — по ярлыку пакета: он поднимается и выходит из коробки.
+  const tab = await page.getByTestId('unpack-40').boundingBox();
+  if (!tab) throw new Error('нет ярлыка');
+  await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2, { steps: 4 });
+  await page.mouse.click(tab.x + tab.width / 2, tab.y + tab.height / 2);
+  await expect(held).toHaveAttribute('aria-label', 'Пакет · Личные вещи Л. Моро');
+  await page.getByTestId('bag-open').click();
+  await expect(page.getByTestId('viewer')).toContainText('Блокнот для эскизов');
+  await page.keyboard.press('Escape');
+  await expect(held).toHaveAttribute('aria-label', 'Пакет · Личные вещи Л. Моро');
+  await page.keyboard.press('Escape');
+  await expect(held).toHaveAttribute('aria-label', 'Коробка «Личные вещи» · вскрыта');
+  await page.keyboard.press('Escape');
+  await expect(held).toBeHidden();
+  await toWall(page);
+  await expect(sheet(page, '42')).toBeVisible();
+  await sheet(page, '42').click();
+  await expect(held).toHaveAttribute('aria-label', 'Пакет · Личные вещи Н. Харта');
+  await page.keyboard.press('Escape');
+  await expect(held).toBeHidden();
+  await expect(page.getByTestId('viewer')).toBeHidden();
 });
 
 test('поиск не видит невскрытого; после вскрытия — находит', async ({ page }) => {

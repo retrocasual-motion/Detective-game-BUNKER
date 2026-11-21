@@ -2,7 +2,9 @@ import {
   CONTAINERS,
   type ContainerId,
   containerContents,
+  DEVICE_IDS,
   folderItemId,
+  openedOf,
   SERVER_DISC_ID,
 } from '@bunker/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -33,28 +35,30 @@ import { Folder, PaperStack, PapersBox } from './papers.tsx';
 import { RADIO_FOCUS, type RadioPart, RadioStand, SCREEN_PX } from './radioStand.tsx';
 import { ServerDiscHeld } from './serverDisc.tsx';
 import { Box, Device, Envelope } from './shapes.tsx';
+import { BagInHands, bagLabel, inventoryRows, Unpacked, type UnpackItem } from './unpack.tsx';
 
 /** Вещь в руках со сценой three.js — отдельный кусок сборки (грузится, когда вещь взяли). */
 export default function HeldThing({ held }: { held: Held }) {
-  const [opened, setOpened] = useState(false);
   const materials = useGame((g) => g.materials);
+  const openedIds = useGame((g) => (g.state ? openedOf(g.state) : NONE));
   const close = () => useGame.getState().hold(null);
   const titles = new Map(materials.map((m) => [m.id, m.title]));
+
+  if (held.type === 'bag') return <BagHeld id={held.id} inBox={!!held.inBox} />;
 
   if (held.type === 'container') {
     const c = CONTAINERS.find((x) => x.id === held.id);
     if (!c) return null;
     const inside = containerContents(c).filter((m) => titles.has(m));
-    if (opened) return <Opened id={held.id} inside={inside} titles={titles} />;
-    const items = inside.map((m) => ({ id: m, title: short(titles.get(m) ?? '') }));
-    const open = () =>
-      afterLeaving(() => {
-        useGame.getState().openContainer(held.id);
-        setOpened(true);
-      });
     const box = held.id === 'personal' || held.id === 'bank';
+    if (openedIds.includes(held.id))
+      return <Opened key={`opened-${held.id}`} id={held.id} inside={inside} box={box} />;
+    const items = inside.map((m) => ({ id: m, title: short(titles.get(m) ?? '') }));
+    // Вскрыли — в руках тот же конверт, уже вскрытый: содержимое стоит в нём (OP-D).
+    const open = () => afterLeaving(() => useGame.getState().openContainer(held.id));
     return (
       <Held3D
+        key={`sealed-${held.id}`}
         mode={box ? 'free' : 'flip'}
         half={[1.6, 1.2]}
         label={box ? `Коробка «${c.label}»` : `Конверт «${c.label}»`}
@@ -405,55 +409,84 @@ const NONE: readonly string[] = [];
 /** Пересканы листов 19–24 П-05 лицом вверх. */
 const RESCANS_ID = 'L957';
 
-/** Вскрыто: документы вышли из конверта и висят на стене группой под названием. */
-function Opened({
-  id,
-  inside,
-  titles,
-}: {
-  id: ContainerId;
-  inside: string[];
-  titles: Map<string, string>;
-}) {
+/**
+ * Вскрыто (OP-D, EB-A — автор 22.11, на пробу): конверт или коробка в руках, содержимое стоит
+ * внутри на ребре. Щелчок по ярлыку — лист читают (закрыли — снова конверт в руках), пакет
+ * личных вещей — в руки. Положили — всё на стене группой под ярлыком (A-260), со свечением.
+ * Изъятые устройства в конверте не стоят: они на столе (RS-A).
+ */
+function Opened({ id, inside, box }: { id: ContainerId; inside: string[]; box: boolean }) {
   const c = CONTAINERS.find((x) => x.id === id);
-  const close = () => useGame.getState().hold(null);
+  const materials = useGame((g) => g.materials);
+  const items = useMemo<UnpackItem[]>(
+    () =>
+      inside
+        .filter((m) => !DEVICE_IDS.has(m))
+        .flatMap((m) => {
+          const mat = materials.find((x) => x.id === m);
+          if (!mat) return [];
+          return [
+            {
+              id: m,
+              title: short(mat.title),
+              kind: mat.kind,
+              ...(mat.kind === 'bag' ? { bag: bagLabel(mat.title, mat.body) } : {}),
+            },
+          ];
+        }),
+    [inside, materials],
+  );
   if (!c) return null;
+  const devices = inside.some((m) => DEVICE_IDS.has(m));
+  const back = { type: 'container', id } as const;
   return (
-    <div className="envelope-view" data-testid="envelope-view">
-      <section className="envelope-opened" data-testid="envelope-opened">
-        <h2>{c.label}</h2>
-        <ul className="envelope-sheets">
-          {inside.map((m, k) => (
-            <li key={m} className="envelope-sheet" style={{ animationDelay: `${k * 60}ms` }}>
-              <span className="envelope-sheet-id">{m}</span>
-              {titles.get(m)}
-            </li>
-          ))}
-        </ul>
-        <p className="envelope-done" data-testid="envelope-done">
-          Всё повешено на стену — группой под ярлыком «{c.label}».
-          {c.devices ? ' Изъятые устройства — на столе.' : ''}
-        </p>
-        <div className="envelope-actions">
-          <button
-            type="button"
-            className="tool envelope-open"
-            data-testid="envelope-to-wall"
-            onClick={() => {
-              close();
-              // К стене — как со стола (ZM-B, правка автора 10.11: прежний наезд на ярлык группы
-              // шёл мимо этого вида); новое на стене светится.
-              useGame.getState().setView('wall');
-            }}
-          >
-            Перейти к стене
-          </button>
-          <button type="button" className="tool" data-testid="envelope-stay" onClick={close}>
-            Остаться у стола
-          </button>
-        </div>
-      </section>
-    </div>
+    <Held3D
+      mode="free"
+      half={[1.6, 1.2]}
+      label={`${box ? 'Коробка' : 'Конверт'} «${c.label}» · вскрыт${box ? 'а' : ''}`}
+      caption={devices ? 'Изъятые вещи — на столе' : undefined}
+      onClose={() => useGame.getState().hold(null)}
+    >
+      <Unpacked
+        vessel={box ? 'box' : 'envelope'}
+        title={c.label}
+        items={items}
+        onPick={(it) =>
+          afterLeaving(() => {
+            const g = useGame.getState();
+            if (it.kind === 'bag') g.hold({ type: 'bag', id: it.id, inBox: true });
+            else g.readFrom(it.id, back);
+          })
+        }
+      />
+    </Held3D>
+  );
+}
+
+/**
+ * Пакет личных вещей в руках (EB-A): ярлык «чьи и откуда» из заголовка описи, сквозь плёнку —
+ * вещи по строкам описи. Щелчок — опись и вещи листом (блокнот, записка, обгоревший лист…);
+ * закрыли — снова пакет. Положили — назад в коробку (если взят из неё) или на место.
+ */
+function BagHeld({ id, inBox }: { id: string; inBox: boolean }) {
+  const mat = useGame((g) => g.materials.find((m) => m.id === id));
+  const g = useGame.getState;
+  const label = useMemo(() => (mat ? bagLabel(mat.title, mat.body) : null), [mat]);
+  const rows = useMemo(() => (mat ? inventoryRows(mat.body) : []), [mat]);
+  if (!mat || !label) return null;
+  return (
+    <Held3D
+      mode="free"
+      half={[1.6, 1.2]}
+      label={`Пакет · ${mat.title}`}
+      onClose={() => g().hold(inBox ? { type: 'container', id: 'personal' } : null)}
+    >
+      <BagInHands
+        label={label}
+        rows={rows}
+        onOpen={() => afterLeaving(() => g().readFrom(id, { type: 'bag', id, inBox }))}
+      />
+    </Held3D>
   );
 }
 

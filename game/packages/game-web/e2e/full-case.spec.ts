@@ -155,9 +155,13 @@ async function showOnWall(page: Page, id: string) {
 }
 
 /** Открыть лист со стены щелчком. */
+/** Пакеты личных вещей (40–46): со стены — в руки, щелчок по пакету — лист (EB-A). */
+const BAG = /^4[0-6]$/;
+
 async function openSheet(page: Page, id: string) {
   const pt = await showOnWall(page, id);
   await page.mouse.click(pt.x, pt.y);
+  if (BAG.test(id)) await page.getByTestId('bag-open').click();
   await expect(page.getByTestId('viewer')).toBeVisible();
   await page.waitForTimeout(450); // защита от второго щелчка двойного
 }
@@ -182,6 +186,11 @@ async function zoomSheet(page: Page, id: string) {
   await zoomOpenSheet(page);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('viewer')).toBeHidden();
+  // Закрыли лист — снова пакет в руках: положить.
+  if (BAG.test(id)) {
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('held')).toBeHidden();
+  }
 }
 
 // ───────────────────────── стол: конверты, вещи ─────────────────────────
@@ -190,8 +199,9 @@ async function openEnvelope(page: Page, id: string) {
   await toDesk(page);
   await page.getByTestId(`container-${id}`).click();
   await page.getByTestId('envelope-open').click();
-  await page.getByTestId('envelope-stay').click();
-  await expect(page.getByTestId('envelope-view')).toBeHidden();
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /» · вскрыт/);
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('held')).toBeHidden();
 }
 
 /** Коробка пачек 29 → пачка в руках. */
@@ -510,6 +520,8 @@ test('QA-C: всё дело через интерфейс — от нового 
     await page.getByTestId('sheet-piece').click();
     await expect(page.getByTestId('sheet-piece-gone')).toBeVisible();
     await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('held')).toBeHidden();
     await expect(sheet(page, 'S:42/1')).toBeAttached();
     await joinPieceTo51(page);
     await expect(sheet(page, 'L990')).toBeVisible();
@@ -667,8 +679,9 @@ test('QA-C: всё дело через интерфейс — от нового 
     await expect(box).toBeVisible();
     await box.click();
     await page.getByTestId('envelope-open').click();
-    await page.getByTestId('envelope-stay').click();
-    await expect(page.getByTestId('envelope-view')).toBeHidden();
+    await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /» · вскрыт/);
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('held')).toBeHidden();
     await expect(sheet(page, 'L461')).toBeAttached();
     // Кассета с проигрывателем — на столе. Находка: на полном столе её место под коробкой 29 —
     // щелчок по середине берёт коробку; щёлкаем по видимому краю, если он есть.
