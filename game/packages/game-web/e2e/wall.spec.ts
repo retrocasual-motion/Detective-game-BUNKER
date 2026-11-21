@@ -351,7 +351,7 @@ test('правая кнопка — рамка выделяет; потянут�
   await page.mouse.move(p.x + 60, p.y + 320, { steps: 8 });
   await page.mouse.up();
   await saved;
-  // Мышь — с листа: лист под курсором растёт (W8-A), а меряем место.
+  // Мышь — с листа: меряем место без наведения.
   await page.mouse.move(5, 400);
   const after = await Promise.all(['01', '02', '03', '04'].map((id) => box(page, id)));
   for (const k of [0, 1, 2]) {

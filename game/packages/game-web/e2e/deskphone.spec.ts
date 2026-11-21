@@ -145,3 +145,36 @@ test('у телефона: печать в поиске — не телефон�
   await expect(page.getByTestId('scene')).toHaveAttribute('data-spot', 'desk');
   await expect(page.getByTestId('dp-number')).toHaveText('—');
 });
+
+test('«0» дважды быстро в начале — «+»; в середине — «00»; «+» с клавиатуры (U.4, T.4)', async ({
+  page,
+}) => {
+  await phoneUp(page);
+  await page.getByTestId('dp-key-0').click();
+  await page.getByTestId('dp-key-0').click();
+  await expect(page.getByTestId('dp-number')).toHaveText('+');
+  await dial(page, '7800');
+  await expect(page.getByTestId('dp-number')).toHaveText('+7800');
+  for (let k = 0; k < 5; k++) await page.getByTestId('dp-erase').click();
+  await page.keyboard.press('+');
+  await page.keyboard.type('7916');
+  await expect(page.getByTestId('dp-number')).toHaveText('+7916');
+  // «+» не в начале — не ставится.
+  await page.keyboard.press('+');
+  await expect(page.getByTestId('dp-number')).toHaveText('+7916');
+});
+
+test('трубку можно стянуть вбок — снята; ещё раз — положена (T.1)', async ({ page }) => {
+  await phoneUp(page);
+  const hs = await page.getByTestId('dp-handset').boundingBox();
+  if (!hs) throw new Error('нет трубки');
+  const [x, y] = [hs.x + hs.width / 2, hs.y + hs.height / 2];
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 60, y, { steps: 6 });
+  await page.mouse.up();
+  await expect(page.getByTestId('dp-lcd')).toContainText('Гудок');
+  // Обычный щелчок по-прежнему кладёт трубку.
+  await page.getByTestId('dp-handset').click();
+  await expect(page.getByTestId('dp-lcd')).toContainText('Наберите номер');
+});

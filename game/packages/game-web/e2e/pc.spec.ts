@@ -186,18 +186,31 @@ test('сеансы пользователей: код 07 — нет; 02 — бе
   await expect(sheet(page, 'L387')).toHaveCount(0);
 });
 
-test('код сеанса: три неверных подряд — поле ждёт (AC-5)', async ({ page }) => {
+test('код сеанса: неверные подряд — поле не ждёт (NP-A, автор 21.11)', async ({ page }) => {
   await grant(page, DISC);
   await pcUp(page);
   await icon(page, SERVER).dblclick();
   await page.getByTestId('srv-menu-sessions').click();
-  for (const c of ['11', '12', '13']) {
+  for (const c of ['11', '12', '13', '14']) {
     await page.getByTestId('srv-code').fill(c);
     await page.getByTestId('srv-code-open').click();
     await expect(page.getByTestId('srv-msg')).not.toHaveText('');
+    await expect(page.getByTestId('srv-msg')).not.toContainText('Повторите через');
   }
-  await expect(page.getByTestId('srv-msg')).toContainText('Повторите через');
-  await expect(page.getByTestId('srv-code')).toBeDisabled();
+  await expect(page.getByTestId('srv-code')).toBeEnabled();
+});
+
+test('архив номеров газеты: много неоцифрованных дат подряд — поле не ждёт (NP-A)', async ({
+  page,
+}) => {
+  await pcUp(page);
+  await icon(page, 'Браузер').dblclick();
+  for (let d = 1; d <= 12; d++) {
+    await page.getByTestId('pc-news-date').fill(`${String(d).padStart(2, '0')}.01.2001`);
+    await page.getByTestId('pc-news-open').click();
+    await expect(page.getByTestId('pc-news-msg')).toHaveText('Выпуск за эту дату не оцифрован.');
+  }
+  await expect(page.getByTestId('pc-news-date')).toBeEnabled();
 });
 
 test('браузер: архив номеров — дата выпуска; неоцифрованная дата — отказ', async ({ page }) => {

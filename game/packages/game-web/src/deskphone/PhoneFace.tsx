@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useState } from 'react';
+import { type CSSProperties, useEffect, useRef, useState } from 'react';
 import { ddmmyyyy, gameNow, hhmm } from '../clock.ts';
 import type { Room } from '../room/camera.ts';
 import { useGame } from '../store.ts';
@@ -26,6 +26,9 @@ const LETTERS: Record<string, string> = {
 };
 const keyId = (k: string) => (k === '*' ? 'star' : k === '#' ? 'hash' : k);
 
+/** Насколько повести трубку вбок (px экрана), чтобы она снялась. */
+const PULL_PX = 24;
+
 /** Логическая ширина слоя (px) — по ней шрифты; в сцене слой сжат до размера зоны. */
 const LOGICAL = { lcd: 340, key: 56, soft: 64, handset: 70, body: 260 } as const;
 
@@ -45,6 +48,8 @@ export function PhoneFace({ room, active }: { room: Room; active: boolean }) {
   const started = useGame((g) => g.state?.started);
   const [now, setNow] = useState(() => gameNow(started));
   const c = useCall();
+  // Трубку можно и стянуть: зажать и повести вбок (T.1, автор 21.11) — как щелчок по ней.
+  const pull = useRef<{ x: number; done: boolean } | null>(null);
   useEffect(() => {
     const t = setInterval(() => setNow(gameNow(started)), 1000);
     return () => clearInterval(t);
@@ -141,7 +146,28 @@ export function PhoneFace({ room, active }: { room: Room; active: boolean }) {
         aria-label={c.offHook ? 'Положить трубку' : 'Снять трубку'}
         aria-pressed={c.offHook}
         style={place(room, spots.handset, LOGICAL.handset, spots.handsetYaw)}
-        onClick={() => c.handset()}
+        onPointerDown={(e) => {
+          if (!active) return;
+          pull.current = { x: e.clientX, done: false };
+          e.currentTarget.setPointerCapture(e.pointerId);
+        }}
+        onPointerMove={(e) => {
+          const p = pull.current;
+          if (!p || p.done || Math.abs(e.clientX - p.x) < PULL_PX) return;
+          p.done = true;
+          c.handset();
+        }}
+        onPointerUp={() => {
+          // Щелчка после стягивания может и не быть (отпустили мимо) — тогда сброс сам.
+          if (pull.current?.done) setTimeout(() => (pull.current = null), 0);
+        }}
+        onPointerCancel={() => (pull.current = null)}
+        onClick={() => {
+          // Стянули — трубка уже снята (положена); щелчок после отпускания не считается.
+          const pulled = pull.current?.done;
+          pull.current = null;
+          if (!pulled) c.handset();
+        }}
       />
     </>
   );

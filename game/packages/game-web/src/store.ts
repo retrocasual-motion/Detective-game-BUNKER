@@ -80,8 +80,6 @@ interface GameStore {
   openExcerpt(id: string): void;
   /** Вскрыли конверт 52: диск вынут — лежит на столе (сохраняется, A-272). */
   takeDiscOut(): void;
-  /** Кассета L462 вставлена в проигрыватель (сохраняется, UX-17). */
-  insertCassette(): void;
   /** Диск дотащили до дисковода: на столе играет вставка (лоток, раскрутка; DD-A). */
   discInserting: boolean;
   insertDisc(): void;
@@ -486,18 +484,24 @@ export const useGame = create<GameStore>((set, get) => {
         openSite(x.place.address ?? '', window, hash);
         return;
       }
-      if (x.place.kind === 'pc') get().openPc(x.material);
+      const screen = x.place.screen;
+      if (x.place.kind === 'pc')
+        get().openPc(
+          screen && /^L(21[45]|38[789]|390)$/.test(x.material)
+            ? `${x.material}#${screen}`
+            : x.material,
+        );
       else if (x.place.kind === 'laptop') get().openLaptop(x.material);
-      else if (x.place.kind === 'phone') get().openPhone(x.material);
-      else get().openCamera();
+      else if (x.place.kind === 'phone') {
+        // Телефон — на том экране, где выписали (7.5): экран телефона живёт в сохранении.
+        if (screen) get().updateState((s) => ({ ...s, phone: { screen } }));
+        get().openPhone(x.material);
+      } else get().openCamera();
       set({ find });
     },
 
     takeDiscOut() {
       get().updateState((s) => (s.discOut ? s : { ...s, discOut: true }));
-    },
-    insertCassette() {
-      get().updateState((s) => (s.cassetteIn ? s : { ...s, cassetteIn: true }));
     },
     insertDisc() {
       set({ discInserting: true, held: null });

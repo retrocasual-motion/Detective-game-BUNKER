@@ -82,6 +82,15 @@ describe('«Входящие» на столе', () => {
     expect(inboxIds(s, withL)).toEqual(['L946', 'L945']);
   });
 
+  it('свойства файла записи во «Входящие» не ложатся — они у плеера (Q.1, автор 21.11)', () => {
+    const props = [
+      ...withL,
+      { ...mat('L971'), title: 'Свойства файла: вводный фильм VAULTLINE (файл 13)' },
+      { ...mat('L970'), title: 'Свойства файлов: ролики-знакомства (файл 14)' },
+    ];
+    expect(inboxIds(defaultState(props), props)).toEqual(['L946', 'L945']);
+  });
+
   it('повешенное на стену из «Входящих» уходит', () => {
     const s = defaultState(withL);
     s.wall.items.push({ id: 'L945', x: 5, y: 5, z: 999, rot: 0 });

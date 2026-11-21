@@ -36,11 +36,6 @@ interface WallThreadsProps {
   onThreadClick(id: string, e: MouseEvent): void;
   onThreadDoubleClick(id: string, e: MouseEvent): void;
   onLabelClick(id: string, e: MouseEvent): void;
-  /**
-   * Лист под курсором (вырастает, W8-A): поверх него — только его нити, чужие — под ним (автор
-   * 18.11: нить соседей поперёк выросшего листа будто к нему относится).
-   */
-  focus?: string | null;
 }
 
 /**
@@ -54,9 +49,7 @@ export function WallThreads({
   onThreadClick,
   onThreadDoubleClick,
   onLabelClick,
-  focus = null,
 }: WallThreadsProps) {
-  const mine = (t: Thread) => t.from === focus || t.to === focus;
   const lines = (list: Thread[]) =>
     list.map((t) => {
       const fa = at.get(t.from);
@@ -96,25 +89,18 @@ export function WallThreads({
       );
     });
   return (
-    <>
-      {focus && (
-        <svg className="board-threads board-threads-under" aria-hidden="true">
-          {lines(threads.filter((t) => !mine(t)))}
-        </svg>
+    <svg className="board-threads" aria-hidden="true">
+      {lines(threads)}
+      {pulling && (
+        <line
+          className="board-thread board-thread-pulling"
+          data-testid="thread-pulling"
+          x1={pulling.from.x}
+          y1={pulling.from.y}
+          x2={pulling.to.x}
+          y2={pulling.to.y}
+        />
       )}
-      <svg className="board-threads" aria-hidden="true">
-        {lines(focus ? threads.filter(mine) : threads)}
-        {pulling && (
-          <line
-            className="board-thread board-thread-pulling"
-            data-testid="thread-pulling"
-            x1={pulling.from.x}
-            y1={pulling.from.y}
-            x2={pulling.to.x}
-            y2={pulling.to.y}
-          />
-        )}
-      </svg>
-    </>
+    </svg>
   );
 }

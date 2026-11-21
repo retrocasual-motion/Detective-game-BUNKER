@@ -1484,10 +1484,6 @@ button {
   overflow: visible;
   pointer-events: none;
 }
-/* Чужие нити выросшего листа — под ним (он 8999), но над остальными листами (W8-A). */
-.board-threads-under {
-  z-index: 8998;
-}
 .board-thread {
   stroke: var(--color-thread);
   stroke-width: 3;
@@ -3000,27 +2996,8 @@ button {
   color: var(--color-danger);
 }
 
-/* Лист на стене при наведении растёт до читаемого (W8-A, автор 18.11; MS-4, HI-3): вокруг своей
-   кнопки (нити остаются на месте), поверх соседей, соседи не двигаются. На общем виде — до 2,5
-   раза; когда доска уже приближена и лист читается — не растёт. Только у мыши/тачпада. */
-@media (hover: hover) {
-  .wall-card > .paper {
-    transform-origin: 50% var(--pin-y);
-  }
-  .wall-card:not(.wall-card-dragging):hover {
-    /* Над соседями, но под нитями (.board-threads — 9000): связи листа видны, пока его читают. */
-    /* biome-ignore lint/complexity/noImportantStyles: поверх порядка листов из inline-стиля */
-    z-index: 8999 !important;
-  }
-  .wall-card:not(.wall-card-dragging):hover > .paper:not(.card-dragging) {
-    scale: clamp(1, calc(0.75 / var(--zoom, 1)), 2.5);
-    box-shadow: var(--shadow-paper-lifted);
-    transition:
-      rotate var(--paper-settle),
-      scale 0.16s ease-out 0.06s,
-      box-shadow 0.16s;
-  }
-}
+/* Лист на стене при наведении больше не растёт (W8-A снято, ручная проверка автора 21.11, 7.1):
+   читать — общим приближением стены (колесо). */
 
 /* Ошибка «Нового дела» или выхода в главном меню (R2-04). */
 .main-menu-error {

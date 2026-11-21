@@ -65,6 +65,10 @@ let timer: ReturnType<typeof setTimeout> | null = null;
 let callNo = 0;
 /** Последний набранный номер — для «Повтор» (до перезагрузки, PH-2). */
 let lastNumber = '';
+/** Когда нажали «0» — второй «0» быстро следом в начале номера даёт «+» (U.4, автор 21.11). */
+let zeroAt = 0;
+/** «0» дважды за это время — «+». */
+const PLUS_MS = 450;
 
 function setTone(k: ToneKind | null) {
   tone?.();
@@ -122,8 +126,15 @@ export const useCall = create<CallState>((set, get) => {
     used: false,
 
     press(k) {
-      dtmf(k);
-      set({ pressed: k, used: true });
+      const s0 = get();
+      // «+» — только первым знаком номера и не в меню линии (T.4: с клавиатуры; U.4: «0» дважды).
+      if (k === '+' && (s0.phase === 'connected' || s0.dialed !== '')) return;
+      const now = Date.now();
+      const plus =
+        k === '0' && s0.dialed === '0' && s0.phase !== 'connected' && now - zeroAt < PLUS_MS;
+      zeroAt = k === '0' && !plus ? now : 0;
+      dtmf(k === '+' ? '0' : k);
+      set({ pressed: k === '+' ? '0' : k, used: true });
       if (pressTimer) clearTimeout(pressTimer);
       pressTimer = setTimeout(() => set({ pressed: null }), 160);
       const s = get();
@@ -150,7 +161,8 @@ export const useCall = create<CallState>((set, get) => {
         return;
       }
       if (s.phase === 'ringing' || s.phase === 'dead') return;
-      const nd = (s.dialed + k).slice(0, MAX);
+      // «0» дважды быстро в начале — «+» вместо «00», как у мобильных (U.4).
+      const nd = plus ? '+' : (s.dialed + k).slice(0, MAX);
       set({ dialed: nd, phase: s.phase === 'dialtone' ? 'idle' : s.phase });
       if (s.offHook) {
         // Трубка снята: гудок стих с первой цифрой; пауза — номер пошёл.

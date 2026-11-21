@@ -47,6 +47,8 @@ export function useSelectionCard(testId: string, kind: ScreenKind) {
     text: string;
     material: string;
     source: string;
+    /** Раздел программы, экран телефона — откуда выписано (7.5): туда и откроется. */
+    screen?: string;
     x: number;
     y: number;
   } | null>(null);
@@ -75,6 +77,7 @@ export function useSelectionCard(testId: string, kind: ScreenKind) {
       text: text.replace(/\s+/g, ' ').trim(),
       material,
       source: at?.closest('[data-source]')?.getAttribute('data-source') ?? title,
+      screen: at?.closest('[data-screen]')?.getAttribute('data-screen') ?? undefined,
       x: Math.min(Math.max(r.right, 120), window.innerWidth - 120),
       y: Math.min(Math.max(r.bottom, 0), window.innerHeight - 48),
     });
@@ -96,7 +99,7 @@ export function useSelectionCard(testId: string, kind: ScreenKind) {
             text: sel.text.slice(0, 600),
             material: sel.material,
             source: sel.source.slice(0, 160),
-            place: { kind },
+            place: sel.screen ? { kind, screen: sel.screen.slice(0, 80) } : { kind },
           });
           done();
         }}
@@ -130,12 +133,20 @@ export function useFindOnScreen(selector: string, on: boolean) {
   const find = useGame((g) => g.find);
   useEffect(() => {
     if (!on || !find) return;
-    const t = setTimeout(() => {
+    // Окно (программа сервера, файл ноутбука) может открыться не сразу — пробуем до 3 с.
+    let tries = 0;
+    let t: ReturnType<typeof setTimeout>;
+    const attempt = () => {
       const root = document.querySelector(selector);
       const r = root ? highlightFind(root, find.q, find.k) : null;
+      if (!r && ++tries < 12) {
+        t = setTimeout(attempt, 250);
+        return;
+      }
       r?.startContainer.parentElement?.scrollIntoView({ block: 'center' });
       useGame.setState({ find: null });
-    }, 500);
+    };
+    t = setTimeout(attempt, 500);
     return () => clearTimeout(t);
   }, [find, on, selector]);
   useEffect(() => (on ? undefined : clearFind()), [on]);

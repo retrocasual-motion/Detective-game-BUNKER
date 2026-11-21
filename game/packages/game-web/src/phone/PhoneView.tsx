@@ -97,7 +97,8 @@ export function PhoneLive() {
   const body48 = materials.find((m) => m.id === '48')?.body ?? '';
   const content = useMemo(() => (body540 ? phoneContent(body540) : null), [body540]);
   const lock = useMemo(() => lockContent(body48), [body48]);
-  const [session, setSession] = useState(false);
+  // Открыт на файле (выписка, поиск) — сразу экран, без «slide to unlock» (7.5, автор 21.11).
+  const [session, setSession] = useState(() => !!useGame.getState().phone?.material);
   const saved = useGame((g) => g.state?.phone?.screen) as Screen | undefined;
   const [screen, setScreen] = useState<Screen>(saved ?? 'home');
   const [dir, setDir] = useState<'open' | 'push' | 'back' | 'none'>('none');
@@ -211,6 +212,7 @@ export function PhoneLive() {
         key={screen}
         className={`ph-app-screen ph-anim-${dir}`}
         style={{ transformOrigin: origin }}
+        data-screen={screen}
         data-testid={`phone-screen-${contact ? 'contact' : screen}`}
       >
         <div className="ph-nav">

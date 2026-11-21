@@ -247,7 +247,8 @@ function PcDesktop({ material }: { material: string | null }) {
   // biome-ignore lint/correctness/useExhaustiveDependencies: только при входе с материалом
   useEffect(() => {
     if (!material) return;
-    if (/^L(21[45]|38[789]|390)$/.test(material))
+    // «L214#node» — выписка из раздела программы (7.4): ref несёт и раздел.
+    if (/^L(21[45]|38[789]|390)(#\w+)?$/.test(material))
       openWin({ id: 'terminal', kind: 'terminal', ref: material });
     else if (/^L73[5678]$/.test(material) || /^L83\d$/.test(material) || material === 'L453')
       openWin({ id: `doc:${material}`, kind: 'doc', ref: material });

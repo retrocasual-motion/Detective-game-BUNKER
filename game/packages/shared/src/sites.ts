@@ -62,8 +62,8 @@ export const SITE_FORMS: Readonly<Record<SiteFormId, SiteForm>> = {
     id: 'vl-registry',
     fields: [
       { name: 'program', label: 'Программа' },
+      // Поля «Дата выбытия» нет (DT-A, ручная проверка автора 21.11): прошлые этапы — по коду.
       { name: 'code', label: 'Код участника' },
-      { name: 'date', label: 'Дата выбытия', placeholder: 'ДД.ММ.ГГГГ' },
     ],
     submit: 'Найти',
     some: true,

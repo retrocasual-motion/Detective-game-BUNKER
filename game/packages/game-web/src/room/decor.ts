@@ -232,8 +232,11 @@ const ENVELOPE_BACK: Record<EnvelopeId, [number, number]> = {
   protocols: [0.18, 0.445],
 };
 const ENVELOPE_ORDER = ['bunker', 'scene', 'protocols'] as const;
-/** Где стоит компьютер следователя (дисковод под монитором), доли p. */
-const PC_X = -0.62;
+/**
+ * Где стоит компьютер следователя (дисковод под монитором), доли p. Левее прежнего (−0,62):
+ * монитор не заходит на стену за столом (ручная проверка автора 21.11, R.1).
+ */
+const PC_X = -0.69;
 const PC_Z = 0.34;
 const C4: [number, number] = [0.324, 0.229];
 /**
@@ -287,7 +290,8 @@ export function deskObjects(
   // Рабочее место бюро (A-272; автор 19.11: «больше и ближе к нам — активный элемент, а не фон»;
   // «монитор развернуть к нам»): слева, ближе к игроку — монитор 22" 16:10 (50 × 33 см, как экран
   // компьютера 1280 × 800), повёрнут на ножке к следователю (25°), на тонком дисководе CD/DVD
-  // (28 × 22 × 2,5 см; сам дисковод стоит прямо — лоток выезжает к игроку); системный
+  // (28 × 22 × 2,5 см; повёрнут вместе с монитором — смотрят в одну сторону, автор 21.11, R.1;
+  // лоток выезжает к следователю); системный
   // блок — под столом, его не видно. Диск дотащили до дисковода (DD-A) — лоток (14 см, выезжает
   // на 15) выходит к игроку и не достаёт до клавиатуры: ни во что не упирается.
   /** Поворот монитора к следователю, градусы. */
@@ -299,25 +303,43 @@ export function deskObjects(
   const front = PC_Z + DRIVE_D / 2 + 0.002;
   const bay = col('--color-pc-bay');
   const trayD = 0.15 * drive.out;
-  const pcBoxes: Box[] = [
-    box(PC_X, PC_Z, DRIVE_W, DRIVE_D, DRIVE_H, col('--color-pc-case')),
-    // Щель лотка, кнопка выброса, огонёк.
-    box(TRAY_X, front, 0.15, 0.004, 0.005, bay, 0.012),
-    box(PC_X + 0.12, front, 0.024, 0.005, 0.008, col('--color-pc-button'), 0.007),
-    box(
-      PC_X - 0.1,
-      front,
-      0.01,
-      0.004,
-      0.004,
-      col(drive.led ? '--color-pc-led-busy' : '--color-pc-led'),
-      0.01,
-    ),
-    // Выехавший лоток и диск на нём.
-    ...(trayD > 0.002 ? [box(TRAY_X, front + trayD / 2, 0.14, trayD, 0.005, bay, 0.011)] : []),
-  ];
+  /** Ось поворота монитора и дисковода. */
+  const PIVOT: [number, number] = [PC_X, PC_Z - 0.02];
+  const pcBoxes: Box[] = turn(
+    [
+      box(PC_X, PC_Z, DRIVE_W, DRIVE_D, DRIVE_H, col('--color-pc-case')),
+      // Щель лотка, кнопка выброса, огонёк.
+      box(TRAY_X, front, 0.15, 0.004, 0.005, bay, 0.012),
+      box(PC_X + 0.12, front, 0.024, 0.005, 0.008, col('--color-pc-button'), 0.007),
+      box(
+        PC_X - 0.1,
+        front,
+        0.01,
+        0.004,
+        0.004,
+        col(drive.led ? '--color-pc-led-busy' : '--color-pc-led'),
+        0.01,
+      ),
+      // Выехавший лоток и диск на нём.
+      ...(trayD > 0.002 ? [box(TRAY_X, front + trayD / 2, 0.14, trayD, 0.005, bay, 0.011)] : []),
+    ],
+    TURN,
+    ...PIVOT,
+  );
+  // Диск на лотке — круг: поворачивается только его середина (как точки коробок, `turned`).
+  const a = (TURN * Math.PI) / 180;
+  const [dx, dz] = [TRAY_X - PIVOT[0], front + trayD / 2 - PIVOT[1]];
   const trayDisc =
-    drive.disc && drive.out > 0.6 ? [disc(TRAY_X, front + trayD / 2, 0.12, 0.016)] : [];
+    drive.disc && drive.out > 0.6
+      ? [
+          disc(
+            PIVOT[0] + dx * Math.cos(a) + dz * Math.sin(a),
+            PIVOT[1] - dx * Math.sin(a) + dz * Math.cos(a),
+            0.12,
+            0.016,
+          ),
+        ]
+      : [];
   // Подставка (22 × 16 см) и ножка монитора — на дисководе.
   const stand = turn(
     [
@@ -325,13 +347,12 @@ export function deskObjects(
       box(PC_X, PC_Z - 0.04, 0.05, 0.035, 0.07, edge, DRIVE_H + 0.01),
     ],
     TURN,
-    PC_X,
-    PC_Z - 0.02,
+    ...PIVOT,
   );
   const monitor: Box = {
     ...box(PC_X, PC_Z - 0.04, 0.5, 0.05, 0.33, col('--color-monitor'), DRIVE_H + 0.07),
-    yaw: (TURN * Math.PI) / 180,
-    pivot: [PC_X * p, (PC_Z - 0.02) * p],
+    yaw: a,
+    pivot: [PIVOT[0] * p, PIVOT[1] * p],
   };
   const envelopes = ENVELOPE_ORDER.filter((id) => !opened.includes(id));
   // Коробка из банка — на коробе с пачками, если он уже на столе.
@@ -365,31 +386,25 @@ export function deskObjects(
       tagInside: true,
       testId: 'device-50',
     },
-    // Коробка «Личные вещи» (A-260): опечатана — крышка; вскрыта — пакеты сверху.
-    opened.includes('personal')
-      ? {
-          key: 'bags',
-          label: 'Коробка: личные вещи членов группы (40–46)',
-          boxes: [
-            box(-0.19, 0.25, 0.33, 0.23, 0.16, col('--color-box')),
-            box(-0.21, 0.245, 0.24, 0.16, 0.03, col('--color-bag'), 0.15),
-          ],
-          tag: 'Личные вещи · 40–46',
-          testId: 'bags-box',
-        }
-      : {
-          key: 'bags',
-          label: 'Коробка «Личные вещи», опечатана — вскрыть',
-          boxes: [
-            // Коробка 33 × 23 × 16 см (как коробка «В руках»), крышка и лента пломбы.
-            box(-0.19, 0.25, 0.33, 0.23, 0.16, col('--color-box')),
-            box(-0.19, 0.25, 0.34, 0.24, 0.015, col('--color-box-lid'), 0.16),
-            box(-0.19, 0.25, 0.03, 0.24, 0.017, col('--color-seal'), 0.16),
-          ],
-          hotspot: { kind: 'container' as const, id: 'personal' as const },
-          tag: 'Личные вещи',
-          testId: 'container-personal',
-        },
+    // Коробка «Личные вещи» (A-260): опечатана — крышка; вскрыта — уходит со стола: пакеты 40–46
+    // на стене, больше коробке делать нечего (ручная проверка автора 21.11, R.4).
+    ...(opened.includes('personal')
+      ? []
+      : [
+          {
+            key: 'bags',
+            label: 'Коробка «Личные вещи», опечатана — вскрыть',
+            boxes: [
+              // Коробка 33 × 23 × 16 см (как коробка «В руках»), крышка и лента пломбы.
+              box(-0.19, 0.25, 0.33, 0.23, 0.16, col('--color-box')),
+              box(-0.19, 0.25, 0.34, 0.24, 0.015, col('--color-box-lid'), 0.16),
+              box(-0.19, 0.25, 0.03, 0.24, 0.017, col('--color-seal'), 0.16),
+            ],
+            hotspot: { kind: 'container' as const, id: 'personal' as const },
+            tag: 'Личные вещи',
+            testId: 'container-personal',
+          },
+        ]),
     // Газета (E44, A-260): свежий номер, сложен; бытовая вещь — без бирки.
     {
       key: 'newspaper',
@@ -487,12 +502,12 @@ export function deskObjects(
       ? [
           {
             key: 'cassette',
-            label: 'Проигрыватель микрокассет бюро и кассета «06.10.08»',
+            label: 'Проигрыватель микрокассет бюро с кассетой «06.10.08»',
             boxes: [
-              // Проигрыватель микрокассет 11 × 6 × 2,2 см и микрокассета 5 × 3,3 см.
+              // Проигрыватель микрокассет 11 × 6 × 2,2 см; кассета уже в нём — видна в окошке
+              // (ручная проверка автора 21.11, 6.4).
               box(CS_X, CS_Z, 0.11, 0.06, 0.022, col('--color-device')),
-              box(CS_X - 0.02, CS_Z, 0.04, 0.03, 0.003, col('--color-device-edge'), 0.022),
-              box(CS_X - 0.1, CS_Z, 0.05, 0.033, 0.007, col('--color-newspaper')),
+              box(CS_X - 0.02, CS_Z, 0.04, 0.03, 0.003, col('--color-newspaper'), 0.022),
             ],
             hotspot: { kind: 'material' as const, id: 'L462' },
             tag: 'Кассета · L462',
