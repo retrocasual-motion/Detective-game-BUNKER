@@ -68,6 +68,7 @@
 | `CLAUDE.md` | правила работы над дизайном | есть |
 | `DECISIONS.md` | решения автора ART-… | есть |
 | `research/art-pipeline.md` | исследование: MCP генераторов, процесс, детективные игры, принципы по медиа, «не ИИ-слоп», skills | есть (10.11) |
+| `research/image-gen-services-2026-11.md` | сервис генерации по подписке через MCP: Krea, Higgsfield, Magnific, Adobe, Google API | есть (21.11) |
 | `ASSET_REGISTRY.md` | реестр: все материалы и предметы дела по линиям производства | есть (21.11) |
 | `art-bible/TEMPLATE.md` | шаблон арт-библии, 17 разделов (на основе Claude-Code-Game-Studios, MIT) | есть |
 | `art-bible/CHECKS.md` | проверки каждого раздела и итоговая | есть |
