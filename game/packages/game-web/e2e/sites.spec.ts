@@ -76,17 +76,21 @@ test('VAULTLINE: вход по кодовому слову (PW-B), учёт ан
   // «Забыли пароль?» — вход по кодовому слову: контрольный вопрос → ответ → кабинет.
   await vl.getByTestId('site-vl-forgot-login').fill('');
   await fill(vl, 'vl-forgot', { login: 'k.walsh' });
-  await expect(vl.getByTestId('site-question')).toContainText('Контрольный вопрос: «Любимый герой?»');
+  await expect(vl.getByTestId('site-question')).toContainText(
+    'Контрольный вопрос: «Любимый герой?»',
+  );
   await fill(vl, 'vl-word', { answer: 'Мэтт' });
   await expect(vl.getByTestId('site-vl-word-msg')).toHaveText('Ответ неверный.');
   await vl.getByTestId('site-vl-word-answer').fill('');
   await fill(vl, 'vl-word', { answer: 'Йен' });
   await expect(vl).toHaveURL(/\/cabinet$/);
   await expect(vl.getByTestId('site')).toContainText('Учёт анкет');
-  // Учёт анкет: без даты — подсказка; с датой — анкета A-24.
+  // Учёт анкет: поля «Дата выбытия» нет (DT-A, 21.11) — анкета A-24 по коду.
+  await expect(vl.getByTestId('site-vl-registry-date')).toHaveCount(0);
+  await fill(vl, 'vl-registry', { code: 'A-40' });
+  await expect(vl.getByTestId('site-vl-registry-msg')).toHaveText('Запись не найдена.');
+  await vl.getByTestId('site-vl-registry-code').fill('');
   await fill(vl, 'vl-registry', { code: 'A-24' });
-  await expect(vl.getByTestId('site-vl-registry-msg')).toContainText('по коду участника и дате');
-  await fill(vl, 'vl-registry', { code: 'A-24', date: '06.10.2008' });
   await expect(vl.getByTestId('site-doc-L619')).toBeVisible();
   // Документы программы: промахи — без паузы (DS-B); «архив проекта» — адрес хранилища.
   for (const t of ['отчёт', 'договор', 'справка о выбытии A-24', 'план'])
@@ -193,18 +197,21 @@ test.describe('коробка из банка (A-272, AC-4)', () => {
     // Лист акта — подлинник, сложен вдвое: на стене карточка со сгибом.
     await expect(sheet(page, 'L461').locator('[data-kind="folded"]').first()).toBeAttached();
     await expect(sheet(page, 'L460')).toBeAttached();
-    // Кассета с проигрывателем — на столе: вставить и слушать.
+    // Проигрыватель на столе, кассета уже внутри (6.4, автор 21.11): щелчок по нему — вплотную,
+    // кнопки на корпусе; под ним — строка записи той точки.
     await page.getByTestId('device-L462').click();
     await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /микрокассет/);
-    await page.getByTestId('cassette-insert').click();
-    const player = page.getByTestId('viewer').getByTestId('media-player');
-    await expect(player).toBeVisible();
-    await expect(page.getByTestId('media-time')).toContainText('0:36');
-    const bar = page.getByTestId('media-bar');
-    const b = await bar.boundingBox();
-    if (!b) throw new Error('нет шкалы');
-    await bar.click({ position: { x: (b.width * 12) / 36, y: b.height / 2 } });
-    await expect(page.getByTestId('media-caption')).toContainText('Объявлять не будем');
+    await expect(page.getByTestId('cassette-insert')).toHaveCount(0);
+    await page.getByTestId('cassette-player').click();
+    await expect(page.getByTestId('cassette-caption')).toContainText('умер');
+    for (let k = 0; k < 3; k++) await page.getByTestId('cassette-ff').click();
+    await expect(page.getByTestId('cassette-caption')).toContainText('Объявлять не будем');
+    await page.getByTestId('cassette-rew').click();
+    await page.getByTestId('cassette-rew').click();
+    await page.getByTestId('cassette-rew').click();
+    await page.getByTestId('cassette-play').click();
+    await expect(page.getByTestId('cassette-caption')).toContainText('пауза', { timeout: 15_000 });
+    await page.getByTestId('cassette-stop').click();
   });
 });
 

@@ -95,7 +95,8 @@ test('«Осмотр места происшествия и изъятое» п�
   await expect(page.getByTestId('device-47')).toBeVisible();
   await expect(page.getByTestId('device-50')).toBeVisible();
   await openEnvelope(page, 'personal');
-  await expect(page.getByTestId('bags-box')).toHaveText('Личные вещи · 40–46');
+  // Вскрытая коробка уходит со стола (R.4, автор 21.11).
+  await expect(page.getByTestId('container-personal')).toHaveCount(0);
   await toWall(page);
   await expect(sheet(page, '48')).toBeAttached();
   await expect(sheet(page, '45')).toBeAttached();

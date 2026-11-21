@@ -50,9 +50,7 @@ describe('сайты дела (A-272, AC-3)', () => {
       target: 'vaultline-program.com — вход для сотрудников',
       value: 'k.walsh / Йен',
     });
-    expect(
-      formAction('vl-registry', { program: '', code: 'A-24', date: '06.10.2008' })?.value,
-    ).toBe('A-24 / 06.10.2008');
+    expect(formAction('vl-registry', { program: '', code: 'A-24' })?.value).toBe('A-24');
     expect(formAction('fr-death', { box: '845', surname: 'Коул', date: '13.10.2009' })?.value).toBe(
       '845 / Коул / 13.10.2009',
     );

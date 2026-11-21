@@ -9,8 +9,8 @@ test('на столе — изъятые устройства с бирками 
     await expect(d).toContainText(`Изъято · ${id}`);
   }
   await expect(page.getByTestId('computer-monitor')).toBeInViewport();
-  // Коробка с пакетами вещдоков подписана; «Входящие» — справа, у лампы.
-  await expect(page.getByTestId('bags-box')).toHaveText('Личные вещи · 40–46');
+  // Вскрытой коробки «Личные вещи» на столе нет (R.4); «Входящие» — справа, у лампы.
+  await expect(page.getByTestId('container-personal')).toHaveCount(0);
   const tray = await page.getByTestId('inbox-tray').boundingBox();
   expect((tray?.x ?? 0) + (tray?.width ?? 0) / 2).toBeGreaterThan(683);
 });

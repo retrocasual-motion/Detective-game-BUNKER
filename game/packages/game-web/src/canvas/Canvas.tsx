@@ -1,12 +1,5 @@
 import type { Camera } from '@bunker/shared';
-import {
-  type CSSProperties,
-  type PointerEvent,
-  type ReactNode,
-  useEffect,
-  useRef,
-  type WheelEvent,
-} from 'react';
+import { type PointerEvent, type ReactNode, useEffect, useRef, type WheelEvent } from 'react';
 import { wheelIntent } from '../input.ts';
 import { type Bounds, clampToBounds, minZoomFor, zoomAt } from './math.ts';
 
@@ -160,13 +153,7 @@ export function Canvas({
     >
       <div
         className="canvas-world"
-        style={
-          {
-            transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.zoom})`,
-            // Приближение — в CSS: лист на стене при наведении растёт до читаемого (W8-A).
-            '--zoom': camera.zoom,
-          } as CSSProperties
-        }
+        style={{ transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.zoom})` }}
       >
         {surface && (
           <div
