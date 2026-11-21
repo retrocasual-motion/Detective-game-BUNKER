@@ -31,16 +31,27 @@ const md = (text: string) => (
   </Markdown>
 );
 
-/** С какого раздела открыть программу по материалу (из поиска). */
-export const sectionOf = (material?: string | null): Section =>
-  material === 'L215' ? 'tech' : material && /^L(38[789]|390)$/.test(material) ? 'sessions' : 'log';
+/**
+ * С какого раздела открыть программу по материалу (из поиска); у выписки — раздел, где выписали:
+ * «L214#node» (7.4, автор 21.11).
+ */
+export const sectionOf = (start?: string | null): Section => {
+  const [material, sec] = (start ?? '').split('#');
+  if (MENU.some((m) => m.key === sec)) return sec as Section;
+  return material === 'L215'
+    ? 'tech'
+    : material && /^L(38[789]|390)$/.test(material)
+      ? 'sessions'
+      : 'log';
+};
 
-export function ServerApp({ start }: { start?: string }) {
+export function ServerApp({ start: ref }: { start?: string }) {
+  const start = ref?.split('#')[0];
   const materials = useGame((g) => g.materials);
   const get = (id: string) => materials.find((m) => m.id === id);
   const l214 = get('L214')?.body ?? '';
   const data = useMemo(() => serverData(l214), [l214]);
-  const [sec, setSec] = useState<Section>(() => sectionOf(start));
+  const [sec, setSec] = useState<Section>(() => sectionOf(ref));
 
   return (
     <div className="srv" data-testid="srv">
@@ -67,6 +78,7 @@ export function ServerApp({ start }: { start?: string }) {
         <section
           className="srv-page"
           data-testid="srv-page"
+          data-screen={sec}
           data-source={`Сервер объекта VL-31 · ${MENU.find((m) => m.key === sec)?.label ?? ''}`}
         >
           {sec === 'log' ? (

@@ -88,6 +88,8 @@ export const ExcerptPlaceSchema = z.object({
   address: z.string().max(300).optional(),
   /** Веб-почта: номер письма. */
   letter: z.number().int().min(1).max(999).optional(),
+  /** Устройство: раздел программы сервера или экран телефона, где выписано (7.5, автор 21.11). */
+  screen: z.string().max(80).optional(),
 });
 export const ExcerptSchema = z.object({
   id: z.string().regex(/^x:[\w-]{1,64}$/),
@@ -180,7 +182,10 @@ export const PlayerStateSchema = z.object({
   }),
   /** Диск сервера вынут из конверта 52 и лежит на столе (A-272, DD-A); вставлен — L214 открыт. */
   discOut: z.boolean().optional(),
-  /** Микрокассета L462 вставлена в проигрыватель бюро (UX-17): при новом взятии — уже внутри. */
+  /**
+   * Прежнее «кассета вставлена» (UX-17). С 21.11 кассета всегда в проигрывателе (6.4) — поле не
+   * пишется, остаётся, чтобы старые сохранения читались.
+   */
   cassetteIn: z.boolean().optional(),
   /** Выписки на стене (A-272, DB-B). Нет поля — выписок нет. */
   excerpts: z.array(ExcerptSchema).max(300).optional(),

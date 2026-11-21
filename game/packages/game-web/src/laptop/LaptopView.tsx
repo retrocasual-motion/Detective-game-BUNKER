@@ -22,7 +22,8 @@ export function LaptopLive() {
   const materials = useGame((g) => g.materials);
   const lap = useMemo(() => buildLaptop(materials), [materials]);
   // Сеанс: после первого входа ключ не нужен — экран приветствия и «Войти» (правка автора 10.11).
-  const [session, setSession] = useState(false);
+  // Открыт на файле (выписка, поиск) — сразу файл, без «Войти» (7.5, автор 21.11): файл уже открывали.
+  const [session, setSession] = useState(() => !!useGame.getState().laptop?.material);
   const unlocked = !!lap && session;
   const { onUp, button } = useSelectionCard('laptop-to-folder', 'laptop');
   useFindOnScreen('.held-screen', true);

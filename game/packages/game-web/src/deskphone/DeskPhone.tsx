@@ -40,7 +40,8 @@ export function DeskPhone() {
       const c = useCall.getState();
       // Esc и ↓ — отойти к столу, как стрелка «Стол» внизу (UX-1, KEY-A).
       if (e.key === 'Escape' || e.key === 'ArrowDown') closePhone();
-      else if (/^[0-9*#]$/.test(e.key)) c.press(e.key);
+      // «+» — с клавиатуры тоже (T.4, автор 21.11).
+      else if (/^[0-9*#+]$/.test(e.key)) c.press(e.key);
       else if (e.key === 'Backspace') c.erase();
       else if (e.key === 'Enter') c.handset();
       else return;

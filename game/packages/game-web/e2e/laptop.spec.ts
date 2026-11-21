@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, sheet, test } from './fixtures.ts';
+import { expect, sheet, test, toWall } from './fixtures.ts';
 
 /**
  * Ноутбук руководителя (этап 4c-1; решения автора 10.11 — SCR-C, UI-A, PL-A, CL-D, LW-A, PT-A):
@@ -254,4 +254,37 @@ test('вплотную — та же вещь (WM-B): правая кнопка 
   await expect(held).toHaveAttribute('data-focus', '');
   await expect(page.getByTestId('laptop-view')).toHaveCount(0);
   await expect(held).toBeVisible();
+});
+
+test('выписка с ноутбука: по ссылке — сразу файл, без «Войти» (7.5, автор 21.11)', async ({
+  page,
+}) => {
+  await laptopUp(page);
+  await unlock(page);
+  await page.getByTestId('lap-icon-Доклад_Р.txt').dblclick();
+  const pad = page.getByTestId('lap-notepad');
+  await expect(pad).toContainText('e.pierce.uk@mailbridge.net');
+  await pad.evaluate((root) => {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const i = (n.textContent ?? '').indexOf('e.pierce.uk@mailbridge.net');
+      if (i < 0) continue;
+      const r = document.createRange();
+      r.setStart(n, i);
+      r.setEnd(n, i + 'e.pierce.uk@mailbridge.net'.length);
+      window.getSelection()?.removeAllRanges();
+      window.getSelection()?.addRange(r);
+      n.parentElement?.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      return;
+    }
+  });
+  await page.getByTestId('laptop-to-wall').click();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('held')).toHaveCount(0);
+  await toWall(page);
+  await page.locator('.paper-excerpt .excerpt-text').click();
+  await expect(page.getByTestId('laptop-desktop')).toBeVisible();
+  await expect(page.getByTestId('laptop-welcome')).toHaveCount(0);
+  await expect(page.getByTestId('lap-notepad')).toBeVisible();
 });

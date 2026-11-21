@@ -128,7 +128,7 @@ export function formAction(
     case 'vl-registry':
       return {
         target: 'кабинет VAULTLINE: учёт анкет',
-        value: join(f('program'), f('code'), f('date')),
+        value: join(f('program'), f('code')),
       };
     case 'vl-docs':
       return { target: 'кабинет VAULTLINE: документы программы', value: f('title') };

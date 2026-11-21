@@ -88,3 +88,81 @@ test('с компьютера: строка журнала сервера → «
   await expect(page.getByTestId('computer')).toBeVisible();
   await expect(page.getByTestId('srv-log')).toBeVisible();
 });
+
+/** Выделить от слов `from` до слов `to` (могут быть в разных ячейках) и отпустить мышь. */
+async function selectAcross(el: Locator, from: string, to: string) {
+  await el.evaluate(
+    (root, [a, b]) => {
+      const find = (w: string) => {
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+          const i = (n.textContent ?? '').indexOf(w);
+          if (i >= 0) return { n, i };
+        }
+        throw new Error(`нет слов: ${w}`);
+      };
+      const s = find(a as string);
+      const e = find(b as string);
+      const r = document.createRange();
+      r.setStart(s.n, s.i);
+      r.setEnd(e.n, e.i + (b as string).length);
+      window.getSelection()?.removeAllRanges();
+      window.getSelection()?.addRange(r);
+      s.n.parentElement?.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    },
+    [from, to],
+  );
+}
+
+/** Сколько мест подсвечено (CSS Custom Highlight «case-find»). */
+const lit = (page: Page) =>
+  page.evaluate(
+    () =>
+      (CSS as unknown as { highlights: Map<string, Set<Range>> }).highlights.get('case-find')
+        ?.size ?? 0,
+  );
+
+test('строка журнала через ячейки → «На стену»; по ссылке — слова подсвечены (7.4, 21.11)', async ({
+  page,
+}) => {
+  await page.request.post('/api/dev/action-line', {
+    data: { line: 'ОСМОТР | 52__конверт_прил_7_сервер.md | вставить диск в дисковод' },
+  });
+  await page.reload();
+  await page.getByTestId('computer-monitor').click();
+  await page.getByTestId('lap-icon-Сервер объекта VL-31').dblclick();
+  // Время и событие строки — разные ячейки таблицы.
+  const row = page
+    .getByTestId('srv-log')
+    .locator('tr', { hasText: 'запрос связи, маршрут 01' })
+    .first();
+  const time = ((await row.locator('td').first().textContent()) ?? '').trim();
+  await selectAcross(row, time, 'запрос связи, маршрут 01');
+  await page.getByTestId('pc-to-wall').click();
+  await page.keyboard.press('Escape');
+  await toWall(page);
+  await page.locator('.paper-excerpt .excerpt-text').click();
+  await expect(page.getByTestId('srv-log')).toBeVisible();
+  await expect.poll(() => lit(page)).toBeGreaterThan(0);
+});
+
+test('выписка из «Узла связи» открывается в этом разделе программы (7.4/7.5)', async ({ page }) => {
+  await page.request.post('/api/dev/action-line', {
+    data: { line: 'ОСМОТР | 52__конверт_прил_7_сервер.md | вставить диск в дисковод' },
+  });
+  await page.reload();
+  await page.getByTestId('computer-monitor').click();
+  await page.getByTestId('lap-icon-Сервер объекта VL-31').dblclick();
+  await page.getByTestId('srv-menu-node').click();
+  const page1 = page.getByTestId('srv-page');
+  const words = ((await page1.locator('p, td, li').first().textContent()) ?? '')
+    .trim()
+    .slice(0, 12);
+  await selectAcross(page1, words, words);
+  await page.getByTestId('pc-to-wall').click();
+  await page.keyboard.press('Escape');
+  await toWall(page);
+  await page.locator('.paper-excerpt .excerpt-text').click();
+  await expect(page.getByTestId('srv-menu-node')).toHaveAttribute('aria-pressed', 'true');
+  await expect.poll(() => lit(page)).toBeGreaterThan(0);
+});

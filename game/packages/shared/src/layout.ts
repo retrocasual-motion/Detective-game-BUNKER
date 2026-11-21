@@ -132,11 +132,17 @@ export function inboxIds(state: PlayerState, materials: Material[]): string[] {
     // Коробка из банка не вскрыта — её содержимое в ней, не в лотке (A-272).
     ...sealedIds(state),
   ]);
-  return materials
-    .filter((m) => isReleased(m) && !hidden.has(m.id))
-    .map((m) => m.id)
-    .reverse();
+  return (
+    materials
+      // Свойства файла записи — под её плеером, не во «Входящих» (ручная проверка автора 21.11, Q.1).
+      .filter((m) => isReleased(m) && !hidden.has(m.id) && !isFileProps(m))
+      .map((m) => m.id)
+      .reverse()
+  );
 }
+
+/** «Свойства файла (файл 13)» и т. п. — табличка у плеера записи (A-251, F3). */
+export const isFileProps = (m: Material) => /^Свойства файл/.test(m.title);
 
 export function defaultState(materials: Material[]): PlayerState {
   return reconcile(

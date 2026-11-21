@@ -611,7 +611,7 @@ test('QA-C: всё дело через интерфейс — от нового 
     await opened(page, ['L620']);
     await fill(vl, 'vl-registry', { program: 'VL-31' });
     await opened(page, ['L618']);
-    await fill(vl, 'vl-registry', { program: '', code: 'A-24', date: '06.10.2008' });
+    await fill(vl, 'vl-registry', { program: '', code: 'A-24' });
     await expect(vl.getByTestId('site-doc-L619')).toBeVisible();
     await opened(page, ['L619']);
     await fill(vl, 'vl-docs', { title: 'архив проекта' });
@@ -683,8 +683,9 @@ test('QA-C: всё дело через интерфейс — от нового 
       await page.mouse.click(pt.x, pt.y);
     }
     await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /микрокассет/);
-    await page.getByTestId('cassette-insert').click();
-    await expect(page.getByTestId('viewer').getByTestId('media-player')).toBeVisible();
+    // Кассета уже в проигрывателе (6.4): щелчок по нему — вплотную, под ним строка записи.
+    await page.getByTestId('cassette-player').click();
+    await expect(page.getByTestId('cassette-sheet')).toBeVisible();
     await handsFree(page);
   });
 
