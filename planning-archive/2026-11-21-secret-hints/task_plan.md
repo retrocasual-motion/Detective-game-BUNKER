@@ -11,7 +11,7 @@
 Ждёт автора: «собирать» → внесение в 01 §10, DECISIONS_LOG, пакет следующей версии; аудит — по желанию.
 
 ## Current Phase
-Phase 5 (ждёт «собирать»)
+завершено
 
 ## Phases
 
@@ -33,8 +33,8 @@ Phase 5 (ждёт «собирать»)
 - **Status:** complete
 
 ### Phase 5: Запись
-- [ ] по «собирать»: своды 01/02, DECISIONS_LOG, пакет (следующая версия), арт-библия р. 6; аудит по желанию
-- **Status:** pending
+- [x] A-277: 01 §10, 04 §1, DECISIONS_LOG, пакет v3.4 правка 21.11, арт-библия р. 6; аудит — автор: не нужен
+- **Status:** complete
 
 ## Errors Encountered
 | Error | Attempt | Resolution |
