@@ -1,0 +1,65 @@
+<!doctype html>
+<!--
+  Протоколы опросов 30–36 — один бланк бюро на серию (Papers, Please: одинаковая форма → отличие
+  заметно). Устройство — как у настоящего протокола опроса (FBI FD-302): шапка учреждения, номер
+  дела в рамке, когда/где/кто, сплошной пересказ, подпись опрашиваемого. Меньше текста (ART-40):
+  ни одной графы сверх пакета; номер формы и «стр.» — совсем мелко (ART-41).
+  Текст подставляет make_protocols.py дословно из пакета игрока v3.4. Шапка бюро — простая надпись
+  до раздела 16 (знак бюро не решён).
+-->
+<html lang="ru"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Marck+Script&family=Neucha&family=Caveat&family=Bad+Script&family=Amatic+SC:wght@700&family=Pangolin&family=Shantell+Sans&family=Comforter&family=Comforter+Brush&family=Underdog&display=block" rel="stylesheet">
+<style>
+  html,body{margin:0;background:#fff}
+  .page{position:relative;width:794px;height:1123px;box-sizing:border-box;padding:58px 72px 50px 92px;
+        font-family:"Times New Roman","Liberation Serif",serif;color:#161616}
+  .org{text-align:center;font-size:12px;letter-spacing:2px;text-transform:uppercase;line-height:1.5}
+  .org b{font-size:13.5px;letter-spacing:2.5px}
+  .rule{border-top:1.5px solid #222;margin:8px 0 0}
+  .case{position:absolute;right:72px;top:118px;border:1px solid #222;padding:3px 8px;font-size:13px}
+  h1{font-size:17px;letter-spacing:3px;margin:30px 0 16px;text-align:left;font-weight:700}
+  .meta{font-size:14px;line-height:1.45;margin-bottom:14px}
+  .body{font-size:14.5px;line-height:1.48;text-align:justify;hyphens:auto}
+  .body p{margin:0 0 8px}
+  .sign{margin-top:22px;font-size:14.5px;position:relative;height:48px}
+  .sign .h{position:absolute;left:78px;top:-12px;white-space:nowrap}
+  .foot{position:absolute;left:92px;right:72px;bottom:34px;font-family:Arial,sans-serif;font-size:7.5px;
+        color:#555;display:flex;justify-content:space-between;letter-spacing:.3px}
+  /* руки (ART-38, черновые шрифты — design/documents/hands/) */
+  .hand{color:#1f2f7c}
+  .h-miller{font-family:"Neucha";font-size:23px;color:#2a3050;-webkit-text-stroke:.3px #2a3050}
+  .h-moro{font-family:"Shantell Sans";font-size:19px}
+  .h-pierce{font-family:"Caveat";font-size:28px}
+  .h-sato{font-family:"Pangolin";font-size:16px}
+  .h-silva{font-family:"Amatic SC";font-weight:700;font-size:30px;display:inline-block;transform:skewX(-10deg)}
+  .h-walsh{font-family:"Bad Script";font-size:24px;display:inline-block;transform:skewX(22deg)}
+  .h-hart{font-family:"Underdog";font-size:19px;color:#2a3050}
+  body[data-layer="print"] .L-hand{visibility:hidden}
+  body[data-layer="hand"] .L-print{visibility:hidden}
+</style></head>
+<body>
+<div class="page">
+  <div class="L-print">
+    <div class="org"><b>Окружное бюро расследований</b><br>округа Сильвер-Ридж</div>
+    <div class="rule"></div>
+    <div class="case">Дело № {{CASE}}</div>
+    <h1>ПРОТОКОЛ ОПРОСА</h1>
+    <div class="meta">{{META}}</div>
+    <div class="body" data-keep="body">{{BODY}}</div>
+    <div class="sign">{{SIGN_LABEL}}</div>
+    <div class="foot"><span>Форма 12 · ред. 2008</span><span>стр. 1 из 1</span></div>
+  </div>
+  <div class="sign" style="position:absolute;left:92px;top:{{SIGN_TOP}}px;width:600px;margin:0">
+    <span class="h hand L-hand {{HAND}}" data-keep="sign">{{SIGN}}</span></div>
+</div>
+<script>
+  const P=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(s=>s.split('=')));
+  document.body.dataset.layer=P.layer||'all';
+  // подпись — сразу под текстом, где бы он ни кончился
+  document.fonts.ready.then(()=>{
+    const s=document.querySelector('.L-print .sign').getBoundingClientRect();
+    const hs=document.querySelector('.hand').parentElement; hs.style.top=(s.top)+'px';
+    document.body.dataset.ready='1';
+  });
+</script>
+</body></html>

@@ -18,7 +18,10 @@ RELIEF_KINDS (сгибы, заломы, углы, картон, дырокол, 
 самой копии — `"stage": "after_profile"`.
 """
 import argparse, json, os, random, glob, zlib
+import sys
 import cv2, numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # свои модули рядом (запуск с -P)
+import proc_traces  # noqa: E402
 
 NEUTRAL = 200.0
 RELIEF_KINDS = {'fold', 'crumple', 'corner', 'cardboard', 'punch', 'staple_clip', 'tear', 'pin_tape', 'pencil_indent'}
@@ -195,6 +198,7 @@ def legibility(clean_lum, final_lum, mask_before, mask_after, boxes, w):
 
 
 def normal_map(height, strength):
+    height = height.astype(np.float32)
     gx = cv2.Sobel(height, cv2.CV_32F, 1, 0, ksize=3) / 8.0
     gy = cv2.Sobel(height, cv2.CV_32F, 0, 1, ksize=3) / 8.0
     n = np.dstack([-gx * strength, -gy * strength, np.ones_like(height)])
@@ -266,7 +270,19 @@ def main():
         t = dict(t)
         if t.get('stage', 'before_profile') != stage:
             continue
+        if t.get('off'):                                    # след выключен (причина — в рецепте)
+            if stage == 'before_profile':
+                meta['traces'].append({'kind': t['kind'], 'why': t.get('why'), 'off': t['off']})
+            continue
         for _ in range(t.get('count', 1)):
+            if t['kind'].startswith('proc:'):                      # следы-геометрия (proc_traces.py)
+                mult, rel, hole = proc_traces.KINDS[t['kind'][5:]](rng, h, w, t)
+                doc = doc * mult
+                lid = np.array(R.get('hole_color', [0.93, 0.925, 0.91]), np.float32)
+                doc = doc * (1 - hole[..., None]) + lid * hole[..., None]
+                height = height * (1 - hole) + rel * t.get('relief_gain', 1.0)
+                meta['traces'].append({'kind': t['kind'], 'why': t.get('why'), 'stage': stage, 'relief': True})
+                continue
             f = pick_instance(os.path.join(a.library, t['kind']), t.get('prefer'), usage, t['kind'], rng)
             if not f:
                 meta['traces'].append({'kind': t['kind'], 'why': t.get('why'), 'skipped': 'нет слоёв в библиотеке'})
