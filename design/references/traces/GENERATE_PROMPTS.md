@@ -105,6 +105,12 @@ Flat top-down scan of white office paper with a faint greasy fingertip smudge: a
 Close top-down photo of white office paper under low raking side light showing only embossed impressions left by a removed paper clip and two tiny staple holes with small creases around them; no metal, no ink, no text, no objects. Photorealistic macro texture.
 ```
 
+**Вторая попытка (22.11, после разбора):** W7 и W12 вышли «ИИ-слопом» (драматичный боковой свет,
+перспектива, утрированные вмятины, янтарный клей), голубая W4 — слишком насыщенной. Новые промпты
+W7b, W12b, W12c, W4b — в `CHAT_PASTE_2.txt`: плоский скан сверху, ровный рассеянный свет, «very
+subtle, low contrast», явный список брака; плюс проверка, доступна ли по безлимиту Nano Banana Pro
+(первый прогон чат сделал на Nano Banana 2).
+
 **W13 — второй экземпляр офисной бумаги**
 ```
 Flat top-down scan of a blank sheet of plain white office copy paper, 80 gsm, very fine fibre, subtle natural unevenness, no marks. Even scanner lighting, no text, no objects, fills the frame. Photorealistic paper texture, high detail.
