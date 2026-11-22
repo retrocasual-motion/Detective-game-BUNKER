@@ -1,0 +1,63 @@
+{
+ "doc": "35",
+ "title": "Протокол опроса (протокол_К_Уолш)",
+ "layout": "make_protocols.py ← design/documents/layouts/protocol_template.html",
+ "wear_md": "О, Р бюро; скоба и дырокол у всех; разные мелочи, по одной на протокол, не повторять",
+ "paper": {
+  "prefer": [
+   "TL-316"
+  ],
+  "tone": [
+   0.975,
+   0.973,
+   0.966
+  ],
+  "contrast": 0.3,
+  "fibre_relief": 0.5,
+  "why": "бюро: белая офисная 80 г, самая свежая в деле (паспорт бумаги)"
+ },
+ "hands": {
+  "hand": {
+   "why": "подпись опрашиваемого синей ручкой бюро",
+   "tremor": 0.8,
+   "pressure": [
+    0.85,
+    1.0
+   ],
+   "indent": 0.2
+  }
+ },
+ "traces": [
+  {
+   "kind": "proc:staple",
+   "why": "скоба (WEAR: у всех протоколов)"
+  },
+  {
+   "kind": "proc:punch",
+   "why": "два отверстия дырокола (подшито в дело)"
+  },
+  {
+   "kind": "stain",
+   "why": "лёгкий отпечаток пальца у подписи",
+   "prefer": [
+    "HF-W11a"
+   ],
+   "place": "object",
+   "size_mm": [
+    16,
+    22
+   ],
+   "at": {
+    "box": "sign",
+    "dx_mm": 6,
+    "dy_mm": 2
+   },
+   "strength": [
+    0.4,
+    0.55
+   ]
+  }
+ ],
+ "profile": "scan_bureau",
+ "relief_strength": 6
+}

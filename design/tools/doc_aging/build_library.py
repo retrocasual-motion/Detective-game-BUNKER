@@ -37,11 +37,46 @@ ROWS = [
     ('TL-329', TL + 'Paper_329L.jpg', 'stain', 'stain', [], 'пятна и тёмный край — для старых бумаг; не обгорание'),
 ]
 
+# Генерации Higgsfield (Nano Banana 2, 2K; промпты — GENERATE_PROMPTS.md; разбор 22.11 — CATALOG.md)
+G = 'generated/'
+ROWS += [
+    ('HF-W13a', G + 'W13_office_paper_v2.png', 'paper_base', 'paper', [], 'офисная бумага, второй экземпляр (ровная)'),
+    ('HF-W1a', G + 'W1_dust_edge_v1.png', 'stain', 'stain', ['--crop', '0.115,0.14,0.89,0.98'], 'мягкая пыль по левому краю листа'),
+    ('HF-W1b', G + 'W1_dust_edge_v2.png', 'stain', 'stain', ['--crop', '0.07,0.035,0.925,0.96'], 'мягкая пыль по верхнему краю'),
+    ('HF-W2a', G + 'W2_coffee_ring_v1.png', 'stain', 'stain', [], 'кофейные кольца (кружку ставили дважды)'),
+    ('HF-W2b', G + 'W2_coffee_ring_v2.png', 'stain', 'stain', ['--crop', '0.13,0.08,0.87,0.91'], 'кофейное кольцо, разорванное'),
+    ('HF-W2c', G + 'W2_tea_ring_v1.png', 'stain', 'stain', [], 'чайное кольцо, бледное, капля'),
+    ('HF-W2d', G + 'W2_tea_ring_v2.png', 'stain', 'stain', [], 'чайное кольцо, заливка, подтёк'),
+    ('HF-W3a', G + 'W3_water_ring_v1.png', 'stain', 'stain', [], 'след стакана воды — волна (рельеф: relief в рецепте)'),
+    ('HF-W3b', G + 'W3_water_ring_v2.png', 'stain', 'stain', [], 'след стакана воды, почти бесцветный'),
+    ('HF-W5a', G + 'W5_carbonless_v1.png', 'carbon_copy', 'stain', ['--crop', '0.02,0.03,0.98,0.97'], 'копия самокопирующегося бланка: синие следы давления'),
+    ('HF-W5b', G + 'W5_carbonless_v2.png', 'carbon_copy', 'stain', ['--crop', '0.095,0.06,0.915,0.945'], 'то же, второй'),
+    ('HF-W6a', G + 'W6_drafting_folded_v2.png', 'fold', 'flat', [], 'тонкая чертёжная, гармошка 6×4'),
+    ('HF-W6b', G + 'W6_drafting_folded_v1.png', 'fold', 'flat', ['--crop', '0.02,0.02,0.98,0.98'], 'то же, грубее, потёртость на сгибах'),
+    ('HF-W10a', G + 'W10_stamp_violet_v1.png', 'stamp', 'stain', [], 'краска штампа, фиолетовая'),
+    ('HF-W10b', G + 'W10_stamp_violet_v2.png', 'stamp', 'stain', [], 'краска штампа, фиолетовая, угол прижат'),
+    ('HF-W10c', G + 'W10_stamp_blue_v1.png', 'stamp', 'stain', [], 'краска штампа, синяя, почти сухая'),
+    ('HF-W10d', G + 'W10_stamp_blue_v2.png', 'stamp', 'stain', [], 'краска штампа, синяя, плотная'),
+    ('HF-W10e', G + 'W10_stamp_red_v1.png', 'stamp', 'stain', [], 'краска штампа, красная'),
+    ('HF-W10f', G + 'W10_stamp_red_v2.png', 'stamp', 'stain', [], 'краска штампа, красная, пятнистая'),
+    ('HF-W11a', G + 'W11_finger_smudge_v2.png', 'stain', 'stain', [], 'жирный мазок пальца, без узора'),
+    ('HF-W11b', G + 'W11_finger_smudge_v1.png', 'stain', 'stain', [], 'жирный мазок пальца на тёплой бумаге'),
+    # второй раунд (промпты CHAT_PASTE_2.txt)
+    ('HF-W12ca', G + 'W12c_staple_removed_v2.png', 'staple_clip', 'stain', [], 'след вынутой скобы: два прокола и линия (кладётся как предмет)'),
+    ('HF-W12cb', G + 'W12c_staple_removed_v1.png', 'staple_clip', 'stain', ['--crop', '0.04,0,1,1'], 'то же, рельефнее'),
+    ('HF-W7ba', G + 'W7b_pad_edge_v3.png', 'tear', 'stain', ['--crop', '0,0.03,1,1'], 'отрывной край блокнота: полоска клея, надрыв (край — к верху листа)'),
+    ('HF-W7bb', G + 'W7b_pad_edge_v2.png', 'tear', 'stain', [], 'то же, ровнее'),
+    # третий раунд: свой рендер скрепки как референс (CHAT_PASTE_3.txt)
+    ('HF-W12da', G + 'W12d_clip_nb_v3.png', 'staple_clip', 'stain', ['--crop', '0.42,0,0.67,0.3'], 'след скрепки: беспечатная вмятина, форма скрепки (Nano Banana)'),
+    ('HF-W12db', G + 'W12d_clip_sd_v1.png', 'staple_clip', 'stain', ['--crop', '0.42,0,0.67,0.3'], 'след скрепки: беспечатная вмятина, мягче (Seedream 5.0 Pro)'),
+]
+
 for rid, src, kind, mode, extra, note in ROWS:
     inp = os.path.join(ROOT, src)
     if not os.path.exists(inp):
         print(f'{rid}: нет файла {src}')
         continue
+    os.makedirs(os.path.join(ROOT, "library", kind), exist_ok=True)
     out = os.path.join(ROOT, 'library', kind, f'{rid}.png')
     cmd = [sys.executable, '-P', '-E', '-X', 'utf8', os.path.join(HERE, 'extract_wear.py'), inp, out,
            '--mode', mode, '--id', rid, '--note', note] + extra

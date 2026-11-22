@@ -1,0 +1,21 @@
+Сначала проверь в Higgsfield (models_explore, unlim: true), какие модели и разрешения покрывает мой безлимит сейчас — особенно nano_banana_pro и разрешение 4k. Напиши мне одной строкой, что доступно.
+
+Потом сгенерируй по списку ниже:
+- модель: nano_banana_pro, если она доступна по безлимиту (разрешение — максимальное доступное, лучше 4k); если Pro по безлимиту недоступна — nano_banana_2 в максимальном доступном разрешении, и прямо скажи, что Pro недоступна;
+- соотношение сторон 3:2, use_unlim: true;
+- по 3 варианта на каждую строку (W4b — 2);
+- generate_image_batch пачками до 12;
+- референс бумаги — уже загруженное медиа моего аккаунта 212d26e8-8916-4742-9c63-8f47903bce61, передавай в medias с ролью image_references для W7b, W12b, W12c, W4b (это образец бумаги: повтори её волокно и ровный свет скана, но не копируй картинку).
+В промптах ничего не меняй. Брак — если на картинке перспектива, драматичный боковой свет, тени от предметов, металл, буквы или цифры: такую строку повтори один раз. В конце дай список: строка → id генераций и какая модель/разрешение реально использованы.
+
+W7b:
+Flat scanner image of the top edge of a single sheet of plain white office paper that was torn off a gummed notepad. Along the very top edge: a thin, slightly uneven strip, 1-2 mm wide, of dried pale off-white rubbery padding glue, with a few tiny torn paper fibres; the rest of the sheet is clean flat white paper. Viewed straight from above on a flatbed scanner, even diffuse light, no shadows, no perspective, no background showing, no text, no lines, no objects. Subtle, realistic, low contrast.
+
+W12b:
+Flat scanner image of a plain white office paper sheet showing only very subtle marks of handling: a faint shallow outline of a paper clip pressed into the paper near the top edge, barely visible as a slightly greyish line, and two tiny pin-sized staple holes near the top left corner, each about 1 mm, clean, with no tearing. Viewed straight from above on a flatbed scanner, even diffuse light, no raking light, no shadows, no perspective, no metal, no text, no objects. Very subtle, realistic, low contrast, the paper is mostly clean.
+
+W12c:
+Flat scanner image of a plain white office paper sheet with the faint traces left after a staple was removed near the top left corner: two tiny round pin holes 12 mm apart, very slightly darker rims, and a faint thin line where the staple crown pressed the paper between them. Everything else is clean paper. Viewed straight from above on a flatbed scanner, even diffuse light, no shadows, no perspective, no metal, no text. Very subtle, realistic, low contrast.
+
+W4b:
+Flat top-down scan of a blank sheet of very pale baby blue office copy paper, only a hint of blue, almost white, 80 gsm, fine uniform fibre, very slight colour variation, clean, no marks. Even scanner lighting, no text, no objects, fills the frame. Photorealistic paper texture.

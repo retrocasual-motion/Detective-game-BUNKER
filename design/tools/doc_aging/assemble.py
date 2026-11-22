@@ -18,7 +18,10 @@ RELIEF_KINDS (сгибы, заломы, углы, картон, дырокол, 
 самой копии — `"stage": "after_profile"`.
 """
 import argparse, json, os, random, glob, zlib
+import sys
 import cv2, numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # свои модули рядом (запуск с -P)
+import proc_traces  # noqa: E402
 
 NEUTRAL = 200.0
 RELIEF_KINDS = {'fold', 'crumple', 'corner', 'cardboard', 'punch', 'staple_clip', 'tear', 'pin_tape', 'pencil_indent'}
@@ -103,6 +106,47 @@ def place_mask(place, h, w, rng, t):
         d = np.hypot(yy - cy, xx - cx)
         return np.clip(1.2 - d / (r * rough), 0, 1)
     raise SystemExit(f'неизвестное размещение: {place}')
+
+
+def place_object(tex, h, w, rng, t, boxes):
+    """Предмет из текстуры (кольцо, мазок пальца, оттиск) — целиком, в нужном месте листа.
+    t: size_mm [мин, макс] — размер предмета; at: {box: id рамки [data-keep], dx_mm, dy_mm} или
+    x, y — доли листа [мин, макс]; rotate — случайный поворот; strength [мин, макс]."""
+    dev = np.abs(tex.mean(2) - 1)
+    dev = cv2.GaussianBlur(dev, (0, 0), 3)
+    ys, xs = np.nonzero(dev > max(0.03, float(np.percentile(dev, 99.7)) * 0.45))
+    if len(xs) == 0:
+        return np.ones((h, w, 3), np.float32), np.zeros((h, w), np.float32), 0.0
+    y0, y1, x0, x1 = np.percentile(ys, 1), np.percentile(ys, 99), np.percentile(xs, 1), np.percentile(xs, 99)
+    cy, cx, half = (y0 + y1) / 2, (x0 + x1) / 2, max(y1 - y0, x1 - x0) * 0.65
+    th, tw = tex.shape[:2]
+    a, b = int(max(0, cy - half)), int(min(th, cy + half))
+    c, d = int(max(0, cx - half)), int(min(tw, cx + half))
+    obj = tex[a:b, c:d]
+    k = w / 210.0
+    size = int(rng.uniform(*t.get('size_mm', [20, 30])) * k)
+    obj = cv2.resize(obj, (size, size), interpolation=cv2.INTER_AREA)
+    if t.get('rotate', True):
+        M = cv2.getRotationMatrix2D((size / 2, size / 2), rng.uniform(0, 360), 1)
+        obj = cv2.warpAffine(obj, M, (size, size), borderValue=(1, 1, 1))
+    at = t.get('at')
+    if at and at.get('box'):
+        bx = [b_ for b_ in boxes if b_['id'] == at['box']][0]
+        px = bx['x'] + bx['w'] + at.get('dx_mm', 5) * k + rng.uniform(-2, 2) * k
+        py = bx['y'] + bx['h'] / 2 + at.get('dy_mm', 0) * k + rng.uniform(-2, 2) * k
+    else:
+        px = w * rng.uniform(*t.get('x', [0.2, 0.8])); py = h * rng.uniform(*t.get('y', [0.2, 0.8]))
+    full = np.ones((h, w, 3), np.float32)
+    X0, Y0 = int(px - size / 2), int(py - size / 2)
+    sx0, sy0 = max(0, -X0), max(0, -Y0)
+    X0c, Y0c = max(0, X0), max(0, Y0)
+    X1c, Y1c = min(w, X0 + size), min(h, Y0 + size)
+    full[Y0c:Y1c, X0c:X1c] = obj[sy0:sy0 + (Y1c - Y0c), sx0:sx0 + (X1c - X0c)]
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    r = np.hypot(yy - py, xx - px) / (size / 2)
+    s = rng.uniform(*t.get('strength', [0.6, 0.9]))
+    m = np.clip((1.0 - r) * 4, 0, 1) * s                 # мягкий край, чтобы не было квадрата
+    return full, m.astype(np.float32), s
 
 
 def keep_mask(boxes, h, w, pad):
@@ -195,6 +239,7 @@ def legibility(clean_lum, final_lum, mask_before, mask_after, boxes, w):
 
 
 def normal_map(height, strength):
+    height = height.astype(np.float32)
     gx = cv2.Sobel(height, cv2.CV_32F, 1, 0, ksize=3) / 8.0
     gy = cv2.Sobel(height, cv2.CV_32F, 0, 1, ksize=3) / 8.0
     n = np.dstack([-gx * strength, -gy * strength, np.ones_like(height)])
@@ -266,12 +311,33 @@ def main():
         t = dict(t)
         if t.get('stage', 'before_profile') != stage:
             continue
+        if t.get('off'):                                    # след выключен (причина — в рецепте)
+            if stage == 'before_profile':
+                meta['traces'].append({'kind': t['kind'], 'why': t.get('why'), 'off': t['off']})
+            continue
         for _ in range(t.get('count', 1)):
+            if t['kind'].startswith('proc:'):                      # следы-геометрия (proc_traces.py)
+                mult, rel, hole = proc_traces.KINDS[t['kind'][5:]](rng, h, w, t)
+                doc = doc * mult
+                lid = np.array(R.get('hole_color', [0.93, 0.925, 0.91]), np.float32)
+                doc = doc * (1 - hole[..., None]) + lid * hole[..., None]
+                height = height * (1 - hole) + rel * t.get('relief_gain', 1.0)
+                meta['traces'].append({'kind': t['kind'], 'why': t.get('why'), 'stage': stage, 'relief': True})
+                continue
             f = pick_instance(os.path.join(a.library, t['kind']), t.get('prefer'), usage, t['kind'], rng)
             if not f:
                 meta['traces'].append({'kind': t['kind'], 'why': t.get('why'), 'skipped': 'нет слоёв в библиотеке'})
                 continue
             tex = load_rgb(f) * 255.0 / NEUTRAL                       # множитель, бумага = 1
+            if t.get('place') == 'object':                            # предмет целиком: кольцо, мазок, штамп
+                tex, m, s = place_object(tex, h, w, rng, t, boxes_j['boxes'])
+                doc = doc * (1 + (tex - 1) * m[..., None])
+                if t.get('relief'):
+                    height = height + (tex.mean(2) - 1) * m * t.get('relief_gain', 1.0)
+                usage.setdefault(t['kind'], []).append(os.path.basename(f))
+                meta['traces'].append({'kind': t['kind'], 'why': t.get('why'), 'instance': os.path.basename(f),
+                                       'place': 'object', 'strength': round(s, 2), 'stage': stage})
+                continue
             anchor = None
             if t.get('place') == 'edge':
                 t['sides'] = [rng.choice(t.get('sides', ['top', 'bottom', 'left', 'right']))]
