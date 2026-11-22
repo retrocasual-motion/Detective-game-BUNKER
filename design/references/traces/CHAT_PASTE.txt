@@ -1,0 +1,54 @@
+Сгенерируй через Higgsfield текстуры по списку ниже. Настройки для всех: модель nano_banana_pro,
+максимальное разрешение, доступное по безлимиту, соотношение сторон 3:2, use_unlim: true,
+по 2 варианта на каждую строку (W4 — по одному на каждый цвет). Используй generate_image_batch
+пачками до 12. Референсы — уже загруженные медиа моего аккаунта, передавай их в medias
+с ролью image_references:
+- W2, W3, W4, W11, W13 → 212d26e8-8916-4742-9c63-8f47903bce61 (это образец бумаги:
+  повтори её волокно и свет скана, но не копируй картинку)
+- W6 → b1863ee8-4051-4c57-a445-e22f07c71bc0 (образец сетки сгибов)
+- W8 → 0b887cc2-fa61-4de9-81af-fbb970a3bc17 (образец картона бирки и люверса)
+- остальные — без референсов.
+В промптах ничего не меняй. Если на картинке появились буквы, цифры, логотипы, руки или
+предметы — повтори эту строку один раз. В конце дай список: строка → id генераций.
+
+W1:
+Flat top-down scan of a sheet of white office paper. Along one long edge only, a soft band of grey-brown dust and light grime, fading out toward the centre over about 3 cm, uneven and blotchy like paper that lay on a dusty workshop shelf. No black spots, no ink, no stains elsewhere. Even scanner lighting, no shadows, no text, no objects. Photorealistic scan texture, high detail.
+
+W2:
+Flat top-down scan of a plain sheet of white office copy paper with a single faint coffee mug ring stain: a thin uneven light-brown ring about 8 cm across, darker at the rim, partly broken, dried, with a faint lighter tint inside. Subtle paper fibre visible. Even scanner lighting, no shadows, no text, no objects. Photorealistic scan texture.
+W2 — также варианты: ...a tea ring, paler and more yellow, with a small drip mark beside it...
+
+W3:
+Flat top-down scan of white office paper with a dried water glass ring: an almost colourless circle about 7 cm across, visible only as a slightly darker, wavy cockled outline where the paper swelled and dried. No colour stain. Even scanner lighting, no text, no objects. Photorealistic scan texture.
+
+W4:
+Flat top-down scan of a blank sheet of pale pastel yellow office copy paper, 80 gsm, fine uniform fibre, very slight colour variation, clean, no marks. Even scanner lighting, no text, no objects, fills the frame. Photorealistic paper texture.
+W4 — также варианты: pale pastel yellow | pale mint green | pale sky blue | pale pink | very light blue-grey
+
+W5:
+Flat top-down scan of a blank carbonless copy paper sheet (NCR copy), thin, pale yellowish cream colour, slightly glossy coating, faint uneven blue pressure marks scattered lightly over the surface as from handling, no writing. Even scanner lighting, no text, no objects. Photorealistic paper texture.
+
+W6:
+Flat top-down scan of thin white drafting bond paper that was folded many times accordion-style and opened again: crisp straight fold lines in a grid, slight wear and greyish rubbing along the folds, thin translucent paper. Even scanner lighting, no drawing, no text, no objects. Photorealistic paper texture.
+
+W7:
+Close top-down scan of the top edge of a sheet torn off a glued notepad: an irregular torn edge with small bits of dried rubbery glue residue and a few uneven paper fibres, white office paper below. Even scanner lighting, no text, no lines, no objects. Photorealistic macro scan texture.
+
+W8:
+Flat top-down scan of a blank manila shipping tag card, buff yellowish-tan cardstock, fine fibre, slightly worn corners, a reinforced round eyelet hole near one end, no string, no printing, no writing. Even scanner lighting on a plain white background. Photorealistic texture.
+
+W9:
+Flat top-down scan of white typing paper with one edge genuinely burned: charred black crumbling edge, a band of brown scorching fading into the paper, irregular burn line, small bits of ash, paper otherwise clean. Even scanner lighting on a plain white background, no text, no objects. Photorealistic scan texture.
+
+W10:
+Top-down scan of a solid rectangular rubber stamp impression in faded violet ink on white paper, no letters or symbols, just an even filled rectangle with realistic uneven ink coverage: speckles, lighter patches, slightly blurred edges, one corner pressed harder. Even scanner lighting, no text. Photorealistic texture.
+W10 — также варианты: faded violet | blue | red
+
+W11:
+Flat top-down scan of white office paper with a faint greasy fingertip smudge: a soft translucent grey-beige oval mark about 2 cm, no visible ridge pattern, slightly shiny, edges blurred. Even scanner lighting, no text, no objects. Photorealistic scan texture.
+
+W12:
+Close top-down photo of white office paper under low raking side light showing only embossed impressions left by a removed paper clip and two tiny staple holes with small creases around them; no metal, no ink, no text, no objects. Photorealistic macro texture.
+
+W13:
+Flat top-down scan of a blank sheet of plain white office copy paper, 80 gsm, very fine fibre, subtle natural unevenness, no marks. Even scanner lighting, no text, no objects, fills the frame. Photorealistic paper texture, high detail.
