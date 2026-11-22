@@ -71,6 +71,30 @@ ROWS += [
     ('HF-W12db', G + 'W12d_clip_sd_v1.png', 'staple_clip', 'stain', ['--crop', '0.42,0,0.67,0.3'], 'след скрепки: беспечатная вмятина, мягче (Seedream 5.0 Pro)'),
 ]
 
+# Раунд 4 (23.11): сверка INVENTORY.md, промпты CHAT_PASTE_4.txt; разбор — CATALOG.md.
+# Особая бумага (линейка, клетка, рисовальная, крафт, манила) — в paper_special: берётся только по
+# явному paper.kind в рецепте, чтобы офисный лист случайно не лёг на тетрадную бумагу.
+ROWS += [
+    ('HF-W14aa', G + 'W14a_graphite_fold_v1.png', 'graphite_ink', 'stain', [], 'лист вчетверо из кармана с карандашом: графит на пересечении сгибов (П-02 лист 20)'),
+    ('HF-W14ab', G + 'W14a_graphite_fold_v2.png', 'graphite_ink', 'stain', [], 'то же, слабее, графит вдоль сгибов'),
+    ('HF-W14ba', G + 'W14b_graphite_hand_v2.png', 'graphite_ink', 'stain', [], 'графитовый смаз ребром ладони по правому краю, два мазка пальцев (блокнот 40)'),
+    ('HF-W14bb', G + 'W14b_graphite_hand_v3.png', 'graphite_ink', 'stain', [], 'то же, мазок уже'),
+    ('HF-W16a', G + 'W16_floor_dust_v2.png', 'stain', 'stain', [], 'пыль полосами с рифлёного пола, по диагонали (лист 51)'),
+    ('HF-W16b', G + 'W16_floor_dust_v3.png', 'stain', 'stain', [], 'то же, полосы поперёк, пыль гуще'),
+    ('HF-W18a', G + 'W18_glue_v3.png', 'stain', 'stain', [], 'следы клея вокруг вклеенного снимка, бледные (фототаблица 22)'),
+    ('HF-W18b', G + 'W18_glue_v2.png', 'stain', 'stain', [], 'то же, клей заметнее, натёк у угла'),
+    ('HF-W17aa', G + 'W17a_ruled_v2.png', 'paper_special', 'paper', [], 'тетрадный лист в линейку, красное поле слева (П-06, 44)'),
+    ('HF-W17ab', G + 'W17a_ruled_v1.png', 'paper_special', 'paper', [], 'то же, второй'),
+    ('HF-W17ba', G + 'W17b_sketch_v2.png', 'paper_special', 'paper', [], 'рисовальная бумага A5, тёплая (блокнот Леи 40)'),
+    ('HF-W17bb', G + 'W17b_sketch_v3.png', 'paper_special', 'paper', ['--crop', '0.05,0.04,0.935,0.965'], 'то же, второй'),
+    ('HF-W17ca', G + 'W17c_grid_v3.png', 'paper_special', 'paper', ['--crop', '0.04,0.02,0.96,0.88'], 'клетка 5 мм, карманный блокнот — только Мика (41)'),
+    ('HF-W17cb', G + 'W17c_grid_v1.png', 'paper_special', 'paper', ['--crop', '0.07,0.05,0.93,0.93'], 'то же, второй'),
+    ('HF-W21a', G + 'W21_kraft_v1.png', 'paper_special', 'paper', [], 'крафт конвертов (линия 3)'),
+    ('HF-W21b', G + 'W21_kraft_v2.png', 'paper_special', 'paper', [], 'крафт, светлее'),
+    ('HF-W22a', G + 'W22_manila_v2.png', 'paper_special', 'paper', ['--crop', '0.045,0.035,0.955,0.965'], 'манильский картон папки (П-09, A-24)'),
+    ('HF-W22b', G + 'W22_manila_v3.png', 'paper_special', 'paper', ['--crop', '0.095,0.075,0.925,0.945'], 'то же, второй'),
+]
+
 for rid, src, kind, mode, extra, note in ROWS:
     inp = os.path.join(ROOT, src)
     if not os.path.exists(inp):
