@@ -1,0 +1,35 @@
+Сгенерируй через Higgsfield по списку ниже:
+- модель nano_banana_pro, use_unlim: true, разрешение 2k, соотношение 3:2;
+- по 3 варианта на каждую строку (10 строк, 30 картинок), generate_image_batch пачками до 12;
+- для строк W14a, W14b, W15, W16, W18 передай в medias с ролью image_references уже загруженное медиа моего аккаунта 212d26e8-8916-4742-9c63-8f47903bce61 — это образец бумаги: повтори её волокно и ровный свет скана, но не копируй картинку. Для W17a, W17b, W17c, W21, W22 референс не передавай.
+Промпты не меняй. Брак — перспектива, драматичный боковой свет, тени от предметов, сами предметы (карандаш, фото, нога, ботинок), буквы, цифры, рисунок: такую строку повтори один раз. В конце дай список: строка → id генераций и какая модель реально записана в задаче.
+
+W14a:
+Photorealistic flatbed scan of a sheet of plain white office copy paper that was folded in four and carried for a long time in a pocket next to a pencil, now unfolded flat: two straight crease lines crossing at the centre. Where the creases cross and along them the paper is rubbed, slightly fuzzy and greyish, with fine soft grey graphite dust smeared into the creases, strongest at the crossing point and fading out along the folds. The rest of the sheet is clean. No pencil, no writing, no text, no drawing. Straight top-down view, even scanner light, no perspective, no shadows from objects. Subtle and realistic.
+
+W14b:
+Photorealistic flatbed scan of a blank page of off-white drawing paper with only the soft grey graphite smudges left by the side of a hand that was drawing with a very soft pencil: one long faint elongated smear along the right edge of the page and two or three lighter fingertip-sized smudges near the bottom, soft edges, no lines, no drawing, no shapes, no text. Straight top-down view, even scanner light, no perspective, no shadows. Subtle and realistic.
+
+W15:
+Photorealistic flatbed scan of plain white office paper with a grease stain from oily food or greasy fingers: one irregular patch about 3 cm across where the paper is slightly darker, faintly yellowish and semi-translucent, with soft uneven edges, plus two or three small drops of the same grease nearby. The rest of the sheet is clean. No food, no fingers, no text. Straight top-down view, even scanner light, no perspective, no shadows. Realistic, low contrast.
+
+W16:
+Photorealistic flatbed scan of a sheet of plain white paper that lay for a day on a dusty ribbed steel floor: faint grey dust transferred in a pattern of parallel straight stripes across part of the sheet, uneven density, some stripes broken, soft edges. No footprints, no shoe marks, no metal visible, no text. Straight top-down view, even scanner light, no perspective, no shadows. Subtle and realistic.
+
+W17a:
+Photorealistic flatbed scan of a blank sheet of American college-ruled notebook paper from the late 2000s: thin pale blue horizontal lines about 7 mm apart, one thin pale red vertical margin line on the left, plain cheap white paper with fine fibre. No holes, no torn edge, no writing, no text. Fills the frame, straight top-down view, even scanner light, no perspective, no shadows.
+
+W17b:
+Photorealistic flatbed scan of a blank page of an A5 sketchbook: off-white drawing paper, slightly heavier, with a visible fine tooth made for soft pencil, very slight warm tone. Clean, no marks, no lines, no spiral, no text. Fills the frame, straight top-down view, even scanner light, no perspective, no shadows.
+
+W17c:
+Photorealistic flatbed scan of a blank page of a small pocket notebook with a fine square grid: thin light grey-blue grid lines 5 mm apart, plain white paper with fine fibre. Clean, no writing, no spiral, no holes, no text. Fills the frame, straight top-down view, even scanner light, no perspective, no shadows.
+
+W18:
+Photorealistic flatbed scan of a sheet of white paper with only the faint traces of dried glue left around a rectangular photograph that was pasted on it (the photograph itself is not in the image, the area is just paper): a thin uneven border of dried white glue, slightly glossy and faintly yellowish, tracing a rectangle in 3:2 proportion, thicker at two corners, with one small smear outside the rectangle. Inside the rectangle the paper is clean. No photograph, no text. Straight top-down view, even scanner light, no perspective, no shadows. Subtle and realistic.
+
+W21:
+Photorealistic flatbed scan of plain brown kraft paper as used for large office envelopes: medium brown, visible long fibres and small darker flecks, slightly uneven tone, matte. Flat, no seams, no flap, no folds, no text, no stamps. Fills the frame, straight top-down view, even scanner light, no perspective, no shadows.
+
+W22:
+Photorealistic flatbed scan of the cover of a plain manila office file folder: light buff cardstock with fine fibre, slightly uneven tone, faint wear and handling, matte. Flat, no tab, no label, no text, no folds. Fills the frame, straight top-down view, even scanner light, no perspective, no shadows.

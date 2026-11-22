@@ -1,5 +1,7 @@
 # Каких текстур не хватает: список для поиска (22.11.2026)
 
+W14–W22 добавлены по сверке `INVENTORY.md` (22.11); промпты — `CHAT_PASTE_4.txt`.
+
 Для автора: что искать, для какого документа, по каким словам, где. Найденное класть в
 `E:\Projects\bunker-media\references\traces\incoming\other\` (с сайта Texturelabs — в
 `incoming\texturelabs\`); имя файла — как скачалось, ссылку на страницу — в чат или рядом в
@@ -32,6 +34,13 @@ Stock, Getty, Shutterstock, Creative Market, Poliigon (платно), Pinterest 
 | W11 | отпечаток или жирный мазок пальца (без чёткого узора линий) | протокол 35, акт приёмки 10 | `fingerprint smudge texture`, `greasy finger mark paper` | **не свой отпечаток**: узор пальца — личные данные; только мазок без линий |
 | W12 | вмятины от скобы, скрепки, зажима | 02, протоколы, фототаблица 22 | `staple holes paper macro`, `paper clip indentation` | скрепить и разогнуть, скан под боковым светом |
 | W13 | второй экземпляр белой офисной бумаги | правило «не два раза подряд» | `white copy paper texture scan`, `office paper texture` | скан чистого листа 80 г на 600 dpi |
+| W14 | графит: a — пыль на пересечении сгибов; b — смаз ребром ладони | a — П-02 лист 20 (канон L991); b — блокнот Леи 40 | `graphite smudge paper`, `pencil smudge texture` | a — лист вчетверо в кармане с карандашом |
+| W15 | жирное пятно, просвечивает | меню П-07, роспись П-04 | `grease stain paper`, `oil stain paper texture` | капля масла на лист |
+| W16 | пыль полосами с рифлёного пола, без следов обуви | половина листа 51 | `dust stripes paper`, `dirty paper floor dust` | — |
+| W17 | бумага: a — в линейку; b — рисовальная A5; c — в клетку 5 мм (только Мика) | П-06, 44; 40; 41 | `college ruled paper scan`, `sketchbook paper texture`, `graph paper texture` | скан чистого листа |
+| W18 | следы клея вокруг вклеенного снимка | фототаблица 22 | `dried glue paper texture` | — |
+| W21 | крафт конвертов | линия 3 | `kraft paper texture scan` | скан крафтового конверта |
+| W22 | манильский картон папки | П-09, папка A-24 | `manila folder texture` | скан обложки папки |
 
 ## Где искать
 
