@@ -14,6 +14,7 @@ NEUTRAL=200; след темнее, блик светлее (до 255 = ×1.275)
 --text   сначала убрать текст и тонкие линии (закрашивание окружающей бумагой); крупные залитые
          области (фото, плотные штампы) — обрезать вручную через --crop.
 --crop x0,y0,x1,y1  (доли 0..1) взять часть картинки.
+--invert  текстура под режим «экран» (белые следы на чёрном) → обычная (тёмные на белом).
 
 python -I extract_wear.py in.jpg out.png --mode flat [--text] [--crop 0,0,1,1] [--color] [--id TL-142]
 """
@@ -46,6 +47,7 @@ def main():
     ap.add_argument('--mode', choices=['flat', 'stain', 'paper'], required=True)
     ap.add_argument('--text', action='store_true')
     ap.add_argument('--color', action='store_true')
+    ap.add_argument('--invert', action='store_true')
     ap.add_argument('--crop', default='0,0,1,1')
     ap.add_argument('--blur', type=float, default=0.08, help='flat: радиус выравнивания, доля стороны')
     ap.add_argument('--id', default='')
@@ -58,6 +60,8 @@ def main():
     h, w = img.shape[:2]
     x0, y0, x1, y1 = [float(v) for v in a.crop.split(',')]
     img = img[int(y0 * h):int(y1 * h), int(x0 * w):int(x1 * w)]
+    if a.invert:
+        img = 255 - img
     text_share = 0.0
     if a.text:
         img, text_share = remove_text(img)
@@ -81,7 +85,7 @@ def main():
     out = np.clip(out, 0, 255).astype(np.uint8)
     cv2.imwrite(a.out, out)
     meta = {'id': a.id, 'source': a.inp.replace('\\', '/').split('/')[-1], 'mode': a.mode,
-            'crop': a.crop, 'text_removed': a.text, 'text_share': round(text_share, 4),
+            'crop': a.crop, 'invert': a.invert, 'text_removed': a.text, 'text_share': round(text_share, 4),
             'color': a.color or a.mode != 'flat', 'neutral': None if a.mode == 'paper' else NEUTRAL,
             'size': [out.shape[1], out.shape[0]], 'note': a.note}
     with open(a.out.rsplit('.', 1)[0] + '.json', 'w', encoding='utf-8') as fh:
