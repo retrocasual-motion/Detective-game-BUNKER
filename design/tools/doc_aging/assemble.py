@@ -272,14 +272,21 @@ def main():
 
     # 1. бумага
     pcfg = R.get('paper', {})
-    pf = pick_instance(os.path.join(a.library, 'paper_base'), pcfg.get('prefer'), usage, 'paper_base', rng)
+    pkind = pcfg.get('kind', 'paper_base')  # paper_special — линейка, клетка, крафт: только явно
+    pf = pick_instance(os.path.join(a.library, pkind), pcfg.get('prefer'), usage, pkind, rng)
     if pf:
-        paper = fit_crop(load_rgb(pf), h, w, rng, crop=(0.5, 0.8))
-        paper = paper / np.percentile(paper.reshape(-1, 3), 60, 0)
-        pm = paper.mean(2, keepdims=True)                 # фактура без цвета; сила — у носителя
-        paper = 1 + (pm - 1) * pcfg.get('contrast', 0.4)
-        paper = paper * np.array(pcfg.get('tone', [0.965, 0.96, 0.945]), np.float32)
-        usage.setdefault('paper_base', []).append(os.path.basename(pf))
+        keep = bool(pcfg.get('keep_color'))   # линейка, клетка: не поворачивать и не отражать
+        paper = fit_crop(load_rgb(pf), h, w, rng, crop=tuple(pcfg.get('crop', [0.5, 0.8])),
+                         rot90=not keep, flip=not keep)
+        if pcfg.get('keep_color'):  # линейка, клетка, крафт: цвет и линии — часть бумаги
+            paper = paper / np.percentile(paper.mean(2), 90)
+            paper = np.clip(paper, 0, 1) * np.array(pcfg.get('tone', [1, 1, 1]), np.float32)
+        else:
+            paper = paper / np.percentile(paper.reshape(-1, 3), 60, 0)
+            pm = paper.mean(2, keepdims=True)                 # фактура без цвета; сила — у носителя
+            paper = 1 + (pm - 1) * pcfg.get('contrast', 0.4)
+            paper = paper * np.array(pcfg.get('tone', [0.965, 0.96, 0.945]), np.float32)
+        usage.setdefault(pkind, []).append(os.path.basename(pf))
         meta['paper'] = os.path.basename(pf)
     else:  # нет основы в библиотеке — ровный тон + волокно формулой (временно)
         paper = np.ones((h, w, 3), np.float32) * np.array(pcfg.get('tone', [0.965, 0.96, 0.945]), np.float32)
