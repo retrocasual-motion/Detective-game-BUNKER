@@ -195,12 +195,5 @@
   [San Francisco PD](https://www.sanfranciscopolice.org/sites/default/files/2024-04/SFPD_DeptNotice_24_035_20240409.pdf);
   [журнал съёмки](https://booksite.elsevier.com/9781455731237/downloads/appendixforms/photo_log.pdf).
 
-Платные наборы-реквизит (вымышленные дела для игр-детективов; хороши как идеи раскладки, часто
-стилизованы, у части — ИИ-картинки):
-- Etsy: [True Crime Forensic Detective Bundle](https://www.etsy.com/listing/4378655034) (≈ $6:
-  отчёты, журналы улик, обложки дел, состаренная бумага), [мини-дело 1:12](https://www.etsy.com/listing/4356370517)
-  (бирки, цепочка хранения, отчёты лаборатории), бланк вскрытия ≈ $2.4; поиск на Etsy —
-  `police case file printable`, `evidence tag printable`, `crime scene report template`.
-- [Payhip: шаблон дела](https://payhip.com/b/z3Kfu) — $5.
-- Tes и Teachers Pay Teachers — школьные наборы по криминалистике: [номерные таблички](https://www.tes.com/teaching-resource/crime-scene-evidence-markers-printable-pdf-12779883),
-  [этикетки и пакеты](https://tes.com/teaching-resource/evidence-label-and-bag-templates-12222524).
+Платные наборы-реквизит (Etsy, Payhip и подобные) — **не берём** (автор 23.11): качество слабое,
+часть картинок сделана ИИ; нужен вид настоящих бумаг — только бесплатные источники выше.
