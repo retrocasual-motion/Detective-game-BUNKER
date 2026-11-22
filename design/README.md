@@ -80,6 +80,22 @@
 | `tools/doc_aging/` | сборка состаренных документов: вёрстка → следы → скан (прототип) | есть (22.11) |
 | `references/README.md` | референсы и пробы: что берём, что избегаем, итог каждой пробы (картинки — в папке медиа) | есть (21.11) |
 
+### Папка медиа на компьютере автора
+
+`E:\Projects\bunker-media\` — создаётся скриптом `design/tools/create_media_folders.ps1`
+(PowerShell; имена папок латиницей, чтобы не было проблем с кодировкой в скриптах).
+
+| Папка | Что там | Каталог в репозитории |
+|---|---|---|
+| `references\traces\incoming\` (`texturelabs`, `pinterest`, `other`) | референсы следов как скачаны | `references/traces/CATALOG.md` |
+| `references\traces\library\<вид>\` | готовые слои следов: `paper_base`, `fold`, `crumple`, `corner`, `staple_clip`, `punch`, `pin_tape`, `stain`, `pencil_indent`, `stamp`, `toner_copy`, `yellowing`, `graphite_ink`, `carbon_copy`, `burn`, `tear`, `cardboard` | там же |
+| `references\traces\generated\` | текстуры, сгенерированные в Nano Banana | там же |
+| `references\documents\` | референсы документов и улик | `references/README.md` |
+| `references\style\`, `places\`, `characters\`, `objects\`, `video\`, `audio\`, `brands\` | референсы по темам | `references/README.md` |
+| `palette\`, `probes\` | образцы палитры, пробы генерации | `references/README.md` |
+| `assets\01_documents\` … `assets\15_game_ui\` | готовые ассеты по 15 линиям реестра | `ASSET_REGISTRY.md` |
+| `blender\` | `.blend` и рендеры 3D-плана | `blender/README.md` |
+
 Медиа (картинки, видео, звук, 3D, `.blend`) — **не в git** (ART-10): папка медиа автора
 `E:\Projects\bunker-media`, синхронизация с облаком. В репозитории — только тексты.
 
