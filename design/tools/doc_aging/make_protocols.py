@@ -17,7 +17,8 @@ SERIES = {
     '32': ('32__', 'h-pierce', None, {'kind': 'proc:clip', 'why': 'след от скрепки'}),
     '33': ('33__', 'h-sato', None, {'kind': 'proc:perforation', 'why': 'неровно оторванный край в перфорации'}),
     '34': ('34__', 'h-silva', 'G. Silva', None),          # канон: «подпись латиницей»
-    '35': ('35__', 'h-walsh', None, None),                # отпечаток пальца у подписи — ждёт текстуры
+    '35': ('35__', 'h-walsh', None, {'kind': 'stain', 'why': 'лёгкий отпечаток пальца у подписи', 'prefer': ['HF-W11a'],
+           'place': 'object', 'size_mm': [16, 22], 'at': {'box': 'sign', 'dx_mm': 6, 'dy_mm': 2}, 'strength': [0.4, 0.55]}),
     '36': ('36__', 'h-hart', None, None),
 }
 
@@ -85,8 +86,6 @@ def main():
             'traces': traces,
             'profile': 'scan_bureau', 'relief_strength': 6,
         }
-        if num == '35':
-            recipe['todo'] = 'лёгкий отпечаток пальца у подписи (WEAR) — нужна текстура: генерация или фото автора'
         json.dump(recipe, open(os.path.join(recipes, f'{num}.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
         print(num, fn, '→', name, '| следы:', ', '.join(t['kind'] for t in traces))
 
