@@ -1,0 +1,11 @@
+Сгенерируй через Higgsfield 9 картинок по одной задаче (W12d) — по 3 на каждую из трёх моделей, все с use_unlim: true, соотношение 3:2, разрешение 2k:
+1) nano_banana_pro — 3 варианта;
+2) seedream_v5_pro — 3 варианта;
+3) gpt_image_2_6 с quality: medium — 3 варианта (если medium по безлимиту не проходит — low).
+Во всех запросах передай два референса из моего аккаунта в medias с ролью image_references:
+- eb58096d-405f-4cf1-9b7e-8a57621f2c9a — главный: ровно эта форма и сила следа скрепки, её надо сделать фотореалистичной;
+- 212d26e8-8916-4742-9c63-8f47903bce61 — образец бумаги (волокно и свет скана).
+Промпт ниже не меняй. Используй generate_image_batch. В конце дай список: модель → id генераций и какая модель реально записана в задаче.
+
+W12d:
+Photorealistic flatbed scan of a plain white office paper sheet. Keep the exact composition of the first reference image: near the top edge, the blind, ink-free impression left by a paper clip that held this sheet for weeks. The paper itself is gently pressed in along the wire loops: you can only see it because one side of each groove catches a faint highlight and the other side a faint soft shade. There is NO drawn line, NO pencil, NO grey outline, NO ink, NO metal, the clip is gone. The rest of the sheet is clean. Straight top-down view, even scanner light, no perspective, no shadows from objects, no text. Extremely subtle, low contrast — almost invisible at first glance.

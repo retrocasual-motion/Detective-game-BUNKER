@@ -111,6 +111,11 @@ W7b, W12b, W12c, W4b — в `CHAT_PASTE_2.txt`: плоский скан свер
 subtle, low contrast», явный список брака; плюс проверка, доступна ли по безлимиту Nano Banana Pro
 (первый прогон чат сделал на Nano Banana 2).
 
+**Третья попытка скрепки (22.11):** W12b дал контур «карандашом». Новый ход — `CHAT_PASTE_3.txt`:
+референс — наш собственный рендер следа скрепки под лампой (`proc_traces.clip`, media
+`eb58096d-…`), задача модели — сделать его фотореалистичным; три модели (Nano Banana Pro, Seedream
+5.0 Pro, GPT Image 2.6) по 3 варианта, выбираем лучший.
+
 **W13 — второй экземпляр офисной бумаги**
 ```
 Flat top-down scan of a blank sheet of plain white office copy paper, 80 gsm, very fine fibre, subtle natural unevenness, no marks. Even scanner lighting, no text, no objects, fills the frame. Photorealistic paper texture, high detail.
