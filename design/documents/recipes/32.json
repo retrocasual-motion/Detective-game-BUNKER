@@ -37,8 +37,31 @@
    "why": "два отверстия дырокола (подшито в дело)"
   },
   {
-   "kind": "proc:clip",
-   "why": "след от скрепки"
+   "kind": "staple_clip",
+   "why": "след от скрепки (вмятина, без краски)",
+   "prefer": [
+    "HF-W12d"
+   ],
+   "place": "object",
+   "size_mm": [
+    32,
+    38
+   ],
+   "rotate": false,
+   "x": [
+    0.45,
+    0.7
+   ],
+   "y": [
+    0.035,
+    0.05
+   ],
+   "strength": [
+    0.8,
+    1.0
+   ],
+   "avoid_keep": false,
+   "relief": true
   }
  ],
  "profile": "scan_bureau",

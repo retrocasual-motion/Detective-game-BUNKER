@@ -66,6 +66,9 @@ ROWS += [
     ('HF-W12cb', G + 'W12c_staple_removed_v1.png', 'staple_clip', 'stain', ['--crop', '0.04,0,1,1'], 'то же, рельефнее'),
     ('HF-W7ba', G + 'W7b_pad_edge_v3.png', 'tear', 'stain', ['--crop', '0,0.03,1,1'], 'отрывной край блокнота: полоска клея, надрыв (край — к верху листа)'),
     ('HF-W7bb', G + 'W7b_pad_edge_v2.png', 'tear', 'stain', [], 'то же, ровнее'),
+    # третий раунд: свой рендер скрепки как референс (CHAT_PASTE_3.txt)
+    ('HF-W12da', G + 'W12d_clip_nb_v3.png', 'staple_clip', 'stain', ['--crop', '0.42,0,0.67,0.3'], 'след скрепки: беспечатная вмятина, форма скрепки (Nano Banana)'),
+    ('HF-W12db', G + 'W12d_clip_sd_v1.png', 'staple_clip', 'stain', ['--crop', '0.42,0,0.67,0.3'], 'след скрепки: беспечатная вмятина, мягче (Seedream 5.0 Pro)'),
 ]
 
 for rid, src, kind, mode, extra, note in ROWS:

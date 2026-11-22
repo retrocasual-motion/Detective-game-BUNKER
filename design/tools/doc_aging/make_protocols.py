@@ -14,7 +14,9 @@ TEMPLATE = os.path.join(HERE, '..', '..', 'documents', 'layouts', 'protocol_temp
 SERIES = {
     '30': ('30__', 'h-miller', None, {'kind': 'proc:corner', 'why': 'чуть загнутый угол'}),
     '31': ('31__', 'h-moro', None, None),
-    '32': ('32__', 'h-pierce', None, {'kind': 'proc:clip', 'why': 'след от скрепки'}),
+    '32': ('32__', 'h-pierce', None, {'kind': 'staple_clip', 'why': 'след от скрепки (вмятина, без краски)',
+           'prefer': ['HF-W12d'], 'place': 'object', 'size_mm': [32, 38], 'rotate': False,
+           'x': [0.45, 0.7], 'y': [0.035, 0.05], 'strength': [0.8, 1.0], 'avoid_keep': False, 'relief': True}),
     '33': ('33__', 'h-sato', None, {'kind': 'proc:perforation', 'why': 'неровно оторванный край в перфорации'}),
     '34': ('34__', 'h-silva', 'G. Silva', None),          # канон: «подпись латиницей»
     '35': ('35__', 'h-walsh', None, {'kind': 'stain', 'why': 'лёгкий отпечаток пальца у подписи', 'prefer': ['HF-W11a'],
