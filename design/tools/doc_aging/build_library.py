@@ -61,6 +61,11 @@ ROWS += [
     ('HF-W10f', G + 'W10_stamp_red_v2.png', 'stamp', 'stain', [], 'краска штампа, красная, пятнистая'),
     ('HF-W11a', G + 'W11_finger_smudge_v2.png', 'stain', 'stain', [], 'жирный мазок пальца, без узора'),
     ('HF-W11b', G + 'W11_finger_smudge_v1.png', 'stain', 'stain', [], 'жирный мазок пальца на тёплой бумаге'),
+    # второй раунд (промпты CHAT_PASTE_2.txt)
+    ('HF-W12ca', G + 'W12c_staple_removed_v2.png', 'staple_clip', 'stain', [], 'след вынутой скобы: два прокола и линия (кладётся как предмет)'),
+    ('HF-W12cb', G + 'W12c_staple_removed_v1.png', 'staple_clip', 'stain', ['--crop', '0.04,0,1,1'], 'то же, рельефнее'),
+    ('HF-W7ba', G + 'W7b_pad_edge_v3.png', 'tear', 'stain', ['--crop', '0,0.03,1,1'], 'отрывной край блокнота: полоска клея, надрыв (край — к верху листа)'),
+    ('HF-W7bb', G + 'W7b_pad_edge_v2.png', 'tear', 'stain', [], 'то же, ровнее'),
 ]
 
 for rid, src, kind, mode, extra, note in ROWS:
