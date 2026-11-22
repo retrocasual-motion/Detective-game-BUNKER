@@ -1,0 +1,91 @@
+<!doctype html>
+<!--
+  Материал 11 «Акт о дефекте» (день 3) — вёрстка для сборки DOC-A (design/tools/doc_aging/).
+  Текст — строго из пакета игрока v3.4: playtest/packs/v3.4-2026-11-18/player/11__акт_о_дефекте_день_3.md.
+  Носитель (WEAR.md): оригинал, бланк объекта + рукопись. Бланк отпечатан заранее (тёмно-серый),
+  поля заполнены на принтере объекта (чёрный тонер, лист подан чуть криво — смещение заполнения
+  относительно граф). Резолюция — рукой А. Коула, отметка — рукой Д. Миллера (ART-38: черновые
+  шрифты, у каждого свой; финал пишут живые люди).
+  Шапка «VAULTLINE» — простая надпись-заглушка до раздела 16 арт-библии (знак не решён).
+  Слои для сборки: #layer=print | cole | miller | all ; #seed=N — дрожание почерка по словам.
+  data-keep — строки, по которым делают вывод: следы на них не ложатся, контраст проверяется.
+-->
+<html lang="ru"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marck+Script&family=Neucha&display=block" rel="stylesheet">
+<style>
+  html,body{margin:0;background:#fff}
+  .page{position:relative;width:794px;height:1123px;box-sizing:border-box;padding:64px 70px 60px 78px;
+        font-family:Arial,"Liberation Sans",sans-serif;color:#3a3a3a}
+  /* бланк (отпечатан заранее, тёмно-серый) */
+  .hdr{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #3a3a3a;padding-bottom:6px}
+  .brand{font-weight:700;letter-spacing:5px;font-size:15px}
+  .brand-sub{font-size:9.5px;letter-spacing:1px;text-transform:uppercase}
+  h1{font-size:20px;letter-spacing:3px;text-align:center;margin:26px 0 20px;font-weight:700}
+  .row{display:flex;gap:18px;margin-bottom:8px}
+  .f{position:relative;border-bottom:1px solid #6a6a6a;height:40px;flex:1}
+  .lbl{position:absolute;left:0;top:0;font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:#555}
+  .box{position:relative;border:1px solid #6a6a6a;margin-top:14px;padding:18px 10px 8px}
+  .box .lbl{left:8px;top:5px}
+  .lines{position:relative;height:var(--h);background:repeating-linear-gradient(#fff 0 27px,#9a9a9a 27px 28px)}
+  /* заполнение на принтере объекта (чёрный тонер); лист подан чуть криво — сдвиг относительно граф */
+  .v,.t{font-family:"Times New Roman","Liberation Serif",serif;color:#111;font-size:15.5px;
+        transform:translate(3px,-2px) rotate(.12deg);transform-origin:0 0}
+  .v{position:absolute;left:4px;bottom:3px}
+  .t{position:absolute;left:4px;right:0;top:4px;line-height:28px}
+  /* рукопись */
+  .hand{position:absolute;left:8px;white-space:nowrap;line-height:28px}
+  .cole{font-family:"Marck Script",cursive;color:#1f2f7c;font-size:27px;-webkit-text-stroke:.45px #1f2f7c}
+  .miller{font-family:"Neucha",cursive;color:#2a3050;font-size:21px;-webkit-text-stroke:.3px #2a3050}
+  .hand span{display:inline-block}
+  body[data-layer="cole"] .box, body[data-layer="miller"] .box{border-color:transparent}
+  body[data-layer="print"] .L-cole, body[data-layer="print"] .L-miller,
+  body[data-layer="cole"] .L-print, body[data-layer="cole"] .L-miller,
+  body[data-layer="miller"] .L-print, body[data-layer="miller"] .L-cole{visibility:hidden}
+</style></head>
+<body>
+<div class="page" id="page">
+  <div class="L-print">
+    <div class="hdr"><div class="brand">VAULTLINE</div><div class="brand-sub">документация объекта</div></div>
+    <h1>АКТ О ДЕФЕКТЕ</h1>
+    <div class="row"><div class="f" style="flex:1.1"><span class="lbl">Программа</span><span class="v">VL-31</span></div>
+      <div class="f"><span class="lbl">Дата</span><span class="v">03.10.2009</span></div>
+      <div class="f" style="flex:.6"><span class="lbl">День</span><span class="v">3</span></div></div>
+    <div class="row"><div class="f"><span class="lbl">Составил</span><span class="v">инженер объекта Д. Миллер</span></div></div>
+    <div class="box"><span class="lbl">Место</span><div class="lines" style="--h:56px">
+      <div class="t">восточная служебная лестница, верхняя площадка, угловая стойка ограждения над проёмом.</div></div></div>
+    <div class="box"><span class="lbl">Дефект</span><div class="lines" style="--h:84px">
+      <div class="t">трещина плиты крепления угловой стойки; стойка шатается. Обнаружено при учебной тревоге (день 3), при спуске группы.</div></div></div>
+    <div class="box"><span class="lbl">Предложение инженера</span><div class="lines" style="--h:56px">
+      <div class="t">закрыть восточную лестницу до замены плиты. Заказать переходную плиту у поставщика.</div></div></div>
+  </div>
+  <div class="box" id="res"><span class="lbl L-print">Решение руководителя</span>
+    <div class="lines L-print" style="--h:84px"></div>
+    <!-- резолюция рукой А. Коула (нажим) -->
+    <div class="hand cole L-cole" data-keep="resolution" style="top:19px;transform:rotate(-1.4deg);transform-origin:0 50%">Отклонено. Маршрут эвакуации не менять.</div>
+    <div class="hand cole L-cole" data-keep="resolution2" style="top:48px;left:14px;transform:rotate(-1deg)">Укрепить.</div>
+    <div class="row L-print" style="margin:10px 0 0"><div class="f"><span class="lbl">Подпись</span></div>
+      <div class="f" style="flex:.7"><span class="lbl">Дата</span></div></div>
+    <div class="hand cole L-cole" data-keep="sign" style="top:114px;left:92px;font-size:31px;transform:rotate(-4deg)">А. Коул</div>
+    <div class="hand cole L-cole" style="top:120px;left:420px;font-size:24px;transform:rotate(-1deg)">03.10.2009</div>
+  </div>
+  <div class="box"><span class="lbl L-print">Отметка инженера</span><div class="lines L-print" style="--h:112px"></div>
+    <!-- отметка рукой Д. Миллера -->
+    <div class="hand miller L-miller" data-keep="mark1" style="top:20px;transform:rotate(.5deg)">Укреплено: хомут на стойке, полоса к анкеру в полу.</div>
+    <div class="hand miller L-miller" data-keep="mark2" style="top:48px;transform:rotate(.3deg)">Допустимо до замены.</div>
+    <div class="hand miller L-miller" data-keep="colton" style="top:76px;transform:rotate(.8deg)">Заказ плиты — Colton Supply. Д. М.</div>
+  </div>
+</div>
+<script>
+  const P=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(s=>s.split('=')));
+  document.body.dataset.layer=P.layer||'all';
+  let s=(+P.seed||1)*2654435761%4294967296;
+  const rnd=()=>((s=(s*1664525+1013904223)%4294967296)/4294967296);
+  // дрожание по словам: внутри слова связи букв не рвутся
+  document.querySelectorAll('.hand').forEach(el=>{
+    const words=el.textContent.split(' ');
+    el.innerHTML=words.map(w=>`<span style="transform:translateY(${(rnd()-.5)*2.2}px) rotate(${(rnd()-.5)*1.6}deg) scale(${.96+rnd()*.08})">${w}</span>`).join(' ');
+  });
+  document.fonts.ready.then(()=>document.body.dataset.ready='1');
+</script>
+</body></html>
