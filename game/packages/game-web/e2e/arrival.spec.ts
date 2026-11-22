@@ -33,7 +33,7 @@ test('открытое ложится во «Входящие» на столе:
   await expect(page.getByTestId('wall-L945')).toHaveCount(0);
   await page.getByTestId('inbox-L945').click();
   const viewer = page.getByTestId('viewer');
-  await expect(viewer).toContainText('Front Range Savings');
+  await expect(viewer).toContainText('Aspen Bank');
   await page.getByTestId('viewer-to-wall').click();
   await expect(page.getByTestId('viewer-to-wall')).toHaveText('На стене');
   // Пока лист открыт — на стене не видно; закрыли — появился и светится (правка автора 10.11).

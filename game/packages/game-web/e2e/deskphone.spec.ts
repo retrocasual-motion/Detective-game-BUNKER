@@ -20,7 +20,7 @@ async function dial(page: Page, digits: string) {
 
 const heard = (page: Page) => page.getByTestId('dp-heard');
 
-test('набрать номер, снять трубку: меню NorthCare → номер партии → ответ; положить трубку', async ({
+test('набрать номер, снять трубку: меню HealthWay → номер партии → ответ; положить трубку', async ({
   page,
 }) => {
   await phoneUp(page);
@@ -108,12 +108,12 @@ test('короткий номер — после паузы линия отве�
 
 test('все линии пакета отвечают по своим номерам (TECH_PLAN 4.14)', async ({ page }) => {
   const lines: [string, string, boolean][] = [
-    ['+7 800 555-31-20', 'NorthCare', true],
-    ['+7 495 555-18-44', 'Colton Supply', true],
+    ['+7 800 555-31-20', 'HealthWay', true],
+    ['+7 495 555-18-44', 'Mesa Supply', true],
     ['+7 916 555-24-08', 'Тому и Лее', false],
     ['+7 926 555-30-14', 'Hola, soy Ana', false],
     ['+7 926 555-47-12', 'Миллерам', false],
-    ['+7 800 555-84-50', 'Front Range Savings', false],
+    ['+7 800 555-84-50', 'Aspen Bank', false],
     ['+7 926 555-01-90', 'Clínica San Rafael', false],
   ];
   for (const [number, text, menu] of lines) {
@@ -122,10 +122,10 @@ test('все линии пакета отвечают по своим номер
     expect(body, number).toMatchObject({ connected: true, menu });
     expect(body.text, number).toContain(text);
   }
-  const colton = await page.request.post('/api/phone', {
+  const mesa = await page.request.post('/api/phone', {
     data: { number: '84955551844', keys: '2291' },
   });
-  expect(((await colton.json()) as { text: string }).text).toContain(
+  expect(((await mesa.json()) as { text: string }).text).toContain(
     'Возвращено на склад 26.10.2009',
   );
 });

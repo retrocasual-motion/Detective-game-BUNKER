@@ -47,7 +47,7 @@ export const CONTAINERS: readonly Container[] = [
    */
   {
     id: 'bank',
-    label: 'Front Range Savings · ячейка № 845 · вскрыта 17.11.2009',
+    label: 'Aspen Bank · ячейка № 845 · вскрыта 17.11.2009',
     files: ['L460', 'L461'],
     devices: ['L462'],
   },
