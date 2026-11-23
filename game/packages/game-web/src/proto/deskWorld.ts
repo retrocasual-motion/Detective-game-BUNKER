@@ -34,6 +34,10 @@ const SIZE: Record<string, [number, number, number]> = {
   photos: [0.15, 0.1, 0.002],
   notebook: [0.148, 0.21, 0.008],
   disc: [0.125, 0.125, 0.004],
+  // Изъятые устройства (без экранов в прототипе): телефон, ручка-диктофон, камера.
+  mobile: [0.065, 0.12, 0.012],
+  pen: [0.14, 0.014, 0.014],
+  camera: [0.1, 0.06, 0.03],
 };
 export const sizeOf = (kind: string): [number, number, number] =>
   SIZE[kind] ?? (SIZE.sheet as [number, number, number]);
@@ -198,4 +202,54 @@ export function scatter(
     out.push(placed);
   });
   return out;
+}
+
+/**
+ * Сдвинуть вещи (лист или несколько) к цели, не выходя из зоны: шагами, а упёрлись — скользят
+ * вдоль края или вещи следователя (сначала по x, потом по z). Сквозь телефон не проскочить: шаг
+ * мелкий. Возвращает сдвиг, который удалось сделать.
+ */
+export function slide(
+  rects: readonly Rect[],
+  dx: number,
+  dz: number,
+  zone: Zone,
+  step = 0.006,
+): { dx: number; dz: number } {
+  const ok = (ox: number, oz: number) =>
+    rects.every((r) => allowed({ ...r, x: r.x + ox, z: r.z + oz }, zone));
+  let cx = 0;
+  let cz = 0;
+  const clip = (v: number) => Math.max(-step, Math.min(step, v));
+  const n = Math.ceil((Math.abs(dx) + Math.abs(dz)) / step) + 4;
+  for (let i = 0; i < n; i++) {
+    let sx = dx - cx;
+    let sz = dz - cz;
+    const len = Math.hypot(sx, sz);
+    if (len < 1e-5) break;
+    if (len > step) {
+      sx = (sx / len) * step;
+      sz = (sz / len) * step;
+    }
+    // Вдоль препятствия — полным шагом по свободной оси.
+    const ax = clip(dx - cx);
+    const az = clip(dz - cz);
+    if (ok(cx + sx, cz + sz)) {
+      cx += sx;
+      cz += sz;
+    } else if (ax && ok(cx + ax, cz)) cx += ax;
+    else if (az && ok(cx, cz + az)) cz += az;
+    else break;
+  }
+  return { dx: cx, dz: cz };
+}
+
+/** Вещь и всё, что лежит на ней (выше и хоть краем сверху, по цепочке): берётся вместе. */
+export function pileOf(pieces: readonly Piece[], id: string): Piece[] {
+  const base = pieces.find((p) => p.id === id);
+  if (!base) return [];
+  const pile = [base];
+  const rest = pieces.filter((p) => p.layer > base.layer).sort((a, b) => a.layer - b.layer);
+  for (const p of rest) if (pile.some((q) => overlap(p, q))) pile.push(p);
+  return pile;
 }

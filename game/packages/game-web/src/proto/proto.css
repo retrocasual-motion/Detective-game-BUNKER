@@ -143,3 +143,6 @@
     13px system-ui,
     sans-serif;
 }
+.proto-help[hidden] {
+  display: none;
+}

@@ -16,7 +16,7 @@ import {
 import { NavArrows } from '../room/NavArrows.tsx';
 import { useViewport } from '../room/useViewport.ts';
 import { Board, GROUP_LABEL, type WallCard } from './Board.tsx';
-import { Desk, type Material } from './Desk.tsx';
+import { DEVICE_KIND, Desk, type Material } from './Desk.tsx';
 import { fixedObjects } from './Room3D.tsx';
 
 /**
@@ -29,6 +29,8 @@ import { fixedObjects } from './Room3D.tsx';
 
 /** Содержимое конверта «Осмотр места происшествия и изъятое» (без изъятых устройств). */
 const CONTENTS = ['22', '23', '25', '26', '27', '51', '18', '19', '20', '21'];
+/** Сколько всего вещей выйдет из конверта: бумаги и три устройства. */
+const TOTAL = CONTENTS.length + 3;
 
 const MATERIALS = new Map<string, Material>(
   (starting as { id: string; title: string; kind: string; body: string }[]).map((m) => [
@@ -50,7 +52,6 @@ export function ProtoDesk() {
   const pose = useRef<Pose>(room.poses.desk);
   const world = useRef<HTMLDivElement>(null);
   const [cards, setCards] = useState<WallCard[]>([]);
-  const nextSlot = useRef(0);
   const [reading, setReading] = useState<string | null>(null);
   const [opened, setOpened] = useState(false);
   const pointer = useRef({ x: 0, y: 0 });
@@ -116,7 +117,6 @@ export function ProtoDesk() {
 
   const reset = () => {
     setCards([]);
-    nextSlot.current = 0;
     setOpened(false);
     setReading(null);
     setRun((r) => r + 1);
@@ -173,29 +173,34 @@ export function ProtoDesk() {
             contents={CONTENTS}
             envelopeTitle={GROUP_LABEL}
             onRead={setReading}
-            onArrive={(id, slot) => {
+            onArrive={(id, at) => {
               const mm = MATERIALS.get(id);
               setCards((cs) => [
                 ...cs,
-                { id, slot, title: mm?.title ?? id, kind: mm?.kind ?? 'sheet', fresh: true },
+                {
+                  id,
+                  ...at,
+                  title: mm?.title ?? id,
+                  kind: DEVICE_KIND[id] ?? mm?.kind ?? 'sheet',
+                  fresh: true,
+                },
               ]);
             }}
-            nextSlot={nextSlot}
             pointer={pointer}
             onOpened={() => setOpened(true)}
           />
         </Canvas>
       </div>
       {!reading && <NavArrows view={view} onGo={go} />}
-      <aside className="proto-help" data-testid="proto-help">
+      <aside className="proto-help" data-testid="proto-help" hidden={view !== 'desk'}>
         <b>Прототип 3D-стола</b>
         <span>
-          {opened ? 'Лист — тащить; на другой лист — стопка' : 'Конверт: потяните клапан вверх'}
+          {opened ? 'Вещь — тащить, класть куда угодно на столе' : 'Конверт: потяните клапан вверх'}
         </span>
-        <span>Стопка: навести — веер; зажать и подержать — вся стопка</span>
-        <span>Щелчок по листу — читать · дотащить до стены — на доску</span>
+        <span>Зажать и подержать — вместе с тем, что лежит сверху</span>
+        <span>Щелчок — читать · дотащить до стены — повесить там</span>
         <span>
-          На стене: {cards.length} из {CONTENTS.length}
+          На стене: {cards.length} из {TOTAL}
         </span>
         <button type="button" onClick={reset}>
           Сначала
@@ -215,9 +220,10 @@ export function ProtoDesk() {
             <header>
               {m.id} · {m.title}
             </header>
-            {m.body
-              .split('\n')
-              .filter((l) => l.trim())
+            {(m.body || 'Изъятое устройство — в игре берут в руки.')
+              .split(/\n\s*\n/)
+              .map((l) => l.replace(/\s*\n\s*/g, ' ').trim())
+              .filter(Boolean)
               .map((l, k) => {
                 const h = /^#+\s*/.test(l);
                 const text = l.replace(/^#+\s*/, '').replace(/[*_`]/g, '');

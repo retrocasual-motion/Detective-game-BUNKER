@@ -4,33 +4,26 @@ import { Euler, type Group, PerspectiveCamera, Quaternion, Vector3 } from 'three
 import { Envelope } from '../hold/shapes.tsx';
 import { BOARD_SCALE, type Pose, type Room, screenToBoard } from '../room/camera.ts';
 import type { DeskObject } from '../room/decor.ts';
-import { cardW, slotCenter } from './Board.tsx';
-import {
-  allowed,
-  heights,
-  type Piece,
-  type Rect,
-  rng,
-  scatter,
-  stackOf,
-  topAt,
-  type Zone,
-} from './deskWorld.ts';
+import { cardH, cardW } from './Board.tsx';
+import { heights, type Piece, pileOf, rng, scatter, slide, type Zone } from './deskWorld.ts';
 import { Paper, type PaperTarget } from './Paper.tsx';
 import { footprints, Room3D } from './Room3D.tsx';
 import { boardPoint, deskPoint, deskToScreen, screenToDesk, syncCamera } from './space.ts';
 
 /**
- * Прототип 3D-стола: стол целиком — комната, вещи следователя, конверт и листы. Всё движение —
- * здесь: каждый кадр каждому листу говорится, где ему быть (на столе, в руке, у стены, в полёте).
+ * Прототип 3D-стола: стол целиком — комната, вещи следователя, конверт, бумаги и изъятые
+ * устройства. Каждый кадр каждой вещи говорится, где ей быть (на столе, в руке, у стены, в полёте).
  *
- * Жесты (все — мышью по самим вещам, без кнопок):
- * - конверт: навести на клапан — приподнимается; потянуть вверх — вскрыт, содержимое на стол;
- * - лист: тянуть — поднят, тень, наклон за рукой; отпустить — лёг с отскоком; на другой лист —
- *   лёг сверху, стопка; на вещь следователя или за край — вернулся на место;
- * - стопка: навести — веер (видны заголовки нижних); зажать и подержать — вся стопка в руке;
- * - щелчок по листу — прочитать крупно;
- * - дотащить до стены (WL-A) — лист встаёт к доске; отпустить — летит в группу конверта.
+ * Жесты — мышью по самим вещам (правки автора 23.11 после первого прогона):
+ * - конверт: потянуть клапан вверх — вскрыт, содержимое на столе, пустой конверт убран;
+ * - вещь: тянуть — идёт за мышью свободно, не примагничивается; кладётся ровно там, где отпустили;
+ *   на другую — ложится сверху как есть (стопка — просто внахлёст);
+ * - вещь не уходит со стола и не проходит сквозь вещи следователя: упёрлась — скользит вдоль;
+ *   мышь ушла в пустоту — вещь остаётся у края, отпустили — лежит там;
+ * - навести — чуть подсвечена (ничего не поднимается и не раскрывается);
+ * - зажать и подержать — вместе со всем, что лежит на ней;
+ * - щелчок — прочитать крупно;
+ * - дотащить до стены (WL-A) — встаёт к доске; отпустить — висит там, где отпустили.
  */
 
 export interface Material {
@@ -40,39 +33,34 @@ export interface Material {
   body: string;
 }
 
-/** Подъём листа в руке, м; над запретным местом — выше. */
-const LIFT = 0.05;
-const LIFT_BAD = 0.09;
-/** Сколько держать, чтобы взять всю стопку, мс. */
-const HOLD_STACK_MS = 380;
-/** Сдвиг листов стопки веером, м и рад (нижние — к стене: видна их верхняя кромка с заголовком). */
-const FAN_DZ = 0.05;
-const FAN_DX = 0.016;
-const FAN_ROT = 0.035;
+/** Подъём вещи в руке, м. */
+const LIFT = 0.035;
+/** Сколько держать, чтобы взять вместе с тем, что лежит сверху, мс. */
+const HOLD_PILE_MS = 400;
 /** Порог протяжки, px. */
-const DRAG_PX = 5;
+const DRAG_PX = 4;
 
-/** Конверт на столе: где лежит опечатанным и куда отодвигается пустым (м). */
-const ENV_AT = { x: 0.12, z: 0.47, rot: -0.06 };
-const ENV_BACK = { x: -0.02, z: 0.15, rot: 0.12 };
+/** Опечатанный конверт на столе (м). */
+const ENV_AT = { x: 0.05, z: 0.45, rot: -0.06 };
 const ENV_W = 0.324;
-const ENV_D = 0.229;
+
+/** Изъятые устройства в прототипе — формы без экранов. */
+export const DEVICE_KIND: Record<string, string> = { '48': 'mobile', '49': 'pen', '24': 'camera' };
 
 const UP = new Euler(Math.PI / 2, 0, 0);
 
 interface Drag {
+  /** Что в руке — снизу вверх. */
   ids: string[];
-  grab: string;
-  whole: boolean;
-  /** Сдвиг каждого листа от точки под мышью (м), от исходной раскладки. */
-  rel: Map<string, { x: number; z: number }>;
-  orig: Piece[];
-  at: Map<string, { x: number; z: number }>;
+  /** Где лежали в начале протяжки. */
+  base: Map<string, { x: number; z: number }>;
+  /** Точка стола под мышью в начале (на высоте подъёма). */
+  grab0: { x: number; z: number };
+  /** Сдвиг, который удалось сделать (в зоне). */
+  off: { x: number; z: number };
   wall: { x: number; y: number } | null;
-  forbidden: boolean;
   vx: number;
   vz: number;
-  last: { x: number; z: number } | null;
 }
 
 interface Press {
@@ -80,7 +68,7 @@ interface Press {
   x0: number;
   y0: number;
   t0: number;
-  whole: boolean;
+  pile: boolean;
   timer: number;
 }
 
@@ -93,7 +81,6 @@ export function Desk({
   envelopeTitle,
   onRead,
   onArrive,
-  nextSlot,
   pointer,
   onOpened,
 }: {
@@ -104,8 +91,8 @@ export function Desk({
   contents: string[];
   envelopeTitle: string;
   onRead: (id: string) => void;
-  onArrive: (id: string, slot: number) => void;
-  nextSlot: RefObject<number>;
+  /** Вещь долетела до стены: карточка — в этой точке доски (px доски). */
+  onArrive: (id: string, at: { x: number; y: number }) => void;
   /** Мышь в координатах экрана — её ведёт страница (протяжка идёт и за край холста). */
   pointer: RefObject<{ x: number; y: number }>;
   onOpened: () => void;
@@ -120,6 +107,7 @@ export function Desk({
   }, [room]);
 
   const [opened, setOpened] = useState(false);
+  const [envGone, setEnvGone] = useState(false);
   const [pieces, setPieces] = useState<Piece[]>([]);
   const ps = useRef<Piece[]>([]);
   ps.current = pieces;
@@ -128,32 +116,27 @@ export function Desk({
   const drag = useRef<Drag | null>(null);
   const press = useRef<Press | null>(null);
   const hoverId = useRef<string | null>(null);
-  const fanStack = useRef<string | null>(null);
-  const timers = useRef({ fan: 0, unfan: 0 });
-  const flying = useRef(new Map<string, { slot: number; since: number }>());
+  const flying = useRef(new Map<string, { x: number; y: number; since: number }>());
   const rand = useRef(rng(11));
   const [, setTick] = useState(0);
   const env = useRef<Group>(null);
   const envPlaced = useRef(false);
+  const envAway = useRef(0);
 
   const blocked = useMemo(() => footprints(room, objects), [room, objects]);
   const zone: Zone = useMemo(() => {
     const left = room.deskLeft / p + 0.01;
     const right = room.deskRight / p - 0.01;
     const near = room.deskNear / p - 0.01;
-    const envRect: Rect[] = opened ? [{ ...ENV_BACK, w: ENV_W + 0.02, d: ENV_D + 0.02 }] : [];
     return {
       inside: (x, z) => {
         if (x < left || x > right || z < 0.015 || z > near) return false;
         const s = deskToScreen(deskCam, room, x, z);
-        // Внизу — стрелка «Стена» и подсказки: туда не кладём.
-        return (
-          s.front && s.x > 8 && s.x < room.vp.width - 8 && s.y > 8 && s.y < room.vp.height - 64
-        );
+        return s.front && s.x > 6 && s.x < room.vp.width - 6 && s.y > 6 && s.y < room.vp.height - 6;
       },
-      blocked: [...blocked, ...envRect],
+      blocked,
     };
-  }, [room, p, deskCam, blocked, opened]);
+  }, [room, p, deskCam, blocked]);
 
   const setCursor = (c: string) => {
     gl.domElement.style.cursor = c;
@@ -190,55 +173,45 @@ export function Desk({
     t.quat.setFromEuler(UP);
     t.scale = (cardW(room.vp) * BOARD_SCALE) / (piece.w * p);
     t.noShadow = true;
-    t.forbidden = false;
   };
 
-  // ── Вскрыть конверт: содержимое высыпается на стол, пустой конверт отодвигается к стене. ──
+  // ── Вскрыть конверт: содержимое высыпается на стол, пустой конверт убирается. ──
   const spill = () => {
     if (opened) return;
     setOpened(true);
     onOpened();
-    const items = contents.map((id) => ({ id, kind: materials.get(id)?.kind ?? 'sheet' }));
-    const laid = scatter(
-      items,
-      { ...zone, blocked: [...blocked, { ...ENV_BACK, w: ENV_W, d: ENV_D }] },
-      {
-        x: ENV_AT.x,
-        z: ENV_AT.z - 0.02,
-      },
-      7,
-      0.14,
-    );
+    envAway.current = performance.now();
+    window.setTimeout(() => setEnvGone(true), 700);
+    const items = [...contents, ...Object.keys(DEVICE_KIND)].map((id) => ({
+      id,
+      kind: DEVICE_KIND[id] ?? materials.get(id)?.kind ?? 'sheet',
+    }));
+    const laid = scatter(items, zone, { x: ENV_AT.x, z: ENV_AT.z - 0.05 }, 7, 0.16);
     const now = performance.now();
     laid.forEach((pc, k) => {
       starts.current.set(pc.id, {
         pos: deskPoint(room, ENV_AT.x, ENV_AT.z, 0.012),
-        at: now + 120 + k * 75,
+        at: now + 120 + k * 60,
       });
     });
     setPieces(laid);
   };
 
-  // ── Нажали на лист. ──
+  // ── Нажали на вещь. ──
   const onDown = (id: string, e: ThreeEvent<PointerEvent>) => {
     if (drag.current || flying.current.has(id)) return;
-    const pc = ps.current.find((q) => q.id === id);
-    if (!pc) return;
     const st: Press = {
       id,
       x0: e.clientX,
       y0: e.clientY,
       t0: performance.now(),
-      whole: false,
+      pile: false,
       timer: 0,
     };
-    if (stackOf(ps.current, pc.stack).length > 1)
+    if (pileOf(ps.current, id).length > 1)
       st.timer = window.setTimeout(() => {
-        if (press.current === st && !drag.current) {
-          st.whole = true;
-          setCursor('grabbing');
-        }
-      }, HOLD_STACK_MS);
+        if (press.current === st && !drag.current) st.pile = true;
+      }, HOLD_PILE_MS);
     press.current = st;
     setCursor('grabbing');
     const move = (ev: PointerEvent) => {
@@ -252,7 +225,7 @@ export function Desk({
       clearTimeout(st.timer);
       press.current = null;
       if (drag.current) drop();
-      else if (!st.whole && performance.now() - st.t0 < 600) onRead(id);
+      else if (!st.pile && performance.now() - st.t0 < 600) onRead(id);
       setCursor(hoverId.current ? 'grab' : '');
     };
     window.addEventListener('pointermove', move);
@@ -260,160 +233,112 @@ export function Desk({
     window.addEventListener('pointercancel', up);
   };
 
-  // ── Протяжка началась: в руке лист или вся стопка; он — поверх всего. ──
+  // ── Протяжка началась: в руке вещь (или с тем, что на ней); она — поверх всего. ──
   const begin = (st: Press) => {
     clearTimeout(st.timer);
     const all = ps.current;
-    const pc = all.find((q) => q.id === st.id);
-    if (!pc) return;
-    const group = st.whole ? stackOf(all, pc.stack) : [pc];
+    const group = st.pile ? pileOf(all, st.id) : all.filter((q) => q.id === st.id);
+    if (!group.length) return;
     const ids = group.map((q) => q.id);
-    const at0 = screenToDesk(deskCam, room, st.x0, st.y0, LIFT) ?? { x: pc.x, z: pc.z };
-    const rel = new Map(group.map((q) => [q.id, { x: q.x - at0.x, z: q.z - at0.z }]));
+    const grab0 = screenToDesk(deskCam, room, st.x0, st.y0, LIFT) ?? {
+      x: group[0]?.x ?? 0,
+      z: group[0]?.z ?? 0,
+    };
     let top = Math.max(0, ...all.map((q) => q.layer));
-    const lifted = all.map((q) =>
-      ids.includes(q.id) ? { ...q, layer: ++top, stack: st.whole ? q.stack : q.id } : q,
-    );
+    const layer = new Map(ids.map((id) => [id, ++top]));
     drag.current = {
       ids,
-      grab: pc.id,
-      whole: st.whole,
-      rel,
-      orig: all,
-      at: new Map(),
+      base: new Map(group.map((q) => [q.id, { x: q.x, z: q.z }])),
+      grab0,
+      off: { x: 0, z: 0 },
       wall: null,
-      forbidden: false,
       vx: 0,
       vz: 0,
-      last: null,
     };
-    fanStack.current = null;
-    setPieces(lifted);
+    setPieces(all.map((q) => ({ ...q, layer: layer.get(q.id) ?? q.layer })));
   };
 
-  // ── Отпустили. ──
+  // ── Отпустили: лежит там, где отпустили (или висит на стене там, где отпустили). ──
   const drop = () => {
     const d = drag.current;
     drag.current = null;
     if (!d) return;
     if (d.wall) {
-      sendToWall(d.ids);
+      sendToWall(d.ids, d.wall);
       return;
     }
-    if (d.forbidden || !d.at.size) {
-      // Сюда нельзя (вещь следователя, край) — всё на прежние места.
-      setPieces(d.orig);
-      return;
-    }
-    const all = ps.current;
-    const skip = new Set(d.ids);
-    let moved = all.map((q) => {
-      const a = d.at.get(q.id);
-      return a ? { ...q, x: a.x, z: a.z } : q;
-    });
-    const grabbed = moved.find((q) => q.id === d.grab);
-    const under = grabbed ? topAt(moved, grabbed.x, grabbed.z, skip) : null;
-    const r = rand.current;
-    if (grabbed && under) {
-      // Бросили на лист — ложится на него, чуть вразнобой (стопка).
-      const tx = under.x + (r() - 0.5) * 0.014 - grabbed.x;
-      const tz = under.z + (r() - 0.5) * 0.014 - grabbed.z;
-      const dr = under.rot + (r() - 0.5) * 0.07 - grabbed.rot;
-      const c = Math.cos(dr);
-      const s = Math.sin(dr);
-      const snapped = moved.map((q) => {
-        if (!skip.has(q.id)) return q;
-        const ox = q.x - grabbed.x;
-        const oz = q.z - grabbed.z;
-        return {
-          ...q,
-          x: grabbed.x + tx + ox * c + oz * s,
-          z: grabbed.z + tz - ox * s + oz * c,
-          rot: q.rot + dr,
-          stack: under.stack,
-        };
-      });
-      if (snapped.filter((q) => skip.has(q.id)).every((q) => allowed(q, zone))) moved = snapped;
-    } else {
-      // На свободное место — с маленьким поворотом, как ложится бумага.
-      const jr = (r() - 0.5) * 0.05;
-      moved = moved.map((q) => (skip.has(q.id) ? { ...q, rot: q.rot + jr } : q));
-    }
-    setPieces(moved);
+    const jr = (rand.current() - 0.5) * 0.03;
+    setPieces((all) =>
+      all.map((q) => {
+        const b = d.base.get(q.id);
+        return b ? { ...q, x: b.x + d.off.x, z: b.z + d.off.z, rot: q.rot + jr } : q;
+      }),
+    );
   };
 
-  // ── WL-A: на стену — каждый лист в своё место группы конверта; долетел — карточка на доске. ──
-  const sendToWall = (ids: string[]) => {
+  // ── WL-A: на стену — туда, где отпустили; несколько — чуть вразбежку. ──
+  const sendToWall = (ids: string[], at: { x: number; y: number }) => {
     const now = performance.now();
-    // Сверху вниз: первым — верхний лист.
-    const order = [...ids].reverse();
-    order.forEach((id, k) => {
-      flying.current.set(id, { slot: nextSlot.current++, since: now + k * 70 });
+    const { vp } = room;
+    const w = cardW(vp);
+    // Сверху вниз: первым — верхний.
+    [...ids].reverse().forEach((id, k) => {
+      const pc = ps.current.find((q) => q.id === id);
+      const h = cardH(vp, pc?.kind ?? 'sheet');
+      const x = Math.min(
+        vp.width * 0.98 - 12 - w / 2,
+        Math.max(vp.width * 0.02 + 12 + w / 2, at.x + k * 16),
+      );
+      const y = Math.min(
+        vp.height * 0.975 - 12 - h / 2,
+        Math.max(vp.height * 0.025 + 12 + h / 2, at.y + k * 12),
+      );
+      flying.current.set(id, { x, y, since: now + k * 60 });
     });
     setTick((t) => t + 1);
   };
 
-  // ── Наведение: подсветка, стопка — веер. ──
+  // ── Наведение: чуть подсвечена, и только. ──
   const onOver = (id: string) => {
     if (drag.current) return;
     hoverId.current = id;
     if (!press.current) setCursor('grab');
-    clearTimeout(timers.current.unfan);
-    const pc = ps.current.find((q) => q.id === id);
-    if (!pc || fanStack.current === pc.stack) return;
-    clearTimeout(timers.current.fan);
-    if (stackOf(ps.current, pc.stack).length > 1)
-      timers.current.fan = window.setTimeout(() => {
-        if (hoverId.current === id && !drag.current) fanStack.current = pc.stack;
-      }, 200);
-    else fanStack.current = null;
   };
   const onOut = (id: string) => {
     if (hoverId.current === id) hoverId.current = null;
     if (!press.current && !drag.current) setCursor('');
-    clearTimeout(timers.current.fan);
-    clearTimeout(timers.current.unfan);
-    timers.current.unfan = window.setTimeout(() => {
-      const h = hoverId.current ? ps.current.find((q) => q.id === hoverId.current) : null;
-      if (!h || h.stack !== fanStack.current) fanStack.current = null;
-    }, 260);
   };
 
-  useEffect(
-    () => () => {
-      clearTimeout(timers.current.fan);
-      clearTimeout(timers.current.unfan);
-    },
-    [],
-  );
-
-  // Для автотестов и снимков: где на экране клапан конверта и листы (вид «Стол»).
+  // Для автотестов и снимков: где на экране клапан конверта и вещи (вид «Стол»).
+  const hCache = useRef<{ key: Piece[] | null; drag: string; h: Map<string, number> }>({
+    key: null,
+    drag: '',
+    h: new Map(),
+  });
   useEffect(() => {
     const at = (x: number, z: number, h = 0) => {
       const v = deskPoint(room, x, z, h).project(deskCam);
       return { x: ((v.x + 1) / 2) * room.vp.width, y: ((1 - v.y) / 2) * room.vp.height };
     };
     (window as unknown as { __proto?: unknown }).__proto = {
-      // Клапан — чуть дальше центра конверта, к стене (там его кончик с печатью).
       flap: () => at(ENV_AT.x, ENV_AT.z - 0.04, 0.003),
       piece: (id: string) => {
         const pc = ps.current.find((q) => q.id === id);
         return pc ? at(pc.x, pc.z, (hCache.current.h.get(id) ?? 0) + pc.t) : null;
       },
-      pieces: () => ps.current.map((q) => ({ id: q.id, stack: q.stack, x: q.x, z: q.z })),
+      desk: (x: number, z: number) => at(x, z),
+      pieces: () =>
+        ps.current.map((q) => ({ id: q.id, x: q.x, z: q.z, w: q.w, d: q.d, rot: q.rot })),
+      pile: (id: string) => pileOf(ps.current, id).map((q) => q.id),
+      blocked: () => blocked,
       board: (bx: number, by: number) => {
         const v = boardPoint(room, bx, by).project(deskCam);
         return { x: ((v.x + 1) / 2) * room.vp.width, y: ((1 - v.y) / 2) * room.vp.height };
       },
     };
-  }, [room, deskCam]);
+  }, [room, deskCam, blocked]);
 
-  // ── Кадр: камера, затем цель каждого листа. ──
-  const hCache = useRef<{ key: Piece[] | null; drag: string; h: Map<string, number> }>({
-    key: null,
-    drag: '',
-    h: new Map(),
-  });
+  // ── Кадр: камера, затем цель каждой вещи. ──
   useFrame((_, dtRaw) => {
     syncCamera(camera as PerspectiveCamera, pose.current, room);
     const dt = Math.max(1 / 240, Math.min(dtRaw, 1 / 30));
@@ -427,46 +352,40 @@ export function Desk({
       hc.h = heights(d ? all.filter((q) => !d.ids.includes(q.id)) : all);
     }
 
-    // Конверт: опечатан — на месте; вскрыт — отъехал к стене.
+    // Конверт: опечатан — лежит; вскрыт — уходит (сжимается и пропадает).
     if (env.current) {
-      const at = opened ? ENV_BACK : ENV_AT;
       const s = (ENV_W * p) / 3;
-      const want = deskPoint(room, at.x, at.z, 0.0155 * (s / p) + 0.0005);
-      // Лицом вверх, клапан — к стене; повёрнут вокруг вертикали на rot.
-      const want_q = new Quaternion().setFromEuler(new Euler(-Math.PI / 2, at.rot, 0, 'YXZ'));
-      const k = envPlaced.current ? 1 - Math.exp(-dt * 6) : 1;
-      envPlaced.current = true;
-      env.current.position.lerp(want, k);
-      env.current.quaternion.slerp(want_q, k);
-      env.current.scale.setScalar(s);
+      const want = deskPoint(room, ENV_AT.x, ENV_AT.z, 0.0155 * (s / p) + 0.0005);
+      const q = new Quaternion().setFromEuler(new Euler(-Math.PI / 2, ENV_AT.rot, 0, 'YXZ'));
+      if (!envPlaced.current) {
+        envPlaced.current = true;
+        env.current.position.copy(want);
+        env.current.quaternion.copy(q);
+      }
+      const k = envAway.current ? Math.min(1, (performance.now() - envAway.current) / 600) : 0;
+      env.current.scale.setScalar(s * (1 - k * k));
+      env.current.position.y = want.y + k * 0.06 * p;
     }
 
-    // Протяжка: где мышь на столе, не над стеной ли, можно ли сюда.
+    // Протяжка: вещь идёт за мышью, но только по зоне — упёрлась, скользит вдоль.
     if (d) {
       const m = pointer.current;
       const floor = screenToDesk(deskCam, room, m.x, m.y, 0);
-      const board =
+      d.wall =
         !floor || floor.z < 0 ? screenToBoard({ x: m.x, y: m.y }, room.poses.desk, room) : null;
-      d.wall = board;
-      const pt = screenToDesk(deskCam, room, m.x, m.y, d.forbidden ? LIFT_BAD : LIFT);
-      if (pt && !board) {
-        if (d.last) {
-          const k = 1 - Math.exp(-dt * 14);
-          d.vx += ((pt.x - d.last.x) / dt - d.vx) * k;
-          d.vz += ((pt.z - d.last.z) / dt - d.vz) * k;
-        }
-        d.last = pt;
-        let bad = false;
-        for (const id of d.ids) {
+      const pt = d.wall ? null : screenToDesk(deskCam, room, m.x, m.y, LIFT);
+      if (pt) {
+        const rects = d.ids.flatMap((id) => {
           const pc = all.find((q) => q.id === id);
-          const rel = d.rel.get(id);
-          if (!pc || !rel) continue;
-          const x = pt.x + rel.x;
-          const z = pt.z + rel.z;
-          d.at.set(id, { x, z });
-          if (!allowed({ ...pc, x, z }, zone)) bad = true;
-        }
-        d.forbidden = bad;
+          const b = d.base.get(id);
+          return pc && b ? [{ ...pc, x: b.x + d.off.x, z: b.z + d.off.z }] : [];
+        });
+        const want = { x: pt.x - d.grab0.x, z: pt.z - d.grab0.z };
+        const mv = slide(rects, want.x - d.off.x, want.z - d.off.z, zone);
+        d.off = { x: d.off.x + mv.dx, z: d.off.z + mv.dz };
+        const k = 1 - Math.exp(-dt * 14);
+        d.vx += (mv.dx / dt - d.vx) * k;
+        d.vz += (mv.dz / dt - d.vz) * k;
       } else {
         d.vx *= 0.8;
         d.vz *= 0.8;
@@ -474,16 +393,15 @@ export function Desk({
     }
 
     const now = performance.now();
-    const fan = fanStack.current;
-    const fanList = fan ? stackOf(all, fan) : [];
+    const pile = press.current?.pile ? pileOf(all, press.current.id).map((q) => q.id) : [];
     for (const pc of all) {
       const t = target(pc.id);
-      t.hover = !d && hoverId.current === pc.id;
+      t.forbidden = false;
+      t.hover = !d && (hoverId.current === pc.id || pile.includes(pc.id));
       const fly = flying.current.get(pc.id);
       if (fly) {
         if (now < fly.since) continue;
-        const at = slotCenter(room.vp, fly.slot);
-        onWall(t, pc, at.x, at.y, 3);
+        onWall(t, pc, fly.x, fly.y, 3);
         t.stiff = 140;
         t.damp = 1;
         continue;
@@ -493,53 +411,34 @@ export function Desk({
         t.stiff = 900;
         t.damp = 0.95;
         if (d.wall) {
-          // Над стеной: лист встаёт к доске у мыши (стопкой — чуть вразбежку).
+          // Над стеной: вещь встаёт к доске у мыши (несколько — чуть вразбежку).
           const n = d.ids.length - 1 - k;
-          onWall(t, pc, d.wall.x + n * 5, d.wall.y + n * 5, 40 + k * 1.5);
+          onWall(t, pc, d.wall.x + n * 16, d.wall.y + n * 12, 40 + k * 1.5);
           continue;
         }
-        const a = d.at.get(pc.id) ?? { x: pc.x, z: pc.z };
-        const lift = (d.forbidden ? LIFT_BAD : LIFT) + k * (pc.t + 0.002);
-        // Наклон за рукой: тянут вправо — правый край чуть вниз.
-        const tz = Math.max(-0.2, Math.min(0.2, -d.vx * 0.35));
-        const tx = Math.max(-0.2, Math.min(0.2, d.vz * 0.35));
-        onDesk(t, a.x, a.z, lift + pc.t / 2, pc.rot, tx, tz);
-        t.forbidden = d.forbidden;
+        const b = d.base.get(pc.id) ?? { x: pc.x, z: pc.z };
+        // Стопка в руке — как лежала: каждая чуть выше предыдущей.
+        const lift = LIFT + k * (pc.t + 0.001);
+        // Наклон за рукой — едва заметный.
+        const tz = Math.max(-0.12, Math.min(0.12, -d.vx * 0.2));
+        const tx = Math.max(-0.12, Math.min(0.12, d.vz * 0.2));
+        onDesk(t, b.x + d.off.x, b.z + d.off.z, lift + pc.t / 2, pc.rot, tx, tz);
         continue;
       }
-      let { x, z, rot } = pc;
-      let h = hc.h.get(pc.id) ?? 0;
-      const depth = fan ? fanList.length - 1 - fanList.findIndex((q) => q.id === pc.id) : 0;
-      if (fan === pc.stack && fanList.length > 1 && depth > 0) {
-        const c = Math.cos(pc.rot);
-        const s = Math.sin(pc.rot);
-        // Сдвиг — в осях самого листа: к его верхней кромке (к стене) и чуть вбок.
-        const u = depth * FAN_DX;
-        const v = -depth * FAN_DZ;
-        x += u * c + v * s;
-        z += -u * s + v * c;
-        rot += depth * FAN_ROT;
-      }
-      if (t.hover) h += 0.004;
-      if (press.current?.whole && pc.stack === all.find((q) => q.id === press.current?.id)?.stack)
-        h += 0.012;
-      onDesk(t, x, z, h + pc.t / 2, rot);
-      t.stiff = 260;
-      t.damp = 0.6;
-      t.forbidden = false;
+      onDesk(t, pc.x, pc.z, (hc.h.get(pc.id) ?? 0) + pc.t / 2, pc.rot);
+      t.stiff = 300;
+      t.damp = 0.7;
     }
 
-    // Долетели до стены — карточки на доске, листы со стола убраны.
+    // Долетели до стены — карточки на доске, вещи со стола убраны.
     const arrived: string[] = [];
-    for (const [id, f] of flying.current) {
-      if (now - f.since > 750) arrived.push(id);
-    }
+    for (const [id, f] of flying.current) if (now - f.since > 750) arrived.push(id);
     if (arrived.length) {
       for (const id of arrived) {
         const f = flying.current.get(id);
         flying.current.delete(id);
         targets.current.delete(id);
-        if (f) onArrive(id, f.slot);
+        if (f) onArrive(id, { x: f.x, y: f.y });
       }
       setPieces((cur) => cur.filter((q) => !arrived.includes(q.id)));
     }
@@ -553,9 +452,11 @@ export function Desk({
   return (
     <>
       <Room3D room={room} objects={objects} />
-      <group ref={env} name="envelope">
-        <Envelope title={envelopeTitle} items={envItems} onOpen={spill} />
-      </group>
+      {!envGone && (
+        <group ref={env} name="envelope">
+          <Envelope title={envelopeTitle} items={envItems} onOpen={spill} />
+        </group>
+      )}
       {pieces.map((pc) => {
         const m = materials.get(pc.id);
         return (

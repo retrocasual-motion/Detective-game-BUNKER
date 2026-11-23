@@ -5,7 +5,9 @@ import {
   heights,
   overlap,
   type Piece,
+  pileOf,
   scatter,
+  slide,
   stackOf,
   topAt,
   type Zone,
@@ -77,5 +79,34 @@ describe('прототип 3D-стола: раскладка без физики
       for (const q of a)
         if (p !== q) expect(Math.hypot(p.x - q.x, p.z - q.z)).toBeGreaterThan(0.11);
     expect(scatter(items, open, { x: 0, z: 0.4 })).toEqual(a);
+  });
+
+  it('сдвиг: упёрся в вещь — скользит вдоль; сквозь неё не проходит; за край не уходит', () => {
+    const wall: Zone = { ...open, blocked: [{ x: 0.5, z: 0.4, w: 0.2, d: 0.8, rot: 0 }] };
+    const a = sheet('a', 0, 0.3, 0);
+    // Прямо в препятствие и за него: встал у края препятствия.
+    const m = slide([a], 0.8, 0, wall);
+    // Край листа (0,105) дошёл до препятствия (0,4): сдвиг 0,295.
+    expect(m.dx).toBeGreaterThan(0.285);
+    expect(m.dx).toBeLessThan(0.2951);
+    // Наискось: по x упёрся, по z проехал.
+    const d = slide([a], 0.8, 0.2, wall);
+    expect(d.dz).toBeCloseTo(0.2, 2);
+    // За край стола (|x| < 1) — не дальше края.
+    const e = slide([a], -2, 0, open);
+    expect(a.x + e.dx - a.w / 2).toBeGreaterThan(-1.0001);
+    expect(a.x + e.dx - a.w / 2).toBeLessThan(-0.99);
+  });
+
+  it('взять с тем, что лежит сверху: только то, что выше и касается, по цепочке', () => {
+    const ps = [
+      sheet('a', 0, 0.3, 0),
+      sheet('b', 0.15, 0.3, 1),
+      sheet('c', 0.3, 0.3, 2),
+      sheet('d', 0.7, 0.3, 3),
+      sheet('e', -0.05, 0.3, -1),
+    ];
+    expect(pileOf(ps, 'a').map((p) => p.id)).toEqual(['a', 'b', 'c']);
+    expect(pileOf(ps, 'c').map((p) => p.id)).toEqual(['c']);
   });
 });

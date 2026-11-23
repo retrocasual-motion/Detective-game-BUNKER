@@ -17,7 +17,7 @@ type Box = DeskObject['boxes'][number];
 const KEEP = new Set([
   'monitor',
   'drive',
-  'keyboard',
+  // Клавиатура убрана (автор 23.11: «освободи место слева»).
   'phone',
   'lamp',
   'inbox-back',

@@ -37,6 +37,12 @@ export interface PaperTarget {
 }
 
 const PAPER = '#efe9dc';
+/** Изъятые устройства в прототипе: цвет корпуса и верха. */
+const DEVICE_LOOK: Record<string, { body: string; top: string }> = {
+  mobile: { body: '#26282b', top: '#2c2f33' },
+  pen: { body: '#7d8186', top: '#8c9095' },
+  camera: { body: '#33363a', top: '#3a3d41' },
+};
 const PX = 5; // м → единицы paintTexture (680 px на единицу)
 
 /** Текст листа без разметки — первые строки (на столе он мелкий: читают крупно, щелчком). */
@@ -56,13 +62,33 @@ function plain(body: string): string[] {
 function paintFace(piece: Piece, title: string, body: string): CanvasTexture {
   const disc = piece.kind === 'disc';
   const photo = piece.kind === 'photos';
+  const device = DEVICE_LOOK[piece.kind];
   return paintTexture(
     piece.w * PX,
     piece.d * PX,
-    disc ? '#e4ddcc' : photo ? '#f6f4ef' : PAPER,
+    device ? device.top : disc ? '#e4ddcc' : photo ? '#f6f4ef' : PAPER,
     ({ ctx, w, h, text }) => {
       const m = w * 0.08;
       ctx.fillStyle = '#1d1d1d';
+      if (device) {
+        if (piece.kind === 'mobile') {
+          // Экран — тёмное стекло с рамкой.
+          ctx.fillStyle = '#101214';
+          ctx.fillRect(w * 0.08, h * 0.1, w * 0.84, h * 0.78);
+        }
+        if (piece.kind === 'camera') {
+          // Объектив сверху.
+          ctx.fillStyle = '#16181a';
+          ctx.beginPath();
+          ctx.arc(w * 0.62, h * 0.5, h * 0.32, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#3a4a5a';
+          ctx.beginPath();
+          ctx.arc(w * 0.62, h * 0.5, h * 0.18, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        return;
+      }
       if (disc) {
         // Бумажный конверт с окошком: диск виден.
         ctx.fillStyle = '#9da3a8';
@@ -199,7 +225,8 @@ export function Paper({
     const fm = faceMat.current;
     if (fm) {
       fm.emissive.set(target.forbidden ? '#c0281e' : '#fff3d6');
-      fm.emissiveIntensity = target.forbidden ? 0.35 : target.hover ? 0.09 : 0;
+      // Наведение — чуть светлее, и только (автор 23.11: не поднимать, не раскрывать).
+      fm.emissiveIntensity = target.forbidden ? 0.35 : target.hover ? 0.06 : 0;
     }
     const s = shadow.current;
     if (s) {
@@ -237,8 +264,8 @@ export function Paper({
         <mesh {...handlers}>
           <boxGeometry args={[W, T, D]} />
           <meshStandardMaterial
-            color={piece.kind === 'disc' ? '#d9d2c0' : '#e2dccd'}
-            roughness={0.9}
+            color={DEVICE_LOOK[piece.kind]?.body ?? (piece.kind === 'disc' ? '#d9d2c0' : '#e2dccd')}
+            roughness={DEVICE_LOOK[piece.kind] ? 0.5 : 0.9}
           />
         </mesh>
         <mesh position={[0, T / 2 + 0.15, 0]} rotation={[-Math.PI / 2, 0, 0]} {...handlers}>
