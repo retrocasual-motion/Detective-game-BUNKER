@@ -546,5 +546,125 @@
   "prompt": "design/references/CHAT_PASTE_GEN6_cabinet_sides.txt, K7-4",
   "refs": "K6_cabinet_board16x9_v3 (генерация), P13_desk_board, P39_dark_room_wall_lamps, P18_cabinet_light",
   "verdict": "—"
+ },
+ {
+  "file": "references/places/M1_stair_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M1-1",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/M1_stair_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M1-2",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/M2_medroom_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M2-1",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: яркий свет в медкабинете логичен; общее — слишком стерильно"
+ },
+ {
+  "file": "references/places/M2_medroom_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M2-2",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: яркий свет в медкабинете логичен; общее — слишком стерильно"
+ },
+ {
+  "file": "references/places/M3_coleoffice_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M3-1",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: не тот кабинет — нужен большой кабинет руководителя, стол по центру у дальней стены"
+ },
+ {
+  "file": "references/places/M3_coleoffice_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M3-2",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: не тот кабинет — нужен большой кабинет руководителя, стол по центру у дальней стены"
+ },
+ {
+  "file": "references/places/M4_radioroom_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M4-1",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/M4_radioroom_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M4-2",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/M5_technical_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M5-1",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/M5_technical_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M5-2",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/M6_corridor_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M6-1",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/M6_corridor_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M6-2",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
  }
 ]
