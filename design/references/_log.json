@@ -706,5 +706,45 @@
   "prompt": "design/references/CHAT_PASTE_GEN8_cole_office.txt, A1-4",
   "refs": "R2_titan_control_room, R2_sc_kitchen_4, P13_desk_board",
   "verdict": "автору нравятся предметы и расположение; шкаф — влево, принтер — вправо, монитор — на стол"
+ },
+ {
+  "file": "references/places/A2_coleoffice_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN9_cole_office_layout.txt, A2-1",
+  "refs": "A1_coleoffice_v4, A1_coleoffice_v2 (генерации)",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/A2_coleoffice_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN9_cole_office_layout.txt, A2-2",
+  "refs": "A1_coleoffice_v4, A1_coleoffice_v2 (генерации)",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/A2_coleoffice_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN9_cole_office_layout.txt, A2-3",
+  "refs": "A1_coleoffice_v4, A1_coleoffice_v2 (генерации)",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/A2_coleoffice_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN9_cole_office_layout.txt, A2-4",
+  "refs": "A1_coleoffice_v4, A1_coleoffice_v2 (генерации)",
+  "verdict": "ВЫБРАН автором 23.11 («похоже на правду»): кабинет руководителя — шкаф слева, принтер справа, монитор на столе"
  }
 ]
