@@ -26,15 +26,23 @@ const call = <T>(page: Page, fn: string, ...args: unknown[]) =>
 const pieces = (page: Page) => call<Laid[]>(page, 'pieces');
 const find = async (page: Page, id: string) => (await pieces(page)).find((p) => p.id === id);
 
+/** Вещи на столе ни во что не врезаются (автор 23.11: «никаких пересечений»). */
+const noCrossing = async (page: Page, when: string) =>
+  expect(await call<string[]>(page, 'intersections'), when).toEqual([]);
+
+/** Протянуть настоящей мышью; на середине пути и после — ничего не врезается. */
 async function drag(page: Page, from: Pt, to: Pt, hold = 0) {
   await page.mouse.move(from.x, from.y, { steps: 3 });
   await page.mouse.down();
   if (hold) await page.waitForTimeout(hold);
   await page.mouse.move((from.x + to.x) / 2, (from.y + to.y) / 2, { steps: 10 });
+  await page.waitForTimeout(120);
+  await noCrossing(page, 'в руке, на середине пути');
   await page.mouse.move(to.x, to.y, { steps: 10 });
   await page.waitForTimeout(200);
   await page.mouse.up();
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(700);
+  await noCrossing(page, 'отпустили');
 }
 
 test('прототип 3D-стола: вскрыть клапаном; вещь свободно, без примагничивания, только по столу и мимо вещей следователя; с тем, что сверху, — на стену туда, где отпустили', async ({
@@ -52,6 +60,7 @@ test('прототип 3D-стола: вскрыть клапаном; вещь 
   await drag(page, flap, { x: flap.x, y: flap.y - 220 });
   await expect.poll(async () => (await pieces(page)).length).toBe(13);
   await page.waitForTimeout(1800);
+  await noCrossing(page, 'высыпали из конверта');
   const blocked = await call<Rect[]>(page, 'blocked');
   const clear = (r: Rect) => !blocked.some((b) => overlap(r, b));
 

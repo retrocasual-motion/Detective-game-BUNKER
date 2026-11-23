@@ -34,6 +34,15 @@ export interface PaperTarget {
   hover: boolean;
   /** Затухание пружины (доля критического): меньше 1 — отскок. */
   damp: number;
+  /**
+   * Ниже этого вещь не опускается (центр, y three.js): лежит не ниже того, что под ней сейчас, —
+   * не врезается в листы и устройства, когда её несут, опускают или вытаскивают (автор 23.11).
+   */
+  minY: number;
+  /** Где вещь сейчас (пишет сам лист каждый кадр) — по нему считают, что под чем. */
+  cur: Vector3;
+  /** Вещь показана на столе (не на стене и не в полёте к ней). */
+  onDesk: boolean;
 }
 
 const PAPER = '#efe9dc';
@@ -200,7 +209,7 @@ export function Paper({
   const placed = useRef(false);
   const W = piece.w * p;
   const D = piece.d * p;
-  const T = Math.max(1.2, piece.t * p);
+  const T = piece.t * p;
 
   useFrame((_, dtRaw) => {
     const g = group.current;
@@ -211,6 +220,7 @@ export function Paper({
       g.position.copy(start?.pos ?? target.pos);
       g.quaternion.copy(target.quat);
       g.scale.setScalar(target.scale);
+      target.cur.copy(g.position);
     }
     if (start && performance.now() < start.at) return;
     // Пружина: a = k·(цель − x) − c·v; c — чуть меньше критического (лёгкий отскок).
@@ -219,6 +229,11 @@ export function Paper({
     v.copy(target.pos).sub(g.position).multiplyScalar(k).addScaledVector(vel.current, -c);
     vel.current.addScaledVector(v, dt);
     g.position.addScaledVector(vel.current, dt);
+    if (g.position.y < target.minY) {
+      g.position.y = target.minY;
+      if (vel.current.y < 0) vel.current.y = 0;
+    }
+    target.cur.copy(g.position);
     g.quaternion.slerp(target.quat, 1 - Math.exp(-dt * (k > 600 ? 22 : 12)));
     g.scale.setScalar(g.scale.x + (target.scale - g.scale.x) * (1 - Math.exp(-dt * 10)));
     // Над запретным местом (вещь следователя, край) — лист краснеет: тень там не видна.
@@ -268,7 +283,7 @@ export function Paper({
             roughness={DEVICE_LOOK[piece.kind] ? 0.5 : 0.9}
           />
         </mesh>
-        <mesh position={[0, T / 2 + 0.15, 0]} rotation={[-Math.PI / 2, 0, 0]} {...handlers}>
+        <mesh position={[0, T / 2 + 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} {...handlers}>
           <planeGeometry args={[W, D]} />
           <meshStandardMaterial ref={faceMat} map={face} roughness={0.92} emissive="#fff3d6" />
         </mesh>

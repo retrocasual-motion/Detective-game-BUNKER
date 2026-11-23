@@ -3,6 +3,7 @@ import {
   allowed,
   contains,
   heights,
+  nearestFree,
   overlap,
   type Piece,
   pileOf,
@@ -18,7 +19,7 @@ const sheet = (id: string, x: number, z: number, layer: number, rot = 0, stack =
   kind: 'sheet',
   w: 0.21,
   d: 0.297,
-  t: 0.0015,
+  t: 0.0025,
   x,
   z,
   rot,
@@ -46,8 +47,8 @@ describe('прототип 3D-стола: раскладка без физики
       sheet('d', 0.6, 0.3, 3),
     ]);
     expect(h.get('a')).toBe(0);
-    expect(h.get('b')).toBeCloseTo(0.0015);
-    expect(h.get('c')).toBeCloseTo(0.003);
+    expect(h.get('b')).toBeCloseTo(0.0025);
+    expect(h.get('c')).toBeCloseTo(0.005);
     expect(h.get('d')).toBe(0);
   });
 
@@ -108,5 +109,16 @@ describe('прототип 3D-стола: раскладка без физики
     ];
     expect(pileOf(ps, 'a').map((p) => p.id)).toEqual(['a', 'b', 'c']);
     expect(pileOf(ps, 'c').map((p) => p.id)).toEqual(['c']);
+  });
+
+  it('ближайшее свободное место: на препятствии — рядом, с той стороны, к которой ближе', () => {
+    const phone: Zone = { ...open, blocked: [{ x: 0, z: 0.4, w: 0.1, d: 0.1, rot: 0 }] };
+    const cam = { x: 0.02, z: 0.4, w: 0.1, d: 0.06, rot: 0 };
+    const m = nearestFree([cam], phone);
+    expect(m).not.toBeNull();
+    // Ближе к правому краю телефона — встала справа вплотную.
+    expect(cam.x + (m?.dx ?? 0) - cam.w / 2).toBeGreaterThanOrEqual(0.05 - 0.01);
+    expect(Math.abs(m?.dz ?? 1)).toBeLessThan(0.02);
+    expect(nearestFree([{ ...cam, x: 0.5 }], phone)).toEqual({ dx: 0, dz: 0 });
   });
 });

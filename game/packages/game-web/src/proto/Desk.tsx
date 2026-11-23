@@ -7,10 +7,11 @@ import type { DeskObject } from '../room/decor.ts';
 import { cardH, cardW } from './Board.tsx';
 import {
   heights,
+  nearestFree,
   overlap,
   type Piece,
   pileOf,
-  rng,
+  type Rect,
   scatter,
   slide,
   topAt,
@@ -26,11 +27,11 @@ import { boardPoint, deskPoint, deskToScreen, screenToDesk, syncCamera } from '.
  *
  * Жесты — мышью по самим вещам (правки автора 23.11 после первого прогона):
  * - конверт: потянуть клапан вверх — вскрыт, содержимое на столе, пустой конверт убран;
- * - вещь: тянуть — чуть приподнята, идёт за мышью свободно, не примагничивается; кладётся ровно
- *   там, где отпустили; на другую — ложится сверху как есть (стопка — просто внахлёст);
- * - устройство (телефон, ручка, камера): на него ничего не кладут — ни лист, ни другое устройство,
- *   взятая вещь встаёт рядом; само оно на бумаги ложится (как пресс-папье); лист из-под него
- *   вытаскивают — устройство опускается (DV-B);
+ * - вещь: взял — она сверху всего, что накрывает, и идёт над стопками и устройствами, ни во что не
+ *   врезаясь; кладётся ровно там, где отпустили; на другую — ложится сверху как есть;
+ * - устройство (телефон, ручка, камера): на него ничего не кладут — ни лист, ни другое устройство;
+ *   нести над ним можно, отпустили на нём — вещь плавно встаёт рядом, с ближней стороны; само оно на
+ *   бумаги ложится (как пресс-папье) (DV-B);
  * - вещь не уходит со стола и не проходит сквозь вещи следователя: упёрлась — скользит вдоль;
  *   мышь ушла в пустоту — вещь остаётся у края, отпустили — лежит там;
  * - навести — чуть подсвечена (ничего не поднимается и не раскрывается);
@@ -46,8 +47,8 @@ export interface Material {
   body: string;
 }
 
-/** Подъём вещи в руке, м: чуть-чуть — видно, что взята (автор 23.11: «не так высоко»). */
-const LIFT = 0.012;
+/** Подъём вещи в руке над тем, что под ней, м: чуть-чуть — видно, что взята (автор 23.11). */
+const LIFT = 0.008;
 /** Сколько держать, чтобы взять вместе с тем, что лежит сверху, мс. */
 const HOLD_PILE_MS = 400;
 /** Порог протяжки, px. */
@@ -74,11 +75,6 @@ interface Drag {
   wall: { x: number; y: number } | null;
   vx: number;
   vz: number;
-  /**
-   * Устройства, под которыми взятый лист лежал в начале: пока лист из-под них не вышел, они ему
-   * не мешают (вытащить лист из-под телефона); вышел — обратно не задвинуть (DV-B).
-   */
-  under: Set<string>;
 }
 
 interface Press {
@@ -135,7 +131,6 @@ export function Desk({
   const press = useRef<Press | null>(null);
   const hoverId = useRef<string | null>(null);
   const flying = useRef(new Map<string, { x: number; y: number; since: number }>());
-  const rand = useRef(rng(11));
   const [, setTick] = useState(0);
   const env = useRef<Group>(null);
   const envPlaced = useRef(false);
@@ -173,6 +168,9 @@ export function Desk({
         forbidden: false,
         noShadow: false,
         hover: false,
+        minY: Number.NEGATIVE_INFINITY,
+        cur: new Vector3(),
+        onDesk: true,
       };
       targets.current.set(id, t);
     }
@@ -264,12 +262,6 @@ export function Desk({
     };
     let top = Math.max(0, ...all.map((q) => q.layer));
     const layer = new Map(ids.map((id) => [id, ++top]));
-    const under = new Set(
-      all
-        .filter((q) => DEVICE_KIND[q.id] && !ids.includes(q.id))
-        .filter((q) => group.some((g) => overlap(g, q)))
-        .map((q) => q.id),
-    );
     drag.current = {
       ids,
       base: new Map(group.map((q) => [q.id, { x: q.x, z: q.z }])),
@@ -278,7 +270,6 @@ export function Desk({
       wall: null,
       vx: 0,
       vz: 0,
-      under,
     };
     setPieces(all.map((q) => ({ ...q, layer: layer.get(q.id) ?? q.layer })));
   };
@@ -292,11 +283,22 @@ export function Desk({
       sendToWall(d.ids, d.wall);
       return;
     }
-    const jr = (rand.current() - 0.5) * 0.03;
-    setPieces((all) =>
-      all.map((q) => {
+    // DV-B: на устройство не кладут — отпустили на нём, вещь встаёт на ближнее свободное место.
+    const all = ps.current;
+    const rects = all
+      .filter((q) => d.base.has(q.id))
+      .map((q) => {
+        const b = d.base.get(q.id) ?? q;
+        return { ...q, x: b.x + d.off.x, z: b.z + d.off.z };
+      });
+    const devices = all.filter((q) => DEVICE_KIND[q.id] && !d.base.has(q.id));
+    const fix = nearestFree(rects, { inside: zone.inside, blocked: [...zone.blocked, ...devices] });
+    const fx = fix?.dx ?? 0;
+    const fz = fix?.dz ?? 0;
+    setPieces((cur) =>
+      cur.map((q) => {
         const b = d.base.get(q.id);
-        return b ? { ...q, x: b.x + d.off.x, z: b.z + d.off.z, rot: q.rot + jr } : q;
+        return b ? { ...q, x: b.x + d.off.x + fx, z: b.z + d.off.z + fz } : q;
       }),
     );
   };
@@ -380,12 +382,32 @@ export function Desk({
         ps.current.map((q) => ({ id: q.id, x: q.x, z: q.z, w: q.w, d: q.d, rot: q.rot })),
       pile: (id: string) => pileOf(ps.current, id).map((q) => q.id),
       blocked: () => blocked,
+      // Пары вещей на столе, которые сейчас врезаются друг в друга (по показанному положению).
+      intersections: () => {
+        const list = ps.current.filter((q) => !flying.current.has(q.id));
+        const out: string[] = [];
+        for (let i = 0; i < list.length; i++)
+          for (let j = i + 1; j < list.length; j++) {
+            const a = list[i] as Piece;
+            const b = list[j] as Piece;
+            const ca = targets.current.get(a.id)?.cur;
+            const cb = targets.current.get(b.id)?.cur;
+            if (!ca || !cb) continue;
+            const ra = { ...a, x: ca.x / p, z: ca.z / p };
+            const rb = { ...b, x: cb.x / p, z: cb.z / p };
+            if (!overlap(ra, rb, 0.004)) continue;
+            const lo = Math.max(ca.y - (a.t * p) / 2, cb.y - (b.t * p) / 2);
+            const hi = Math.min(ca.y + (a.t * p) / 2, cb.y + (b.t * p) / 2);
+            if (hi - lo > 0.3) out.push(`${a.id}/${b.id}`);
+          }
+        return out;
+      },
       board: (bx: number, by: number) => {
         const v = boardPoint(room, bx, by).project(deskCam);
         return { x: ((v.x + 1) / 2) * room.vp.width, y: ((1 - v.y) / 2) * room.vp.height };
       },
     };
-  }, [room, deskCam, blocked]);
+  }, [room, deskCam, blocked, p]);
 
   // ── Кадр: камера, затем цель каждой вещи. ──
   useFrame((_, dtRaw) => {
@@ -430,18 +452,8 @@ export function Desk({
           return pc && b ? [{ ...pc, x: b.x + d.off.x, z: b.z + d.off.z }] : [];
         });
         const want = { x: pt.x - d.grab0.x, z: pt.z - d.grab0.z };
-        // DV-B: на устройство ничего не кладут — ни лист, ни другое устройство; они для взятой вещи
-        // — как вещи следователя (лист под ним в начале — пока не вышел из-под него).
-        const devices = all.filter((q) => DEVICE_KIND[q.id] && !d.ids.includes(q.id));
-        for (const id of d.under) {
-          const dev = devices.find((q) => q.id === id);
-          if (!dev || !rects.some((r) => overlap(r, dev))) d.under.delete(id);
-        }
-        const obstacles = devices.filter((q) => !d.under.has(q.id));
-        const mv = slide(rects, want.x - d.off.x, want.z - d.off.z, {
-          inside: zone.inside,
-          blocked: [...zone.blocked, ...obstacles],
-        });
+        // Упирается только в край стола и вещи следователя; над устройствами и стопками — проходит.
+        const mv = slide(rects, want.x - d.off.x, want.z - d.off.z, zone);
         d.off = { x: d.off.x + mv.dx, z: d.off.z + mv.dz };
         const k = 1 - Math.exp(-dt * 14);
         d.vx += (mv.dx / dt - d.vx) * k;
@@ -454,9 +466,31 @@ export function Desk({
 
     const now = performance.now();
     const pile = press.current?.pile ? pileOf(all, press.current.id).map((q) => q.id) : [];
+    const deskY3 = -room.deskY;
+    const onDeskNow = all.filter(
+      (q) => !flying.current.has(q.id) && !(d?.wall && d.ids.includes(q.id)),
+    );
+    // Где вещь сейчас (по тому, что показано) и на какой высоте её низ, м.
+    const rectNow = (q: Piece) => {
+      const c = targets.current.get(q.id)?.cur;
+      return c ? { ...q, x: c.x / p, z: c.z / p } : q;
+    };
+    const bottomNow = (q: Piece) => {
+      const c = targets.current.get(q.id)?.cur;
+      return c ? (c.y - deskY3) / p - q.t / 2 : 0;
+    };
+    // На чём лежит (или над чем идёт) вещь в этом месте: верх всего, что под ней ниже по порядку.
+    const support = (q: Piece, r: Rect) => {
+      let top = 0;
+      for (const o of onDeskNow)
+        if (o !== q && o.layer < q.layer && overlap(r, rectNow(o)))
+          top = Math.max(top, bottomNow(o) + o.t);
+      return top;
+    };
     for (const pc of all) {
       const t = target(pc.id);
       t.forbidden = false;
+      t.minY = Number.NEGATIVE_INFINITY;
       t.hover = !d && (hoverId.current === pc.id || pile.includes(pc.id));
       const fly = flying.current.get(pc.id);
       if (fly) {
@@ -469,7 +503,7 @@ export function Desk({
       if (d?.ids.includes(pc.id)) {
         const k = d.ids.indexOf(pc.id);
         t.stiff = 900;
-        t.damp = 0.95;
+        t.damp = 1;
         if (d.wall) {
           // Над стеной: вещь встаёт к доске у мыши (несколько — чуть вразбежку).
           const n = d.ids.length - 1 - k;
@@ -477,17 +511,19 @@ export function Desk({
           continue;
         }
         const b = d.base.get(pc.id) ?? { x: pc.x, z: pc.z };
-        // Стопка в руке — как лежала: каждая чуть выше предыдущей.
-        const lift = LIFT + k * (pc.t + 0.001);
-        // Наклон за рукой — едва заметный.
-        const tz = Math.max(-0.12, Math.min(0.12, -d.vx * 0.2));
-        const tx = Math.max(-0.12, Math.min(0.12, d.vz * 0.2));
-        onDesk(t, b.x + d.off.x, b.z + d.off.z, lift + pc.t / 2, pc.rot, tx, tz);
+        const x = b.x + d.off.x;
+        const z = b.z + d.off.z;
+        // В руке — сверху всего, что под ней сейчас (сразу, без прохода сквозь), и чуть выше.
+        const h = support(pc, { ...pc, x, z }) + LIFT;
+        onDesk(t, x, z, h + pc.t / 2, pc.rot);
+        t.minY = t.pos.y;
         continue;
       }
       onDesk(t, pc.x, pc.z, (hc.h.get(pc.id) ?? 0) + pc.t / 2, pc.rot);
+      // Опускается или едет на место — не ниже того, что под ней по пути.
+      t.minY = deskY3 + (support(pc, rectNow(pc)) + pc.t / 2) * p;
       t.stiff = 300;
-      t.damp = 0.7;
+      t.damp = 1;
     }
 
     // Долетели до стены — карточки на доске, вещи со стола убраны.

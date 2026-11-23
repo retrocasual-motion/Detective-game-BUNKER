@@ -26,14 +26,15 @@ export interface Piece extends Rect {
 
 /** Размеры по виду материала, м: ширина, глубина, толщина (толщина утрирована — край виден). */
 const SIZE: Record<string, [number, number, number]> = {
-  sheet: [0.21, 0.297, 0.0015],
-  folded: [0.21, 0.297, 0.003],
-  stapled: [0.21, 0.297, 0.004],
-  pack: [0.21, 0.297, 0.006],
-  half: [0.21, 0.15, 0.0015],
-  photos: [0.15, 0.1, 0.002],
+  // Толщина — та же, что рисуется: высоты стопки и коробки листов совпадают, края не врезаются.
+  sheet: [0.21, 0.297, 0.0025],
+  folded: [0.21, 0.297, 0.004],
+  stapled: [0.21, 0.297, 0.005],
+  pack: [0.21, 0.297, 0.007],
+  half: [0.21, 0.15, 0.0025],
+  photos: [0.15, 0.1, 0.003],
   notebook: [0.148, 0.21, 0.008],
-  disc: [0.125, 0.125, 0.004],
+  disc: [0.125, 0.125, 0.005],
   // Изъятые устройства (без экранов в прототипе): телефон, ручка-диктофон, камера.
   mobile: [0.065, 0.12, 0.012],
   pen: [0.14, 0.014, 0.014],
@@ -252,4 +253,29 @@ export function pileOf(pieces: readonly Piece[], id: string): Piece[] {
   const rest = pieces.filter((p) => p.layer > base.layer).sort((a, b) => a.layer - b.layer);
   for (const p of rest) if (pile.some((q) => overlap(p, q))) pile.push(p);
   return pile;
+}
+
+/**
+ * Ближайшее к месту место, где вещи (лист, стопка) можно положить: само место, если можно, иначе —
+ * по кольцам вокруг (шаг 1 см). Отпустили на телефон — встаёт рядом с той стороны, к которой ближе.
+ */
+export function nearestFree(
+  rects: readonly Rect[],
+  zone: Zone,
+  maxR = 0.5,
+  step = 0.008,
+): { dx: number; dz: number } | null {
+  const ok = (ox: number, oz: number) =>
+    rects.every((r) => allowed({ ...r, x: r.x + ox, z: r.z + oz }, zone));
+  if (ok(0, 0)) return { dx: 0, dz: 0 };
+  for (let r = step; r <= maxR; r += step) {
+    const n = Math.max(16, Math.ceil((2 * Math.PI * r) / step));
+    for (let k = 0; k < n; k++) {
+      const a = (k / n) * Math.PI * 2;
+      const dx = Math.cos(a) * r;
+      const dz = Math.sin(a) * r;
+      if (ok(dx, dz)) return { dx, dz };
+    }
+  }
+  return null;
 }
