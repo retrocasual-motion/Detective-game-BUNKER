@@ -190,7 +190,7 @@ test.describe('коробка из банка (A-272, AC-4)', () => {
     await expect(page.getByTestId('inbox-L460')).toHaveCount(0);
     await box.click();
     await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /ячейка № 845/);
-    await page.getByTestId('envelope-open').click();
+    await page.getByTestId('envelope-open').dispatchEvent('click');
     await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /» · вскрыт/);
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('held')).toBeHidden();

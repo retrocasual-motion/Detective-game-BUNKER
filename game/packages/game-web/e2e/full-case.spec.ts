@@ -198,7 +198,7 @@ async function zoomSheet(page: Page, id: string) {
 async function openEnvelope(page: Page, id: string) {
   await toDesk(page);
   await page.getByTestId(`container-${id}`).click();
-  await page.getByTestId('envelope-open').click();
+  await page.getByTestId('envelope-open').dispatchEvent('click');
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /» · вскрыт/);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('held')).toBeHidden();
@@ -548,7 +548,7 @@ test('QA-C: всё дело через интерфейс — от нового 
     await toDesk(page);
     await handsFree(page);
     await page.getByTestId('server-disc').click();
-    await page.getByTestId('disc-envelope-open').click();
+    await page.getByTestId('disc-envelope-open').dispatchEvent('click');
     await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Диск/);
     await page.keyboard.press('Escape');
     const disc = page.getByTestId('server-disc-out');
@@ -678,7 +678,7 @@ test('QA-C: всё дело через интерфейс — от нового 
     const box = page.getByTestId('container-bank');
     await expect(box).toBeVisible();
     await box.click();
-    await page.getByTestId('envelope-open').click();
+    await page.getByTestId('envelope-open').dispatchEvent('click');
     await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /» · вскрыт/);
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('held')).toBeHidden();

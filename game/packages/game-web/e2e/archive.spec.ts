@@ -7,7 +7,7 @@ test.use({ sealed: true });
 /** Взять конверт со стола, вскрыть (в руках — вскрытый, OP-D), положить. */
 async function openEnvelope(page: Page, id: string) {
   await page.getByTestId(`container-${id}`).click();
-  await page.getByTestId('envelope-open').click();
+  await page.getByTestId('envelope-open').dispatchEvent('click');
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /» · вскрыт/);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('held')).toBeHidden();
@@ -64,12 +64,57 @@ test('щелчок по конверту — он в руках: протяну�
   await expect(sheet(page, '30')).toHaveCount(0);
 });
 
+/** Зажать в точке и протянуть настоящей мышью. */
+async function pull(page: Page, x: number, y: number, dx: number, dy: number) {
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + dx, y + dy, { steps: 12 });
+  await page.mouse.up();
+  // Не дотянутый клапан ложится обратно не мгновенно — следующая протяжка после него, как у человека.
+  await page.waitForTimeout(500);
+}
+
+test('OG-B: клапан тянут мышью — вскрыт; за клапан конверт не крутится, не дотянули — цел; крышку коробки — так же', async ({
+  page,
+}) => {
+  await page.getByTestId('container-protocols').click();
+  const held = page.getByTestId('held');
+  await expect(held).toHaveAttribute('aria-label', 'Конверт «Протоколы опроса»');
+  const seal = await page.getByTestId('envelope-open').boundingBox();
+  if (!seal) throw new Error('печати не видно');
+  // Точка на клапане — над печатью.
+  const x = seal.x + seal.width / 2;
+  const y = seal.y + seal.height / 2 - 40;
+  // Вбок за клапан: конверт не повернулся, клапан не дотянут — лёг обратно.
+  await pull(page, x, y, 260, 0);
+  await expect(held).toHaveAttribute('data-side', 'front');
+  await expect(held).toHaveAttribute('aria-label', 'Конверт «Протоколы опроса»');
+  // Вверх чуть-чуть — тоже не вскрыт.
+  await pull(page, x, y, 0, -40);
+  await expect(held).toHaveAttribute('aria-label', 'Конверт «Протоколы опроса»');
+  // Дотянули — вскрыт.
+  const saved = savedPut(page);
+  await pull(page, x, y, 10, -220);
+  await saved;
+  await expect(held).toHaveAttribute('aria-label', 'Конверт «Протоколы опроса» · вскрыт');
+  await page.keyboard.press('Escape');
+  await expect(held).toBeHidden();
+
+  // Коробка: тянут пломбу с крышкой вверх.
+  await page.getByTestId('container-personal').click();
+  await expect(held).toHaveAttribute('aria-label', 'Коробка «Личные вещи»');
+  const tape = await page.getByTestId('envelope-open').boundingBox();
+  if (!tape) throw new Error('пломбы не видно');
+  await pull(page, tape.x + tape.width / 2, tape.y + tape.height / 2, 0, -220);
+  await expect(held).toHaveAttribute('aria-label', /Коробка «Личные вещи» · вскрыт/);
+});
+
 test('«Вскрыть» — вскрытый конверт в руках, содержимое на ребре (OP-D): вынуть лист — читать, закрыть — снова конверт; положить — группа на стене; после перезагрузки так же', async ({
   page,
 }) => {
   await page.getByTestId('container-protocols').click();
   const saved = savedPut(page);
-  await page.getByTestId('envelope-open').click();
+  await page.getByTestId('envelope-open').dispatchEvent('click');
   await saved;
   const held = page.getByTestId('held');
   await expect(held).toHaveAttribute('aria-label', 'Конверт «Протоколы опроса» · вскрыт');
@@ -119,7 +164,7 @@ test('«Личные вещи» — семь пакетов (EB-A): пакет �
   page,
 }) => {
   await page.getByTestId('container-personal').click();
-  await page.getByTestId('envelope-open').click();
+  await page.getByTestId('envelope-open').dispatchEvent('click');
   const held = page.getByTestId('held');
   await expect(held).toHaveAttribute('aria-label', 'Коробка «Личные вещи» · вскрыта');
   for (let n = 40; n <= 46; n++) await expect(page.getByTestId(`unpack-${n}`)).toHaveCount(1);

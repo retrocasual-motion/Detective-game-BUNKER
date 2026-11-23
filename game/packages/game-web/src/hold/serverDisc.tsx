@@ -6,12 +6,12 @@ import { insertServerDisc } from '../room/drive.ts';
 import { useViewport } from '../room/useViewport.ts';
 import { useGame } from '../store.ts';
 import Held3D from './Held3D.tsx';
-import { Plate, useTexture } from './shapes.tsx';
+import { EnvelopeFlap, Plate, paintFlapShadow, useTexture } from './shapes.tsx';
 import { paintTexture } from './texture.ts';
 
 /**
  * Конверт «Прил. 7 · Сервер VL-31» с диском (A-272, AC-2; автор 19.11): в руках — заклеенный
- * конверт, «Вскрыть конверт» — в руках диск, его крутят и читают надпись. Отложили — диск лежит
+ * конверт, потянули клапан (OG-B) — в руках диск, его крутят и читают надпись. Отложили — диск лежит
  * на столе; вставляет его игрок сам: зажать на столе и дотащить до дисковода под монитором
  * (DD-A, `room/drive.ts`) — или, держа диск в руках, щёлкнуть по дисководу за ним (UX-3, DA-2: путь
  * без удержания кнопки). Кнопки «Вставить» нет. Надписи — только из канона: на конверте
@@ -22,29 +22,20 @@ const KRAFT = '#b58f5a';
 const INK = '#1d1d1d';
 const LABEL = 'Прил. 7 · Сервер VL-31';
 
-/** Конверт заклеен, без печати; надпись маркером. */
-function ServerEnvelope() {
+/**
+ * Конверт заклеен, без печати; надпись маркером. Клапан тянут вверх — вскрыт, в руках диск (OG-B,
+ * автор 23.11: не кнопкой).
+ */
+function ServerEnvelope({ onOpen }: { onOpen: () => void }) {
   const front = useTexture(
     () =>
       paintTexture(2.6, 1.8, KRAFT, ({ ctx, w, h, text }) => {
+        paintFlapShadow(ctx, w, (FLAP_D / 1.8) * h);
         ctx.fillStyle = INK;
-        text('Дело № 09-1128', w * 0.07, h * 0.1, w * 0.8, '54px Georgia, serif', 64);
+        // Надписи — под клапаном.
+        text('Дело № 09-1128', w * 0.07, h * 0.4, w * 0.8, '54px Georgia, serif', 64);
         // Маркер — толстые буквы от руки.
-        text(LABEL, w * 0.07, h * 0.36, w * 0.86, '700 132px "Comic Sans MS", cursive', 150);
-      }),
-    [],
-  );
-  const back = useTexture(
-    () =>
-      paintTexture(2.6, 1.8, KRAFT, ({ ctx, w, h }) => {
-        // Клапан заклеен — треугольник и полоса клея.
-        ctx.fillStyle = 'rgb(0 0 0 / 10%)';
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(w, 0);
-        ctx.lineTo(w / 2, h * 0.3);
-        ctx.closePath();
-        ctx.fill();
+        text(LABEL, w * 0.07, h * 0.5, w * 0.86, '700 132px "Comic Sans MS", cursive', 150);
       }),
     [],
   );
@@ -55,10 +46,22 @@ function ServerEnvelope() {
         <meshStandardMaterial color={KRAFT} roughness={0.9} />
       </mesh>
       <Plate w={2.6} h={1.8} z={0.0205} map={front} />
-      <Plate w={2.6} h={1.8} z={-0.0205} back map={back} />
+      <EnvelopeFlap
+        w={2.6}
+        h={1.8}
+        depth={FLAP_D}
+        z={0.0205}
+        seal={false}
+        label="Вскрыть конверт"
+        testId="disc-envelope-open"
+        onOpen={onOpen}
+      />
     </group>
   );
 }
+
+/** Глубина клапана конверта с диском. */
+const FLAP_D = 0.62;
 
 /** Диск: сверху — белая печатная сторона с надписью маркером, снизу — зеркальная; дырка в центре. */
 function Disc() {
@@ -168,22 +171,8 @@ export function ServerDiscHeld() {
       label={out ? `Диск «${LABEL}»` : `Конверт «${LABEL}»`}
       onClose={close}
       overlay={out ? <DriveTarget /> : undefined}
-      action={
-        out ? undefined : (
-          <div className="held-action">
-            <button
-              type="button"
-              className="tool held-action-btn"
-              data-testid="disc-envelope-open"
-              onClick={() => useGame.getState().takeDiscOut()}
-            >
-              Вскрыть конверт
-            </button>
-          </div>
-        )
-      }
     >
-      {out ? <Disc /> : <ServerEnvelope />}
+      {out ? <Disc /> : <ServerEnvelope onOpen={() => useGame.getState().takeDiscOut()} />}
     </Held3D>
   );
 }
