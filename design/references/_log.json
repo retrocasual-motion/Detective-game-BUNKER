@@ -666,5 +666,45 @@
   "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M6-2",
   "refs": "R2/R1 реальные снимки (см. промпт)",
   "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/A1_coleoffice_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN8_cole_office.txt, A1-1",
+  "refs": "R2_titan_control_room, R2_sc_kitchen_4, P13_desk_board",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/A1_coleoffice_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN8_cole_office.txt, A1-2",
+  "refs": "R2_titan_control_room, R2_sc_kitchen_4, P13_desk_board",
+  "verdict": "автору нравится архитектура: арки, трубы"
+ },
+ {
+  "file": "references/places/A1_coleoffice_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN8_cole_office.txt, A1-3",
+  "refs": "R2_titan_control_room, R2_sc_kitchen_4, P13_desk_board",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/A1_coleoffice_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN8_cole_office.txt, A1-4",
+  "refs": "R2_titan_control_room, R2_sc_kitchen_4, P13_desk_board",
+  "verdict": "автору нравятся предметы и расположение; шкаф — влево, принтер — вправо, монитор — на стол"
  }
 ]
