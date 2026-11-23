@@ -5,7 +5,17 @@ import { Envelope } from '../hold/shapes.tsx';
 import { BOARD_SCALE, type Pose, type Room, screenToBoard } from '../room/camera.ts';
 import type { DeskObject } from '../room/decor.ts';
 import { cardH, cardW } from './Board.tsx';
-import { heights, type Piece, pileOf, rng, scatter, slide, type Zone } from './deskWorld.ts';
+import {
+  heights,
+  overlap,
+  type Piece,
+  pileOf,
+  rng,
+  scatter,
+  slide,
+  topAt,
+  type Zone,
+} from './deskWorld.ts';
 import { Paper, type PaperTarget } from './Paper.tsx';
 import { footprints, Room3D } from './Room3D.tsx';
 import { boardPoint, deskPoint, deskToScreen, screenToDesk, syncCamera } from './space.ts';
@@ -16,8 +26,11 @@ import { boardPoint, deskPoint, deskToScreen, screenToDesk, syncCamera } from '.
  *
  * Жесты — мышью по самим вещам (правки автора 23.11 после первого прогона):
  * - конверт: потянуть клапан вверх — вскрыт, содержимое на столе, пустой конверт убран;
- * - вещь: тянуть — идёт за мышью свободно, не примагничивается; кладётся ровно там, где отпустили;
- *   на другую — ложится сверху как есть (стопка — просто внахлёст);
+ * - вещь: тянуть — чуть приподнята, идёт за мышью свободно, не примагничивается; кладётся ровно
+ *   там, где отпустили; на другую — ложится сверху как есть (стопка — просто внахлёст);
+ * - устройство (телефон, ручка, камера): на него ничего не кладут — ни лист, ни другое устройство,
+ *   взятая вещь встаёт рядом; само оно на бумаги ложится (как пресс-папье); лист из-под него
+ *   вытаскивают — устройство опускается (DV-B);
  * - вещь не уходит со стола и не проходит сквозь вещи следователя: упёрлась — скользит вдоль;
  *   мышь ушла в пустоту — вещь остаётся у края, отпустили — лежит там;
  * - навести — чуть подсвечена (ничего не поднимается и не раскрывается);
@@ -33,8 +46,8 @@ export interface Material {
   body: string;
 }
 
-/** Подъём вещи в руке, м. */
-const LIFT = 0.035;
+/** Подъём вещи в руке, м: чуть-чуть — видно, что взята (автор 23.11: «не так высоко»). */
+const LIFT = 0.012;
 /** Сколько держать, чтобы взять вместе с тем, что лежит сверху, мс. */
 const HOLD_PILE_MS = 400;
 /** Порог протяжки, px. */
@@ -61,6 +74,11 @@ interface Drag {
   wall: { x: number; y: number } | null;
   vx: number;
   vz: number;
+  /**
+   * Устройства, под которыми взятый лист лежал в начале: пока лист из-под них не вышел, они ему
+   * не мешают (вытащить лист из-под телефона); вышел — обратно не задвинуть (DV-B).
+   */
+  under: Set<string>;
 }
 
 interface Press {
@@ -246,6 +264,12 @@ export function Desk({
     };
     let top = Math.max(0, ...all.map((q) => q.layer));
     const layer = new Map(ids.map((id) => [id, ++top]));
+    const under = new Set(
+      all
+        .filter((q) => DEVICE_KIND[q.id] && !ids.includes(q.id))
+        .filter((q) => group.some((g) => overlap(g, q)))
+        .map((q) => q.id),
+    );
     drag.current = {
       ids,
       base: new Map(group.map((q) => [q.id, { x: q.x, z: q.z }])),
@@ -254,6 +278,7 @@ export function Desk({
       wall: null,
       vx: 0,
       vz: 0,
+      under,
     };
     setPieces(all.map((q) => ({ ...q, layer: layer.get(q.id) ?? q.layer })));
   };
@@ -327,6 +352,30 @@ export function Desk({
         return pc ? at(pc.x, pc.z, (hCache.current.h.get(id) ?? 0) + pc.t) : null;
       },
       desk: (x: number, z: number) => at(x, z),
+      // Видимая точка вещи: её часть, которую ничего не накрывает (на столе внахлёст).
+      grab: (id: string) => {
+        const pc = ps.current.find((q) => q.id === id);
+        if (!pc) return null;
+        const c = Math.cos(pc.rot);
+        const sn = Math.sin(pc.rot);
+        for (const [u, v] of [
+          [0, 0],
+          [-0.3, -0.3],
+          [0.3, -0.3],
+          [-0.3, 0.3],
+          [0.3, 0.3],
+          [0, -0.4],
+          [0, 0.4],
+          [-0.4, 0],
+          [0.4, 0],
+        ] as const) {
+          const x = pc.x + u * pc.w * c + v * pc.d * sn;
+          const z = pc.z - u * pc.w * sn + v * pc.d * c;
+          if (topAt(ps.current, x, z)?.id === id)
+            return at(x, z, (hCache.current.h.get(id) ?? 0) + pc.t);
+        }
+        return null;
+      },
       pieces: () =>
         ps.current.map((q) => ({ id: q.id, x: q.x, z: q.z, w: q.w, d: q.d, rot: q.rot })),
       pile: (id: string) => pileOf(ps.current, id).map((q) => q.id),
@@ -381,7 +430,18 @@ export function Desk({
           return pc && b ? [{ ...pc, x: b.x + d.off.x, z: b.z + d.off.z }] : [];
         });
         const want = { x: pt.x - d.grab0.x, z: pt.z - d.grab0.z };
-        const mv = slide(rects, want.x - d.off.x, want.z - d.off.z, zone);
+        // DV-B: на устройство ничего не кладут — ни лист, ни другое устройство; они для взятой вещи
+        // — как вещи следователя (лист под ним в начале — пока не вышел из-под него).
+        const devices = all.filter((q) => DEVICE_KIND[q.id] && !d.ids.includes(q.id));
+        for (const id of d.under) {
+          const dev = devices.find((q) => q.id === id);
+          if (!dev || !rects.some((r) => overlap(r, dev))) d.under.delete(id);
+        }
+        const obstacles = devices.filter((q) => !d.under.has(q.id));
+        const mv = slide(rects, want.x - d.off.x, want.z - d.off.z, {
+          inside: zone.inside,
+          blocked: [...zone.blocked, ...obstacles],
+        });
         d.off = { x: d.off.x + mv.dx, z: d.off.z + mv.dz };
         const k = 1 - Math.exp(-dt * 14);
         d.vx += (mv.dx / dt - d.vx) * k;
