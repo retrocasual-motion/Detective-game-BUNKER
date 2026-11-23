@@ -17,7 +17,7 @@ describe('компьютер следователя — из канона', () =
     expect(letters[1]).toMatchObject({
       n: 2,
       date: '28.08.2009',
-      from: 'j.mercer@sentinel-labs.net',
+      from: 'j.mercer@octon-labs.net',
       subject: 'Условия',
     });
   });

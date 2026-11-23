@@ -145,7 +145,7 @@ test('проводник: «Тревога» — записи, «Свойств�
   // Отчёт о расходах — таблицей.
   await page.getByTestId('lap-icon-Отчёты').dblclick();
   await page.getByTestId('lap-file-расходы_объект_2008-2009.xls').dblclick();
-  await expect(page.getByTestId('lap-sheet')).toContainText('Front Range Savings');
+  await expect(page.getByTestId('lap-sheet')).toContainText('Aspen Bank');
 });
 
 test('неверный ключ и сразу новый — новый не обрывается (правка автора 10.11)', async ({

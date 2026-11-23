@@ -35,7 +35,7 @@ describe('buildLaptop — ноутбук из канона', () => {
     expect(findFile(lap, 'Доклад_Р.txt')?.modified).toBe('13.10.2009 08:12');
     expect(findFile(lap, 'Доклад_Р.txt')?.body).toContain('e.pierce.uk@mailbridge.net');
     expect(findFile(lap, 'Отчёты/расходы_объект_2008-2009.xls')?.body).toContain(
-      'Front Range Savings',
+      'Aspen Bank',
     );
   });
   it('«Тревога» — три записи с длительностью; «Личные дела» — даты открытия', () => {
@@ -53,7 +53,7 @@ describe('buildLaptop — ноутбук из канона', () => {
     const h = findFile(lap, 'Корзина/Хейлу_заявление.doc');
     expect([h?.origin, h?.deleted]).toEqual(['Этап A/', '25.09.2009']);
     expect(h?.body).toContain('Причина:');
-    expect(lap?.bookmarks.map((b) => b.url)).toContain('frontrange-savings.com/safe-deposit-boxes');
+    expect(lap?.bookmarks.map((b) => b.url)).toContain('aspen-bank.com/safe-deposit-boxes');
     expect(allFiles(lap).every((f) => f.body.length > 0)).toBe(true);
   });
 });

@@ -81,11 +81,11 @@ rule(id="url-hexon-docs", action="АДРЕС", target=r".*", target_label="ад�
      fail="Страница не найдена (404). Поисковой системы в браузере нет: страница открывается только по точному адресу.")
 
 # --- Банк: «Сообщить о смерти арендатора» (страница «Сейфовые ячейки», L130) ---
-rule(id="pw-bank-death", action="ПАРОЛЬ", target=r"сообщ\w* о смерти|ячейк|front\s*range|банк",
-     target_label="frontrange-savings.com — Сейфовые ячейки — Сообщить о смерти арендатора: номер ячейки, фамилия, дата смерти",
+rule(id="pw-bank-death", action="ПАРОЛЬ", target=r"сообщ\w* о смерти|ячейк|aspen|банк",
+     target_label="aspen-bank.com — Сейфовые ячейки — Сообщить о смерти арендатора: номер ячейки, фамилия, дата смерти",
      accept=[r"(?=.*\b845\b)(?=.*(коул|cole))(?=.*13\s*[./-]\s*10\s*[./-]\s*(20)?09)"],
      requires=["L130"], requires_reply="Такого поля ввода в деле нет.", release=["L460", "L461", "L462"],
-     ok="Сообщение принято. Ячейка № 845, отделение Денвер, вскрыта в присутствии сотрудника банка и представителя бюро; содержимое передано в дело. На столе — коробка «Front Range Savings · ячейка № 845 · вскрыта 17.11.2009».",
+     ok="Сообщение принято. Ячейка № 845, отделение Денвер, вскрыта в присутствии сотрудника банка и представителя бюро; содержимое передано в дело. На столе — коробка «Aspen Bank · ячейка № 845 · вскрыта 17.11.2009».",
      fail="Ячейка с такими данными не найдена.")
 
 # --- Почта Эммы: «Вход в почту» → «Забыли пароль?» (L249) ---
@@ -117,34 +117,34 @@ def site(rid, dom, rel=None, ok=None, label=None):
          ok=ok or "Страница открыта.", fail=NF)
 site("url-vaultline", r"vaultline-program\.com", ["L101"], "Открыт сайт vaultline-program.com.")
 site("url-hexon", r"hexon-bio\.com", ["L163"], "Открыт сайт hexon-bio.com.")
-site("url-fieldworks", r"fieldworks-radio\.com", ["L177"], "Открыт сайт fieldworks-radio.com.")
+site("url-radiosolutions", r"radiosolutions-inc\.com", ["L177"], "Открыт сайт radiosolutions-inc.com.")
 site("url-mailbridge", r"mailbridge\.net", ["L249"], "Открыт сайт mailbridge.net.")
-site("url-sentinel", r"sentinel-labs\.net", ["L272"], "Открыт сайт sentinel-labs.net.")
+site("url-octon", r"octon-labs\.net", ["L272"], "Открыт сайт octon-labs.net.")
 site("url-signal", r"the-signal-news\.com", ["L296"], "Открыт сайт the-signal-news.com.")
 site("url-newspaper", r"silverridge-chronicle\.com", [], "Сайт газеты: архив номеров — в закладках браузера (файл 17); сегодняшний номер — на столе (файл 15). Выпуск архива открывается по дате.")
-site("url-pinecell", r"pinecell-mobile\.com", ["L178"], "Открыт сайт pinecell-mobile.com.")  # NF-B, A-273: тарифы, покрытие, запросы органов
-site("url-northcare", r"northcare-nutrition\.com", ["L179"], "Открыт сайт northcare-nutrition.com.")  # NF-B, A-273 (NC-B): справки по партиям — номер горячей линии на сайте
-site("url-colton", r"coltonsupply\.com", ["L180"], "Открыт сайт coltonsupply.com.")  # NF-B, A-273 (CS-B): статус заказа — по телефону на сайте
+site("url-skycell", r"skycell-mobile\.com", ["L178"], "Открыт сайт skycell-mobile.com.")  # NF-B, A-273: тарифы, покрытие, запросы органов
+site("url-healthway", r"healthway-nutrition\.com", ["L179"], "Открыт сайт healthway-nutrition.com.")  # NF-B, A-273 (NC-B): справки по партиям — номер горячей линии на сайте
+site("url-mesa", r"mesa-supply\.com", ["L180"], "Открыт сайт mesa-supply.com.")  # NF-B, A-273 (CS-B): статус заказа — по телефону на сайте
 site("url-bureau", r"okrug-bureau\.org", ["L181"], "Открыт сайт okrug-bureau.org.")  # NF-B, A-273: новости, приёмная
-site("url-frontrange", r"frontrange-savings\.com", ["L130"], "Открыт сайт frontrange-savings.com.")  # A-250 п. 3, A-272: главная, «Сейфовые ячейки» с формой «Сообщить о смерти арендатора»
+site("url-aspen", r"aspen-bank\.com", ["L130"], "Открыт сайт aspen-bank.com.")  # A-250 п. 3, A-272: главная, «Сейфовые ячейки» с формой «Сообщить о смерти арендатора»
 
 # ---------- ЗВОНОК ----------
 NO_DIGITS = r"^\D*$"
-rule(id="call-northcare-menu", action="ЗВОНОК", target=r"800\D*555\D*31\D*20", target_label="+7 800 555-31-20 (NorthCare)",
-     accept=[NO_DIGITS], release=[], ok="NorthCare Nutrition, горячая линия: «Справки по партиям: после сигнала введите номер партии с упаковки.»",
-     fail="NorthCare: «Партия с таким номером в реестре не зарегистрирована. Проверьте номер партии на упаковке.»")
-rule(id="call-northcare-0418", action="ЗВОНОК", target=r"800\D*555\D*31\D*20", target_label="+7 800 555-31-20 (NorthCare)",
-     accept=[r"\b0418\b"], release=[], ok="NorthCare: «Партия 0418: комплекс для изоляции, выпущена в марте 2009 года, годен до марта 2011 года. Партия в реестре.»",
-     fail="NorthCare: «Партия с таким номером в реестре не зарегистрирована. Проверьте номер партии на упаковке.»")
-rule(id="call-northcare-0417", action="ЗВОНОК", target=r"800\D*555\D*31\D*20", target_label="+7 800 555-31-20 (NorthCare)",
-     accept=[r"\b0417\b"], release=[], ok="NorthCare: «Партия 0417 в реестре не зарегистрирована. Проверьте номер партии на упаковке.»",
-     fail="NorthCare: «Партия с таким номером в реестре не зарегистрирована. Проверьте номер партии на упаковке.»")
-rule(id="call-colton-menu", action="ЗВОНОК", target=r"495\D*555\D*18\D*44", target_label="+7 495 555-18-44 (Colton Supply)",
-     accept=[NO_DIGITS], release=[], ok="Colton Supply: «Статус заказа: после сигнала введите номер заказа.»",
-     fail="Colton Supply: «Заказ с таким номером не найден.»")
-rule(id="call-colton-2291", action="ЗВОНОК", target=r"495\D*555\D*18\D*44", target_label="+7 495 555-18-44 (Colton Supply)",
-     accept=[r"2291"], release=[], ok="Colton Supply, заказ CS-2291: «Изготовлено по чертежу. Отгружено 11.10.2009. Доставка не выполнена: получатель недоступен. Возвращено на склад 26.10.2009.»",
-     fail="Colton Supply: «Заказ с таким номером не найден.»")
+rule(id="call-healthway-menu", action="ЗВОНОК", target=r"800\D*555\D*31\D*20", target_label="+7 800 555-31-20 (HealthWay)",
+     accept=[NO_DIGITS], release=[], ok="HealthWay, горячая линия: «Справки по партиям: после сигнала введите номер партии с упаковки.»",
+     fail="HealthWay: «Партия с таким номером в реестре не зарегистрирована. Проверьте номер партии на упаковке.»")
+rule(id="call-healthway-0418", action="ЗВОНОК", target=r"800\D*555\D*31\D*20", target_label="+7 800 555-31-20 (HealthWay)",
+     accept=[r"\b0418\b"], release=[], ok="HealthWay: «Партия 0418: комплекс для изоляции, выпущена в марте 2009 года, годен до марта 2011 года. Партия в реестре.»",
+     fail="HealthWay: «Партия с таким номером в реестре не зарегистрирована. Проверьте номер партии на упаковке.»")
+rule(id="call-healthway-0417", action="ЗВОНОК", target=r"800\D*555\D*31\D*20", target_label="+7 800 555-31-20 (HealthWay)",
+     accept=[r"\b0417\b"], release=[], ok="HealthWay: «Партия 0417 в реестре не зарегистрирована. Проверьте номер партии на упаковке.»",
+     fail="HealthWay: «Партия с таким номером в реестре не зарегистрирована. Проверьте номер партии на упаковке.»")
+rule(id="call-mesa-menu", action="ЗВОНОК", target=r"495\D*555\D*18\D*44", target_label="+7 495 555-18-44 (Mesa Supply)",
+     accept=[NO_DIGITS], release=[], ok="Mesa Supply: «Статус заказа: после сигнала введите номер заказа.»",
+     fail="Mesa Supply: «Заказ с таким номером не найден.»")
+rule(id="call-mesa-2291", action="ЗВОНОК", target=r"495\D*555\D*18\D*44", target_label="+7 495 555-18-44 (Mesa Supply)",
+     accept=[r"2291"], release=[], ok="Mesa Supply, заказ CS-2291: «Изготовлено по чертежу. Отгружено 11.10.2009. Доставка не выполнена: получатель недоступен. Возвращено на склад 26.10.2009.»",
+     fail="Mesa Supply: «Заказ с таким номером не найден.»")
 rule(id="call-tom", action="ЗВОНОК", target=r"916\D*555\D*24\D*08", target_label="+7 916 555-24-08",
      accept=[r".*"], release=[], ok="Автоответчик, мужской голос, весёлый: «Привет, вы позвонили Тому и Лее. Нас нет дома — оставьте сообщение.» Сигнал.")
 rule(id="call-ana", action="ЗВОНОК", target=r"926\D*555\D*30\D*14", target_label="+7 926 555-30-14",
@@ -153,8 +153,8 @@ rule(id="call-ana", action="ЗВОНОК", target=r"926\D*555\D*30\D*14", target
 # A-241 п. 4: контакт из листа персонала Дэна (L618); назначение платежа не раскрывается.
 rule(id="call-l-miller", action="ЗВОНОК", target=r"926\D*555\D*47\D*12", target_label="+7 926 555-47-12 (Л. Миллер, Денвер)",
      accept=[r".*"], release=[], ok="Автоответчик, женский голос: «Вы позвонили Миллерам. Оставьте сообщение.» Сигнал.")
-rule(id="call-frontrange", action="ЗВОНОК", target=r"800\D*555\D*84\D*50", target_label="+7 800 555-84-50 (Front Range Savings)",
-     accept=[r".*"], release=[], ok="Front Range Savings, справочная: «Справки по счетам — для клиентов по номеру карты. Сейфовые ячейки: при смерти арендатора — форма „Сообщить о смерти арендатора“ на странице сейфовых ячеек сайта банка.»")
+rule(id="call-aspen", action="ЗВОНОК", target=r"800\D*555\D*84\D*50", target_label="+7 800 555-84-50 (Aspen Bank)",
+     accept=[r".*"], release=[], ok="Aspen Bank, справочная: «Справки по счетам — для клиентов по номеру карты. Сейфовые ячейки: при смерти арендатора — форма „Сообщить о смерти арендатора“ на странице сейфовых ячеек сайта банка.»")
 rule(id="call-clinic", action="ЗВОНОК", target=r"926\D*555\D*01\D*90", target_label="+7 926 555-01-90 (Clínica San Rafael)",
      accept=[r".*"], release=[], ok="Clínica San Rafael, регистратура: «Сведений о пациентах по телефону не сообщаем.»")
 

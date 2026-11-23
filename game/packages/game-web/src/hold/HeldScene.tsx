@@ -65,7 +65,7 @@ export default function HeldThing({ held }: { held: Held }) {
           <Box
             items={items}
             onOpen={open}
-            title="Front Range Savings"
+            title="Aspen Bank"
             note="Ячейка № 845 · вскрыта 17.11.2009"
           />
         ) : box ? (

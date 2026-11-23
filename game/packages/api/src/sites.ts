@@ -28,8 +28,8 @@ export const SITES: readonly Site[] = [
   { domain: 'docs.hexon-bio.com', label: 'docs.hexon-bio', forms: ['hx-archive'], page: 'L735' },
   { domain: 'hexon-bio.com', label: 'hexon-bio', forms: [], page: 'L163' },
   {
-    domain: 'frontrange-savings.com',
-    label: 'frontrange-savings',
+    domain: 'aspen-bank.com',
+    label: 'aspen-bank',
     forms: ['fr-death'],
     page: 'L130',
   },
@@ -39,13 +39,13 @@ export const SITES: readonly Site[] = [
     forms: ['mb-login', 'mb-forgot', 'mb-answer'],
     page: 'L249',
   },
-  { domain: 'fieldworks-radio.com', label: 'fieldworks-radio', forms: [], page: 'L177' },
-  { domain: 'sentinel-labs.net', label: 'sentinel-labs', forms: [], page: 'L272' },
+  { domain: 'radiosolutions-inc.com', label: 'radiosolutions-inc', forms: [], page: 'L177' },
+  { domain: 'octon-labs.net', label: 'octon-labs', forms: [], page: 'L272' },
   { domain: 'the-signal-news.com', label: 'the-signal-news', forms: [], page: 'L296' },
-  // Сайты без замков (NF-B, A-273; TECH_PLAN 4.13): читать; телефоны NorthCare и Colton — на них.
-  { domain: 'pinecell-mobile.com', label: 'pinecell-mobile', forms: [], page: 'L178' },
-  { domain: 'northcare-nutrition.com', label: 'northcare-nutrition', forms: [], page: 'L179' },
-  { domain: 'coltonsupply.com', label: 'coltonsupply', forms: [], page: 'L180' },
+  // Сайты без замков (NF-B, A-273; TECH_PLAN 4.13): читать; телефоны HealthWay и Mesa — на них.
+  { domain: 'skycell-mobile.com', label: 'skycell-mobile', forms: [], page: 'L178' },
+  { domain: 'healthway-nutrition.com', label: 'healthway-nutrition', forms: [], page: 'L179' },
+  { domain: 'mesa-supply.com', label: 'mesa-supply', forms: [], page: 'L180' },
   { domain: 'okrug-bureau.org', label: 'okrug-bureau', forms: [], page: 'L181' },
 ];
 
@@ -136,7 +136,7 @@ export function formAction(
       return { target: 'архив проекта', value: f('password') };
     case 'fr-death':
       return {
-        target: 'frontrange-savings.com — сообщить о смерти арендатора',
+        target: 'aspen-bank.com — сообщить о смерти арендатора',
         value: join(f('box'), f('surname'), f('date')),
       };
     case 'mb-login':

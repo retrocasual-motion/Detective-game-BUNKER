@@ -132,7 +132,7 @@ test('почта: «Забыли пароль?» → контрольный во
   await expect(mb).toHaveURL(/\/mail$/);
   await expect(mb.getByTestId('site-mail')).toBeVisible();
   await mb.getByTestId('site-letter-6').click();
-  await expect(mb.getByTestId('site-letter')).toContainText('j.mercer@sentinel-labs.net');
+  await expect(mb.getByTestId('site-letter')).toContainText('j.mercer@octon-labs.net');
   await mb.getByTestId('site-mail-out').click();
   await expect(mb.getByTestId('site-letter-8')).toContainText('Re: B');
   // Вернулся на главную позже — «Вы вошли», без формы входа (F8).
@@ -144,7 +144,7 @@ test('почта: «Забыли пароль?» → контрольный во
 test('банк: форма «Сообщить о смерти арендатора» — без даты не уходит, неверно — отказ, верно — ячейка вскрыта', async ({
   page,
 }) => {
-  const fr = await site(page, 'frontrange-savings.com');
+  const fr = await site(page, 'aspen-bank.com');
   // Пустая дата — у поля, без сервера: попытка не тратится (UX-4).
   await fill(fr, 'fr-death', { box: '845', surname: 'Коул' });
   await expect(fr.getByTestId('site-fr-death-msg')).toHaveText('Заполните поле «Дата смерти».');
@@ -179,7 +179,7 @@ test.describe('коробка из банка (A-272, AC-4)', () => {
     page,
   }) => {
     await expect(page.getByTestId('container-bank')).toHaveCount(0);
-    const fr = await site(page, 'frontrange-savings.com');
+    const fr = await site(page, 'aspen-bank.com');
     await fill(fr, 'fr-death', { box: '845', surname: 'Коул', date: '13.10.2009' });
     await expect(fr.getByTestId('site-fr-death-msg')).toContainText('Сообщение принято');
     // Вернулся во вкладку игры — коробка на столе (лоток пуст: всё в коробке).
@@ -215,13 +215,13 @@ test.describe('коробка из банка (A-272, AC-4)', () => {
   });
 });
 
-test('сайты без замков (NF-B, A-273): оператор, производитель, поставщик, бюро — по адресу; телефоны NorthCare и Colton — на сайте', async ({
+test('сайты без замков (NF-B, A-273): оператор, производитель, поставщик, бюро — по адресу; телефоны HealthWay и Mesa — на сайте', async ({
   page,
 }) => {
   const pages: [string, string][] = [
-    ['pinecell-mobile.com', 'lawful@pinecell-mobile.com'],
-    ['northcare-nutrition.com', '+7 800 555-31-20'],
-    ['coltonsupply.com', '+7 495 555-18-44'],
+    ['skycell-mobile.com', 'lawful@skycell-mobile.com'],
+    ['healthway-nutrition.com', '+7 800 555-31-20'],
+    ['mesa-supply.com', '+7 495 555-18-44'],
     ['okrug-bureau.org', 'duty@okrug-bureau.org'],
   ];
   for (const [address, text] of pages) {

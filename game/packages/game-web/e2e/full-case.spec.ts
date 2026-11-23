@@ -516,7 +516,7 @@ test('QA-C: всё дело через интерфейс — от нового 
     await opened(page, ['L990']);
   });
 
-  await test.step('телефон на столе: NorthCare, номер партии 0418 (линии ничего не открывают)', async () => {
+  await test.step('телефон на столе: HealthWay, номер партии 0418 (линии ничего не открывают)', async () => {
     await toDesk(page);
     await handsFree(page);
     await page.getByTestId('desk-phone').click();
@@ -568,7 +568,7 @@ test('QA-C: всё дело через интерфейс — от нового 
     // Ссылки в стартовых листах.
     tabs.push(await siteByLink(page, '02', 'vaultline-program.com'));
     await opened(page, ['L101']);
-    tabs.push(await siteByLink(page, '05', 'pinecell-mobile.com'));
+    tabs.push(await siteByLink(page, '05', 'skycell-mobile.com'));
     await opened(page, ['L178']);
     tabs.push(await siteByLink(page, '01', 'okrug-bureau.org'));
     await opened(page, ['L181']);
@@ -578,11 +578,11 @@ test('QA-C: всё дело через интерфейс — от нового 
     // набирает их в адресной строке браузера компьютера.
     for (const [address, got] of [
       ['mailbridge.net', 'L249'],
-      ['sentinel-labs.net', 'L272'],
-      ['frontrange-savings.com', 'L130'],
-      ['fieldworks-radio.com', 'L177'],
-      ['northcare-nutrition.com', 'L179'],
-      ['coltonsupply.com', 'L180'],
+      ['octon-labs.net', 'L272'],
+      ['aspen-bank.com', 'L130'],
+      ['radiosolutions-inc.com', 'L177'],
+      ['healthway-nutrition.com', 'L179'],
+      ['mesa-supply.com', 'L180'],
       ['the-signal-news.com', 'L296'],
     ] as const) {
       tabs.push(await siteByAddressBar(page, address));
@@ -656,7 +656,7 @@ test('QA-C: всё дело через интерфейс — от нового 
   });
 
   await test.step('банк: «Сообщить о смерти арендатора» 845/Коул/13.10.2009 → коробка на столе (L460–L462)', async () => {
-    const fr = await siteByAddressBar(page, 'frontrange-savings.com');
+    const fr = await siteByAddressBar(page, 'aspen-bank.com');
     await fill(fr, 'fr-death', { box: '845', surname: 'Коул', date: '13.10.2009' });
     await expect(fr.getByTestId('site-fr-death-msg')).toContainText('Сообщение принято');
     await opened(page, ['L460', 'L461', 'L462']);

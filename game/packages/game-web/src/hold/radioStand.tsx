@@ -359,7 +359,7 @@ function Recorder({ on, busy, onFocus }: UnitProps) {
       paintTexture(0.9, 0.16, '#d8dadc', ({ ctx, w, h }) => {
         ctx.fillStyle = '#2a2c2f';
         ctx.font = `700 ${Math.round(h * 0.34)}px Tahoma, sans-serif`;
-        ctx.fillText('FIELDWORKS RADIO · RL-2', w * 0.04, h * 0.3, w * 0.92);
+        ctx.fillText('RADIO SOLUTIONS · RL-2', w * 0.04, h * 0.3, w * 0.92);
       }),
     [],
   );

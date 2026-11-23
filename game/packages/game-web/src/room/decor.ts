@@ -482,7 +482,7 @@ export function deskObjects(
       ? [
           {
             key: 'bank-box',
-            label: 'Коробка «Front Range Savings · ячейка № 845» — вскрыть',
+            label: 'Коробка «Aspen Bank · ячейка № 845» — вскрыть',
             boxes: [
               // 20 × 14 × 10 см: внутри проигрыватель микрокассет и кассета.
               box(BX, BZ, 0.2, 0.14, 0.1, col('--color-box'), onPapers),
