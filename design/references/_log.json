@@ -826,5 +826,95 @@
   "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S2-4",
   "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
   "verdict": "материалы и свет хороши; геометрия старая (8 м, лестница в коридоре, проём не читается)"
+ },
+ {
+  "file": "references/places/S3_eaststair_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S3-1",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "автор: не понятно, как падает Адам — нужна схема и «до/после»"
+ },
+ {
+  "file": "references/places/S3_eaststair_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S3-2",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "угловая стойка на плите хорошо видна"
+ },
+ {
+  "file": "references/places/S3_eaststair_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S3-3",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "автор: не понятно, как падает Адам — нужна схема и «до/после»"
+ },
+ {
+  "file": "references/places/S4_eaststair_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S4-1",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "автор: не понятно, как падает Адам — нужна схема и «до/после»"
+ },
+ {
+  "file": "references/places/S4_eaststair_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S4-2",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "лучший: угол площадки, стойка на литой плите, проём и марш — основа для «до/после»"
+ },
+ {
+  "file": "references/places/S4_eaststair_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S4-3",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "автор: не понятно, как падает Адам — нужна схема и «до/после»"
+ },
+ {
+  "file": "references/places/S5_eaststair_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S5-1",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "автор: не понятно, как падает Адам — нужна схема и «до/после»"
+ },
+ {
+  "file": "references/places/S5_eaststair_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S5-2",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "автор: не понятно, как падает Адам — нужна схема и «до/после»"
+ },
+ {
+  "file": "references/places/S5_eaststair_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S5-3",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "автор: не понятно, как падает Адам — нужна схема и «до/после»"
  }
 ]
