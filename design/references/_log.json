@@ -1,0 +1,920 @@
+[
+ {
+  "file": "references/places/G1_cabinet_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G1",
+  "refs": [
+   "P18_cabinet_light",
+   "P13_desk_board",
+   "P41_office_phone"
+  ],
+  "verdict": "переделать: стены слева и справа (автор 23.11), лица на фото доски"
+ },
+ {
+  "file": "references/places/G1_cabinet_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G1",
+  "refs": [
+   "P18_cabinet_light",
+   "P13_desk_board",
+   "P41_office_phone"
+  ],
+  "verdict": "переделать: стены слева и справа (автор 23.11)"
+ },
+ {
+  "file": "references/places/G1_cabinet_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G1",
+  "refs": [
+   "P18_cabinet_light",
+   "P13_desk_board",
+   "P41_office_phone"
+  ],
+  "verdict": "переделать: стены слева и справа (автор 23.11)"
+ },
+ {
+  "file": "references/places/G1_cabinet_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G1",
+  "refs": [
+   "P18_cabinet_light",
+   "P13_desk_board",
+   "P41_office_phone"
+  ],
+  "verdict": "брак: надпись на этикетке пакета (запрет 11); стены"
+ },
+ {
+  "file": "references/places/G2_desktop_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G2",
+  "refs": [
+   "P23_desk_top",
+   "P41_office_phone"
+  ],
+  "verdict": "берём: чисто, круг лампы, предметы 2009"
+ },
+ {
+  "file": "references/places/G2_desktop_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G2",
+  "refs": [
+   "P23_desk_top",
+   "P41_office_phone"
+  ],
+  "verdict": "берём: диктофон и пакет с биркой читаются"
+ },
+ {
+  "file": "references/places/G2_desktop_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G2",
+  "refs": [
+   "P23_desk_top",
+   "P41_office_phone"
+  ],
+  "verdict": "с оговоркой: кольца от кружки — лишнее (запрет 17)"
+ },
+ {
+  "file": "references/places/G2_desktop_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G2",
+  "refs": [
+   "P23_desk_top",
+   "P41_office_phone"
+  ],
+  "verdict": "брак: рукописные стикеры и бирка, кружка, ключи, флешка — лишнее (запреты 11, 17)"
+ },
+ {
+  "file": "references/objects/G3_microcassette_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G3",
+  "refs": [
+   "R4_sony_microcassette",
+   "P07_microcassette_black",
+   "P38_microcassette_silver"
+  ],
+  "verdict": "берём: форма ближе всего к реальному образцу"
+ },
+ {
+  "file": "references/objects/G3_microcassette_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G3",
+  "refs": [
+   "R4_sony_microcassette",
+   "P07_microcassette_black",
+   "P38_microcassette_silver"
+  ],
+  "verdict": "берём: износ хромированных углов"
+ },
+ {
+  "file": "references/objects/G3_microcassette_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G3",
+  "refs": [
+   "R4_sony_microcassette",
+   "P07_microcassette_black",
+   "P38_microcassette_silver"
+  ],
+  "verdict": "с оговоркой: чисто, но износа мало"
+ },
+ {
+  "file": "references/objects/G3_microcassette_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G3",
+  "refs": [
+   "R4_sony_microcassette",
+   "P07_microcassette_black",
+   "P38_microcassette_silver"
+  ],
+  "verdict": "берём: износ, пыль в решётке"
+ },
+ {
+  "file": "references/objects/G4_penrecorder_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G4",
+  "refs": [
+   "P40_pen_recorder"
+  ],
+  "verdict": "берём: USB в колпачке, как в промпте"
+ },
+ {
+  "file": "references/objects/G4_penrecorder_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G4",
+  "refs": [
+   "P40_pen_recorder"
+  ],
+  "verdict": "с оговоркой: контакты в колпачке странные, мелкая надпись у переключателя"
+ },
+ {
+  "file": "references/objects/G4_penrecorder_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G4",
+  "refs": [
+   "P40_pen_recorder"
+  ],
+  "verdict": "брак: USB на корпусе, колпачок пустой — не по промпту"
+ },
+ {
+  "file": "references/objects/G4_penrecorder_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G4",
+  "refs": [
+   "P40_pen_recorder"
+  ],
+  "verdict": "с оговоркой: два светодиода, красный и синий"
+ },
+ {
+  "file": "references/objects/G5_evidencebag_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G5",
+  "refs": [
+   "P01_evidence_bag",
+   "P09_evidence_bag_form",
+   "P15_manila_tag"
+  ],
+  "verdict": "берём: пакет, лента, пустая этикетка, бирка"
+ },
+ {
+  "file": "references/objects/G5_evidencebag_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G5",
+  "refs": [
+   "P01_evidence_bag",
+   "P09_evidence_bag_form",
+   "P15_manila_tag"
+  ],
+  "verdict": "брак: оранжевая деталь на диктофоне — лишнее"
+ },
+ {
+  "file": "references/objects/G5_evidencebag_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G5",
+  "refs": [
+   "P01_evidence_bag",
+   "P09_evidence_bag_form",
+   "P15_manila_tag"
+  ],
+  "verdict": "брак: надпись-марка на диктофоне (запрет 11)"
+ },
+ {
+  "file": "references/objects/G5_evidencebag_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G5",
+  "refs": [
+   "P01_evidence_bag",
+   "P09_evidence_bag_form",
+   "P15_manila_tag"
+  ],
+  "verdict": "с оговоркой: большой бланк в пакете — как у лаборатории, графы лишние (ART-40)"
+ },
+ {
+  "file": "references/places/K1_cabinet_chair_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K1",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "нравится автору (в чате — вариант 4): стол и лампа; свет доски — бра по бокам, слишком отдельный"
+ },
+ {
+  "file": "references/places/K1_cabinet_chair_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K1",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "нравится автору (в чате — вариант 1): стол и лампа; надпись на этикетке пакета (запрет 11); свет доски — бра по бокам"
+ },
+ {
+  "file": "references/places/K1_cabinet_chair_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K1",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "с оговоркой: стена слева освещена"
+ },
+ {
+  "file": "references/places/K1_cabinet_chair_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K1",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "с оговоркой: бра по бокам доски"
+ },
+ {
+  "file": "references/places/K2_cabinet_wide_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K2",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "с оговоркой: бра по бокам доски"
+ },
+ {
+  "file": "references/places/K2_cabinet_wide_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K2",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "с оговоркой: бра по бокам, шкаф слева"
+ },
+ {
+  "file": "references/places/K2_cabinet_wide_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K2",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "с оговоркой: лампы сверху — ближе к нужному свету"
+ },
+ {
+  "file": "references/places/K2_cabinet_wide_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K2",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "с оговоркой: бра по бокам"
+ },
+ {
+  "file": "references/places/K3_cabinet_toplight_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN3_cabinet_board.txt, строка K3",
+  "refs": "K1_cabinet_chair_v1, K1_cabinet_chair_v2 (генерации), UI02, UI04, UI05, P08",
+  "verdict": "нравится автору: стена и свет; лампы поднять выше кадра, меньше тени сверху"
+ },
+ {
+  "file": "references/places/K3_cabinet_toplight_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN3_cabinet_board.txt, строка K3",
+  "refs": "K1_cabinet_chair_v1, K1_cabinet_chair_v2 (генерации), UI02, UI04, UI05, P08",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K3_cabinet_toplight_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN3_cabinet_board.txt, строка K3",
+  "refs": "K1_cabinet_chair_v1, K1_cabinet_chair_v2 (генерации), UI02, UI04, UI05, P08",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K3_cabinet_toplight_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN3_cabinet_board.txt, строка K3",
+  "refs": "K1_cabinet_chair_v1, K1_cabinet_chair_v2 (генерации), UI02, UI04, UI05, P08",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K4_cabinet_pendants_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN3_cabinet_board.txt, строка K4",
+  "refs": "K1_cabinet_chair_v1, K1_cabinet_chair_v2 (генерации), UI02, UI04, UI05, P08",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K4_cabinet_pendants_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN3_cabinet_board.txt, строка K4",
+  "refs": "K1_cabinet_chair_v1, K1_cabinet_chair_v2 (генерации), UI02, UI04, UI05, P08",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K4_cabinet_pendants_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN3_cabinet_board.txt, строка K4",
+  "refs": "K1_cabinet_chair_v1, K1_cabinet_chair_v2 (генерации), UI02, UI04, UI05, P08",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K4_cabinet_pendants_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN3_cabinet_board.txt, строка K4",
+  "refs": "K1_cabinet_chair_v1, K1_cabinet_chair_v2 (генерации), UI02, UI04, UI05, P08",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K5_cabinet_lamps_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN4_cabinet_lamps.txt, K5-1",
+  "refs": "K3_cabinet_toplight_v1 (генерация)",
+  "verdict": "нравится автору: лампы не видны, верх доски светлее; доска слишком длинная — в игре пробка 16:9 (WB-C)"
+ },
+ {
+  "file": "references/places/K5_cabinet_lamps_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN4_cabinet_lamps.txt, K5-2",
+  "refs": "K3_cabinet_toplight_v1 (генерация)",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K5_cabinet_lamps_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN4_cabinet_lamps.txt, K5-3",
+  "refs": "K3_cabinet_toplight_v1 (генерация)",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K5_cabinet_lamps_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN4_cabinet_lamps.txt, K5-4",
+  "refs": "K3_cabinet_toplight_v1 (генерация)",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K6_cabinet_board16x9_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN5_cabinet_board16x9.txt, K6-1",
+  "refs": "K5_cabinet_lamps_v1 (генерация)",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K6_cabinet_board16x9_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN5_cabinet_board16x9.txt, K6-2",
+  "refs": "K5_cabinet_lamps_v1 (генерация)",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K6_cabinet_board16x9_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN5_cabinet_board16x9.txt, K6-3",
+  "refs": "K5_cabinet_lamps_v1 (генерация)",
+  "verdict": "нравится автору: доска уже (всё ещё ~2,5:1, не 16:9); по бокам пустовато"
+ },
+ {
+  "file": "references/places/K6_cabinet_board16x9_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN5_cabinet_board16x9.txt, K6-4",
+  "refs": "K5_cabinet_lamps_v1 (генерация)",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K7_cabinet_sides_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN6_cabinet_sides.txt, K7-1",
+  "refs": "K6_cabinet_board16x9_v3 (генерация), P13_desk_board, P39_dark_room_wall_lamps, P18_cabinet_light",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K7_cabinet_sides_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN6_cabinet_sides.txt, K7-2",
+  "refs": "K6_cabinet_board16x9_v3 (генерация), P13_desk_board, P39_dark_room_wall_lamps, P18_cabinet_light",
+  "verdict": "ВЫБРАН автором 23.11 («супер, очень нравится»): референс кабинета — ночь, зелёная лампа, свет сверху на доску, плащ слева, картотека и полка справа"
+ },
+ {
+  "file": "references/places/K7_cabinet_sides_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN6_cabinet_sides.txt, K7-3",
+  "refs": "K6_cabinet_board16x9_v3 (генерация), P13_desk_board, P39_dark_room_wall_lamps, P18_cabinet_light",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K7_cabinet_sides_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN6_cabinet_sides.txt, K7-4",
+  "refs": "K6_cabinet_board16x9_v3 (генерация), P13_desk_board, P39_dark_room_wall_lamps, P18_cabinet_light",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/M1_stair_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M1-1",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/M1_stair_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M1-2",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/M2_medroom_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M2-1",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: яркий свет в медкабинете логичен; общее — слишком стерильно"
+ },
+ {
+  "file": "references/places/M2_medroom_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M2-2",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: яркий свет в медкабинете логичен; общее — слишком стерильно"
+ },
+ {
+  "file": "references/places/M3_coleoffice_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M3-1",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: не тот кабинет — нужен большой кабинет руководителя, стол по центру у дальней стены"
+ },
+ {
+  "file": "references/places/M3_coleoffice_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M3-2",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: не тот кабинет — нужен большой кабинет руководителя, стол по центру у дальней стены"
+ },
+ {
+  "file": "references/places/M4_radioroom_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M4-1",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/M4_radioroom_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M4-2",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/M5_technical_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M5-1",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/M5_technical_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M5-2",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/M6_corridor_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M6-1",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/M6_corridor_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN7_bunker_places.txt, M6-2",
+  "refs": "R2/R1 реальные снимки (см. промпт)",
+  "verdict": "автор: слишком стерильно, светло и плоско, безжизненно — переделать мягче, с износом"
+ },
+ {
+  "file": "references/places/A1_coleoffice_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN8_cole_office.txt, A1-1",
+  "refs": "R2_titan_control_room, R2_sc_kitchen_4, P13_desk_board",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/A1_coleoffice_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN8_cole_office.txt, A1-2",
+  "refs": "R2_titan_control_room, R2_sc_kitchen_4, P13_desk_board",
+  "verdict": "автору нравится архитектура: арки, трубы"
+ },
+ {
+  "file": "references/places/A1_coleoffice_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN8_cole_office.txt, A1-3",
+  "refs": "R2_titan_control_room, R2_sc_kitchen_4, P13_desk_board",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/A1_coleoffice_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN8_cole_office.txt, A1-4",
+  "refs": "R2_titan_control_room, R2_sc_kitchen_4, P13_desk_board",
+  "verdict": "автору нравятся предметы и расположение; шкаф — влево, принтер — вправо, монитор — на стол"
+ },
+ {
+  "file": "references/places/A2_coleoffice_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN9_cole_office_layout.txt, A2-1",
+  "refs": "A1_coleoffice_v4, A1_coleoffice_v2 (генерации)",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/A2_coleoffice_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN9_cole_office_layout.txt, A2-2",
+  "refs": "A1_coleoffice_v4, A1_coleoffice_v2 (генерации)",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/A2_coleoffice_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN9_cole_office_layout.txt, A2-3",
+  "refs": "A1_coleoffice_v4, A1_coleoffice_v2 (генерации)",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/A2_coleoffice_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN9_cole_office_layout.txt, A2-4",
+  "refs": "A1_coleoffice_v4, A1_coleoffice_v2 (генерации)",
+  "verdict": "ВЫБРАН автором 23.11 («похоже на правду»): кабинет руководителя — шкаф слева, принтер справа, монитор на столе"
+ },
+ {
+  "file": "references/places/S1_eaststair_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S1-1",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "материалы и свет хороши; геометрия старая (8 м, лестница в коридоре, проём не читается)"
+ },
+ {
+  "file": "references/places/S1_eaststair_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S1-2",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "материалы и свет хороши; геометрия старая (8 м, лестница в коридоре, проём не читается)"
+ },
+ {
+  "file": "references/places/S1_eaststair_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S1-3",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "материалы и свет хороши; геометрия старая (8 м, лестница в коридоре, проём не читается)"
+ },
+ {
+  "file": "references/places/S1_eaststair_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S1-4",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "ближе всего: площадка с ограждением над проёмом, вниз виден марш; материалы и свет хороши"
+ },
+ {
+  "file": "references/places/S2_eaststair_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S2-1",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "материалы и свет хороши; геометрия старая (8 м, лестница в коридоре, проём не читается)"
+ },
+ {
+  "file": "references/places/S2_eaststair_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S2-2",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "материалы и свет хороши; геометрия старая (8 м, лестница в коридоре, проём не читается)"
+ },
+ {
+  "file": "references/places/S2_eaststair_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S2-3",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "брак: на стене нарисован номер «S2-3» (запрет 11)"
+ },
+ {
+  "file": "references/places/S2_eaststair_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S2-4",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "материалы и свет хороши; геометрия старая (8 м, лестница в коридоре, проём не читается)"
+ },
+ {
+  "file": "references/places/S3_eaststair_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S3-1",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "автор: не понятно, как падает Адам — нужна схема и «до/после»"
+ },
+ {
+  "file": "references/places/S3_eaststair_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S3-2",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "угловая стойка на плите хорошо видна"
+ },
+ {
+  "file": "references/places/S3_eaststair_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S3-3",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "автор: не понятно, как падает Адам — нужна схема и «до/после»"
+ },
+ {
+  "file": "references/places/S4_eaststair_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S4-1",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "автор: не понятно, как падает Адам — нужна схема и «до/после»"
+ },
+ {
+  "file": "references/places/S4_eaststair_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S4-2",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "лучший: угол площадки, стойка на литой плите, проём и марш — основа для «до/после»"
+ },
+ {
+  "file": "references/places/S4_eaststair_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S4-3",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "автор: не понятно, как падает Адам — нужна схема и «до/после»"
+ },
+ {
+  "file": "references/places/S5_eaststair_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S5-1",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "автор: не понятно, как падает Адам — нужна схема и «до/после»"
+ },
+ {
+  "file": "references/places/S5_eaststair_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S5-2",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "автор: не понятно, как падает Адам — нужна схема и «до/после»"
+ },
+ {
+  "file": "references/places/S5_eaststair_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S5-3",
+  "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
+  "verdict": "автор: не понятно, как падает Адам — нужна схема и «до/после»"
+ }
+]
