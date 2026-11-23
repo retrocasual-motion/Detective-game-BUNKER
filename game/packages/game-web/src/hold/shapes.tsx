@@ -114,6 +114,9 @@ export function useActive(
   return { anchor, hover, handlers };
 }
 
+/** Часть, которую луч мыши не ловит (видимая, но не для захвата). */
+const noHit = () => {};
+
 /** Тень под краями клапана — краской на лицевой стороне (клапан той же бумаги, край иначе не виден). */
 export function paintFlapShadow(ctx: CanvasRenderingContext2D, w: number, d: number) {
   ctx.save();
@@ -179,8 +182,17 @@ export function EnvelopeFlap({
         <planeGeometry args={[w * 0.8, 0.035]} />
         <meshBasicMaterial color="#4a3820" />
       </mesh>
+      {/* Зона захвата — на месте закрытого клапана и неподвижна: приподнятый при наведении клапан
+          не уходит из-под мыши (иначе наведение мигает и нажатие попадает мимо — малый конверт на
+          столе). */}
+      <mesh position={[0, h / 2, z + 0.03]} {...pull.handlers}>
+        <shapeGeometry args={[shape]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} side={DoubleSide} />
+      </mesh>
+      {/* Сам клапан и верхняя половина печати лучом не ловятся: поднятый клапан не должен
+          заслонять зону захвата (у вещи в руках луч идёт по всем частям вещи). */}
       <group ref={hinge} position={[0, h / 2, z + 0.004]}>
-        <mesh {...pull.handlers}>
+        <mesh raycast={noHit}>
           <shapeGeometry args={[shape]} />
           <meshStandardMaterial
             color={FLAP}
@@ -191,7 +203,7 @@ export function EnvelopeFlap({
           />
         </mesh>
         {seal && (
-          <mesh position={[0, -depth, 0.012]} rotation={[Math.PI / 2, 0, 0]} {...pull.handlers}>
+          <mesh position={[0, -depth, 0.012]} rotation={[Math.PI / 2, 0, 0]} raycast={noHit}>
             <cylinderGeometry args={[R, R, 0.024, 32, 1, false, Math.PI / 2, Math.PI]} />
             <meshStandardMaterial
               color={SEAL}

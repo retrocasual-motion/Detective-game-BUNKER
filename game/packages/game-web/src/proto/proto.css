@@ -1,0 +1,145 @@
+/* Прототип 3D-стола — серые формы, без дизайна. */
+.proto-gl {
+  position: absolute;
+  inset: 0;
+}
+.proto-gl canvas {
+  display: block;
+}
+
+/* Стена — упрощённая доска: пробка, карточки людей и материалов, группа конверта. */
+.proto-board {
+  position: absolute;
+  inset: 0;
+}
+.proto-cork {
+  position: absolute;
+  inset: 2.5% 2%;
+  background: #8a6d4a;
+  border: 10px solid #4b3a28;
+  border-radius: 3px;
+}
+.proto-card {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 6px 7px;
+  background: #efe9dc;
+  color: #1d1d1d;
+  font:
+    11px / 1.25 system-ui,
+    sans-serif;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 35%);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.proto-card b {
+  font:
+    700 12px Georgia,
+    serif;
+}
+.proto-person {
+  align-items: center;
+  text-align: center;
+  justify-content: flex-end;
+}
+.proto-face {
+  flex: 1;
+  width: 70%;
+  background: #9a9fa4;
+  border-radius: 2px;
+}
+.proto-group {
+  position: absolute;
+  padding: 3px 8px;
+  background: #e9e1c9;
+  color: #1d1d1d;
+  font:
+    600 12px system-ui,
+    sans-serif;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 35%);
+}
+.proto-fresh {
+  animation: proto-glow 2.2s ease-out;
+}
+@keyframes proto-glow {
+  0% {
+    box-shadow:
+      0 0 0 3px #f3c969,
+      0 0 22px 6px rgb(243 201 105 / 80%);
+  }
+  100% {
+    box-shadow: 0 2px 4px rgb(0 0 0 / 35%);
+  }
+}
+
+/* Подсказка прототипа (это не интерфейс игры — пояснение для проверки). */
+.proto-help {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 300px;
+  padding: 8px 10px;
+  background: rgb(20 22 25 / 78%);
+  color: #e8e4da;
+  font:
+    12px / 1.35 system-ui,
+    sans-serif;
+  border-radius: 6px;
+  pointer-events: auto;
+  z-index: 5;
+}
+.proto-help button {
+  align-self: flex-start;
+  margin-top: 4px;
+  font: inherit;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+
+/* Лист крупно. */
+.proto-viewer {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgb(10 11 12 / 72%);
+}
+.proto-sheet {
+  width: min(640px, 92vw);
+  max-height: 82vh;
+  overflow: auto;
+  padding: 28px 34px;
+  background: #efe9dc;
+  color: #1d1d1d;
+  font:
+    15px / 1.5 Georgia,
+    serif;
+  box-shadow: 0 10px 40px rgb(0 0 0 / 60%);
+}
+.proto-sheet header {
+  font-weight: 700;
+  font-size: 17px;
+  margin-bottom: 12px;
+}
+.proto-sheet h3 {
+  font-size: 15px;
+  margin: 12px 0 4px;
+}
+.proto-sheet p {
+  margin: 0 0 6px;
+}
+.proto-viewer-hint {
+  color: #cfc9bd;
+  font:
+    13px system-ui,
+    sans-serif;
+}
