@@ -266,5 +266,85 @@
    "P15_manila_tag"
   ],
   "verdict": "с оговоркой: большой бланк в пакете — как у лаборатории, графы лишние (ART-40)"
+ },
+ {
+  "file": "references/places/K1_cabinet_chair_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K1",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "нравится автору (вариант 1): стол и лампа; свет доски — бра по бокам, слишком отдельный"
+ },
+ {
+  "file": "references/places/K1_cabinet_chair_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K1",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "с оговоркой: надпись на этикетке пакета (запрет 11)"
+ },
+ {
+  "file": "references/places/K1_cabinet_chair_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K1",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "с оговоркой: стена слева освещена"
+ },
+ {
+  "file": "references/places/K1_cabinet_chair_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K1",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "нравится автору (вариант 4): стол и лампа; свет доски — бра по бокам"
+ },
+ {
+  "file": "references/places/K2_cabinet_wide_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K2",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "с оговоркой: бра по бокам доски"
+ },
+ {
+  "file": "references/places/K2_cabinet_wide_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K2",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "с оговоркой: бра по бокам, шкаф слева"
+ },
+ {
+  "file": "references/places/K2_cabinet_wide_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K2",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "с оговоркой: лампы сверху — ближе к нужному свету"
+ },
+ {
+  "file": "references/places/K2_cabinet_wide_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K2",
+  "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
+  "verdict": "с оговоркой: бра по бокам"
  }
 ]
