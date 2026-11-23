@@ -275,7 +275,7 @@
   "resolution": "2k",
   "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K1",
   "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
-  "verdict": "нравится автору (вариант 1): стол и лампа; свет доски — бра по бокам, слишком отдельный"
+  "verdict": "нравится автору (в чате — вариант 4): стол и лампа; свет доски — бра по бокам, слишком отдельный"
  },
  {
   "file": "references/places/K1_cabinet_chair_v2.png",
@@ -285,7 +285,7 @@
   "resolution": "2k",
   "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K1",
   "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
-  "verdict": "с оговоркой: надпись на этикетке пакета (запрет 11)"
+  "verdict": "нравится автору (в чате — вариант 1): стол и лампа; надпись на этикетке пакета (запрет 11); свет доски — бра по бокам"
  },
  {
   "file": "references/places/K1_cabinet_chair_v3.png",
@@ -305,7 +305,7 @@
   "resolution": "2k",
   "prompt": "design/references/CHAT_PASTE_GEN2_cabinet.txt, строка K1",
   "refs": "P39_dark_room_wall_lamps, P13_desk_board, G1_cabinet_v2 (генерация), P41_office_phone",
-  "verdict": "нравится автору (вариант 4): стол и лампа; свет доски — бра по бокам"
+  "verdict": "с оговоркой: бра по бокам доски"
  },
  {
   "file": "references/places/K2_cabinet_wide_v1.png",
