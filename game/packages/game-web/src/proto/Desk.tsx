@@ -6,15 +6,15 @@ import { BOARD_SCALE, type Pose, type Room, screenToBoard } from '../room/camera
 import type { DeskObject } from '../room/decor.ts';
 import { cardH, cardW } from './Board.tsx';
 import {
+  allowed,
   heights,
   nearestFree,
   overlap,
   type Piece,
   pileOf,
+  plan,
   type Rect,
-  type SteerMemo,
   scatter,
-  steer,
   topAt,
   type Zone,
 } from './deskWorld.ts';
@@ -52,7 +52,7 @@ export interface Material {
 }
 
 /** Подъём вещи в руке над тем, что под ней, м: чуть-чуть — видно, что взята (автор 23.11). */
-const LIFT = 0.008;
+const LIFT = 0.02;
 /** Сколько держать, чтобы взять вместе с тем, что лежит сверху, мс. */
 const HOLD_PILE_MS = 400;
 /** Порог протяжки, px. */
@@ -80,12 +80,11 @@ interface Drag {
   vx: number;
   vz: number;
   /** Как обходит устройство (помнится между кадрами). */
-  memo: SteerMemo;
   /** Устройства, которых взятая вещь касалась в начале (лист под телефоном): не мешают, пока касается. */
   pass: Set<string>;
-  /** Что лежало на взятом листе: пока лист под ними — выезжает снизу, они стоят. */
-  above: Set<string>;
-  under: boolean;
+  /** Можно ли стоять со сдвигом — запомнено на эту протяжку (поиск пути проверяет много мест). */
+  cache: Map<string, boolean>;
+  cacheKey: string;
 }
 
 interface Press {
@@ -182,6 +181,7 @@ export function Desk({
         minY: Number.NEGATIVE_INFINITY,
         cur: new Vector3(),
         onDesk: true,
+        floorY: -room.deskY,
         mode: 'rest',
       };
       targets.current.set(id, t);
@@ -282,16 +282,10 @@ export function Desk({
       x: group[0]?.x ?? 0,
       z: group[0]?.z ?? 0,
     };
-    // Взяли лист из-под других (не всю стопку) — он выезжает снизу; иначе — сразу сверху всего.
-    const above = new Set(
-      st.pile
-        ? []
-        : pileOf(all, st.id)
-            .map((q) => q.id)
-            .filter((id) => !ids.includes(id)),
-    );
+    // Взял — всегда сверху всего (автор 23.11: «под низ положить нельзя»): в руке рисуется поверх
+    // соседних, поднимается плавно — стопка под ним не шевелится.
     let top = Math.max(0, ...all.map((q) => q.layer));
-    const layer = new Map(above.size ? [] : ids.map((id) => [id, ++top]));
+    const layer = new Map(ids.map((id) => [id, ++top]));
     drag.current = {
       ids,
       base: new Map(group.map((q) => [q.id, { x: q.x, z: q.z }])),
@@ -300,9 +294,8 @@ export function Desk({
       wall: null,
       vx: 0,
       vz: 0,
-      above,
-      under: above.size > 0,
-      memo: {},
+      cache: new Map(),
+      cacheKey: '',
       pass: new Set(
         all
           .filter((q) => DEVICE_KIND[q.id] && !ids.includes(q.id))
@@ -421,6 +414,15 @@ export function Desk({
         ps.current.map((q) => ({ id: q.id, x: q.x, z: q.z, w: q.w, d: q.d, rot: q.rot })),
       pile: (id: string) => pileOf(ps.current, id).map((q) => q.id),
       blocked: () => blocked,
+      // Для проверок: положить вещь сюда, поверх всего (как будто её положили рукой).
+      place: (id: string, x: number, z: number) => {
+        const all = ps.current;
+        const top = Math.max(0, ...all.map((q) => q.layer)) + 1;
+        const next = all.map((q) => (q.id === id ? { ...q, x, z, layer: top } : q));
+        ps.current = next;
+        setPieces(next);
+      },
+      layers: () => ps.current.map((q) => [q.id, q.layer]),
       // Где вещь показана сейчас (px three.js) и куда её ведут — для проверки.
       cur: (id: string) => {
         const t = targets.current.get(id);
@@ -432,12 +434,14 @@ export function Desk({
             }
           : null;
       },
-      dragOff: () => (drag.current ? { ...drag.current.off, under: drag.current.under } : null),
+      dragOff: () => (drag.current ? { ...drag.current.off } : null),
       // Высота вещи на экране сейчас (px three.js) — для проверки плавности.
       y: (id: string) => targets.current.get(id)?.cur.y ?? null,
       // Пары вещей на столе, которые сейчас врезаются друг в друга (по показанному положению).
       intersections: () => {
-        const list = ps.current.filter((q) => !flying.current.has(q.id));
+        // Вещь в руке рисуется поверх соседних — её не считаем.
+        const inHand = new Set(drag.current?.ids ?? []);
+        const list = ps.current.filter((q) => !flying.current.has(q.id) && !inHand.has(q.id));
         const out: string[] = [];
         for (let i = 0; i < list.length; i++)
           for (let j = i + 1; j < list.length; j++) {
@@ -470,11 +474,10 @@ export function Desk({
     const d = drag.current;
     const dragKey = d ? d.ids.join(',') : '';
     const hc = hCache.current;
-    if (hc.key !== all || hc.drag !== `${dragKey}${d?.under ? ':under' : ''}`) {
+    if (hc.key !== all || hc.drag !== dragKey) {
       hc.key = all;
-      hc.drag = `${dragKey}${d?.under ? ':under' : ''}`;
-      // Лист выезжает из-под стопки — стопка стоит, как стояла (лист в расчёте на прежнем месте).
-      hc.h = heights(d && !d.under ? all.filter((q) => !d.ids.includes(q.id)) : all);
+      hc.drag = dragKey;
+      hc.h = heights(d ? all.filter((q) => !d.ids.includes(q.id)) : all);
     }
 
     // Конверт: опечатан — лежит; вскрыт — уходит (сжимается и пропадает).
@@ -506,42 +509,38 @@ export function Desk({
           return pc && b ? [{ ...pc, x: b.x + d.off.x, z: b.z + d.off.z }] : [];
         });
         const want = { x: pt.x - d.grab0.x, z: pt.z - d.grab0.z };
-        // Край стола и вещи следователя — упор; устройство — обтекает по контуру (над ним не бывает,
-        // автор 23.11); над бумагами — проходит.
+        // Край стола, вещи следователя и устройства — не пройти: путь к мыши — в обход (над
+        // устройством вещь не бывает, автор 23.11); над бумагами — проходит. Ближе подойти нельзя —
+        // стоит, не дрожит.
         const devices = all.filter((q) => DEVICE_KIND[q.id] && !d.ids.includes(q.id));
         // Лист, что лежал под устройством, из-под него выезжает: то устройство ему не мешает, пока касается.
         for (const id of d.pass)
           if (!devices.some((q) => q.id === id && rects.some((r) => overlap(r, q))))
             d.pass.delete(id);
-        const mv = steer(
-          rects,
-          want.x - d.off.x,
-          want.z - d.off.z,
-          zone,
-          devices.filter((q) => !d.pass.has(q.id)),
-          d.memo,
-          // Не дальше, чем ушла мышь, плюс 2 см: обходит угол за несколько кадров (~1,2 м/с).
-          Math.hypot(want.x - d.off.x, want.z - d.off.z) + 0.02,
-        );
-        d.off = { x: d.off.x + mv.dx, z: d.off.z + mv.dz };
-        if (d.under) {
-          // Вышел — и там, куда его ведут, и там, где он показан (показ чуть отстаёт от мыши).
-          const shown = rects.map((r) => {
-            const c = targets.current.get(r.id)?.cur;
-            return c ? { ...r, x: c.x / p, z: c.z / p } : r;
-          });
-          const still = [
-            ...rects.map((r) => ({ ...r, x: r.x + mv.dx, z: r.z + mv.dz })),
-            ...shown,
-          ].some((r) => all.some((q) => d.above.has(q.id) && overlap(r, q)));
-          if (!still) {
-            // Вышел из-под стопки: теперь он сверху всего, стопка оседает на то, что осталось.
-            d.under = false;
-            let top = Math.max(0, ...all.map((q) => q.layer));
-            const layer = new Map(d.ids.map((id) => [id, ++top]));
-            relayer(all, layer);
-          }
+        const obstacles = devices.filter((q) => !d.pass.has(q.id));
+        const ck = obstacles.map((q) => q.id).join(',');
+        if (d.cacheKey !== ck) {
+          d.cache = new Map();
+          d.cacheKey = ck;
         }
+        const full: Zone = { inside: zone.inside, blocked: [...zone.blocked, ...obstacles] };
+        const base = rects.map((r) => ({ ...r, x: r.x - d.off.x, z: r.z - d.off.z }));
+        const cache = d.cache;
+        const ok = (ox: number, oz: number) => {
+          const key = `${Math.round(ox * 2000)},${Math.round(oz * 2000)}`;
+          let v = cache.get(key);
+          if (v === undefined) {
+            v = base.every((r) => allowed({ ...r, x: r.x + ox, z: r.z + oz }, full));
+            cache.set(key, v);
+          }
+          return v;
+        };
+        const next = plan(ok, d.off, want, {
+          // В обход — не быстрее мыши плюс 2 см за кадр (угол — за несколько кадров).
+          maxPath: Math.hypot(want.x - d.off.x, want.z - d.off.z) + 0.02,
+        });
+        const mv = { dx: next.x - d.off.x, dz: next.z - d.off.z };
+        d.off = next;
         const k = 1 - Math.exp(-dt * 14);
         d.vx += (mv.dx / dt - d.vx) * k;
         d.vz += (mv.dz / dt - d.vz) * k;
@@ -610,12 +609,6 @@ export function Desk({
         const z = b.z + d.off.z;
         t.mode = 'hand';
         const here = { ...pc, x, z };
-        if (d.under) {
-          // Выезжает из-под стопки — на своей высоте.
-          onDesk(t, x, z, (hc.h.get(pc.id) ?? 0) + pc.t / 2, pc.rot);
-          t.minY = deskY3 + (Math.max(support(pc, here), support(pc, rectNow(pc))) + pc.t / 2) * p;
-          continue;
-        }
         // Смотрит вперёд — только туда, куда её несут: поднимается заранее, к краю телефона или
         // стопки уже над ним; то, что сбоку, её не поднимает.
         const sp = Math.hypot(d.vx, d.vz);
@@ -637,13 +630,16 @@ export function Desk({
             );
         const h = under + LIFT;
         onDesk(t, x, z, h + pc.t / 2, pc.rot);
-        t.minY = deskY3 + (Math.max(support(pc, here), support(pc, rectNow(pc))) + pc.t / 2) * p;
+        // В руке — плавно и без «пола»: она рисуется поверх соседних, рывков вверх нет.
+        t.floorY = deskY3 + support(pc, rectNow(pc)) * p;
         continue;
       }
       onDesk(t, pc.x, pc.z, (hc.h.get(pc.id) ?? 0) + pc.t / 2, pc.rot);
       t.mode = 'rest';
       // Опускается или едет на место — не ниже того, что под ней по пути.
-      t.minY = deskY3 + (support(pc, rectNow(pc)) + pc.t / 2) * p;
+      const under = support(pc, rectNow(pc));
+      t.minY = deskY3 + (under + pc.t / 2) * p;
+      t.floorY = deskY3 + under * p;
       t.stiff = 300;
       t.damp = 1;
     }

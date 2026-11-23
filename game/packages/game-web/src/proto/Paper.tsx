@@ -1,4 +1,4 @@
-import { type ThreeEvent, useFrame } from '@react-three/fiber';
+import { type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import {
   CanvasTexture,
@@ -43,6 +43,8 @@ export interface PaperTarget {
   cur: Vector3;
   /** Вещь показана на столе (не на стене и не в полёте к ней). */
   onDesk: boolean;
+  /** Верх того, что под вещью (y three.js): на нём лежит её тень. */
+  floorY: number;
   /**
    * Как движется (автор 23.11: «резко прыгает», «стекают», «не кидаю — кладу»): `hand` — в руке,
    * пружиной и плавно по высоте; `rest` — на столе: к месту одним мягким движением с замедлением в
@@ -63,6 +65,8 @@ const easePlace = (t: number) => 1 - (1 - t) ** 4;
 const LIFT_K = 500;
 /** Самая быстрая смена высоты в руке, м/с. */
 const RISE = 0.12;
+/** На сколько вещь в руке придвинута к камере (доля расстояния): поверх соседних, на экране — та же. */
+const PULL = 0.04;
 
 const PAPER = '#efe9dc';
 /** Изъятые устройства в прототипе: цвет корпуса и верха. */
@@ -237,26 +241,34 @@ export function Paper({
   const D = piece.d * p;
   const T = piece.t * p;
 
+  // Логическое положение и масштаб (где вещь «на самом деле»); показ — с приближением к камере в руке.
+  const lp = useRef(new Vector3());
+  const sc = useRef(1);
+  const hold = useRef(0);
+  const camera = useThree((st) => st.camera);
+
   useFrame((_, dtRaw) => {
     const g = group.current;
     if (!g) return;
     const dt = Math.min(dtRaw, 1 / 30);
+    const pos = lp.current;
     if (!placed.current) {
       placed.current = true;
-      g.position.copy(start?.pos ?? target.pos);
+      pos.copy(start?.pos ?? target.pos);
       g.quaternion.copy(target.quat);
-      g.scale.setScalar(target.scale);
-      target.cur.copy(g.position);
+      sc.current = target.scale;
+      target.cur.copy(pos);
     }
-    if (start && performance.now() < start.at) return;
+    const waiting = !!start && performance.now() < start.at;
     // Пружина: a = k·(цель − x) − c·v.
     const k = target.stiff;
     const c = 2 * Math.sqrt(k) * target.damp;
-    const pos = g.position;
     const vl = vel.current;
     const now = performance.now();
     if (target.mode !== 'rest') tween.current = null;
-    if (target.mode === 'rest') {
+    if (waiting) {
+      // Ещё в конверте — ждёт своей очереди.
+    } else if (target.mode === 'rest') {
       // Положить: новое место — новое мягкое движение из того, где вещь сейчас.
       const tw = tween.current;
       if (!tw || tw.to.distanceTo(target.pos) > 0.3) {
@@ -306,9 +318,17 @@ export function Paper({
       if (vl.y < 0) vl.y = 0;
     }
     target.cur.copy(pos);
-    if (target.mode !== 'rest')
+    if (target.mode !== 'rest' && !waiting)
       g.quaternion.slerp(target.quat, 1 - Math.exp(-dt * (k > 600 ? 22 : 12)));
-    g.scale.setScalar(g.scale.x + (target.scale - g.scale.x) * (1 - Math.exp(-dt * 10)));
+    sc.current += (target.scale - sc.current) * (1 - Math.exp(-dt * 10));
+    // В руке вещь рисуется поверх соседних бумаг и устройств: её показ придвинут к камере вдоль
+    // луча взгляда (на экране она там же и того же размера) — поднимаясь из-под стопки, она не
+    // проходит сквозь неё на глазах (автор 23.11: «взял — всегда сверху»). Положили — плавно назад.
+    const want = target.mode === 'hand' ? 1 : 0;
+    hold.current += (want - hold.current) * (1 - Math.exp(-dt * (want ? 30 : 7)));
+    const kd = 1 - PULL * hold.current;
+    g.position.copy(camera.position).addScaledVector(v.copy(pos).sub(camera.position), kd);
+    g.scale.setScalar(sc.current * kd);
     // Над запретным местом (вещь следователя, край) — лист краснеет: тень там не видна.
     const fm = faceMat.current;
     if (fm) {
@@ -316,18 +336,20 @@ export function Paper({
       // Наведение — чуть светлее, и только (автор 23.11: не поднимать, не раскрывать).
       fm.emissiveIntensity = target.forbidden ? 0.35 : target.hover ? 0.06 : 0;
     }
-    const s = shadow.current;
-    if (s) {
-      const lift = Math.max(0, g.position.y - target.deskY);
-      const show = !target.noShadow && lift > 1.5;
-      s.visible = show;
+    const sh = shadow.current;
+    if (sh) {
+      // Тень — на том, что под вещью (стол, стопка), темнее у самой поверхности.
+      const floor = Math.max(target.deskY, target.floorY);
+      const lift = Math.max(0, pos.y - (T / 2) * sc.current - floor);
+      const show = !target.noShadow && lift > 0.8;
+      sh.visible = show;
       if (show) {
-        s.position.set(g.position.x, target.deskY + 0.4, g.position.z);
-        const grow = 1 + lift / (0.12 * p);
-        s.scale.set(W * 1.15 * grow, D * 1.15 * grow, 1);
-        s.rotation.set(-Math.PI / 2, 0, 0);
-        const mat = s.material as MeshBasicMaterial;
-        mat.opacity = Math.max(0.12, 0.55 - lift / (0.25 * p));
+        sh.position.set(pos.x, floor + 0.4, pos.z);
+        const grow = 1 + lift / (0.1 * p);
+        sh.scale.set(W * 1.12 * grow, D * 1.12 * grow, 1);
+        sh.rotation.set(-Math.PI / 2, 0, 0);
+        const mat = sh.material as MeshBasicMaterial;
+        mat.opacity = Math.max(0.25, 0.78 - lift / (0.12 * p));
         mat.color.set(target.forbidden ? '#b0221a' : '#000000');
       }
     }

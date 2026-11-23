@@ -7,10 +7,10 @@ import {
   overlap,
   type Piece,
   pileOf,
+  plan,
   scatter,
   slide,
   stackOf,
-  steer,
   topAt,
   type Zone,
 } from './deskWorld.ts';
@@ -123,26 +123,38 @@ describe('прототип 3D-стола: раскладка без физики
     expect(nearestFree([{ ...cam, x: 0.5 }], phone)).toEqual({ dx: 0, dz: 0 });
   });
 
-  it('в обход устройства: камера слева от телефона, ведут вправо — обходит и встаёт справа', () => {
-    const phone = { id: '48', x: 0, z: 0.4, w: 0.065, d: 0.12, rot: 0 };
-    const cam = { x: -0.12, z: 0.4, w: 0.1, d: 0.06, rot: 0 };
-    const m = steer([cam], 0.24, 0, open, [phone]);
-    const end = { ...cam, x: cam.x + m.dx, z: cam.z + m.dz };
-    expect(overlap(end, phone)).toBe(false);
-    expect(end.x).toBeGreaterThan(phone.x + phone.w / 2);
-    // Цель свободна — пришла туда же.
-    expect(end.x).toBeCloseTo(0.12, 2);
-    expect(end.z).toBeCloseTo(0.4, 2);
-    // Повёрнутые, мышь ведут мелкими шагами (как в живой протяжке): тоже обходит.
-    const ph2 = { id: '48', x: -0.2275, z: 0.6974, w: 0.1, d: 0.06, rot: 0.065 };
-    let c2 = { x: -0.5174, z: 0.6953, w: 0.065, d: 0.12, rot: 0.1357 };
-    const memo = {};
-    for (let k = 0; k < 60; k++) {
-      const want = { x: -0.5174 + ((0.15 + 0.5174) * (k + 1)) / 60, z: 0.6953 };
-      const mv = steer([c2], want.x - c2.x, want.z - c2.z, open, [ph2], memo);
-      c2 = { ...c2, x: c2.x + mv.dx, z: c2.z + mv.dz };
+  it('путь в обход: камера слева от телефона, мышь справа — обходит и встаёт справа; места нет — стоит, не дрожит', () => {
+    const phone = { x: -0.2275, z: 0.6974, w: 0.1, d: 0.06, rot: 0.065 };
+    const base = { x: -0.5174, z: 0.6953, w: 0.065, d: 0.12, rot: 0.1357 };
+    const okFor = (zone: Zone) => (ox: number, oz: number) =>
+      allowed(
+        { ...base, x: base.x + ox, z: base.z + oz },
+        { ...zone, blocked: [...zone.blocked, phone] },
+      );
+    const ok = okFor(open);
+    // Мышь ведут вправо мелкими шагами, как в живой протяжке.
+    let off = { x: 0, z: 0 };
+    for (let k = 0; k < 90; k++) {
+      const want = { x: (0.15 + 0.5174) * Math.min(1, (k + 1) / 60), z: 0 };
+      off = plan(ok, off, want);
     }
-    expect(overlap(c2, ph2)).toBe(false);
-    expect(c2.x).toBeCloseTo(0.15, 2);
+    const end = { ...base, x: base.x + off.x, z: base.z + off.z };
+    expect(overlap(end, phone)).toBe(false);
+    expect(end.x).toBeCloseTo(0.15, 2);
+    // Справа от телефона — стена (вещь следователя): места нет. Стоит у телефона, не качается.
+    const wall: Zone = { ...open, blocked: [{ x: -0.1, z: 0.6, w: 0.08, d: 0.6, rot: 0 }] };
+    const ok2 = okFor(wall);
+    let o2 = { x: 0, z: 0 };
+    const seen: number[] = [];
+    for (let k = 0; k < 80; k++) {
+      o2 = plan(ok2, o2, { x: 0.45, z: 0 });
+      if (k >= 60) seen.push(o2.x, o2.z);
+    }
+    const spread = Math.max(...seen) - Math.min(...seen);
+    expect(
+      Math.max(...seen.filter((_, i) => i % 2 === 0)) -
+        Math.min(...seen.filter((_, i) => i % 2 === 0)),
+    ).toBeLessThan(0.001);
+    expect(spread).toBeLessThan(0.5);
   });
 });
