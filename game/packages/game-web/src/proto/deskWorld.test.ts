@@ -162,42 +162,40 @@ describe('прототип 3D-стола: раскладка без физики
     expect(spread).toBeLessThan(0.5);
   });
 
-  it('прогиб (DV-H): лист на телефоне — над ним приподнят до верха, к краям — полого вниз, без ступеньки', () => {
-    const phone: Piece = {
-      id: 'ph',
+  it('прогиб (DV-H): бумага — упругая: над телефоном до его верха, между двумя вещами — мостиком, вдали — на столе', () => {
+    const dev = (id: string, x: number, t: number): Piece => ({
+      id,
       kind: 'mobile',
-      w: 0.065,
+      w: 0.03,
       d: 0.12,
-      t: 0.012,
-      x: 0,
+      t,
+      x,
       z: 0.4,
       rot: 0,
       layer: 0,
-      stack: 'ph',
-    };
-    const p = sheet('a', 0.05, 0.4, 1);
-    const all = [phone, p];
-    const h = heights(all, (up, low) => up.kind !== 'mobile' && low.kind === 'mobile');
-    expect(h.get('a')).toBe(0);
-    const d = drapes(all, h, (q) => q.kind !== 'mobile').get('a');
-    expect(d).toBeDefined();
-    const lift = d as Float32Array;
-    const max = Math.max(...lift);
-    // До верха телефона и миллиметр зазора.
-    expect(max).toBeCloseTo(0.013, 4);
-    // Правый край листа (далеко от телефона) — на столе.
-    const right = lift[14 * (DRAPE_NX + 1) + DRAPE_NX] ?? 1;
-    expect(right).toBeLessThan(0.001);
-    // Горбик — по размеру телефона: дальше 4 см от его края лист лежит на столе.
+      stack: id,
+    });
+    const isDev = (q: Piece) => q.kind === 'mobile';
+    const over = (up: Piece, low: Piece) => !isDev(up) && isDev(low);
+    // Лист на двух вещах в 10 см друг от друга.
+    const a = dev('a', -0.05, 0.012);
+    const b = dev('b', 0.05, 0.012);
+    const sh = { ...sheet('s', 0, 0.4, 1), w: 0.21 };
+    const all = [a, b, sh];
+    const h = heights(all, over);
+    expect(h.get('s')).toBe(0);
+    const lift = drapes(all, h, (q) => !isDev(q)).get('s') as Float32Array;
     const row = 14 * (DRAPE_NX + 1);
-    for (let ix = 0; ix <= DRAPE_NX; ix++) {
-      const u = -0.105 + (ix * 0.21) / DRAPE_NX + 0.05; // x вершины (центр листа 0,05)
-      if (Math.abs(u) > 0.0325 + 0.0075 + 0.03 + 0.005)
-        expect(lift[row + ix] ?? 0).toBeLessThan(1e-4);
-    }
-    // Лист далеко от устройств — ровный.
-    expect(drapes([phone, sheet('b', 0.6, 0.4, 1)], h, (q) => q.kind !== 'mobile').has('b')).toBe(
-      false,
-    );
+    const mid = lift[row + DRAPE_NX / 2] ?? 0;
+    // Над вещами — не ниже их верха (с зазором).
+    expect(Math.max(...lift)).toBeGreaterThanOrEqual(0.013 - 1e-4);
+    // Между ними — мостик: провис не больше 7 мм (одеяло упало бы до стола).
+    expect(mid).toBeGreaterThan(0.013 - 0.007);
+    // Нигде не ниже стола; и плавно: соседние вершины по ширине — без ступенек.
+    for (let ix = 0; ix < DRAPE_NX; ix++)
+      expect(Math.abs((lift[row + ix] ?? 0) - (lift[row + ix + 1] ?? 0))).toBeLessThan(0.006);
+    for (const v of lift) expect(v).toBeGreaterThanOrEqual(0);
+    // Лист далеко от вещей — ровный.
+    expect(drapes([a, sheet('far', 0.6, 0.4, 1)], h, (q) => !isDev(q)).has('far')).toBe(false);
   });
 });

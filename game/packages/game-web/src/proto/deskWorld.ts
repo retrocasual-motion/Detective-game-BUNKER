@@ -412,6 +412,72 @@ export const DRAPE_NY = 28;
 const GAP = 0.001;
 /** Поле вокруг устройства, где бумага держит полную высоту, м: полдиагонали шага сетки. */
 const MARGIN = 0.0075;
+/**
+ * Жёсткость бумаги (автор 23.11: «как плед — проваливается в каждый угол; бумага держит
+ * структуру»): лист — упругая пластина. Свободный край на 3 см над столом доходит до стола за ~8 см,
+ * над щелью в 10 см между вещами провисает на ~6 мм.
+ */
+const SAG = 5e-5;
+/** Запомненные прогибы: ключ — лист и всё, что под ним. */
+const PLATE_CACHE = new Map<string, Float32Array>();
+
+/**
+ * Упругий лист на опорах: высоты не ниже `floor` (то, что под листом; стол — 0), бумага
+ * сопротивляется изгибу (∇⁴h = −sag — пластина под своим весом) — между вещами ложится мостиком,
+ * свободный край плавно опускается к столу, в щели не проваливается. Гаусс — Зейдель с верхней
+ * релаксацией; края листа — без излома.
+ */
+export function solvePlate(floor: Float32Array, nx: number, ny: number, sag = SAG, iters = 700) {
+  const W = nx + 1;
+  const H = ny + 1;
+  const h = new Float32Array(floor);
+  const at = (x: number, y: number) =>
+    h[Math.min(H - 1, Math.max(0, y)) * W + Math.min(W - 1, Math.max(0, x))] ?? 0;
+  const omega = 1.6;
+  const step = (x: number, y: number, n1: number, d: number, n2: number) => {
+    const k = y * W + x;
+    const gs = (8 * n1 - 2 * d - n2 - sag) / 20;
+    const cur = h[k] as number;
+    const f = floor[k] as number;
+    const nv = cur + omega * (gs - cur);
+    h[k] = nv > f ? nv : f;
+  };
+  for (let it = 0; it < iters; it++) {
+    for (let y = 0; y < H; y++)
+      for (let x = 0; x < W; x++) {
+        if (x >= 2 && x < W - 2 && y >= 2 && y < H - 2) {
+          // Внутри листа — прямо по индексам (быстро).
+          const k = y * W + x;
+          step(
+            x,
+            y,
+            (h[k + 1] as number) +
+              (h[k - 1] as number) +
+              (h[k + W] as number) +
+              (h[k - W] as number),
+            (h[k + W + 1] as number) +
+              (h[k + W - 1] as number) +
+              (h[k - W + 1] as number) +
+              (h[k - W - 1] as number),
+            (h[k + 2] as number) +
+              (h[k - 2] as number) +
+              (h[k + 2 * W] as number) +
+              (h[k - 2 * W] as number),
+          );
+          continue;
+        }
+        step(
+          x,
+          y,
+          at(x + 1, y) + at(x - 1, y) + at(x, y + 1) + at(x, y - 1),
+          at(x + 1, y + 1) + at(x - 1, y + 1) + at(x + 1, y - 1) + at(x - 1, y - 1),
+          at(x + 2, y) + at(x - 2, y) + at(x, y + 2) + at(x, y - 2),
+        );
+      }
+  }
+  return h;
+}
+
 /** Округа вершины для высоты (доли шага сетки). */
 const AROUND: readonly [number, number][] = [
   [0, 0],
@@ -437,10 +503,12 @@ export function drapes(
   pieces: readonly Piece[],
   base: Map<string, number>,
   bends: (p: Piece) => boolean,
-  radius = 0.03,
+  /** Провисание: прогиб под своим весом на клетку⁴ сетки, м (меньше — жёстче бумага). */
+  sag = SAG,
 ): Map<string, Float32Array> {
   const out = new Map<string, Float32Array>();
   const sorted = [...pieces].sort((a, b) => a.layer - b.layer);
+  const keyOf = new Map<string, string>();
   const nx = DRAPE_NX;
   const ny = DRAPE_NY;
   const local = (o: Piece, x: number, z: number) => {
@@ -523,20 +591,24 @@ export function drapes(
         if (req > 1e-5) src.push(k);
       }
     if (!src.length) continue;
-    // Полого: подъём сходит косинусом на radius — горбик, а не ступенька (только от поднятых вершин).
-    const lift = new Float32Array(raw);
-    for (let a = 0; a < n; a++) {
-      const pa = pts[a] as { x: number; z: number };
-      let m = lift[a] ?? 0;
-      for (const bI of src) {
-        const rb = raw[bI] ?? 0;
-        if (rb <= m) continue;
-        const pb = pts[bI] as { x: number; z: number };
-        const d = Math.hypot(pa.x - pb.x, pa.z - pb.z);
-        if (d >= radius) continue;
-        m = Math.max(m, (rb * (1 + Math.cos((Math.PI * d) / radius))) / 2);
-      }
-      lift[a] = m;
+    // Под листом ничего не изменилось — прогиб тот же (расчёт пластины — десятки мс на лист).
+    const key = [
+      p.id,
+      p.x.toFixed(5),
+      p.z.toFixed(5),
+      p.rot.toFixed(5),
+      b0.toFixed(6),
+      ...below.map(
+        (o) =>
+          `${o.id}:${o.x.toFixed(5)}:${o.z.toFixed(5)}:${o.rot.toFixed(5)}:${(base.get(o.id) ?? 0).toFixed(6)}:${keyOf.get(o.id) ?? ''}`,
+      ),
+    ].join('|');
+    keyOf.set(p.id, key);
+    const cached = PLATE_CACHE.get(key);
+    const lift = cached ?? solvePlate(raw, nx, ny, sag);
+    if (!cached) {
+      PLATE_CACHE.set(key, lift);
+      if (PLATE_CACHE.size > 200) PLATE_CACHE.delete(PLATE_CACHE.keys().next().value as string);
     }
     out.set(p.id, lift);
   }
