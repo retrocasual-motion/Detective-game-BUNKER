@@ -746,5 +746,85 @@
   "prompt": "design/references/CHAT_PASTE_GEN9_cole_office_layout.txt, A2-4",
   "refs": "A1_coleoffice_v4, A1_coleoffice_v2 (генерации)",
   "verdict": "ВЫБРАН автором 23.11 («похоже на правду»): кабинет руководителя — шкаф слева, принтер справа, монитор на столе"
+ },
+ {
+  "file": "references/places/S1_eaststair_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S1-1",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "материалы и свет хороши; геометрия старая (8 м, лестница в коридоре, проём не читается)"
+ },
+ {
+  "file": "references/places/S1_eaststair_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S1-2",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "материалы и свет хороши; геометрия старая (8 м, лестница в коридоре, проём не читается)"
+ },
+ {
+  "file": "references/places/S1_eaststair_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S1-3",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "материалы и свет хороши; геометрия старая (8 м, лестница в коридоре, проём не читается)"
+ },
+ {
+  "file": "references/places/S1_eaststair_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S1-4",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "ближе всего: площадка с ограждением над проёмом, вниз виден марш; материалы и свет хороши"
+ },
+ {
+  "file": "references/places/S2_eaststair_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S2-1",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "материалы и свет хороши; геометрия старая (8 м, лестница в коридоре, проём не читается)"
+ },
+ {
+  "file": "references/places/S2_eaststair_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S2-2",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "материалы и свет хороши; геометрия старая (8 м, лестница в коридоре, проём не читается)"
+ },
+ {
+  "file": "references/places/S2_eaststair_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S2-3",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "брак: на стене нарисован номер «S2-3» (запрет 11)"
+ },
+ {
+  "file": "references/places/S2_eaststair_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN10_east_stair.txt, S2-4",
+  "refs": "R2_long_hall, R2_controlroom_silo_corridor, R1_restricted_head_room, A2_coleoffice_v4",
+  "verdict": "материалы и свет хороши; геометрия старая (8 м, лестница в коридоре, проём не читается)"
  }
 ]
