@@ -1,0 +1,270 @@
+[
+ {
+  "file": "references/places/G1_cabinet_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G1",
+  "refs": [
+   "P18_cabinet_light",
+   "P13_desk_board",
+   "P41_office_phone"
+  ],
+  "verdict": "переделать: стены слева и справа (автор 23.11), лица на фото доски"
+ },
+ {
+  "file": "references/places/G1_cabinet_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G1",
+  "refs": [
+   "P18_cabinet_light",
+   "P13_desk_board",
+   "P41_office_phone"
+  ],
+  "verdict": "переделать: стены слева и справа (автор 23.11)"
+ },
+ {
+  "file": "references/places/G1_cabinet_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G1",
+  "refs": [
+   "P18_cabinet_light",
+   "P13_desk_board",
+   "P41_office_phone"
+  ],
+  "verdict": "переделать: стены слева и справа (автор 23.11)"
+ },
+ {
+  "file": "references/places/G1_cabinet_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G1",
+  "refs": [
+   "P18_cabinet_light",
+   "P13_desk_board",
+   "P41_office_phone"
+  ],
+  "verdict": "брак: надпись на этикетке пакета (запрет 11); стены"
+ },
+ {
+  "file": "references/places/G2_desktop_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G2",
+  "refs": [
+   "P23_desk_top",
+   "P41_office_phone"
+  ],
+  "verdict": "берём: чисто, круг лампы, предметы 2009"
+ },
+ {
+  "file": "references/places/G2_desktop_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G2",
+  "refs": [
+   "P23_desk_top",
+   "P41_office_phone"
+  ],
+  "verdict": "берём: диктофон и пакет с биркой читаются"
+ },
+ {
+  "file": "references/places/G2_desktop_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G2",
+  "refs": [
+   "P23_desk_top",
+   "P41_office_phone"
+  ],
+  "verdict": "с оговоркой: кольца от кружки — лишнее (запрет 17)"
+ },
+ {
+  "file": "references/places/G2_desktop_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G2",
+  "refs": [
+   "P23_desk_top",
+   "P41_office_phone"
+  ],
+  "verdict": "брак: рукописные стикеры и бирка, кружка, ключи, флешка — лишнее (запреты 11, 17)"
+ },
+ {
+  "file": "references/objects/G3_microcassette_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G3",
+  "refs": [
+   "R4_sony_microcassette",
+   "P07_microcassette_black",
+   "P38_microcassette_silver"
+  ],
+  "verdict": "берём: форма ближе всего к реальному образцу"
+ },
+ {
+  "file": "references/objects/G3_microcassette_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G3",
+  "refs": [
+   "R4_sony_microcassette",
+   "P07_microcassette_black",
+   "P38_microcassette_silver"
+  ],
+  "verdict": "берём: износ хромированных углов"
+ },
+ {
+  "file": "references/objects/G3_microcassette_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G3",
+  "refs": [
+   "R4_sony_microcassette",
+   "P07_microcassette_black",
+   "P38_microcassette_silver"
+  ],
+  "verdict": "с оговоркой: чисто, но износа мало"
+ },
+ {
+  "file": "references/objects/G3_microcassette_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G3",
+  "refs": [
+   "R4_sony_microcassette",
+   "P07_microcassette_black",
+   "P38_microcassette_silver"
+  ],
+  "verdict": "берём: износ, пыль в решётке"
+ },
+ {
+  "file": "references/objects/G4_penrecorder_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G4",
+  "refs": [
+   "P40_pen_recorder"
+  ],
+  "verdict": "берём: USB в колпачке, как в промпте"
+ },
+ {
+  "file": "references/objects/G4_penrecorder_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G4",
+  "refs": [
+   "P40_pen_recorder"
+  ],
+  "verdict": "с оговоркой: контакты в колпачке странные, мелкая надпись у переключателя"
+ },
+ {
+  "file": "references/objects/G4_penrecorder_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G4",
+  "refs": [
+   "P40_pen_recorder"
+  ],
+  "verdict": "брак: USB на корпусе, колпачок пустой — не по промпту"
+ },
+ {
+  "file": "references/objects/G4_penrecorder_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G4",
+  "refs": [
+   "P40_pen_recorder"
+  ],
+  "verdict": "с оговоркой: два светодиода, красный и синий"
+ },
+ {
+  "file": "references/objects/G5_evidencebag_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G5",
+  "refs": [
+   "P01_evidence_bag",
+   "P09_evidence_bag_form",
+   "P15_manila_tag"
+  ],
+  "verdict": "берём: пакет, лента, пустая этикетка, бирка"
+ },
+ {
+  "file": "references/objects/G5_evidencebag_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G5",
+  "refs": [
+   "P01_evidence_bag",
+   "P09_evidence_bag_form",
+   "P15_manila_tag"
+  ],
+  "verdict": "брак: оранжевая деталь на диктофоне — лишнее"
+ },
+ {
+  "file": "references/objects/G5_evidencebag_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G5",
+  "refs": [
+   "P01_evidence_bag",
+   "P09_evidence_bag_form",
+   "P15_manila_tag"
+  ],
+  "verdict": "брак: надпись-марка на диктофоне (запрет 11)"
+ },
+ {
+  "file": "references/objects/G5_evidencebag_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN1.txt, строка G5",
+  "refs": [
+   "P01_evidence_bag",
+   "P09_evidence_bag_form",
+   "P15_manila_tag"
+  ],
+  "verdict": "с оговоркой: большой бланк в пакете — как у лаборатории, графы лишние (ART-40)"
+ }
+]
