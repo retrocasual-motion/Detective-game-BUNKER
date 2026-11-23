@@ -100,13 +100,18 @@ export function contains(r: Rect, x: number, z: number): boolean {
  * Высота низа каждого листа над столом, м: лежит на самом высоком из тех, что положены раньше и
  * под ним (хоть краем). Так и стопка, и листы внахлёст.
  */
-export function heights(pieces: readonly Piece[]): Map<string, number> {
+export function heights(
+  pieces: readonly Piece[],
+  /** Что под вещью не поднимает её (лист над устройством — прогибается, DV-H). */
+  ignore?: (upper: Piece, lower: Piece) => boolean,
+): Map<string, number> {
   const sorted = [...pieces].sort((a, b) => a.layer - b.layer);
   const h = new Map<string, number>();
   sorted.forEach((p, i) => {
     let base = 0;
     for (let j = 0; j < i; j++) {
       const q = sorted[j] as Piece;
+      if (ignore?.(p, q)) continue;
       if (overlap(p, q)) base = Math.max(base, (h.get(q.id) ?? 0) + q.t);
     }
     h.set(p.id, base);
@@ -390,4 +395,113 @@ export function plan(
   const l = Math.hypot(dx, dz);
   if (l <= maxPath) return { x: tgt.x, z: tgt.z };
   return { x: cur.x + (dx / l) * maxPath, z: cur.z + (dz / l) * maxPath };
+}
+
+/** Сетка прогиба листа: столько делений по ширине и глубине. */
+export const DRAPE_NX = 10;
+export const DRAPE_NY = 14;
+/** Зазор бумаги над устройством, м. */
+const GAP = 0.001;
+/** Поле вокруг устройства, где бумага держит полную высоту, м (больше шага сетки листа). */
+const MARGIN = 0.025;
+
+/**
+ * Прогиб листов (DV-H, автор 23.11: «положить сверху — немного огибает, легонько»): лист лежит на
+ * своей высоте (по бумагам под ним), а там, где под ним устройство или горбик нижнего листа, —
+ * приподнят до их верха; подъём расходится полого на `radius` вокруг (широкий горбик, без излома).
+ * Возвращает подъём каждой вершины сетки, м: ряды от дальнего края листа к ближнему, в ряду —
+ * слева направо; ровный лист — нет записи.
+ */
+export function drapes(
+  pieces: readonly Piece[],
+  base: ReadonlyMap<string, number>,
+  bends: (p: Piece) => boolean,
+  radius = 0.07,
+): Map<string, Float32Array> {
+  const out = new Map<string, Float32Array>();
+  const sorted = [...pieces].sort((a, b) => a.layer - b.layer);
+  const nx = DRAPE_NX;
+  const ny = DRAPE_NY;
+  const vert = (p: Piece, ix: number, iy: number) => {
+    const u = -p.w / 2 + (ix * p.w) / nx;
+    const v = -p.d / 2 + (iy * p.d) / ny;
+    const c = Math.cos(p.rot);
+    const s = Math.sin(p.rot);
+    return { x: p.x + u * c + v * s, z: p.z - u * s + v * c };
+  };
+  const sample = (o: Piece, lift: Float32Array, x: number, z: number) => {
+    const c = Math.cos(o.rot);
+    const s = Math.sin(o.rot);
+    const dx = x - o.x;
+    const dz = z - o.z;
+    const u = dx * c - dz * s;
+    const v = dx * s + dz * c;
+    const fx = Math.min(nx, Math.max(0, ((u + o.w / 2) / o.w) * nx));
+    const fy = Math.min(ny, Math.max(0, ((v + o.d / 2) / o.d) * ny));
+    const x0 = Math.min(nx - 1, Math.floor(fx));
+    const y0 = Math.min(ny - 1, Math.floor(fy));
+    const tx = fx - x0;
+    const ty = fy - y0;
+    const at = (i: number, j: number) => lift[j * (nx + 1) + i] ?? 0;
+    return (
+      at(x0, y0) * (1 - tx) * (1 - ty) +
+      at(x0 + 1, y0) * tx * (1 - ty) +
+      at(x0, y0 + 1) * (1 - tx) * ty +
+      at(x0 + 1, y0 + 1) * tx * ty
+    );
+  };
+  // Верх вещи o в точке (x, z): у листа — с его горбиком. Устройство — с полем на шаг сетки листа:
+  // между вершинами бумага не проваливается на его край.
+  const surface = (o: Piece, x: number, z: number) => {
+    const grow = bends(o) ? 0 : MARGIN;
+    if (!contains({ ...o, w: o.w + grow * 2, d: o.d + grow * 2 }, x, z))
+      return Number.NEGATIVE_INFINITY;
+    const top = (base.get(o.id) ?? 0) + o.t;
+    const l = out.get(o.id);
+    return l ? top + sample(o, l, x, z) : top;
+  };
+  for (const [i, p] of sorted.entries()) {
+    if (!bends(p)) continue;
+    const below = sorted
+      .slice(0, i)
+      .filter((o) => overlap(p, bends(o) ? o : { ...o, w: o.w + MARGIN * 2, d: o.d + MARGIN * 2 }));
+    if (!below.length) continue;
+    const b0 = base.get(p.id) ?? 0;
+    const raw = new Float32Array((nx + 1) * (ny + 1));
+    const pts: { x: number; z: number }[] = [];
+    let any = false;
+    for (let iy = 0; iy <= ny; iy++)
+      for (let ix = 0; ix <= nx; ix++) {
+        const q = vert(p, ix, iy);
+        pts.push(q);
+        let req = 0;
+        // Над устройством — с зазором в миллиметр: поверхности не совпадают (иначе верх камеры
+        // «пробивает» бумагу).
+        for (const o of below) {
+          const top = surface(o, q.x, q.z) - b0;
+          if (top > 1e-5) req = Math.max(req, top + GAP);
+        }
+        const k = iy * (nx + 1) + ix;
+        raw[k] = Math.max(0, req);
+        if (raw[k] > 1e-5) any = true;
+      }
+    if (!any) continue;
+    // Полого: подъём расходится косинусом на radius — горбик, а не ступенька.
+    const lift = new Float32Array(raw.length);
+    for (let a = 0; a < raw.length; a++) {
+      const pa = pts[a] as { x: number; z: number };
+      let m = raw[a] ?? 0;
+      for (let bI = 0; bI < raw.length; bI++) {
+        const rb = raw[bI] ?? 0;
+        if (rb <= m) continue;
+        const pb = pts[bI] as { x: number; z: number };
+        const d = Math.hypot(pa.x - pb.x, pa.z - pb.z);
+        if (d >= radius) continue;
+        m = Math.max(m, (rb * (1 + Math.cos((Math.PI * d) / radius))) / 2);
+      }
+      lift[a] = m;
+    }
+    out.set(p.id, lift);
+  }
+  return out;
 }

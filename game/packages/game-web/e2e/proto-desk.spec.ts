@@ -104,12 +104,21 @@ test('прототип 3D-стола: вскрыть клапаном; вещь 
   expect(layers.get(y.id) ?? 0).toBeGreaterThan(layers.get(a.id) ?? 0);
   expect(await call<string[]>(page, 'pile', a.id)).not.toContain(y.id);
 
-  // DV-B: на устройство не кладут — ни устройство, ни лист: встают рядом.
+  // Устройство на устройство не ставят: встаёт рядом.
   await drag(page, await grab('24'), await call<Pt>(page, 'piece', '48'));
   expect(await overlapsNow('24', '48')).toBe(false);
+  // DV-H (по умолчанию): лист на телефон — ложится сверху и прогибается (не пересечение).
   const z = papers[0] as Laid;
   await drag(page, await grab(z.id), await call<Pt>(page, 'piece', '48'));
+  expect(await overlapsNow(z.id, '48')).toBe(true);
+  // DV-B (переключатель): лист объезжает телефон.
+  await page.getByTestId('proto-drape').click();
+  await expect(page.getByTestId('proto-drape')).toContainText('DV-B');
+  await drag(page, await grab(z.id), await call<Pt>(page, 'desk', -0.05, 0.62));
+  await drag(page, await grab(z.id), await call<Pt>(page, 'piece', '48'));
   expect(await overlapsNow(z.id, '48')).toBe(false);
+  await page.getByTestId('proto-drape').click();
+  await expect(page.getByTestId('proto-drape')).toContainText('DV-H');
   // А само устройство на бумагу ложится; лист из-под него вытаскивают.
   await drag(page, await grab('49'), await call<Pt>(page, 'piece', y.id));
   expect(await overlapsNow('49', y.id)).toBe(true);

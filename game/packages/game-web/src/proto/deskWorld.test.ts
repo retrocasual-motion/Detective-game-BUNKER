@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   allowed,
   contains,
+  DRAPE_NX,
+  drapes,
   heights,
   nearestFree,
   overlap,
@@ -158,5 +160,43 @@ describe('прототип 3D-стола: раскладка без физики
         Math.min(...seen.filter((_, i) => i % 2 === 0)),
     ).toBeLessThan(0.001);
     expect(spread).toBeLessThan(0.5);
+  });
+
+  it('прогиб (DV-H): лист на телефоне — над ним приподнят до верха, к краям — полого вниз, без ступеньки', () => {
+    const phone: Piece = {
+      id: 'ph',
+      kind: 'mobile',
+      w: 0.065,
+      d: 0.12,
+      t: 0.012,
+      x: 0,
+      z: 0.4,
+      rot: 0,
+      layer: 0,
+      stack: 'ph',
+    };
+    const p = sheet('a', 0.05, 0.4, 1);
+    const all = [phone, p];
+    const h = heights(all, (up, low) => up.kind !== 'mobile' && low.kind === 'mobile');
+    expect(h.get('a')).toBe(0);
+    const d = drapes(all, h, (q) => q.kind !== 'mobile').get('a');
+    expect(d).toBeDefined();
+    const lift = d as Float32Array;
+    const max = Math.max(...lift);
+    // До верха телефона и миллиметр зазора.
+    expect(max).toBeCloseTo(0.013, 4);
+    // Правый край листа (далеко от телефона) — на столе.
+    const right = lift[7 * (DRAPE_NX + 1) + DRAPE_NX] ?? 1;
+    expect(right).toBeLessThan(0.001);
+    // Соседние вершины по ширине: перепад не больше трети высоты — полого.
+    for (let ix = 0; ix < DRAPE_NX; ix++) {
+      const a = lift[7 * (DRAPE_NX + 1) + ix] ?? 0;
+      const b = lift[7 * (DRAPE_NX + 1) + ix + 1] ?? 0;
+      expect(Math.abs(a - b)).toBeLessThan(0.0065);
+    }
+    // Лист далеко от устройств — ровный.
+    expect(drapes([phone, sheet('b', 0.6, 0.4, 1)], h, (q) => q.kind !== 'mobile').has('b')).toBe(
+      false,
+    );
   });
 });

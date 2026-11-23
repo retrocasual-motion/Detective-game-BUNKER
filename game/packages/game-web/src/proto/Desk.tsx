@@ -7,6 +7,7 @@ import type { DeskObject } from '../room/decor.ts';
 import { cardH, cardW } from './Board.tsx';
 import {
   allowed,
+  drapes,
   heights,
   nearestFree,
   overlap,
@@ -107,6 +108,7 @@ export function Desk({
   onArrive,
   pointer,
   onOpened,
+  drape,
 }: {
   room: Room;
   pose: RefObject<Pose>;
@@ -120,6 +122,11 @@ export function Desk({
   /** Мышь в координатах экрана — её ведёт страница (протяжка идёт и за край холста). */
   pointer: RefObject<{ x: number; y: number }>;
   onOpened: () => void;
+  /**
+   * DV-H (автор 23.11: «попробуем — сверху и немного огибает»): лист можно положить на устройство —
+   * он ложится и полого прогибается по нему. Нет — DV-B: лист объезжает устройство.
+   */
+  drape: boolean;
 }) {
   const { camera, gl } = useThree();
   const { p } = room;
@@ -181,6 +188,7 @@ export function Desk({
         minY: Number.NEGATIVE_INFINITY,
         cur: new Vector3(),
         onDesk: true,
+        drape: null,
         floorY: -room.deskY,
         mode: 'rest',
       };
@@ -324,7 +332,9 @@ export function Desk({
         const b = d.base.get(q.id) ?? q;
         return { ...q, x: b.x + d.off.x, z: b.z + d.off.z };
       });
-    const devices = all.filter((q) => DEVICE_KIND[q.id] && !d.base.has(q.id));
+    const carries = [...d.base.keys()].some((id) => DEVICE_KIND[id]);
+    const devices =
+      drape && !carries ? [] : all.filter((q) => DEVICE_KIND[q.id] && !d.base.has(q.id));
     const fix = nearestFree(rects, { inside: zone.inside, blocked: [...zone.blocked, ...devices] });
     const fx = fix?.dx ?? 0;
     const fz = fix?.dz ?? 0;
@@ -370,10 +380,16 @@ export function Desk({
   };
 
   // Для автотестов и снимков: где на экране клапан конверта и вещи (вид «Стол»).
-  const hCache = useRef<{ key: Piece[] | null; drag: string; h: Map<string, number> }>({
+  const hCache = useRef<{
+    key: Piece[] | null;
+    drag: string;
+    h: Map<string, number>;
+    d: Map<string, Float32Array>;
+  }>({
     key: null,
     drag: '',
     h: new Map(),
+    d: new Map(),
   });
   useEffect(() => {
     const at = (x: number, z: number, h = 0) => {
@@ -423,6 +439,15 @@ export function Desk({
         setPieces(next);
       },
       layers: () => ps.current.map((q) => [q.id, q.layer]),
+      drapeMax: (id: string) => {
+        const l = hCache.current.d.get(id);
+        const t = targets.current.get(id);
+        return {
+          calc: l ? Math.max(...l) : null,
+          onTarget: t?.drape ? Math.max(...t.drape) : null,
+          mode: t?.mode,
+        };
+      },
       // Где вещь показана сейчас (px three.js) и куда её ведут — для проверки.
       cur: (id: string) => {
         const t = targets.current.get(id);
@@ -453,6 +478,8 @@ export function Desk({
             const ra = { ...a, x: ca.x / p, z: ca.z / p };
             const rb = { ...b, x: cb.x / p, z: cb.z / p };
             if (!overlap(ra, rb, 0.004)) continue;
+            // DV-H: лист над устройством прогнут по нему — не пересечение.
+            if (drape && !!DEVICE_KIND[a.id] !== !!DEVICE_KIND[b.id]) continue;
             const lo = Math.max(ca.y - (a.t * p) / 2, cb.y - (b.t * p) / 2);
             const hi = Math.min(ca.y + (a.t * p) / 2, cb.y + (b.t * p) / 2);
             if (hi - lo > 0.05) out.push(`${a.id}/${b.id}`);
@@ -464,7 +491,7 @@ export function Desk({
         return { x: ((v.x + 1) / 2) * room.vp.width, y: ((1 - v.y) / 2) * room.vp.height };
       },
     };
-  }, [room, deskCam, blocked, p]);
+  }, [room, deskCam, blocked, p, drape]);
 
   // ── Кадр: камера, затем цель каждой вещи. ──
   useFrame((_, dtRaw) => {
@@ -474,10 +501,16 @@ export function Desk({
     const d = drag.current;
     const dragKey = d ? d.ids.join(',') : '';
     const hc = hCache.current;
-    if (hc.key !== all || hc.drag !== dragKey) {
+    if (hc.key !== all || hc.drag !== `${dragKey}|${drape}`) {
       hc.key = all;
-      hc.drag = dragKey;
-      hc.h = heights(d ? all.filter((q) => !d.ids.includes(q.id)) : all);
+      hc.drag = `${dragKey}|${drape}`;
+      const list = d ? all.filter((q) => !d.ids.includes(q.id)) : all;
+      // DV-H: лист над устройством лежит на своей высоте (по бумагам), а по устройству прогибается.
+      const over = drape
+        ? (up: Piece, low: Piece) => !DEVICE_KIND[up.id] && !!DEVICE_KIND[low.id]
+        : undefined;
+      hc.h = heights(list, over);
+      hc.d = drape ? drapes(list, hc.h, (q) => !DEVICE_KIND[q.id]) : new Map();
     }
 
     // Конверт: опечатан — лежит; вскрыт — уходит (сжимается и пропадает).
@@ -512,7 +545,12 @@ export function Desk({
         // Край стола, вещи следователя и устройства — не пройти: путь к мыши — в обход (над
         // устройством вещь не бывает, автор 23.11); над бумагами — проходит. Ближе подойти нельзя —
         // стоит, не дрожит.
-        const devices = all.filter((q) => DEVICE_KIND[q.id] && !d.ids.includes(q.id));
+        // DV-H: лист (без устройств в руке) ложится и на устройства — они ему не преграда.
+        const carriesDevice = d.ids.some((id) => DEVICE_KIND[id]);
+        const devices =
+          drape && !carriesDevice
+            ? []
+            : all.filter((q) => DEVICE_KIND[q.id] && !d.ids.includes(q.id));
         // Лист, что лежал под устройством, из-под него выезжает: то устройство ему не мешает, пока касается.
         for (const id of d.pass)
           if (!devices.some((q) => q.id === id && rects.some((r) => overlap(r, q))))
@@ -625,19 +663,23 @@ export function Desk({
                   x: x + (d.vx / sp) * lead * f,
                   z: z + (d.vz / sp) * lead * f,
                 },
-                true,
+                // Лист при DV-H идёт и над устройствами — подниматься заранее и над ними.
+                !(drape && !DEVICE_KIND[pc.id]),
               ),
             );
         const h = under + LIFT;
         onDesk(t, x, z, h + pc.t / 2, pc.rot);
+        t.drape = null;
         // В руке — плавно и без «пола»: она рисуется поверх соседних, рывков вверх нет.
         t.floorY = deskY3 + support(pc, rectNow(pc)) * p;
         continue;
       }
       onDesk(t, pc.x, pc.z, (hc.h.get(pc.id) ?? 0) + pc.t / 2, pc.rot);
       t.mode = 'rest';
-      // Опускается или едет на место — не ниже того, что под ней по пути.
-      const under = support(pc, rectNow(pc));
+      t.drape = hc.d.get(pc.id) ?? null;
+      // Опускается или едет на место — не ниже того, что под ней по пути (лист при DV-H — по
+      // бумагам: устройство он огибает прогибом).
+      const under = support(pc, rectNow(pc), drape && !DEVICE_KIND[pc.id]);
       t.minY = deskY3 + (under + pc.t / 2) * p;
       t.floorY = deskY3 + under * p;
       t.stiff = 300;

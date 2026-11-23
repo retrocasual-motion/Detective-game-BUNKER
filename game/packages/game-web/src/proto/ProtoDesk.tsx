@@ -56,6 +56,8 @@ export function ProtoDesk() {
   const [opened, setOpened] = useState(false);
   const pointer = useRef({ x: 0, y: 0 });
   const [run, setRun] = useState(0);
+  // DV-H — лист ложится на устройство и прогибается; DV-B — объезжает (переключатель для сравнения).
+  const [drape, setDrape] = useState(true);
 
   useEffect(() => {
     const move = (e: PointerEvent) => {
@@ -188,6 +190,7 @@ export function ProtoDesk() {
             }}
             pointer={pointer}
             onOpened={() => setOpened(true)}
+            drape={drape}
           />
         </Canvas>
       </div>
@@ -204,6 +207,9 @@ export function ProtoDesk() {
         </span>
         <button type="button" onClick={reset}>
           Сначала
+        </button>
+        <button type="button" data-testid="proto-drape" onClick={() => setDrape((v) => !v)}>
+          Лист и устройства: {drape ? 'ложится сверху (DV-H)' : 'объезжает (DV-B)'}
         </button>
       </aside>
       {m && (

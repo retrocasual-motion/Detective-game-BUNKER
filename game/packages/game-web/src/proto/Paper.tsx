@@ -2,15 +2,17 @@ import { type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import {
   CanvasTexture,
+  DoubleSide,
   type Group,
   type Mesh,
   type MeshBasicMaterial,
   type MeshStandardMaterial,
+  PlaneGeometry,
   type Quaternion,
   Vector3,
 } from 'three';
 import { paintTexture } from '../hold/texture.ts';
-import type { Piece } from './deskWorld.ts';
+import { DRAPE_NX, DRAPE_NY, type Piece } from './deskWorld.ts';
 
 /**
  * Прототип 3D-стола: лист (вещь из конверта) на столе. Куда ему встать, говорит `target`
@@ -45,6 +47,8 @@ export interface PaperTarget {
   onDesk: boolean;
   /** Верх того, что под вещью (y three.js): на нём лежит её тень. */
   floorY: number;
+  /** Прогиб листа (DV-H): подъём вершин сетки, м; null — ровный. */
+  drape: Float32Array | null;
   /**
    * Как движется (автор 23.11: «резко прыгает», «стекают», «не кидаю — кладу»): `hand` — в руке,
    * пружиной и плавно по высоте; `rest` — на столе: к месту одним мягким движением с замедлением в
@@ -243,6 +247,11 @@ export function Paper({
 
   // Логическое положение и масштаб (где вещь «на самом деле»); показ — с приближением к камере в руке.
   const lp = useRef(new Vector3());
+  // Лист — гнущаяся плоскость (DV-H): прогиб по устройству появляется плавно, когда лист кладут.
+  const isDevice = !!DEVICE_LOOK[piece.kind];
+  const sheetGeo = useMemo(() => new PlaneGeometry(W, D, DRAPE_NX, DRAPE_NY), [W, D]);
+  useEffect(() => () => sheetGeo.dispose(), [sheetGeo]);
+  const bend = useRef({ k: 0, shown: -1, drape: null as Float32Array | null });
   const sc = useRef(1);
   const hold = useRef(0);
   const camera = useThree((st) => st.camera);
@@ -328,6 +337,25 @@ export function Paper({
     hold.current += (want - hold.current) * (1 - Math.exp(-dt * (want ? 30 : 7)));
     const kd = 1 - PULL * hold.current;
     g.position.copy(camera.position).addScaledVector(v.copy(pos).sub(camera.position), kd);
+    // Прогиб: появляется, пока лист кладут (~0,25 с), уходит, когда его берут.
+    if (!isDevice) {
+      const bd = bend.current;
+      if (target.drape) bd.drape = target.drape;
+      const wantB = target.mode === 'rest' && target.drape ? 1 : 0;
+      bd.k += (wantB - bd.k) * (1 - Math.exp(-dt * (wantB ? 9 : 16)));
+      if (bd.k < 0.001 && !wantB) bd.k = 0;
+      const drapeNow = bd.drape;
+      if (drapeNow && Math.abs(bd.k - bd.shown) > 0.0005) {
+        const pa = sheetGeo.attributes.position;
+        if (pa) {
+          for (let i = 0; i < pa.count; i++) pa.setZ(i, (drapeNow[i] ?? 0) * p * bd.k);
+          pa.needsUpdate = true;
+          sheetGeo.computeVertexNormals();
+          sheetGeo.computeBoundingSphere();
+        }
+        bd.shown = bd.k;
+      }
+    }
     g.scale.setScalar(sc.current * kd);
     // Над запретным местом (вещь следователя, край) — лист краснеет: тень там не видна.
     const fm = faceMat.current;
@@ -371,17 +399,37 @@ export function Paper({
   return (
     <>
       <group ref={group} name={`paper-${piece.id}`}>
-        <mesh {...handlers}>
-          <boxGeometry args={[W, T, D]} />
-          <meshStandardMaterial
-            color={DEVICE_LOOK[piece.kind]?.body ?? (piece.kind === 'disc' ? '#d9d2c0' : '#e2dccd')}
-            roughness={DEVICE_LOOK[piece.kind] ? 0.5 : 0.9}
-          />
-        </mesh>
-        <mesh position={[0, T / 2 + 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} {...handlers}>
-          <planeGeometry args={[W, D]} />
-          <meshStandardMaterial ref={faceMat} map={face} roughness={0.92} emissive="#fff3d6" />
-        </mesh>
+        {isDevice ? (
+          <>
+            <mesh {...handlers}>
+              <boxGeometry args={[W, T, D]} />
+              <meshStandardMaterial
+                color={DEVICE_LOOK[piece.kind]?.body ?? '#26282b'}
+                roughness={0.5}
+              />
+            </mesh>
+            <mesh position={[0, T / 2 + 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} {...handlers}>
+              <planeGeometry args={[W, D]} />
+              <meshStandardMaterial ref={faceMat} map={face} roughness={0.92} emissive="#fff3d6" />
+            </mesh>
+          </>
+        ) : (
+          // Лист — одна гнущаяся плоскость (бумага тонкая: торец не нужен).
+          <mesh
+            geometry={sheetGeo}
+            position={[0, T / 2, 0]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            {...handlers}
+          >
+            <meshStandardMaterial
+              ref={faceMat}
+              map={face}
+              roughness={0.92}
+              emissive="#fff3d6"
+              side={DoubleSide}
+            />
+          </mesh>
+        )}
       </group>
       <mesh ref={shadow} visible={false} renderOrder={-1}>
         <planeGeometry args={[1, 1]} />
