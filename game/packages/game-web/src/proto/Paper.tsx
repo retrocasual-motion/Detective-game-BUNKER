@@ -251,7 +251,8 @@ export function Paper({
   const isDevice = !!DEVICE_LOOK[piece.kind];
   const sheetGeo = useMemo(() => new PlaneGeometry(W, D, DRAPE_NX, DRAPE_NY), [W, D]);
   useEffect(() => () => sheetGeo.dispose(), [sheetGeo]);
-  const bend = useRef({ k: 0, shown: -1, drape: null as Float32Array | null });
+  // Показанный подъём вершин, px: плавно к прогибу, но никогда ниже того, что под листом.
+  const zs = useRef<Float32Array | null>(null);
   const sc = useRef(1);
   const hold = useRef(0);
   const camera = useThree((st) => st.camera);
@@ -337,23 +338,37 @@ export function Paper({
     hold.current += (want - hold.current) * (1 - Math.exp(-dt * (want ? 30 : 7)));
     const kd = 1 - PULL * hold.current;
     g.position.copy(camera.position).addScaledVector(v.copy(pos).sub(camera.position), kd);
-    // Прогиб: появляется, пока лист кладут (~0,25 с), уходит, когда его берут.
+    // Прогиб: плавно появляется, пока лист кладут, и уходит, когда его берут. Каждая точка листа
+    // не ниже того, что под ней, и на лету (автор 23.11: «проходит сквозь, потом выше»): пока лист
+    // выше своего места на dy, точке нужен подъём не меньше прогиба минус dy.
     if (!isDevice) {
-      const bd = bend.current;
-      if (target.drape) bd.drape = target.drape;
-      const wantB = target.mode === 'rest' && target.drape ? 1 : 0;
-      bd.k += (wantB - bd.k) * (1 - Math.exp(-dt * (wantB ? 9 : 16)));
-      if (bd.k < 0.001 && !wantB) bd.k = 0;
-      const drapeNow = bd.drape;
-      if (drapeNow && Math.abs(bd.k - bd.shown) > 0.0005) {
-        const pa = sheetGeo.attributes.position;
-        if (pa) {
-          for (let i = 0; i < pa.count; i++) pa.setZ(i, (drapeNow[i] ?? 0) * p * bd.k);
+      const pa = sheetGeo.attributes.position;
+      if (pa) {
+        if (!zs.current) zs.current = new Float32Array(pa.count);
+        const z = zs.current;
+        const dr = target.mode === 'rest' ? target.drape : null;
+        const dy = target.mode === 'rest' ? pos.y - target.pos.y : 0;
+        const k = 1 - Math.exp(-dt * 14);
+        let changed = false;
+        for (let i = 0; i < pa.count; i++) {
+          const want = dr ? (dr[i] ?? 0) * p : 0;
+          const need = dr ? Math.max(0, want - dy) : 0;
+          const now = z[i] ?? 0;
+          const next = Math.max(need, now + (want - now) * k);
+          if (Math.abs(next - now) > 0.005) {
+            z[i] = next;
+            changed = true;
+          } else if (now !== want && Math.abs(want - now) <= 0.005) {
+            z[i] = want;
+            changed = true;
+          }
+        }
+        if (changed) {
+          for (let i = 0; i < pa.count; i++) pa.setZ(i, z[i] ?? 0);
           pa.needsUpdate = true;
           sheetGeo.computeVertexNormals();
           sheetGeo.computeBoundingSphere();
         }
-        bd.shown = bd.k;
       }
     }
     g.scale.setScalar(sc.current * kd);

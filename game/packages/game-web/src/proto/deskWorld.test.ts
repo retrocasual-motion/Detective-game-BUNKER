@@ -186,13 +186,14 @@ describe('прототип 3D-стола: раскладка без физики
     // До верха телефона и миллиметр зазора.
     expect(max).toBeCloseTo(0.013, 4);
     // Правый край листа (далеко от телефона) — на столе.
-    const right = lift[7 * (DRAPE_NX + 1) + DRAPE_NX] ?? 1;
+    const right = lift[14 * (DRAPE_NX + 1) + DRAPE_NX] ?? 1;
     expect(right).toBeLessThan(0.001);
-    // Соседние вершины по ширине: перепад не больше трети высоты — полого.
-    for (let ix = 0; ix < DRAPE_NX; ix++) {
-      const a = lift[7 * (DRAPE_NX + 1) + ix] ?? 0;
-      const b = lift[7 * (DRAPE_NX + 1) + ix + 1] ?? 0;
-      expect(Math.abs(a - b)).toBeLessThan(0.0065);
+    // Горбик — по размеру телефона: дальше 4 см от его края лист лежит на столе.
+    const row = 14 * (DRAPE_NX + 1);
+    for (let ix = 0; ix <= DRAPE_NX; ix++) {
+      const u = -0.105 + (ix * 0.21) / DRAPE_NX + 0.05; // x вершины (центр листа 0,05)
+      if (Math.abs(u) > 0.0325 + 0.0075 + 0.03 + 0.005)
+        expect(lift[row + ix] ?? 0).toBeLessThan(1e-4);
     }
     // Лист далеко от устройств — ровный.
     expect(drapes([phone, sheet('b', 0.6, 0.4, 1)], h, (q) => q.kind !== 'mobile').has('b')).toBe(

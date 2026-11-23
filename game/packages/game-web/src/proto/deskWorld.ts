@@ -322,6 +322,14 @@ export function plan(
     return true;
   };
   if (ok(want.x, want.z) && clear(cur.x, cur.z, want.x, want.z)) return { x: want.x, z: want.z };
+  // Вещь стоит там, где стоять нельзя (так вышло) — не залипает: прямо к мыши, пока не выйдет.
+  if (!ok(cur.x, cur.z)) {
+    const dx = want.x - cur.x;
+    const dz = want.z - cur.z;
+    const l = Math.hypot(dx, dz);
+    if (l <= maxPath) return { x: want.x, z: want.z };
+    return { x: cur.x + (dx / l) * maxPath, z: cur.z + (dz / l) * maxPath };
+  }
   // Поиск в ширину по сетке вокруг вещи.
   const R = Math.round(radius / cell);
   const key = (i: number, j: number) => (i + R) * (2 * R + 1) + (j + R);
@@ -397,45 +405,58 @@ export function plan(
   return { x: cur.x + (dx / l) * maxPath, z: cur.z + (dz / l) * maxPath };
 }
 
-/** Сетка прогиба листа: столько делений по ширине и глубине. */
-export const DRAPE_NX = 10;
-export const DRAPE_NY = 14;
+/** Сетка прогиба листа: столько делений по ширине и глубине (шаг ~1 см). */
+export const DRAPE_NX = 20;
+export const DRAPE_NY = 28;
 /** Зазор бумаги над устройством, м. */
 const GAP = 0.001;
-/** Поле вокруг устройства, где бумага держит полную высоту, м (больше шага сетки листа). */
-const MARGIN = 0.025;
+/** Поле вокруг устройства, где бумага держит полную высоту, м: полдиагонали шага сетки. */
+const MARGIN = 0.0075;
+/** Округа вершины для высоты (доли шага сетки). */
+const AROUND: readonly [number, number][] = [
+  [0, 0],
+  [0.5, 0],
+  [-0.5, 0],
+  [0, 0.5],
+  [0, -0.5],
+  [0.5, 0.5],
+  [-0.5, 0.5],
+  [0.5, -0.5],
+  [-0.5, -0.5],
+];
 
 /**
- * Прогиб листов (DV-H, автор 23.11: «положить сверху — немного огибает, легонько»): лист лежит на
- * своей высоте (по бумагам под ним), а там, где под ним устройство или горбик нижнего листа, —
- * приподнят до их верха; подъём расходится полого на `radius` вокруг (широкий горбик, без излома).
- * Возвращает подъём каждой вершины сетки, м: ряды от дальнего края листа к ближнему, в ряду —
- * слева направо; ровный лист — нет записи.
+ * Прогиб листов (DV-H, автор 23.11: «положить сверху — немного огибает, легонько»; «изгиб слишком
+ * большой — по размеру вещи»): лист лежит на своей высоте (по бумагам под ним), а там, где под ним
+ * устройство или горбик нижнего листа, — приподнят до их верха (зазор 1 мм); подъём сходит полого на
+ * `radius` вокруг. Устройство на прогнутом листе ложится на верх горбика (`base` дополняется).
+ * Возвращает подъём каждой вершины сетки, м: ряды от дальнего края листа к ближнему, в ряду — слева
+ * направо; ровный лист — нет записи.
  */
 export function drapes(
   pieces: readonly Piece[],
-  base: ReadonlyMap<string, number>,
+  base: Map<string, number>,
   bends: (p: Piece) => boolean,
-  radius = 0.07,
+  radius = 0.03,
 ): Map<string, Float32Array> {
   const out = new Map<string, Float32Array>();
   const sorted = [...pieces].sort((a, b) => a.layer - b.layer);
   const nx = DRAPE_NX;
   const ny = DRAPE_NY;
-  const vert = (p: Piece, ix: number, iy: number) => {
-    const u = -p.w / 2 + (ix * p.w) / nx;
-    const v = -p.d / 2 + (iy * p.d) / ny;
+  const local = (o: Piece, x: number, z: number) => {
+    const c = Math.cos(o.rot);
+    const s = Math.sin(o.rot);
+    const dx = x - o.x;
+    const dz = z - o.z;
+    return { u: dx * c - dz * s, v: dx * s + dz * c };
+  };
+  const world = (p: Piece, u: number, v: number) => {
     const c = Math.cos(p.rot);
     const s = Math.sin(p.rot);
     return { x: p.x + u * c + v * s, z: p.z - u * s + v * c };
   };
   const sample = (o: Piece, lift: Float32Array, x: number, z: number) => {
-    const c = Math.cos(o.rot);
-    const s = Math.sin(o.rot);
-    const dx = x - o.x;
-    const dz = z - o.z;
-    const u = dx * c - dz * s;
-    const v = dx * s + dz * c;
+    const { u, v } = local(o, x, z);
     const fx = Math.min(nx, Math.max(0, ((u + o.w / 2) / o.w) * nx));
     const fy = Math.min(ny, Math.max(0, ((v + o.d / 2) / o.d) * ny));
     const x0 = Math.min(nx - 1, Math.floor(fx));
@@ -450,48 +471,64 @@ export function drapes(
       at(x0 + 1, y0 + 1) * tx * ty
     );
   };
-  // Верх вещи o в точке (x, z): у листа — с его горбиком. Устройство — с полем на шаг сетки листа:
-  // между вершинами бумага не проваливается на его край.
+  const grown = (o: Piece) => (bends(o) ? o : { ...o, w: o.w + MARGIN * 2, d: o.d + MARGIN * 2 });
+  // Верх вещи o в точке (x, z): у листа — с его горбиком; устройство — с полем на полшага сетки.
   const surface = (o: Piece, x: number, z: number) => {
-    const grow = bends(o) ? 0 : MARGIN;
-    if (!contains({ ...o, w: o.w + grow * 2, d: o.d + grow * 2 }, x, z))
-      return Number.NEGATIVE_INFINITY;
+    if (!contains(grown(o), x, z)) return Number.NEGATIVE_INFINITY;
     const top = (base.get(o.id) ?? 0) + o.t;
     const l = out.get(o.id);
     return l ? top + sample(o, l, x, z) : top;
   };
   for (const [i, p] of sorted.entries()) {
-    if (!bends(p)) continue;
-    const below = sorted
-      .slice(0, i)
-      .filter((o) => overlap(p, bends(o) ? o : { ...o, w: o.w + MARGIN * 2, d: o.d + MARGIN * 2 }));
+    const below = sorted.slice(0, i).filter((o) => overlap(p, grown(o)));
     if (!below.length) continue;
+    if (!bends(p)) {
+      // Устройство на прогнутом листе — на верху горбика (середина и углы).
+      let top = base.get(p.id) ?? 0;
+      const pts = [world(p, 0, 0), ...cornersOf(p).map(([x, z]) => ({ x, z }))];
+      for (const o of below)
+        if (bends(o) && out.has(o.id))
+          for (const q of pts) top = Math.max(top, surface(o, q.x, q.z));
+      base.set(p.id, top);
+      continue;
+    }
     const b0 = base.get(p.id) ?? 0;
-    const raw = new Float32Array((nx + 1) * (ny + 1));
+    const n = (nx + 1) * (ny + 1);
+    const raw = new Float32Array(n);
     const pts: { x: number; z: number }[] = [];
-    let any = false;
+    const src: number[] = [];
     for (let iy = 0; iy <= ny; iy++)
       for (let ix = 0; ix <= nx; ix++) {
-        const q = vert(p, ix, iy);
+        const q = world(p, -p.w / 2 + (ix * p.w) / nx, -p.d / 2 + (iy * p.d) / ny);
         pts.push(q);
         let req = 0;
-        // Над устройством — с зазором в миллиметр: поверхности не совпадают (иначе верх камеры
-        // «пробивает» бумагу).
+        // Над устройством — с зазором в миллиметр (иначе верх камеры «пробивает» бумагу). Высота —
+        // наибольшая в округе вершины (полшага сетки): между вершинами выпуклый горбик нижнего листа
+        // не проступает сквозь верхний.
         for (const o of below) {
-          const top = surface(o, q.x, q.z) - b0;
+          let top = Number.NEGATIVE_INFINITY;
+          for (const [du, dv] of AROUND) {
+            const r = world(
+              p,
+              -p.w / 2 + ((ix + du) * p.w) / nx,
+              -p.d / 2 + ((iy + dv) * p.d) / ny,
+            );
+            top = Math.max(top, surface(o, r.x, r.z));
+          }
+          top -= b0;
           if (top > 1e-5) req = Math.max(req, top + GAP);
         }
         const k = iy * (nx + 1) + ix;
-        raw[k] = Math.max(0, req);
-        if (raw[k] > 1e-5) any = true;
+        raw[k] = req;
+        if (req > 1e-5) src.push(k);
       }
-    if (!any) continue;
-    // Полого: подъём расходится косинусом на radius — горбик, а не ступенька.
-    const lift = new Float32Array(raw.length);
-    for (let a = 0; a < raw.length; a++) {
+    if (!src.length) continue;
+    // Полого: подъём сходит косинусом на radius — горбик, а не ступенька (только от поднятых вершин).
+    const lift = new Float32Array(raw);
+    for (let a = 0; a < n; a++) {
       const pa = pts[a] as { x: number; z: number };
-      let m = raw[a] ?? 0;
-      for (let bI = 0; bI < raw.length; bI++) {
+      let m = lift[a] ?? 0;
+      for (const bI of src) {
         const rb = raw[bI] ?? 0;
         if (rb <= m) continue;
         const pb = pts[bI] as { x: number; z: number };

@@ -671,7 +671,9 @@ export function Desk({
         onDesk(t, x, z, h + pc.t / 2, pc.rot);
         t.drape = null;
         // В руке — плавно и без «пола»: она рисуется поверх соседних, рывков вверх нет.
-        t.floorY = deskY3 + support(pc, rectNow(pc)) * p;
+        // Тень — на уровне бумаг: устройство и горбик над ним её сами закрывают (иначе плоская тень
+        // висела на высоте устройства — «просвечивала рамку»).
+        t.floorY = deskY3 + support(pc, rectNow(pc), true) * p;
         continue;
       }
       onDesk(t, pc.x, pc.z, (hc.h.get(pc.id) ?? 0) + pc.t / 2, pc.rot);
