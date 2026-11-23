@@ -43,7 +43,20 @@ export interface PaperTarget {
   cur: Vector3;
   /** Вещь показана на столе (не на стене и не в полёте к ней). */
   onDesk: boolean;
+  /**
+   * Как движется по высоте (автор 23.11: «резко прыгает — некрасиво», «стекают — нереалистично»):
+   * `hand` — в руке, плавно вверх и вниз; `rest` — на столе: доехала до места — падает с настоящим
+   * ускорением, без отскока; `air` — к стене и на стене, всё одной пружиной.
+   */
+  mode: 'hand' | 'rest' | 'air';
 }
+
+/** Ускорение падения, м/с² — настоящее: стопка оседает быстро и чётко, не «стекает». */
+const G = 9.8;
+/** Пружина высоты в руке: подъём на сантиметр — около десятой доли секунды, без рывка. */
+const LIFT_K = 500;
+/** Самая быстрая смена высоты в руке, м/с. */
+const RISE = 0.12;
 
 const PAPER = '#efe9dc';
 /** Изъятые устройства в прототипе: цвет корпуса и верха. */
@@ -223,17 +236,55 @@ export function Paper({
       target.cur.copy(g.position);
     }
     if (start && performance.now() < start.at) return;
-    // Пружина: a = k·(цель − x) − c·v; c — чуть меньше критического (лёгкий отскок).
+    // Пружина: a = k·(цель − x) − c·v.
     const k = target.stiff;
     const c = 2 * Math.sqrt(k) * target.damp;
-    v.copy(target.pos).sub(g.position).multiplyScalar(k).addScaledVector(vel.current, -c);
-    vel.current.addScaledVector(v, dt);
-    g.position.addScaledVector(vel.current, dt);
-    if (g.position.y < target.minY) {
-      g.position.y = target.minY;
-      if (vel.current.y < 0) vel.current.y = 0;
+    const pos = g.position;
+    const vl = vel.current;
+    if (target.mode === 'air') {
+      v.copy(target.pos).sub(pos).multiplyScalar(k).addScaledVector(vl, -c);
+      vl.addScaledVector(v, dt);
+      pos.addScaledVector(vl, dt);
+    } else {
+      // По столу — пружиной.
+      vl.x += (k * (target.pos.x - pos.x) - c * vl.x) * dt;
+      vl.z += (k * (target.pos.z - pos.z) - c * vl.z) * dt;
+      pos.x += vl.x * dt;
+      pos.z += vl.z * dt;
+      const ty = target.pos.y;
+      if (target.mode === 'hand') {
+        // В руке — плавно (критическое затухание), без рывков вверх.
+        vl.y += (LIFT_K * (ty - pos.y) - 2 * Math.sqrt(LIFT_K) * vl.y) * dt;
+        // Не быстрее RISE: на телефон поднимается ровно, а не «прыжком».
+        vl.y = Math.max(-RISE * p, Math.min(RISE * p, vl.y));
+        pos.y += vl.y * dt;
+      } else if (pos.y > ty + 0.01) {
+        // Сверху места: пока едет к месту — держится; доехала — падает с ускорением.
+        const far = Math.hypot(target.pos.x - pos.x, target.pos.z - pos.z) > 0.012 * p;
+        if (far) vl.y = 0;
+        else {
+          vl.y -= G * p * dt;
+          pos.y += vl.y * dt;
+          if (pos.y <= ty) {
+            pos.y = ty;
+            vl.y = 0;
+          }
+        }
+      } else if (pos.y < ty - 0.01) {
+        // Ниже места (под неё подвинули) — поднимается быстро и плавно.
+        pos.y += (ty - pos.y) * (1 - Math.exp(-dt * 25));
+        vl.y = 0;
+      } else {
+        pos.y = ty;
+        vl.y = 0;
+      }
     }
-    target.cur.copy(g.position);
+    // Ни во что не врезается: не ниже того, что под ней.
+    if (pos.y < target.minY) {
+      pos.y = target.minY;
+      if (vl.y < 0) vl.y = 0;
+    }
+    target.cur.copy(pos);
     g.quaternion.slerp(target.quat, 1 - Math.exp(-dt * (k > 600 ? 22 : 12)));
     g.scale.setScalar(g.scale.x + (target.scale - g.scale.x) * (1 - Math.exp(-dt * 10)));
     // Над запретным местом (вещь следователя, край) — лист краснеет: тень там не видна.

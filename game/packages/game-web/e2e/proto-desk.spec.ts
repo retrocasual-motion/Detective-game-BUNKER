@@ -87,8 +87,14 @@ test('прототип 3D-стола: вскрыть клапаном; вещь 
   // где отпустили (не прыгает к первому), и лежит сверху.
   await drag(page, await grab(a.id), await call<Pt>(page, 'desk', -0.35, 0.58));
   const y = papers[papers.length - 2] as Laid;
+  // Сначала — в сторону: лист, вынутый из-под другого, пока его касается, едет под ним (как на
+  // столе); вышел — сверху всего.
+  await drag(page, await grab(y.id), await call<Pt>(page, 'desk', 0.02, 0.62));
   const under = await call<Pt>(page, 'piece', a.id);
-  await drag(page, await grab(y.id), { x: under.x + 60, y: under.y });
+  // Взять за видимую точку и отпустить так, чтобы центр листа лёг чуть правее центра нижнего.
+  const gy = await grab(y.id);
+  const cy = await call<Pt>(page, 'piece', y.id);
+  await drag(page, gy, { x: under.x + (gy.x - cy.x) + 80, y: under.y + (gy.y - cy.y) });
   const y1 = (await find(page, y.id)) as Laid;
   const x1 = (await find(page, a.id)) as Laid;
   expect(Math.abs(y1.x - x1.x)).toBeGreaterThan(0.03);

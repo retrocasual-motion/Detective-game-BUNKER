@@ -19,7 +19,7 @@ const sheet = (id: string, x: number, z: number, layer: number, rot = 0, stack =
   kind: 'sheet',
   w: 0.21,
   d: 0.297,
-  t: 0.0025,
+  t: 0.0012,
   x,
   z,
   rot,
@@ -47,8 +47,8 @@ describe('прототип 3D-стола: раскладка без физики
       sheet('d', 0.6, 0.3, 3),
     ]);
     expect(h.get('a')).toBe(0);
-    expect(h.get('b')).toBeCloseTo(0.0025);
-    expect(h.get('c')).toBeCloseTo(0.005);
+    expect(h.get('b')).toBeCloseTo(0.0012);
+    expect(h.get('c')).toBeCloseTo(0.0024);
     expect(h.get('d')).toBe(0);
   });
 
