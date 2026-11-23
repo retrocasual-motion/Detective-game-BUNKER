@@ -1,0 +1,8 @@
+Сгенерируй через Higgsfield одну строку K5: модель nano_banana_pro, use_unlim: true, разрешение 2k, формат 16:9, 4 варианта, generate_image_batch. В medias с ролью image_references передай только 4ac5f6ae-7891-4b47-b996-2fc64e9eba60 — это id прошлой генерации, которая мне понравилась; это правка этого кадра, а не новый кадр. Промпт не меняй.
+
+Брак (такой вариант повтори один раз): лампы над доской видны в кадре; доска освещена ровно, как витрина; поменялись стол, лампа, вещи или ракурс; новые предметы; любые буквы, цифры, логотипы; люди; лица на фото доски.
+
+В конце дай id генераций и какая модель записана в задаче.
+
+K5 — те же стена и свет, лампы выше и не видны:
+Edit this exact photograph. Keep everything else identical: the camera position and framing, the desk, the green glass banker's lamp, every object on the desk, the cork board and everything pinned on it, the warm colour and direction of the light on the wall, the darkness to the left, right and below. Change only the lamps above the board: they are mounted higher, above the top edge of the frame, so the lamps themselves are not visible at all — only their warm light falls on the wall from above. Because the lamps are higher, the light on the board is a little more even from top to bottom: the dark band along the top edge of the board and the dark gaps between the light pools at the top become lighter, so the top of the board is lit about as well as the middle. Keep the soft falloff towards the sides and the bottom, the small soft shadows under the pinned papers and the slight film grain. No visible lamps, no wall sconces, no people, no readable text, no logos.
