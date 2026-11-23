@@ -280,3 +280,136 @@ export function nearestFree(
   }
   return null;
 }
+
+/** Куда вещь обходит устройство: вдоль какой его оси и в какую сторону (помнится между кадрами). */
+export interface SteerMemo {
+  esc?: { id: string; axis: 'u' | 'v'; sign: number } | null;
+}
+
+/**
+ * Вести вещь к цели в обход устройств (автор 23.11: «сверху он не может быть… плавно оказывается
+ * с правой стороны»). Упёрлась в устройство — в его собственных осях (вещи стоят под углами):
+ * сначала вдоль его стороны к цели, иначе — в обход к ближнему углу; направление обхода
+ * запоминается (`memo`), чтобы вещь не качалась туда-сюда; обошла угол — снова прямо к мыши.
+ * Край стола и вещи следователя (`zone.blocked`) — упор, как в `slide`. `soft` — устройства с id.
+ */
+export function steer(
+  rects: readonly Rect[],
+  dx: number,
+  dz: number,
+  zone: Zone,
+  soft: readonly (Rect & { id: string })[],
+  memo: SteerMemo = {},
+  /** Сколько пути за раз (за кадр): обход угла — за несколько кадров, а не рывком. */
+  maxPath = Number.POSITIVE_INFINITY,
+  step = 0.006,
+): { dx: number; dz: number } {
+  let path = 0;
+  const full: Zone = { inside: zone.inside, blocked: [...zone.blocked, ...soft] };
+  const at = (ox: number, oz: number) => rects.map((r) => ({ ...r, x: r.x + ox, z: r.z + oz }));
+  const ok = (ox: number, oz: number) => at(ox, oz).every((r) => allowed(r, full));
+  const n0 = Math.max(1, rects.length);
+  const gx0 = rects.reduce((a, r) => a + r.x, 0) / n0;
+  const gz0 = rects.reduce((a, r) => a + r.z, 0) / n0;
+  const ext = rects[0] ?? { w: 0, d: 0 };
+  const clip = (v: number) => Math.max(-step, Math.min(step, v));
+  let cx = 0;
+  let cz = 0;
+  const n = Math.min(900, Math.ceil((Math.abs(dx) + Math.abs(dz)) / step) * 6 + 60);
+  for (let i = 0; i < n; i++) {
+    const rx = dx - cx;
+    const rz = dz - cz;
+    const len = Math.hypot(rx, rz);
+    if (len < 1e-4 || path >= maxPath) break;
+    path += Math.min(step, len);
+    const k = Math.min(step, len) / len;
+    const sx = rx * k;
+    const sz = rz * k;
+    if (ok(cx + sx, cz + sz)) {
+      cx += sx;
+      cz += sz;
+      if (memo.esc && !soft.some((b) => b.id === memo.esc?.id && near(at(cx, cz), b)))
+        memo.esc = null;
+      continue;
+    }
+    const blocker = soft.find((b) => at(cx + sx, cz + sz).some((r) => overlap(r, b)));
+    if (!blocker) {
+      // Упор — край или вещь следователя: вдоль него по свободной оси.
+      const ax = clip(rx);
+      const az = clip(rz);
+      if (ax && ok(cx + ax, cz)) cx += ax;
+      else if (az && ok(cx, cz + az)) cz += az;
+      else break;
+      continue;
+    }
+    // Оси устройства: u — вдоль его ширины, v — вдоль глубины.
+    const c = Math.cos(blocker.rot);
+    const sn = Math.sin(blocker.rot);
+    const U = [c, -sn] as const;
+    const V = [sn, c] as const;
+    const su = sx * U[0] + sz * U[1];
+    const sv = sx * V[0] + sz * V[1];
+    const esc = memo.esc && memo.esc.id === blocker.id ? memo.esc : null;
+    // Вдоль стороны — к цели (но не назад, против начатого обхода).
+    const tryU = !(esc && esc.axis === 'u' && Math.sign(su) === -esc.sign);
+    const tryV = !(esc && esc.axis === 'v' && Math.sign(sv) === -esc.sign);
+    if (tryU && Math.abs(su) > 1e-6 && ok(cx + su * U[0], cz + su * U[1])) {
+      cx += su * U[0];
+      cz += su * U[1];
+      continue;
+    }
+    if (tryV && Math.abs(sv) > 1e-6 && ok(cx + sv * V[0], cz + sv * V[1])) {
+      cx += sv * V[0];
+      cz += sv * V[1];
+      continue;
+    }
+    // В обход: с какой стороны устройства вещь — от той оси и уходим к ближнему углу.
+    let e = esc;
+    if (!e) {
+      const gx = gx0 + cx - blocker.x;
+      const gz = gz0 + cz - blocker.z;
+      const pu = gx * U[0] + gz * U[1];
+      const pv = gx * V[0] + gz * V[1];
+      const onU =
+        Math.abs(pu) / (blocker.w / 2 + ext.w / 2) >= Math.abs(pv) / (blocker.d / 2 + ext.d / 2);
+      const axis: 'u' | 'v' = onU ? 'v' : 'u';
+      const along = axis === 'v' ? pv : pu;
+      const want = axis === 'v' ? rx * V[0] + rz * V[1] : rx * U[0] + rz * U[1];
+      const sign = Math.abs(along) > 0.004 ? Math.sign(along) : Math.sign(want) || 1;
+      e = { id: blocker.id, axis, sign };
+      memo.esc = e;
+    }
+    // Вдоль стороны в выбранную сторону; не выходит (край стола, повёрнутый бок) — с отступом от
+    // устройства, отступить, обходить с другой стороны.
+    const A = e.axis === 'u' ? U : V;
+    const N = e.axis === 'u' ? V : U;
+    const gx = gx0 + cx - blocker.x;
+    const gz = gz0 + cz - blocker.z;
+    const away = Math.sign(gx * N[0] + gz * N[1]) || 1;
+    const cand: [number, number, number][] = [];
+    for (const sg of [e.sign, -e.sign])
+      for (const off of [0, 0.5, 1])
+        cand.push([sg, A[0] * sg + N[0] * away * off, A[1] * sg + N[1] * away * off]);
+    cand.splice(3, 0, [e.sign, N[0] * away, N[1] * away]);
+    let moved = false;
+    for (const [sg, vx, vz] of cand) {
+      const l = Math.hypot(vx, vz) || 1;
+      const mx = (vx / l) * step;
+      const mz = (vz / l) * step;
+      if (ok(cx + mx, cz + mz)) {
+        cx += mx;
+        cz += mz;
+        e.sign = sg;
+        moved = true;
+        break;
+      }
+    }
+    if (!moved) break;
+  }
+  return { dx: cx, dz: cz };
+}
+
+/** Вещь рядом с устройством (в пределах шага обхода) — обход ещё идёт. */
+function near(rs: readonly Rect[], b: Rect, pad = 0.012) {
+  return rs.some((r) => overlap({ ...r, w: r.w + pad * 2, d: r.d + pad * 2 }, b));
+}

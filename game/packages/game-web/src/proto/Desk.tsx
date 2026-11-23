@@ -12,8 +12,9 @@ import {
   type Piece,
   pileOf,
   type Rect,
+  type SteerMemo,
   scatter,
-  slide,
+  steer,
   topAt,
   type Zone,
 } from './deskWorld.ts';
@@ -78,6 +79,10 @@ interface Drag {
   wall: { x: number; y: number } | null;
   vx: number;
   vz: number;
+  /** Как обходит устройство (помнится между кадрами). */
+  memo: SteerMemo;
+  /** Устройства, которых взятая вещь касалась в начале (лист под телефоном): не мешают, пока касается. */
+  pass: Set<string>;
   /** Что лежало на взятом листе: пока лист под ними — выезжает снизу, они стоят. */
   above: Set<string>;
   under: boolean;
@@ -297,6 +302,13 @@ export function Desk({
       vz: 0,
       above,
       under: above.size > 0,
+      memo: {},
+      pass: new Set(
+        all
+          .filter((q) => DEVICE_KIND[q.id] && !ids.includes(q.id))
+          .filter((q) => group.some((g) => overlap(g, q)))
+          .map((q) => q.id),
+      ),
     };
     relayer(all, layer);
   };
@@ -409,6 +421,18 @@ export function Desk({
         ps.current.map((q) => ({ id: q.id, x: q.x, z: q.z, w: q.w, d: q.d, rot: q.rot })),
       pile: (id: string) => pileOf(ps.current, id).map((q) => q.id),
       blocked: () => blocked,
+      // Где вещь показана сейчас (px three.js) и куда её ведут — для проверки.
+      cur: (id: string) => {
+        const t = targets.current.get(id);
+        return t
+          ? {
+              cur: t.cur.toArray().map((v) => Math.round(v)),
+              to: t.pos.toArray().map((v) => Math.round(v)),
+              mode: t.mode,
+            }
+          : null;
+      },
+      dragOff: () => (drag.current ? { ...drag.current.off, under: drag.current.under } : null),
       // Высота вещи на экране сейчас (px three.js) — для проверки плавности.
       y: (id: string) => targets.current.get(id)?.cur.y ?? null,
       // Пары вещей на столе, которые сейчас врезаются друг в друга (по показанному положению).
@@ -482,8 +506,23 @@ export function Desk({
           return pc && b ? [{ ...pc, x: b.x + d.off.x, z: b.z + d.off.z }] : [];
         });
         const want = { x: pt.x - d.grab0.x, z: pt.z - d.grab0.z };
-        // Упирается только в край стола и вещи следователя; над устройствами и стопками — проходит.
-        const mv = slide(rects, want.x - d.off.x, want.z - d.off.z, zone);
+        // Край стола и вещи следователя — упор; устройство — обтекает по контуру (над ним не бывает,
+        // автор 23.11); над бумагами — проходит.
+        const devices = all.filter((q) => DEVICE_KIND[q.id] && !d.ids.includes(q.id));
+        // Лист, что лежал под устройством, из-под него выезжает: то устройство ему не мешает, пока касается.
+        for (const id of d.pass)
+          if (!devices.some((q) => q.id === id && rects.some((r) => overlap(r, q))))
+            d.pass.delete(id);
+        const mv = steer(
+          rects,
+          want.x - d.off.x,
+          want.z - d.off.z,
+          zone,
+          devices.filter((q) => !d.pass.has(q.id)),
+          d.memo,
+          // Не дальше, чем ушла мышь, плюс 2 см: обходит угол за несколько кадров (~1,2 м/с).
+          Math.hypot(want.x - d.off.x, want.z - d.off.z) + 0.02,
+        );
         d.off = { x: d.off.x + mv.dx, z: d.off.z + mv.dz };
         if (d.under) {
           // Вышел — и там, куда его ведут, и там, где он показан (показ чуть отстаёт от мыши).
@@ -528,10 +567,16 @@ export function Desk({
       return c ? (c.y - deskY3) / p - q.t / 2 : 0;
     };
     // На чём лежит (или над чем идёт) вещь в этом месте: верх всего, что под ней ниже по порядку.
-    const support = (q: Piece, r: Rect) => {
+    // papersOnly — без устройств: на устройство вещь не заходит (обходит), над ним не поднимается.
+    const support = (q: Piece, r: Rect, papersOnly = false) => {
       let top = 0;
       for (const o of onDeskNow)
-        if (o !== q && o.layer < q.layer && overlap(r, rectNow(o)))
+        if (
+          o !== q &&
+          o.layer < q.layer &&
+          !(papersOnly && DEVICE_KIND[o.id]) &&
+          overlap(r, rectNow(o))
+        )
           top = Math.max(top, bottomNow(o) + o.t);
       return top;
     };
@@ -580,11 +625,15 @@ export function Desk({
           for (const f of [0.35, 0.7, 1])
             under = Math.max(
               under,
-              support(pc, {
-                ...here,
-                x: x + (d.vx / sp) * lead * f,
-                z: z + (d.vz / sp) * lead * f,
-              }),
+              support(
+                pc,
+                {
+                  ...here,
+                  x: x + (d.vx / sp) * lead * f,
+                  z: z + (d.vz / sp) * lead * f,
+                },
+                true,
+              ),
             );
         const h = under + LIFT;
         onDesk(t, x, z, h + pc.t / 2, pc.rot);

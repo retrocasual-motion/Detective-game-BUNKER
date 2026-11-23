@@ -10,6 +10,7 @@ import {
   scatter,
   slide,
   stackOf,
+  steer,
   topAt,
   type Zone,
 } from './deskWorld.ts';
@@ -120,5 +121,28 @@ describe('прототип 3D-стола: раскладка без физики
     expect(cam.x + (m?.dx ?? 0) - cam.w / 2).toBeGreaterThanOrEqual(0.05 - 0.01);
     expect(Math.abs(m?.dz ?? 1)).toBeLessThan(0.02);
     expect(nearestFree([{ ...cam, x: 0.5 }], phone)).toEqual({ dx: 0, dz: 0 });
+  });
+
+  it('в обход устройства: камера слева от телефона, ведут вправо — обходит и встаёт справа', () => {
+    const phone = { id: '48', x: 0, z: 0.4, w: 0.065, d: 0.12, rot: 0 };
+    const cam = { x: -0.12, z: 0.4, w: 0.1, d: 0.06, rot: 0 };
+    const m = steer([cam], 0.24, 0, open, [phone]);
+    const end = { ...cam, x: cam.x + m.dx, z: cam.z + m.dz };
+    expect(overlap(end, phone)).toBe(false);
+    expect(end.x).toBeGreaterThan(phone.x + phone.w / 2);
+    // Цель свободна — пришла туда же.
+    expect(end.x).toBeCloseTo(0.12, 2);
+    expect(end.z).toBeCloseTo(0.4, 2);
+    // Повёрнутые, мышь ведут мелкими шагами (как в живой протяжке): тоже обходит.
+    const ph2 = { id: '48', x: -0.2275, z: 0.6974, w: 0.1, d: 0.06, rot: 0.065 };
+    let c2 = { x: -0.5174, z: 0.6953, w: 0.065, d: 0.12, rot: 0.1357 };
+    const memo = {};
+    for (let k = 0; k < 60; k++) {
+      const want = { x: -0.5174 + ((0.15 + 0.5174) * (k + 1)) / 60, z: 0.6953 };
+      const mv = steer([c2], want.x - c2.x, want.z - c2.z, open, [ph2], memo);
+      c2 = { ...c2, x: c2.x + mv.dx, z: c2.z + mv.dz };
+    }
+    expect(overlap(c2, ph2)).toBe(false);
+    expect(c2.x).toBeCloseTo(0.15, 2);
   });
 });
