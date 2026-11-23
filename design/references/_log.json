@@ -506,5 +506,45 @@
   "prompt": "design/references/CHAT_PASTE_GEN5_cabinet_board16x9.txt, K6-4",
   "refs": "K5_cabinet_lamps_v1 (генерация)",
   "verdict": "—"
+ },
+ {
+  "file": "references/places/K7_cabinet_sides_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN6_cabinet_sides.txt, K7-1",
+  "refs": "K6_cabinet_board16x9_v3 (генерация), P13_desk_board, P39_dark_room_wall_lamps, P18_cabinet_light",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K7_cabinet_sides_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN6_cabinet_sides.txt, K7-2",
+  "refs": "K6_cabinet_board16x9_v3 (генерация), P13_desk_board, P39_dark_room_wall_lamps, P18_cabinet_light",
+  "verdict": "ВЫБРАН автором 23.11 («супер, очень нравится»): референс кабинета — ночь, зелёная лампа, свет сверху на доску, плащ слева, картотека и полка справа"
+ },
+ {
+  "file": "references/places/K7_cabinet_sides_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN6_cabinet_sides.txt, K7-3",
+  "refs": "K6_cabinet_board16x9_v3 (генерация), P13_desk_board, P39_dark_room_wall_lamps, P18_cabinet_light",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K7_cabinet_sides_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN6_cabinet_sides.txt, K7-4",
+  "refs": "K6_cabinet_board16x9_v3 (генерация), P13_desk_board, P39_dark_room_wall_lamps, P18_cabinet_light",
+  "verdict": "—"
  }
 ]
