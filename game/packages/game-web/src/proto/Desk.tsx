@@ -54,7 +54,7 @@ export interface Material {
 /** Подъём вещи в руке над тем, что под ней, м: чуть-чуть — видно, что взята (автор 23.11). */
 const LIFT = 0.02;
 /** Сколько держать, чтобы взять вместе с тем, что лежит сверху, мс. */
-const HOLD_PILE_MS = 400;
+const HOLD_PILE_MS = 500;
 /** Порог протяжки, px. */
 const DRAG_PX = 4;
 
@@ -455,7 +455,7 @@ export function Desk({
             if (!overlap(ra, rb, 0.004)) continue;
             const lo = Math.max(ca.y - (a.t * p) / 2, cb.y - (b.t * p) / 2);
             const hi = Math.min(ca.y + (a.t * p) / 2, cb.y + (b.t * p) / 2);
-            if (hi - lo > 0.3) out.push(`${a.id}/${b.id}`);
+            if (hi - lo > 0.05) out.push(`${a.id}/${b.id}`);
           }
         return out;
       },

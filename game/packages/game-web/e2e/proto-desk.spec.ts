@@ -98,7 +98,11 @@ test('прототип 3D-стола: вскрыть клапаном; вещь 
   const y1 = (await find(page, y.id)) as Laid;
   const x1 = (await find(page, a.id)) as Laid;
   expect(Math.abs(y1.x - x1.x)).toBeGreaterThan(0.03);
-  expect(await call<string[]>(page, 'pile', a.id)).toContain(y.id);
+  // Лёг поверх, внахлёст (со сдвигом — не стопка: удержание её не возьмёт).
+  expect(await overlapsNow(a.id, y.id)).toBe(true);
+  const layers = new Map(await call<[string, number][]>(page, 'layers'));
+  expect(layers.get(y.id) ?? 0).toBeGreaterThan(layers.get(a.id) ?? 0);
+  expect(await call<string[]>(page, 'pile', a.id)).not.toContain(y.id);
 
   // DV-B: на устройство не кладут — ни устройство, ни лист: встают рядом.
   await drag(page, await grab('24'), await call<Pt>(page, 'piece', '48'));

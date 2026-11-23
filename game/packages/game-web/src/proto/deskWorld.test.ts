@@ -20,7 +20,7 @@ const sheet = (id: string, x: number, z: number, layer: number, rot = 0, stack =
   kind: 'sheet',
   w: 0.21,
   d: 0.297,
-  t: 0.0012,
+  t: 0.00015,
   x,
   z,
   rot,
@@ -48,8 +48,8 @@ describe('прототип 3D-стола: раскладка без физики
       sheet('d', 0.6, 0.3, 3),
     ]);
     expect(h.get('a')).toBe(0);
-    expect(h.get('b')).toBeCloseTo(0.0012);
-    expect(h.get('c')).toBeCloseTo(0.0024);
+    expect(h.get('b')).toBeCloseTo(0.00015, 6);
+    expect(h.get('c')).toBeCloseTo(0.0003, 6);
     expect(h.get('d')).toBe(0);
   });
 
@@ -100,16 +100,18 @@ describe('прототип 3D-стола: раскладка без физики
     expect(a.x + e.dx - a.w / 2).toBeLessThan(-0.99);
   });
 
-  it('взять с тем, что лежит сверху: только то, что выше и касается, по цепочке', () => {
+  it('взять с тем, что лежит сверху: только то, что прямо на ней (по цепочке); лесенка — нет', () => {
     const ps = [
       sheet('a', 0, 0.3, 0),
-      sheet('b', 0.15, 0.3, 1),
-      sheet('c', 0.3, 0.3, 2),
-      sheet('d', 0.7, 0.3, 3),
-      sheet('e', -0.05, 0.3, -1),
+      sheet('b', 0.02, 0.31, 1),
+      sheet('c', 0.04, 0.32, 2),
+      sheet('d', 0.15, 0.3, 3),
+      sheet('e', 0.7, 0.3, 4),
     ];
     expect(pileOf(ps, 'a').map((p) => p.id)).toEqual(['a', 'b', 'c']);
-    expect(pileOf(ps, 'c').map((p) => p.id)).toEqual(['c']);
+    // Лесенка: каждый на треть ширины правее — не стопка.
+    const stair = [sheet('s1', 0, 0.3, 0), sheet('s2', 0.07, 0.3, 1), sheet('s3', 0.14, 0.3, 2)];
+    expect(pileOf(stair, 's1').map((p) => p.id)).toEqual(['s1']);
   });
 
   it('ближайшее свободное место: на препятствии — рядом, с той стороны, к которой ближе', () => {

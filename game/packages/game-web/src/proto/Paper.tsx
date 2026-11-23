@@ -378,7 +378,7 @@ export function Paper({
             roughness={DEVICE_LOOK[piece.kind] ? 0.5 : 0.9}
           />
         </mesh>
-        <mesh position={[0, T / 2 + 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} {...handlers}>
+        <mesh position={[0, T / 2 + 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} {...handlers}>
           <planeGeometry args={[W, D]} />
           <meshStandardMaterial ref={faceMat} map={face} roughness={0.92} emissive="#fff3d6" />
         </mesh>
