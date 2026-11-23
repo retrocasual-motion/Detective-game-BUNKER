@@ -426,5 +426,45 @@
   "prompt": "design/references/CHAT_PASTE_GEN3_cabinet_board.txt, строка K4",
   "refs": "K1_cabinet_chair_v1, K1_cabinet_chair_v2 (генерации), UI02, UI04, UI05, P08",
   "verdict": "—"
+ },
+ {
+  "file": "references/places/K5_cabinet_lamps_v1.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN4_cabinet_lamps.txt, K5-1",
+  "refs": "K3_cabinet_toplight_v1 (генерация)",
+  "verdict": "нравится автору: лампы не видны, верх доски светлее; доска слишком длинная — в игре пробка 16:9 (WB-C)"
+ },
+ {
+  "file": "references/places/K5_cabinet_lamps_v2.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN4_cabinet_lamps.txt, K5-2",
+  "refs": "K3_cabinet_toplight_v1 (генерация)",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K5_cabinet_lamps_v3.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN4_cabinet_lamps.txt, K5-3",
+  "refs": "K3_cabinet_toplight_v1 (генерация)",
+  "verdict": "—"
+ },
+ {
+  "file": "references/places/K5_cabinet_lamps_v4.png",
+  "date": "2026-11-23",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN4_cabinet_lamps.txt, K5-4",
+  "refs": "K3_cabinet_toplight_v1 (генерация)",
+  "verdict": "—"
  }
 ]
