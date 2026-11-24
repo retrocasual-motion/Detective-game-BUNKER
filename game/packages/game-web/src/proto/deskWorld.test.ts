@@ -198,4 +198,37 @@ describe('прототип 3D-стола: раскладка без физики
     // Лист далеко от вещей — ровный.
     expect(drapes([a, sheet('far', 0.6, 0.4, 1)], h, (q) => !isDev(q)).has('far')).toBe(false);
   });
+
+  it('прогиб (DV-H): стопка над вещами держит форму, свободный край опускается к столу', () => {
+    // Автор 24.11: вещи рядом, сверху листы — «в какой-то момент перестают гнуться».
+    const dev = (id: string, x: number, z: number, w: number, d: number, t: number): Piece => ({
+      id,
+      kind: 'mobile',
+      w,
+      d,
+      t,
+      x,
+      z,
+      rot: 0,
+      layer: 0,
+      stack: id,
+    });
+    const isDev = (q: Piece) => q.kind === 'mobile';
+    const all: Piece[] = [
+      dev('cam', -0.05, 0.38, 0.1, 0.06, 0.03),
+      dev('ph', 0.05, 0.42, 0.065, 0.12, 0.012),
+      dev('pen', 0, 0.5, 0.14, 0.014, 0.014),
+    ];
+    for (let l = 1; l <= 8; l++) all.push({ ...sheet(`s${l}`, 0.003 * l, 0.4, l), rot: 0.02 * l });
+    const h = heights(all, (u, lo) => !isDev(u) && isDev(lo));
+    const d = drapes(all, h, (q) => !isDev(q));
+    const first = d.get('s1') as Float32Array;
+    const last = d.get('s8') as Float32Array;
+    // Верхний лист не выше нижнего больше, чем на толщину стопки с зазорами (не «раздувается»).
+    expect(Math.max(...last) - Math.max(...first)).toBeLessThan(0.003);
+    // И гнётся, как нижний: у края, где вещей нет, — почти у стола.
+    const edge = (L: Float32Array) => L[6 * (DRAPE_NX + 1) + DRAPE_NX] ?? 0;
+    expect(edge(first)).toBeLessThan(0.006);
+    expect(edge(last)).toBeLessThan(0.006);
+  });
 });

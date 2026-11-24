@@ -410,6 +410,8 @@ export const DRAPE_NX = 20;
 export const DRAPE_NY = 28;
 /** Зазор бумаги над устройством, м. */
 const GAP = 0.001;
+/** Зазор листа над прогнутым листом, м (чтобы не мерцали). */
+const PAPER_GAP = 0.0002;
 /** Поле вокруг устройства, где бумага держит полную высоту, м: полдиагонали шага сетки. */
 const MARGIN = 0.0075;
 /**
@@ -427,53 +429,121 @@ const PLATE_CACHE = new Map<string, Float32Array>();
  * свободный край плавно опускается к столу, в щели не проваливается. Гаусс — Зейдель с верхней
  * релаксацией; края листа — без излома.
  */
-export function solvePlate(floor: Float32Array, nx: number, ny: number, sag = SAG, iters = 700) {
+export function solvePlate(floor: Float32Array, nx: number, ny: number, sag = SAG, iters = 240) {
   const W = nx + 1;
   const H = ny + 1;
   const h = new Float32Array(floor);
-  const at = (x: number, y: number) =>
-    h[Math.min(H - 1, Math.max(0, y)) * W + Math.min(W - 1, Math.max(0, x))] ?? 0;
-  const omega = 1.6;
-  const step = (x: number, y: number, n1: number, d: number, n2: number) => {
-    const k = y * W + x;
-    const gs = (8 * n1 - 2 * d - n2 - sag) / 20;
-    const cur = h[k] as number;
-    const f = floor[k] as number;
-    const nv = cur + omega * (gs - cur);
-    h[k] = nv > f ? nv : f;
-  };
-  for (let it = 0; it < iters; it++) {
+  // Сначала — грубо, на сетке вдвое реже (клетка вдвое больше — нагрузка на клетку⁴ в 16 раз),
+  // и это начальное приближение: пластина сходится медленно, а так — за пару сотен шагов.
+  if (nx % 2 === 0 && ny % 2 === 0 && nx >= 8 && ny >= 8) {
+    const cw = nx / 2 + 1;
+    const ch = ny / 2 + 1;
+    const cf = new Float32Array(cw * ch);
+    for (let y = 0; y < ch; y++)
+      for (let x = 0; x < cw; x++) {
+        // Опора грубой клетки — наибольшая из её мелких точек (тонкую вещь не терять).
+        let m = 0;
+        for (let dy = -1; dy <= 1; dy++)
+          for (let dx = -1; dx <= 1; dx++) {
+            const fx = 2 * x + dx;
+            const fy = 2 * y + dy;
+            if (fx >= 0 && fx < W && fy >= 0 && fy < H)
+              m = Math.max(m, floor[fy * W + fx] as number);
+          }
+        cf[y * cw + x] = m;
+      }
+    const c = solvePlate(cf, nx / 2, ny / 2, sag * 16, iters);
     for (let y = 0; y < H; y++)
       for (let x = 0; x < W; x++) {
-        if (x >= 2 && x < W - 2 && y >= 2 && y < H - 2) {
-          // Внутри листа — прямо по индексам (быстро).
-          const k = y * W + x;
-          step(
-            x,
-            y,
-            (h[k + 1] as number) +
-              (h[k - 1] as number) +
-              (h[k + W] as number) +
-              (h[k - W] as number),
-            (h[k + W + 1] as number) +
-              (h[k + W - 1] as number) +
-              (h[k - W + 1] as number) +
-              (h[k - W - 1] as number),
-            (h[k + 2] as number) +
-              (h[k - 2] as number) +
-              (h[k + 2 * W] as number) +
-              (h[k - 2 * W] as number),
-          );
-          continue;
-        }
-        step(
-          x,
-          y,
-          at(x + 1, y) + at(x - 1, y) + at(x, y + 1) + at(x, y - 1),
-          at(x + 1, y + 1) + at(x - 1, y + 1) + at(x + 1, y - 1) + at(x - 1, y - 1),
-          at(x + 2, y) + at(x - 2, y) + at(x, y + 2) + at(x, y - 2),
-        );
+        const x0 = x >> 1;
+        const y0 = y >> 1;
+        const x1 = Math.min(cw - 1, x0 + (x & 1));
+        const y1 = Math.min(ch - 1, y0 + (y & 1));
+        const v =
+          ((c[y0 * cw + x0] as number) +
+            (c[y0 * cw + x1] as number) +
+            (c[y1 * cw + x0] as number) +
+            (c[y1 * cw + x1] as number)) /
+          4;
+        const k = y * W + x;
+        h[k] = Math.max(floor[k] as number, v);
       }
+  }
+  // Свободный край (автор 24.11: под стопкой над вещами лист «перестаёт гнуться»): за краем
+  // листа ничего нет — нет изгибающего момента и перерезывающей силы, точки за краем продолжают
+  // лист по прямой (h″ = 0, h‴ = 0). Прежде край «отражался» — лист вёл себя как закреплённый
+  // и не опускался к столу.
+  const at = (x: number, y: number): number => {
+    if (x < 0 || x > W - 1) {
+      const e = x < 0 ? 0 : W - 1;
+      const s = x < 0 ? 1 : -1;
+      const v0 = at(e, y);
+      const v1 = at(e + s, y);
+      return Math.abs(x - e) === 1 ? 2 * v0 - v1 : 4 * v0 - 4 * v1 + at(e + 2 * s, y);
+    }
+    if (y < 0 || y > H - 1) {
+      const e = y < 0 ? 0 : H - 1;
+      const s = y < 0 ? 1 : -1;
+      const v0 = at(x, e);
+      const v1 = at(x, e + s);
+      return Math.abs(y - e) === 1 ? 2 * v0 - v1 : 4 * v0 - 4 * v1 + at(x, e + 2 * s);
+    }
+    return h[y * W + x] as number;
+  };
+  // Невязка ∇⁴h + sag в точке у края (с точками за краем).
+  const resid = (x: number, y: number) =>
+    20 * at(x, y) -
+    8 * (at(x + 1, y) + at(x - 1, y) + at(x, y + 1) + at(x, y - 1)) +
+    2 * (at(x + 1, y + 1) + at(x - 1, y + 1) + at(x + 1, y - 1) + at(x - 1, y - 1)) +
+    (at(x + 2, y) + at(x - 2, y) + at(x, y + 2) + at(x, y - 2)) +
+    sag;
+  // У края свой вес собственной точки в уравнении (точки за краем зависят от неё).
+  const edge: { x: number; y: number; k: number; diag: number }[] = [];
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      if (x >= 2 && x < W - 2 && y >= 2 && y < H - 2) continue;
+      const k = y * W + x;
+      const keep = h[k] as number;
+      const r0 = resid(x, y);
+      h[k] = keep + 1;
+      const diag = resid(x, y) - r0;
+      h[k] = keep;
+      edge.push({ x, y, k, diag });
+    }
+  const omega = 1.7;
+  const inner: number[] = [];
+  for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) inner.push(y * W + x);
+  const back = [...inner].reverse();
+  const edgeBack = [...edge].reverse();
+  for (let it = 0; it < iters; it++) {
+    // Проходы — то вперёд, то назад: иначе прогиб «сносит» в сторону обхода.
+    const fwd = it % 2 === 0;
+    for (const k of fwd ? inner : back) {
+      // Внутри листа — прямо по индексам (быстро).
+      const n1 =
+        (h[k + 1] as number) + (h[k - 1] as number) + (h[k + W] as number) + (h[k - W] as number);
+      const d =
+        (h[k + W + 1] as number) +
+        (h[k + W - 1] as number) +
+        (h[k - W + 1] as number) +
+        (h[k - W - 1] as number);
+      const n2 =
+        (h[k + 2] as number) +
+        (h[k - 2] as number) +
+        (h[k + 2 * W] as number) +
+        (h[k - 2 * W] as number);
+      const gs = (8 * n1 - 2 * d - n2 - sag) / 20;
+      const cur = h[k] as number;
+      const f = floor[k] as number;
+      const nv = cur + omega * (gs - cur);
+      h[k] = Math.max(nv, f);
+    }
+    for (const e of fwd ? edge : edgeBack) {
+      const cur = h[e.k] as number;
+      const f = floor[e.k] as number;
+      const nv = cur - (omega * resid(e.x, e.y)) / e.diag;
+      h[e.k] = Math.max(nv, f);
+    }
   }
   return h;
 }
@@ -574,6 +644,14 @@ export function drapes(
         // наибольшая в округе вершины (полшага сетки): между вершинами выпуклый горбик нижнего листа
         // не проступает сквозь верхний.
         for (const o of below) {
+          if (bends(o)) {
+            // Лист на прогнутом листе (автор 24.11: стопка над вещами «перестаёт гнуться»): прямо
+            // по нижнему, с зазором в долю миллиметра. Запас «по округе» и миллиметр на каждый лист
+            // раздували горбик слой за слоем — к пятому листу стопка становилась плоской крышкой.
+            const top = surface(o, q.x, q.z) - b0;
+            if (top > 1e-5) req = Math.max(req, top + PAPER_GAP);
+            continue;
+          }
           let top = Number.NEGATIVE_INFINITY;
           for (const [du, dv] of AROUND) {
             const r = world(

@@ -256,6 +256,33 @@ export function Paper({
   const sc = useRef(1);
   const hold = useRef(0);
   const camera = useThree((st) => st.camera);
+  // В руке — рисуется после всего и поверх (автор 24.11: лист, вытянутый из-под камеры, на подъёме
+  // проходил сквозь неё — поднимается он плавно, а сверху оказывается сразу). Перед первой своей
+  // частью очищает глубину: соседние вещи её не заслоняют, свои части — по глубине между собой.
+  const onTop = useRef(false);
+  const layer = useRef(piece.layer);
+  layer.current = piece.layer;
+  const setOnTop = (g: Group, top: boolean) => {
+    onTop.current = top;
+    let i = 0;
+    g.traverse((o) => {
+      const m = o as Mesh;
+      if (!m.isMesh) return;
+      // Прозрачные рисуются после непрозрачных и после теней — так тень не ложится поверх.
+      m.renderOrder = top ? 1000 + layer.current * 4 + i : 0;
+      if (i === 0)
+        m.onBeforeRender = (gl) => {
+          if (!onTop.current) return;
+          gl.state.buffers.depth.setMask(true);
+          gl.clearDepth();
+        };
+      i++;
+      for (const mt of Array.isArray(m.material) ? m.material : [m.material]) {
+        mt.transparent = top;
+        mt.needsUpdate = true;
+      }
+    });
+  };
 
   useFrame((_, dtRaw) => {
     const g = group.current;
@@ -270,6 +297,7 @@ export function Paper({
       target.cur.copy(pos);
     }
     const waiting = !!start && performance.now() < start.at;
+    if ((target.mode === 'hand') !== onTop.current) setOnTop(g, target.mode === 'hand');
     // Пружина: a = k·(цель − x) − c·v.
     const k = target.stiff;
     const c = 2 * Math.sqrt(k) * target.damp;
