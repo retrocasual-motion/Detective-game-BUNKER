@@ -366,7 +366,9 @@ export function Paper({
     target.cur.copy(pos);
     if (target.mode !== 'rest' && !waiting)
       g.quaternion.slerp(target.quat, 1 - Math.exp(-dt * (k > 600 ? 22 : 12)));
-    sc.current += (target.scale - sc.current) * (1 - Math.exp(-dt * 10));
+    // В руке размер — так же быстро, как движение (к доске — без отставания, «не тянется»).
+    sc.current +=
+      (target.scale - sc.current) * (1 - Math.exp(-dt * (target.mode === 'hand' ? 28 : 10)));
     // В руке вещь рисуется поверх соседних бумаг и устройств: её показ придвинут к камере вдоль
     // луча взгляда (на экране она там же и того же размера) — поднимаясь из-под стопки, она не
     // проходит сквозь неё на глазах (автор 23.11: «взял — всегда сверху»). Положили — плавно назад.

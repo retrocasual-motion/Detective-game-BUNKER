@@ -56,8 +56,8 @@ export interface Material {
 const LIFT = 0.02;
 /** Запас у заднего края стола, м: на стену — дальше края на столько, назад — ближе на столько. */
 const WALL_BAND = 0.02;
-/** Жёсткость перехода стол ↔ стена (≈ треть секунды, без отскока). */
-const WALL_K = 120;
+/** Скорость перехода стол ↔ стена, 1/с (≈ 0,2 с, сразу с места). */
+const WALL_RATE = 15;
 /** Сколько держать, чтобы взять вместе с тем, что лежит сверху, мс. */
 const HOLD_PILE_MS = 500;
 /** Порог протяжки, px. */
@@ -86,7 +86,6 @@ interface Drag {
   lastWall: { x: number; y: number } | null;
   /** Насколько вещь «на стене»: 0 — в руке над столом, 1 — у доски; меняется плавно. */
   w: number;
-  wv: number;
   vx: number;
   vz: number;
   /** Как обходит устройство (помнится между кадрами). */
@@ -312,7 +311,6 @@ export function Desk({
       wall: null,
       lastWall: null,
       w: 0,
-      wv: 0,
       vx: 0,
       vz: 0,
       cache: new Map(),
@@ -553,15 +551,11 @@ export function Desk({
       if (!d.wall && fz < -WALL_BAND && bp) d.wall = bp;
       else if (d.wall && fz > WALL_BAND) d.wall = null;
       else if (d.wall) d.wall = bp ?? d.lastWall;
-      // И сам переход — плавный, а не скачком (без «примагничивания»).
+      // И сам переход — плавный, а не скачком (без «примагничивания»), и лёгкий: сразу с места и
+      // мягко в конце (автор 24.11: «тянется, как тяжёлый» — прежде разгонялся и тормозил).
       const goal = d.wall ? 1 : 0;
-      d.wv += (WALL_K * (goal - d.w) - 2 * Math.sqrt(WALL_K) * d.wv) * dt;
-      d.w += d.wv * dt;
-      if (d.w < 0) d.w = d.wv = 0;
-      if (d.w > 1) {
-        d.w = 1;
-        d.wv = 0;
-      }
+      d.w += (goal - d.w) * (1 - Math.exp(-dt * WALL_RATE));
+      if (Math.abs(goal - d.w) < 0.002) d.w = goal;
       const pt = d.wall ? null : screenToDesk(deskCam, room, m.x, m.y, LIFT);
       if (pt) {
         const rects = d.ids.flatMap((id) => {
@@ -706,7 +700,8 @@ export function Desk({
           onWall(t, pc, wa.x + n * 16, wa.y + n * 12, 40 + k * 1.5);
           t.noShadow = false;
           t.pos.lerpVectors(deskPos, t.pos, d.w);
-          t.quat.slerpQuaternions(deskQuat, t.quat, d.w);
+          // Лицом к себе, вертикально, как карточка доски (автор 24.11: «видеть, куда кладу»).
+          t.quat.copy(deskQuat.slerp(t.quat, d.w));
           t.scale = 1 + (t.scale - 1) * d.w;
         }
         continue;
