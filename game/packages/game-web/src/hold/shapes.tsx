@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { type CanvasTexture, type Group, Shape } from 'three';
+import { type CanvasTexture, DoubleSide, type Group, Shape } from 'three';
 import { gameNow, hhmm } from '../clock.ts';
 import { reducedMotion } from '../motion.ts';
 import { phoneHome } from '../phone/phoneHome.ts';
@@ -8,6 +8,7 @@ import { SETTLED, useAnimate } from './animate.ts';
 import { onClickPart, setPartCursor, useScreenAnchor, useSpot } from './Held3D.tsx';
 import { paintLaptopFace } from './laptopFace.ts';
 import { paintPhoneFace } from './phoneFace.ts';
+import { usePull } from './pull.tsx';
 import { type Painter, paintTexture } from './texture.ts';
 
 /**
@@ -22,6 +23,9 @@ const BOX = '#8a7656';
 const DEVICE = '#5f6267';
 const INK = '#1d1d1d';
 const SEAL = '#8e2b25';
+/** Клапан — та же бумага, чуть светлее: край виден на свету. */
+const FLAP = '#bf9862';
+const LID = '#9a8462';
 
 export interface Item {
   id: string;
@@ -110,6 +114,130 @@ export function useActive(
   return { anchor, hover, handlers };
 }
 
+/** Часть, которую луч мыши не ловит (видимая, но не для захвата). */
+const noHit = () => {};
+
+/** Тень под краями клапана — краской на лицевой стороне (клапан той же бумаги, край иначе не виден). */
+export function paintFlapShadow(ctx: CanvasRenderingContext2D, w: number, d: number) {
+  ctx.save();
+  ctx.strokeStyle = 'rgb(0 0 0 / 24%)';
+  ctx.lineWidth = 12;
+  ctx.beginPath();
+  ctx.moveTo(0, 8);
+  ctx.lineTo(w / 2, d + 8);
+  ctx.lineTo(w, 8);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
+ * Клапан конверта на петле у верхнего края (OG-B, автор 23.11): треугольник, печать — на его
+ * кончике, половина на клапане, половина на конверте. Навели — клапан чуть приподнялся; потянули
+ * вверх — открывается за мышью, печать ломается пополам; щелчок — тоже вскрыть (`usePull`).
+ * `z` — лицевая плоскость конверта; `seal: false` — конверт заклеен без печати.
+ */
+export function EnvelopeFlap({
+  w,
+  h,
+  depth,
+  z,
+  seal,
+  label,
+  testId,
+  onOpen,
+}: {
+  w: number;
+  h: number;
+  depth: number;
+  z: number;
+  seal: boolean;
+  label: string;
+  testId: string;
+  onOpen: () => void;
+}) {
+  const hinge = useRef<Group>(null);
+  const shape = useMemo(() => {
+    const s = new Shape();
+    s.moveTo(-w / 2, 0);
+    s.lineTo(w / 2, 0);
+    s.lineTo(0, -depth);
+    s.closePath();
+    return s;
+  }, [w, depth]);
+  const pull = usePull({
+    id: 'seal',
+    label,
+    testId,
+    onOpen,
+    apply: (t) => {
+      if (hinge.current) hinge.current.rotation.x = -t * Math.PI * 0.92;
+    },
+  });
+  const glow = pull.hover ? 0.45 : 0.1;
+  const R = 0.2;
+  return (
+    <group>
+      {/* Горло конверта — тёмная щель под клапаном: видна, когда клапан подняли. */}
+      <mesh position={[0, h / 2 - 0.025, z + 0.001]}>
+        <planeGeometry args={[w * 0.8, 0.035]} />
+        <meshBasicMaterial color="#4a3820" />
+      </mesh>
+      {/* Зона захвата — на месте закрытого клапана и неподвижна: приподнятый при наведении клапан
+          не уходит из-под мыши (иначе наведение мигает и нажатие попадает мимо — малый конверт на
+          столе). */}
+      <mesh position={[0, h / 2, z + 0.03]} {...pull.handlers}>
+        <shapeGeometry args={[shape]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} side={DoubleSide} />
+      </mesh>
+      {/* Сам клапан и верхняя половина печати лучом не ловятся: поднятый клапан не должен
+          заслонять зону захвата (у вещи в руках луч идёт по всем частям вещи). */}
+      <group ref={hinge} position={[0, h / 2, z + 0.004]}>
+        <mesh raycast={noHit}>
+          <shapeGeometry args={[shape]} />
+          <meshStandardMaterial
+            color={FLAP}
+            roughness={0.9}
+            side={DoubleSide}
+            emissive={FLAP}
+            emissiveIntensity={pull.hover ? 0.12 : 0}
+          />
+        </mesh>
+        {seal && (
+          <mesh position={[0, -depth, 0.012]} rotation={[Math.PI / 2, 0, 0]} raycast={noHit}>
+            <cylinderGeometry args={[R, R, 0.024, 32, 1, false, Math.PI / 2, Math.PI]} />
+            <meshStandardMaterial
+              color={SEAL}
+              roughness={0.5}
+              emissive={SEAL}
+              emissiveIntensity={glow}
+            />
+          </mesh>
+        )}
+      </group>
+      {seal && (
+        <mesh
+          position={[0, h / 2 - depth, z + 0.016]}
+          rotation={[Math.PI / 2, 0, 0]}
+          {...pull.handlers}
+        >
+          <cylinderGeometry args={[R, R, 0.024, 32, 1, false, -Math.PI / 2, Math.PI]} />
+          <meshStandardMaterial
+            color={SEAL}
+            roughness={0.5}
+            emissive={SEAL}
+            emissiveIntensity={glow}
+          />
+        </mesh>
+      )}
+      <group ref={pull.anchor} position={[0, h / 2 - depth, z + 0.03]} />
+    </group>
+  );
+}
+
+const ENV_W = 3;
+const ENV_H = 2.1;
+const ENV_FLAP = 0.8;
+
 export function Envelope({
   title,
   items,
@@ -121,14 +249,16 @@ export function Envelope({
 }) {
   const front = useTexture(
     () =>
-      paintTexture(3, 2.1, KRAFT, ({ ctx, w, h, text }) => {
+      paintTexture(ENV_W, ENV_H, KRAFT, ({ ctx, w, h, text }) => {
+        paintFlapShadow(ctx, w, (ENV_FLAP / ENV_H) * h);
         ctx.fillStyle = INK;
-        text('Дело № 09-1128', w * 0.07, h * 0.08, w * 0.8, '58px Georgia, serif', 70);
-        const y = text(title, w * 0.07, h * 0.24, w * 0.62, '700 120px Georgia, serif', 132);
+        // Надписи — под клапаном, не на нём.
+        text('Дело № 09-1128', w * 0.07, h * 0.42, w * 0.8, '58px Georgia, serif', 70);
+        const y = text(title, w * 0.07, h * 0.5, w * 0.62, '700 108px Georgia, serif', 118);
         text(
           'Материалы дела · передано специалисту',
           w * 0.07,
-          y + 20,
+          y + 16,
           w * 0.6,
           '54px Georgia, serif',
           66,
@@ -136,7 +266,7 @@ export function Envelope({
         text(
           '16.11.2009 · подпись следователя',
           w * 0.07,
-          h * 0.86,
+          h * 0.88,
           w * 0.6,
           'italic 50px Georgia, serif',
           60,
@@ -145,49 +275,35 @@ export function Envelope({
     [title],
   );
   const back = useTexture(
-    () =>
-      paintTexture(3, 2.1, KRAFT, (p) => {
-        const { ctx, w, h } = p;
-        // Клапан — треугольник сверху.
-        ctx.fillStyle = 'rgb(0 0 0 / 10%)';
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(w, 0);
-        ctx.lineTo(w / 2, h * 0.26);
-        ctx.closePath();
-        ctx.fill();
-        paintList(p, items, h * 0.32);
-      }),
+    () => paintTexture(ENV_W, ENV_H, KRAFT, (p) => paintList(p, items, p.h * 0.08)),
     [items],
   );
-  const seal = useActive('seal', 'Сломать печать и вскрыть конверт', 'envelope-open', onOpen);
   return (
     <group>
       <mesh>
-        <boxGeometry args={[3, 2.1, 0.03]} />
+        <boxGeometry args={[ENV_W, ENV_H, 0.03]} />
         <meshStandardMaterial color={KRAFT} roughness={0.9} />
       </mesh>
-      <Plate w={3} h={2.1} z={0.0155} map={front} />
-      <Plate w={3} h={2.1} z={-0.0155} back map={back} />
-      {/* Печать: сургучный круг — щелчок вскрывает. */}
-      <group position={[1.0, -0.55, 0.02]} ref={seal.anchor}>
-        <mesh rotation={[Math.PI / 2, 0, 0]} {...seal.handlers}>
-          <cylinderGeometry args={[0.3, 0.3, 0.03, 40]} />
-          <meshStandardMaterial
-            color={SEAL}
-            roughness={0.5}
-            emissive={SEAL}
-            emissiveIntensity={seal.hover ? 0.5 : 0.1}
-          />
-        </mesh>
-      </group>
+      <Plate w={ENV_W} h={ENV_H} z={0.0155} map={front} />
+      <Plate w={ENV_W} h={ENV_H} z={-0.0155} back map={back} />
+      <EnvelopeFlap
+        w={ENV_W}
+        h={ENV_H}
+        depth={ENV_FLAP}
+        z={0.0155}
+        seal
+        label="Сломать печать и вскрыть конверт"
+        testId="envelope-open"
+        onOpen={onOpen}
+      />
     </group>
   );
 }
 
 /**
  * Коробка с пломбой: «Личные вещи» (A-260) или коробка вещдоков из банка (A-272, AC-4) — надпись
- * на передней стенке, опись на крышке.
+ * на передней стенке, опись на крышке. Крышку тянут вверх (OG-B): пломба через её край рвётся —
+ * нижняя половина на стенке, верхняя уходит с крышкой.
  */
 export function Box({
   items,
@@ -212,35 +328,63 @@ export function Box({
     [title, note],
   );
   const lid = useTexture(
-    () => paintTexture(2.5, 1.7, '#9a8462', (p) => paintList(p, items, p.h * 0.08)),
+    () => paintTexture(2.5, 1.7, LID, (p) => paintList(p, items, p.h * 0.08)),
     [items],
   );
-  const tape = useActive('tape', 'Сорвать пломбу и открыть коробку', 'envelope-open', onOpen);
+  const hinge = useRef<Group>(null);
+  const pull = usePull({
+    id: 'tape',
+    label: 'Сорвать пломбу и открыть коробку',
+    testId: 'envelope-open',
+    onOpen,
+    apply: (t) => {
+      if (hinge.current) hinge.current.rotation.x = -t * 1.9;
+    },
+  });
+  const glow = pull.hover ? 0.45 : 0.1;
+  const seal = <meshStandardMaterial color={SEAL} emissive={SEAL} emissiveIntensity={glow} />;
   return (
     <group rotation={[0.35, -0.5, 0]} scale={0.72}>
       <mesh>
         <boxGeometry args={[2.6, 1.3, 1.8]} />
         <meshStandardMaterial color={BOX} roughness={0.95} />
       </mesh>
-      <mesh position={[0, 0.69, 0]} {...tape.handlers}>
-        <boxGeometry args={[2.66, 0.08, 1.86]} />
-        <meshStandardMaterial color="#9a8462" roughness={0.95} />
+      {/* Нутро — тёмное, видно под поднятой крышкой. */}
+      <mesh position={[0, 0.652, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[2.44, 1.64]} />
+        <meshBasicMaterial color="#2b2419" />
       </mesh>
       <Plate w={2.6} h={1.3} z={0.901} map={front} />
-      <group position={[0, 0.735, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <Plate w={2.5} h={1.7} z={0} map={lid} />
-      </group>
-      {/* Пломба — лента у правого края передней стенки (не на надписи): щелчок срывает. */}
-      <group position={[1.08, 0.45, 0.92]} ref={tape.anchor}>
-        <mesh {...tape.handlers}>
-          <boxGeometry args={[0.22, 0.55, 0.02]} />
+      {/* Пломба у правого края стенки (не на надписи) — нижняя половина. */}
+      <mesh position={[1.08, 0.41, 0.92]} {...pull.handlers}>
+        <boxGeometry args={[0.22, 0.47, 0.02]} />
+        {seal}
+      </mesh>
+      {/* Крышка на петле у заднего края. */}
+      <group ref={hinge} position={[0, 0.65, -0.93]}>
+        <mesh position={[0, 0.04, 0.93]} {...pull.handlers}>
+          <boxGeometry args={[2.66, 0.08, 1.86]} />
           <meshStandardMaterial
-            color={SEAL}
-            emissive={SEAL}
-            emissiveIntensity={tape.hover ? 0.5 : 0.1}
+            color={LID}
+            roughness={0.95}
+            emissive={LID}
+            emissiveIntensity={pull.hover ? 0.12 : 0}
           />
         </mesh>
+        <group position={[0, 0.085, 0.93]} rotation={[-Math.PI / 2, 0, 0]}>
+          <Plate w={2.5} h={1.7} z={0} map={lid} />
+        </group>
+        {/* Пломба через край крышки — верхняя половина. */}
+        <mesh position={[1.08, 0.04, 1.872]} {...pull.handlers}>
+          <boxGeometry args={[0.22, 0.1, 0.02]} />
+          {seal}
+        </mesh>
+        <mesh position={[1.08, 0.089, 1.72]} {...pull.handlers}>
+          <boxGeometry args={[0.22, 0.01, 0.3]} />
+          {seal}
+        </mesh>
       </group>
+      <group ref={pull.anchor} position={[1.08, 0.5, 0.95]} />
     </group>
   );
 }
