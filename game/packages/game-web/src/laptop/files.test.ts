@@ -34,9 +34,7 @@ describe('buildLaptop — ноутбук из канона', () => {
     ]);
     expect(findFile(lap, 'Доклад_Р.txt')?.modified).toBe('13.10.2009 08:12');
     expect(findFile(lap, 'Доклад_Р.txt')?.body).toContain('e.pierce.uk@mailbridge.net');
-    expect(findFile(lap, 'Отчёты/расходы_объект_2008-2009.xls')?.body).toContain(
-      'Aspen Bank',
-    );
+    expect(findFile(lap, 'Отчёты/расходы_объект_2008-2009.xls')?.body).toContain('Aspen Bank');
   });
   it('«Тревога» — три записи с длительностью; «Личные дела» — даты открытия', () => {
     const alarm = findFile(lap, 'Тревога');

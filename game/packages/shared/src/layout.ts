@@ -2,15 +2,18 @@ import {
   CONTAINERS,
   type ContainerId,
   containerContents,
+  DESK_DEVICES,
   NEVER_ON_WALL,
   OFF_WALL_IDS,
   openedOf,
+  SPILL_CONTAINERS,
   sealedIds,
 } from './archive.ts';
 import { PERSONS } from './persons.ts';
 import { joinedParts, pieceItemId } from './pieces.ts';
 import {
   type Camera,
+  type DeskItem,
   type Material,
   type Note,
   type PlayerState,
@@ -131,6 +134,8 @@ export function inboxIds(state: PlayerState, materials: Material[]): string[] {
     ...FORM_MATERIALS,
     // Коробка из банка не вскрыта — её содержимое в ней, не в лотке (A-272).
     ...sealedIds(state),
+    // Лежит на столе свободно (3D-стол) — не во «Входящих».
+    ...(state.desk ?? []).map((d) => d.id),
   ]);
   return (
     materials
@@ -280,6 +285,15 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
   // Записка без места на стене не нужна.
   const kept = notes.filter((n) => seen.has(n.id));
 
+  // Стол (3D-стол): только то, что у игрока есть, без повторов; висящее на стене — уже не на столе.
+  const have = new Set(materials.map((m) => m.id));
+  const onDesk = new Set<string>();
+  const desk = (state.desk ?? []).filter((d) => {
+    if (!have.has(d.id) || seen.has(d.id) || onDesk.has(d.id) || parts.has(d.id)) return false;
+    onDesk.add(d.id);
+    return true;
+  });
+
   let z = items.reduce((max, i) => Math.max(max, i.z), 0);
   // Стартовое — на стену, кроме невскрытого (A-260) и того, что лежит на столе или в браузере.
   // Сохранение до конвертов (нет `opened`) — как раньше: всё на стене.
@@ -290,6 +304,7 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
       seen.has(id) ||
       sealed.has(id) ||
       parts.has(id) ||
+      onDesk.has(id) ||
       (!legacy && OFF_WALL_IDS.has(id)) ||
       NEVER_ON_WALL.has(id)
     )
@@ -309,6 +324,7 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
     ...state,
     wall: { ...state.wall, items, threads, notes: kept },
     ...(state.excerpts ? { excerpts } : {}),
+    ...(state.desk ? { desk } : {}),
   };
 }
 
@@ -456,7 +472,9 @@ const GROUP_COL_CHOICES = [GRID_COLS, 8, GROUP_COLS, 4];
 /**
  * Вскрыть конверт архива (A-260): содержимое — на стену группой под ярлыком с названием
  * конверта, на свободное место (со стола доска видна целиком — boardCamera).
- * Уже вскрытый — без изменений.
+ * 3D-стол (автор 24.11): конверты SPILL_CONTAINERS высыпаются на стол — листы и устройства
+ * DESK_DEVICES ложатся свободно (место решит стол), на стену группой — только остальное
+ * (устройства на своих местах). Уже вскрытый — без изменений.
  */
 export function openContainer(
   state: PlayerState,
@@ -468,7 +486,14 @@ export function openContainer(
   const opened = [...(state.opened ?? []), id];
   const have = new Set(materials.map((m) => m.id));
   const onWallNow = new Set(state.wall.items.map((i) => i.id));
-  const ids = containerContents(c).filter((m) => have.has(m) && !onWallNow.has(m));
+  const onDeskNow = new Set((state.desk ?? []).map((d) => d.id));
+  const fresh = containerContents(c).filter(
+    (m) => have.has(m) && !onWallNow.has(m) && !onDeskNow.has(m),
+  );
+  const spill = SPILL_CONTAINERS.has(id);
+  const toDesk = spill ? fresh.filter((m) => c.files.includes(m) || DESK_DEVICES.has(m)) : [];
+  const ids = fresh.filter((m) => !toDesk.includes(m));
+  if (toDesk.length) state = { ...state, desk: spillOnDesk(state.desk ?? [], toDesk) };
   if (!ids.length) return { ...state, opened };
   const labelW = Math.min(NOTE_STYLE.maxWidth, 60 + c.label.length * 15);
   const noteW = new Map(state.wall.notes.map((n) => [n.id, n.width ?? NOTE_STYLE[n.kind].width]));
@@ -514,6 +539,26 @@ export function openContainer(
       items: [...state.wall.items.filter((i) => i.id !== labelId), ...placed],
       notes: [...keepNotes, label],
     },
+  };
+}
+
+/** Высыпать на стол: порядок — как в конверте, первое — снизу; места ещё нет (решит стол). */
+function spillOnDesk(desk: DeskItem[], ids: string[]): DeskItem[] {
+  let top = desk.reduce((m, d) => Math.max(m, d.layer), 0);
+  return [...desk, ...ids.map((id) => ({ id, layer: ++top }))];
+}
+
+/**
+ * Со стола — на стену (3D-стол, WL-A): вещь уходит со стола и висит там, где отпустили (x, y —
+ * мир стены, верхний левый угол карточки), поверх остального.
+ */
+export function hangFromDesk(state: PlayerState, id: string, x: number, y: number): PlayerState {
+  const z = state.wall.items.reduce((m, i) => Math.max(m, i.z), 0) + 1;
+  const item: WallItem = { id, ...onWall(x, y), z, rot: hangTilt(id) };
+  return {
+    ...state,
+    desk: (state.desk ?? []).filter((d) => d.id !== id),
+    wall: { ...state.wall, items: [...state.wall.items.filter((i) => i.id !== id), item] },
   };
 }
 

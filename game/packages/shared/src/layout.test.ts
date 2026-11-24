@@ -10,6 +10,7 @@ import {
   containerLabelId,
   defaultState,
   GRID_TOP,
+  hangFromDesk,
   inboxIds,
   onWall,
   openAll,
@@ -241,13 +242,13 @@ describe('конверт с диском сервера (A-272)', () => {
 describe('конверты архива (A-260)', () => {
   const s = defaultState(starting);
 
-  it('вскрытие: содержимое — на стену группой под ярлыком, ничего не накрыто', () => {
-    const o = openContainer(s, starting, 'protocols');
-    expect(o.opened).toEqual(['protocols']);
-    const ids = ['30', '31', '32', '33', '34', '35', '36'];
-    const label = o.wall.items.find((i) => i.id === containerLabelId('protocols'));
-    expect(o.wall.notes.find((n) => n.id === containerLabelId('protocols'))?.text).toBe(
-      'Протоколы опроса',
+  it('коробка «Личные вещи»: содержимое — на стену группой под ярлыком, ничего не накрыто', () => {
+    const o = openContainer(s, starting, 'personal');
+    expect(o.opened).toEqual(['personal']);
+    const ids = ['40', '41', '42', '43', '44', '45', '46'];
+    const label = o.wall.items.find((i) => i.id === containerLabelId('personal'));
+    expect(o.wall.notes.find((n) => n.id === containerLabelId('personal'))?.text).toBe(
+      'Личные вещи',
     );
     const placed = o.wall.items.filter((i) => ids.includes(i.id));
     expect(placed).toHaveLength(7);
@@ -257,16 +258,50 @@ describe('конверты архива (A-260)', () => {
       for (const b of others)
         expect(Math.abs(a.x - b.x) >= 160 || Math.abs(a.y - b.y) >= 220).toBe(true);
     // Повторно — без изменений; reconcile не трогает разложенное.
-    expect(openContainer(o, starting, 'protocols')).toBe(o);
+    expect(openContainer(o, starting, 'personal')).toBe(o);
     expect(reconcile(o, starting).wall.items).toEqual(o.wall.items);
   });
 
-  it('устройства приходят с конвертом места; невскрытое не видно', () => {
+  it('3D-стол: конверт высыпается на стол — не на стену и не во «Входящие»', () => {
+    const o = openContainer(s, starting, 'protocols');
+    expect(o.opened).toEqual(['protocols']);
+    const ids = ['30', '31', '32', '33', '34', '35', '36'];
+    expect(o.desk?.map((d) => d.id)).toEqual(ids);
+    // Места ещё нет — разложит стол; порядок укладки растёт.
+    expect(o.desk?.every((d) => d.x === undefined && d.z === undefined)).toBe(true);
+    expect(o.desk?.map((d) => d.layer)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(o.wall.items.some((i) => ids.includes(i.id))).toBe(false);
+    expect(o.wall.notes.some((n) => n.id === containerLabelId('protocols'))).toBe(false);
+    expect(inboxIds(o, starting).some((id) => ids.includes(id))).toBe(false);
+    // Перезагрузка: стол на месте, на стену само не вешается.
+    const r = reconcile(o, starting);
+    expect(r.desk).toEqual(o.desk);
+    expect(r.wall.items.some((i) => ids.includes(i.id))).toBe(false);
+    expect(openContainer(o, starting, 'protocols')).toBe(o);
+  });
+
+  it('3D-стол: конверт места — листы и 24, 48, 49 на стол; ноутбук и 50 — на стену', () => {
     expect(sealedIds(s).has('48')).toBe(true);
     const o = openContainer(s, starting, 'scene');
     expect(sealedIds(o).has('48')).toBe(false);
-    expect(o.wall.items.some((i) => i.id === '48')).toBe(true);
+    const desk = new Set(o.desk?.map((d) => d.id));
+    for (const id of ['22', '18', '51', '24', '48', '49']) expect(desk.has(id)).toBe(true);
+    expect(desk.has('47')).toBe(false);
+    expect(o.wall.items.some((i) => i.id === '47')).toBe(true);
+    expect(o.wall.items.some((i) => i.id === '48')).toBe(false);
     expect(sealedIds(o).has('30')).toBe(true);
+  });
+
+  it('3D-стол: со стола на стену — висит там, где отпустили, со стола уходит', () => {
+    const o = openContainer(s, starting, 'protocols');
+    const h = hangFromDesk(o, '31', 400, 300);
+    expect(h.desk?.some((d) => d.id === '31')).toBe(false);
+    const it31 = h.wall.items.find((i) => i.id === '31');
+    expect(it31).toMatchObject(onWall(400, 300));
+    expect(it31?.z).toBe(Math.max(...h.wall.items.map((i) => i.z)));
+    // Висящее на стене со стола убирается и при reconcile (старое сохранение с повтором).
+    const dup = { ...h, desk: [...(h.desk ?? []), { id: '31', layer: 99 }] };
+    expect(reconcile(dup, starting).desk?.some((d) => d.id === '31')).toBe(false);
   });
 
   it('вскрыть всё — стартовая сетка без газеты и закладок; старое сохранение — всё вскрыто', () => {
