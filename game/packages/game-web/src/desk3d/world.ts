@@ -170,9 +170,13 @@ export function scatter(
   at: { x: number; z: number },
   seed = 7,
   gap = 0.12,
+  /** Что уже лежит на столе: новые ложатся так, чтобы и от них была видна часть. */
+  around: readonly Piece[] = [],
 ): Piece[] {
   const rand = rng(seed);
   const out: Piece[] = [];
+  const near = (x: number, z: number) =>
+    [...around, ...out].some((o) => Math.hypot(o.x - x, o.z - z) < gap);
   items.forEach((it, k) => {
     const [w, d, t] = sizeOf(it.kind);
     let placed: Piece | null = null;
@@ -193,23 +197,31 @@ export function scatter(
         stack: it.id,
       };
       if (!allowed(cand, zone)) continue;
-      if (out.some((o) => Math.hypot(o.x - cand.x, o.z - cand.z) < gap)) continue;
+      if (near(cand.x, cand.z)) continue;
       placed = cand;
     }
     if (!placed) {
-      const under = out[out.length - 1];
-      placed = {
-        id: it.id,
-        kind: it.kind,
-        w,
-        d,
-        t,
-        x: under ? under.x + 0.01 : at.x,
-        z: under ? under.z + 0.01 : at.z,
-        rot: under ? under.rot + 0.03 : 0,
-        layer: k,
-        stack: under ? under.stack : it.id,
-      };
+      // Места нет — внахлёст на ближайший к конверту лист, что уже лежит; нет и его — на ближнее
+      // свободное место (не под вещь следователя: там лист не виден).
+      const all = [...around, ...out];
+      const under = all.reduce<Piece | undefined>(
+        (b, o) =>
+          !b || Math.hypot(o.x - at.x, o.z - at.z) < Math.hypot(b.x - at.x, b.z - at.z) ? o : b,
+        undefined,
+      );
+      const base = { id: it.id, kind: it.kind, w, d, t, rot: 0, layer: k, stack: it.id };
+      if (under)
+        placed = {
+          ...base,
+          x: under.x + 0.01,
+          z: under.z + 0.01,
+          rot: under.rot + 0.03,
+          stack: under.stack,
+        };
+      else {
+        const fix = nearestFree([{ ...base, x: at.x, z: at.z }], zone, 1.2, 0.01);
+        placed = { ...base, x: at.x + (fix?.dx ?? 0), z: at.z + (fix?.dz ?? 0) };
+      }
     }
     out.push(placed);
   });

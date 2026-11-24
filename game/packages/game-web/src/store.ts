@@ -6,9 +6,11 @@ import {
   type Camera,
   type ContainerId,
   DEVICE_IDS,
+  type DeskItem,
   deviceOf,
   FOLDER_DOCS,
   folderItemId,
+  hangFromDesk,
   isWeb,
   type Join,
   type Material,
@@ -106,8 +108,15 @@ interface GameStore {
   /** Компьютер следователя открыт на этом материале (поиск, 4c-3). */
   pcMaterial: string | null;
   openPc(material: string | null): void;
-  /** Вскрыть конверт архива или коробку (A-260): содержимое — на стену группой. */
+  /**
+   * Вскрыть конверт архива или коробку (A-260): содержимое конвертов — на стол (3D-стол, автор
+   * 24.11), коробок — на стену группой.
+   */
   openContainer(id: ContainerId): void;
+  /** 3D-стол: раскладка стола изменилась (положили, высыпали) — сохранить. */
+  setDesk(items: DeskItem[]): void;
+  /** 3D-стол: вещь со стола долетела до доски — висит на стене в этой точке (мир стены, угол). */
+  hangFromDesk(id: string, x: number, y: number): void;
   /**
    * Вещь в руках (этап 4a): конверт, коробка или устройство — крупно, вертеть мышью, колесо —
    * ближе к точке под курсором, щелчок по самой вещи — вскрыть или включить.
@@ -345,6 +354,16 @@ export const useGame = create<GameStore>((set, get) => {
       const { materials } = get();
       const before = onWallNow(get().state);
       get().updateState((s) => openContainer(s, materials, id));
+      markNew(before);
+    },
+
+    setDesk(items) {
+      get().updateState((s) => ({ ...s, desk: items }));
+    },
+
+    hangFromDesk(id, x, y) {
+      const before = onWallNow(get().state);
+      get().updateState((s) => hangFromDesk(s, id, x, y));
       markNew(before);
     },
 

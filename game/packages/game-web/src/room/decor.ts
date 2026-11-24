@@ -232,6 +232,12 @@ const ENVELOPE_BACK: Record<EnvelopeId, [number, number]> = {
   protocols: [0.18, 0.445],
 };
 const ENVELOPE_ORDER = ['bunker', 'scene', 'protocols'] as const;
+
+/** Где лежит конверт на столе (доли p: x, z): отсюда его содержимое высыпается на 3D-стол. */
+export function envelopeSpot(id: ContainerId, opened: readonly ContainerId[]): [number, number] {
+  const at = opened.includes('scene') ? ENVELOPE_BACK : ENVELOPE_AT;
+  return id in at ? at[id as EnvelopeId] : ENVELOPE_AT.scene;
+}
 /**
  * Где стоит компьютер следователя (дисковод под монитором), доли p. Левее прежнего (−0,62):
  * монитор не заходит на стену за столом (ручная проверка автора 21.11, R.1).
@@ -638,8 +644,10 @@ export function deskObjects(
   ];
   // Устройства лежат на столе, когда вскрыт конверт «Осмотр места происшествия и изъятое» (A-260);
   // коробка с пачками — когда вскрыт «Документация объекта и программы».
+  // Камера, ручка и телефон — на 3D-столе свободно (или карточкой на стене), не нарисованы.
   return all.filter(
     (o) =>
+      !FREE_KEYS.has(o.key) &&
       !(DEVICE_KEYS.has(o.key) && !opened.includes('scene')) &&
       !(o.key === 'papers' && !opened.includes('bunker')),
   );
@@ -647,6 +655,8 @@ export function deskObjects(
 
 /** Изъятые устройства на столе (24, 47–50). */
 const DEVICE_KEYS = new Set(['radio', 'laptop', 'pen', 'card', 'mobile']);
+/** Изъятые вещи, что лежат на 3D-столе свободно (DESK_DEVICES: 49, 24, 48). */
+const FREE_KEYS = new Set(['pen', 'card', 'mobile']);
 
 /** Отсечь многоугольник плоскостью z = zMax (всё, что за зрителем, выбрасывается). */
 export function clipNear(pts: Vec3[], zMax: number): Vec3[] {
