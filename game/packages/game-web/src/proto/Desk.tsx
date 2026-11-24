@@ -54,6 +54,10 @@ export interface Material {
 
 /** Подъём вещи в руке над тем, что под ней, м: чуть-чуть — видно, что взята (автор 23.11). */
 const LIFT = 0.02;
+/** Запас у заднего края стола, м: на стену — дальше края на столько, назад — ближе на столько. */
+const WALL_BAND = 0.02;
+/** Жёсткость перехода стол ↔ стена (≈ треть секунды, без отскока). */
+const WALL_K = 120;
 /** Сколько держать, чтобы взять вместе с тем, что лежит сверху, мс. */
 const HOLD_PILE_MS = 500;
 /** Порог протяжки, px. */
@@ -78,6 +82,11 @@ interface Drag {
   /** Сдвиг, который удалось сделать (в зоне). */
   off: { x: number; z: number };
   wall: { x: number; y: number } | null;
+  /** Последняя точка доски под мышью — к ней уходит и от неё возвращается. */
+  lastWall: { x: number; y: number } | null;
+  /** Насколько вещь «на стене»: 0 — в руке над столом, 1 — у доски; меняется плавно. */
+  w: number;
+  wv: number;
   vx: number;
   vz: number;
   /** Как обходит устройство (помнится между кадрами). */
@@ -191,6 +200,7 @@ export function Desk({
         drape: null,
         floorY: -room.deskY,
         mode: 'rest',
+        carry: 0,
       };
       targets.current.set(id, t);
     }
@@ -300,6 +310,9 @@ export function Desk({
       grab0,
       off: { x: 0, z: 0 },
       wall: null,
+      lastWall: null,
+      w: 0,
+      wv: 0,
       vx: 0,
       vz: 0,
       cache: new Map(),
@@ -532,8 +545,23 @@ export function Desk({
     if (d) {
       const m = pointer.current;
       const floor = screenToDesk(deskCam, room, m.x, m.y, 0);
-      d.wall =
-        !floor || floor.z < 0 ? screenToBoard({ x: m.x, y: m.y }, room.poses.desk, room) : null;
+      const bp = screenToBoard({ x: m.x, y: m.y }, room.poses.desk, room);
+      if (bp) d.lastWall = bp;
+      // Стол ↔ стена — с запасом у края (автор 24.11: у края «резко туда и назад»): на стену —
+      // когда мышь ушла за край стола на пару сантиметров, назад — когда вернулась на столько же.
+      const fz = floor ? floor.z : Number.NEGATIVE_INFINITY;
+      if (!d.wall && fz < -WALL_BAND && bp) d.wall = bp;
+      else if (d.wall && fz > WALL_BAND) d.wall = null;
+      else if (d.wall) d.wall = bp ?? d.lastWall;
+      // И сам переход — плавный, а не скачком (без «примагничивания»).
+      const goal = d.wall ? 1 : 0;
+      d.wv += (WALL_K * (goal - d.w) - 2 * Math.sqrt(WALL_K) * d.wv) * dt;
+      d.w += d.wv * dt;
+      if (d.w < 0) d.w = d.wv = 0;
+      if (d.w > 1) {
+        d.w = 1;
+        d.wv = 0;
+      }
       const pt = d.wall ? null : screenToDesk(deskCam, room, m.x, m.y, LIFT);
       if (pt) {
         const rects = d.ids.flatMap((id) => {
@@ -635,13 +663,6 @@ export function Desk({
         const k = d.ids.indexOf(pc.id);
         t.stiff = 900;
         t.damp = 1;
-        if (d.wall) {
-          // Над стеной: вещь встаёт к доске у мыши (несколько — чуть вразбежку).
-          const n = d.ids.length - 1 - k;
-          onWall(t, pc, d.wall.x + n * 16, d.wall.y + n * 12, 40 + k * 1.5);
-          t.mode = 'air';
-          continue;
-        }
         const b = d.base.get(pc.id) ?? { x: pc.x, z: pc.z };
         const x = b.x + d.off.x;
         const z = b.z + d.off.z;
@@ -674,8 +695,23 @@ export function Desk({
         // Тень — на уровне бумаг: устройство и горбик над ним её сами закрывают (иначе плоская тень
         // висела на высоте устройства — «просвечивала рамку»).
         t.floorY = deskY3 + support(pc, rectNow(pc), true) * p;
+        t.carry = d.w;
+        const wa = d.wall ?? d.lastWall;
+        if (d.w > 0.001 && wa) {
+          // Между столом и доской — смесь двух положений: с края стола к доске у мыши (несколько —
+          // чуть вразбежку), с наклоном и масштабом доски; тень гаснет так же плавно.
+          const n = d.ids.length - 1 - k;
+          const deskPos = t.pos.clone();
+          const deskQuat = t.quat.clone();
+          onWall(t, pc, wa.x + n * 16, wa.y + n * 12, 40 + k * 1.5);
+          t.noShadow = false;
+          t.pos.lerpVectors(deskPos, t.pos, d.w);
+          t.quat.slerpQuaternions(deskQuat, t.quat, d.w);
+          t.scale = 1 + (t.scale - 1) * d.w;
+        }
         continue;
       }
+      t.carry = 0;
       onDesk(t, pc.x, pc.z, (hc.h.get(pc.id) ?? 0) + pc.t / 2, pc.rot);
       t.mode = 'rest';
       t.drape = hc.d.get(pc.id) ?? null;

@@ -55,6 +55,8 @@ export interface PaperTarget {
    * конце (кладут, а не роняют); `air` — к стене и на стене, одной пружиной.
    */
   mode: 'hand' | 'rest' | 'air';
+  /** В руке: насколько вещь ушла к доске (0 — над столом, 1 — у доски). */
+  carry: number;
 }
 
 /**
@@ -345,10 +347,16 @@ export function Paper({
       pos.x += (target.pos.x - pos.x) * follow;
       pos.z += (target.pos.z - pos.z) * follow;
       const ty = target.pos.y;
-      // В руке — плавно (критическое затухание), без рывков вверх; не быстрее RISE.
-      vl.y += (LIFT_K * (ty - pos.y) - 2 * Math.sqrt(LIFT_K) * vl.y) * dt;
-      vl.y = Math.max(-RISE * p, Math.min(RISE * p, vl.y));
-      pos.y += vl.y * dt;
+      if (target.carry > 0.001) {
+        // К доске и обратно — высота за мышью так же, как остальное (переход уже плавный).
+        pos.y += (ty - pos.y) * follow;
+        vl.y = 0;
+      } else {
+        // В руке — плавно (критическое затухание), без рывков вверх; не быстрее RISE.
+        vl.y += (LIFT_K * (ty - pos.y) - 2 * Math.sqrt(LIFT_K) * vl.y) * dt;
+        vl.y = Math.max(-RISE * p, Math.min(RISE * p, vl.y));
+        pos.y += vl.y * dt;
+      }
     }
     // Ни во что не врезается: не ниже того, что под ней.
     if (pos.y < target.minY) {
@@ -412,7 +420,9 @@ export function Paper({
       // Тень — на том, что под вещью (стол, стопка), темнее у самой поверхности.
       const floor = Math.max(target.deskY, target.floorY);
       const lift = Math.max(0, pos.y - (T / 2) * sc.current - floor);
-      const show = !target.noShadow && lift > 0.8;
+      // Уходит к доске — тень бледнеет вместе с этим, а не пропадает разом.
+      const fade = 1 - target.carry;
+      const show = !target.noShadow && lift > 0.8 && fade > 0.02;
       sh.visible = show;
       if (show) {
         sh.position.set(pos.x, floor + 0.4, pos.z);
@@ -420,7 +430,7 @@ export function Paper({
         sh.scale.set(W * 1.12 * grow, D * 1.12 * grow, 1);
         sh.rotation.set(-Math.PI / 2, 0, 0);
         const mat = sh.material as MeshBasicMaterial;
-        mat.opacity = Math.max(0.25, 0.78 - lift / (0.12 * p));
+        mat.opacity = Math.max(0.25, 0.78 - lift / (0.12 * p)) * fade;
         mat.color.set(target.forbidden ? '#b0221a' : '#000000');
       }
     }
