@@ -41,6 +41,9 @@ const SIZE: Record<string, [number, number, number]> = {
   mobile: [0.065, 0.12, 0.012],
   pen: [0.14, 0.014, 0.014],
   camera: [0.1, 0.06, 0.03],
+  // Ноутбук руководителя (47) — закрытый; радиопост (50) — корпус регистратора.
+  laptop: [0.34, 0.24, 0.032],
+  radio: [0.26, 0.16, 0.1],
 };
 export const sizeOf = (kind: string): [number, number, number] =>
   SIZE[kind] ?? (SIZE.sheet as [number, number, number]);
@@ -172,9 +175,12 @@ export function scatter(
   gap = 0.12,
   /** Что уже лежит на столе: новые ложатся так, чтобы и от них была видна часть. */
   around: readonly Piece[] = [],
+  /** Твёрдое (устройство): на него при высыпании ничего не ложится, и оно ни на что. */
+  solid: (kind: string) => boolean = () => false,
 ): Piece[] {
   const rand = rng(seed);
   const out: Piece[] = [];
+  const solids = () => [...around, ...out].filter((o) => solid(o.kind));
   const near = (x: number, z: number) =>
     [...around, ...out].some((o) => Math.hypot(o.x - x, o.z - z) < gap);
   items.forEach((it, k) => {
@@ -196,21 +202,22 @@ export function scatter(
         layer: k,
         stack: it.id,
       };
-      if (!allowed(cand, zone)) continue;
+      if (!allowed(cand, { ...zone, blocked: [...zone.blocked, ...solids()] })) continue;
       if (near(cand.x, cand.z)) continue;
       placed = cand;
     }
     if (!placed) {
       // Места нет — внахлёст на ближайший к конверту лист, что уже лежит; нет и его — на ближнее
       // свободное место (не под вещь следователя: там лист не виден).
-      const all = [...around, ...out];
+      const all = [...around, ...out].filter((o) => !solid(o.kind));
       const under = all.reduce<Piece | undefined>(
         (b, o) =>
           !b || Math.hypot(o.x - at.x, o.z - at.z) < Math.hypot(b.x - at.x, b.z - at.z) ? o : b,
         undefined,
       );
       const base = { id: it.id, kind: it.kind, w, d, t, rot: 0, layer: k, stack: it.id };
-      if (under)
+      // Твёрдое внахлёст не кладут — ему ближнее свободное место.
+      if (under && !solid(it.kind))
         placed = {
           ...base,
           x: under.x + 0.01,
@@ -219,7 +226,12 @@ export function scatter(
           stack: under.stack,
         };
       else {
-        const fix = nearestFree([{ ...base, x: at.x, z: at.z }], zone, 1.2, 0.01);
+        const fix = nearestFree(
+          [{ ...base, x: at.x, z: at.z }],
+          { ...zone, blocked: [...zone.blocked, ...solids()] },
+          1.2,
+          0.01,
+        );
         placed = { ...base, x: at.x + (fix?.dx ?? 0), z: at.z + (fix?.dz ?? 0) };
       }
     }

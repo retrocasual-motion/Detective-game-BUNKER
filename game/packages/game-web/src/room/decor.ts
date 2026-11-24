@@ -122,7 +122,7 @@ function inboxObjects(r: Room, col: Col, inbox: string[]): DeskObject[] {
     color,
   });
   // Справа на столе, слева от лампы (правка автора 09.11).
-  const X = 0.72;
+  const X = 0.74;
   const Z = 0.12;
   const tray = col('--color-tray');
   const shown = inbox.slice(0, INBOX_SHOWN);
@@ -222,21 +222,17 @@ export function roomPolys(r: Room, col: Col): Poly[] {
  */
 type EnvelopeId = Exclude<ContainerId, 'personal' | 'bank'>;
 const ENVELOPE_AT: Record<EnvelopeId, [number, number]> = {
-  bunker: [0.08, 0.555],
-  scene: [0.1, 0.64],
-  protocols: [0.12, 0.725],
-};
-const ENVELOPE_BACK: Record<EnvelopeId, [number, number]> = {
-  bunker: [0.14, 0.36],
-  scene: [0.16, 0.4],
-  protocols: [0.18, 0.445],
+  // 3D-стол (автор 24.11: «освобождаем середину стола»): стопкой у стены, между коробкой «Личные
+  // вещи» и коробом пачек; середина спереди — пустая, туда высыпается вскрытый конверт.
+  bunker: [0.12, 0.17],
+  scene: [0.13, 0.26],
+  protocols: [0.14, 0.35],
 };
 const ENVELOPE_ORDER = ['bunker', 'scene', 'protocols'] as const;
 
 /** Где лежит конверт на столе (доли p: x, z): отсюда его содержимое высыпается на 3D-стол. */
-export function envelopeSpot(id: ContainerId, opened: readonly ContainerId[]): [number, number] {
-  const at = opened.includes('scene') ? ENVELOPE_BACK : ENVELOPE_AT;
-  return id in at ? at[id as EnvelopeId] : ENVELOPE_AT.scene;
+export function envelopeSpot(id: ContainerId): [number, number] {
+  return id in ENVELOPE_AT ? ENVELOPE_AT[id as EnvelopeId] : ENVELOPE_AT.scene;
 }
 /**
  * Где стоит компьютер следователя (дисковод под монитором), доли p. Левее прежнего (−0,62):
@@ -250,8 +246,10 @@ const C4: [number, number] = [0.324, 0.229];
  * (BX-A — 38 × 30 × 25): 30 × 22 × 15, чтобы не спорил с компьютером (автор 19.11; размеры — на
  * этапе дизайна).
  */
-const PAPERS_AT: [number, number] = [0.43, 0.125];
+const PAPERS_AT: [number, number] = [0.445, 0.125];
 const PAPERS_H = 0.15;
+/** Конверт с диском сервера (A-272) — у дисковода, правее клавиатуры (3D-стол, автор 24.11). */
+const DISC_AT: [number, number] = [-0.3, 0.45];
 
 export function deskObjects(
   r: Room,
@@ -402,9 +400,9 @@ export function deskObjects(
             label: 'Коробка «Личные вещи», опечатана — вскрыть',
             boxes: [
               // Коробка 33 × 23 × 16 см (как коробка «В руках»), крышка и лента пломбы.
-              box(-0.19, 0.25, 0.33, 0.23, 0.16, col('--color-box')),
-              box(-0.19, 0.25, 0.34, 0.24, 0.015, col('--color-box-lid'), 0.16),
-              box(-0.19, 0.25, 0.03, 0.24, 0.017, col('--color-seal'), 0.16),
+              box(-0.21, 0.25, 0.33, 0.23, 0.16, col('--color-box')),
+              box(-0.21, 0.25, 0.34, 0.24, 0.015, col('--color-box-lid'), 0.16),
+              box(-0.21, 0.25, 0.03, 0.24, 0.017, col('--color-seal'), 0.16),
             ],
             hotspot: { kind: 'container' as const, id: 'personal' as const },
             tag: 'Личные вещи',
@@ -426,7 +424,7 @@ export function deskObjects(
     // Конверты архива (A-260): опечатаны, у каждого — название; вскрытый со стола уходит. C4,
     // стопкой внахлёст: у дальних видна полоска с названием — по ней и щёлкают.
     ...envelopes.map((id, k) => {
-      const at = opened.includes('scene') ? ENVELOPE_BACK : ENVELOPE_AT;
+      const at = ENVELOPE_AT;
       const [x, z] = at[id];
       const c = CONTAINERS.find((cc) => cc.id === id);
       const lift = k * 0.008;
@@ -457,8 +455,8 @@ export function deskObjects(
             label: 'Конверт «Прил. 7 · Сервер VL-31» — взять',
             boxes: [
               // Конверт C6 (162 × 114 мм), в нём диск 12 см.
-              box(-0.38, 0.47, 0.162, 0.114, 0.006, col('--color-archive-envelope')),
-              box(-0.38, 0.47, 0.1, 0.07, 0.002, col('--color-newspaper'), 0.006),
+              box(DISC_AT[0], DISC_AT[1], 0.162, 0.114, 0.006, col('--color-archive-envelope')),
+              box(DISC_AT[0], DISC_AT[1], 0.1, 0.07, 0.002, col('--color-newspaper'), 0.006),
             ],
             hotspot: { kind: 'disc' as const },
             tag: 'Прил. 7 · Сервер VL-31',
@@ -474,7 +472,7 @@ export function deskObjects(
               key: 'server-disc',
               label: 'Диск «Прил. 7 · Сервер VL-31»',
               boxes: [],
-              discs: [disc(-0.38, 0.47, 0.12, 0)],
+              discs: [disc(DISC_AT[0], DISC_AT[1], 0.12, 0)],
               hotspot: { kind: 'disc' as const },
               tag: 'Диск «Прил. 7»',
               tagInside: true,
@@ -593,8 +591,9 @@ export function deskObjects(
     {
       key: 'keyboard',
       label: 'Компьютер следователя',
-      // 44 × 15 см — перед монитором, повёрнута с ним к следователю; лоток выезжает левее.
-      boxes: turn([box(-0.34, 0.68, 0.44, 0.15, 0.03, edge)], 18, -0.34, 0.68),
+      // Меньше и у левого края, перед монитором, повёрнута с ним (автор 24.11: «сильно левее,
+      // ближе к компьютеру… и меньше» — середина стола свободна под 3D-стол).
+      boxes: turn([box(-0.56, 0.53, 0.3, 0.1, 0.022, edge)], 25, -0.56, 0.53),
       // Клавиатура у руки — щелчок открывает компьютер, как монитор и дисковод (UX-10, DA-4).
       hotspot: { kind: 'computer' },
       testId: 'computer-keyboard',
@@ -655,8 +654,8 @@ export function deskObjects(
 
 /** Изъятые устройства на столе (24, 47–50). */
 const DEVICE_KEYS = new Set(['radio', 'laptop', 'pen', 'card', 'mobile']);
-/** Изъятые вещи, что лежат на 3D-столе свободно (DESK_DEVICES: 49, 24, 48). */
-const FREE_KEYS = new Set(['pen', 'card', 'mobile']);
+/** Изъятые вещи, что лежат на 3D-столе свободно (DESK_DEVICES: 49, 24, 48, 47, 50). */
+const FREE_KEYS = new Set(['pen', 'card', 'mobile', 'laptop', 'radio']);
 
 /** Отсечь многоугольник плоскостью z = zMax (всё, что за зрителем, выбрасывается). */
 export function clipNear(pts: Vec3[], zMax: number): Vec3[] {

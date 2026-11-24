@@ -80,6 +80,8 @@ const DEVICE_LOOK: Record<string, { body: string; top: string }> = {
   mobile: { body: '#26282b', top: '#2c2f33' },
   pen: { body: '#7d8186', top: '#8c9095' },
   camera: { body: '#33363a', top: '#3a3d41' },
+  laptop: { body: '#3c3f44', top: '#45484d' },
+  radio: { body: '#4a4d45', top: '#55584f' },
 };
 const PX = 5; // м → единицы paintTexture (680 px на единицу)
 
@@ -113,6 +115,21 @@ function paintFace(piece: Piece, title: string, body: string): CanvasTexture {
           // Экран — тёмное стекло с рамкой.
           ctx.fillStyle = '#101214';
           ctx.fillRect(w * 0.08, h * 0.1, w * 0.84, h * 0.78);
+        }
+        if (piece.kind === 'laptop') {
+          // Закрытая крышка: шов у петель и полоска защёлки спереди.
+          ctx.fillStyle = '#34373b';
+          ctx.fillRect(0, h * 0.05, w, h * 0.025);
+          ctx.fillRect(w * 0.42, h * 0.92, w * 0.16, h * 0.03);
+        }
+        if (piece.kind === 'radio') {
+          // Решётка динамика и ручка настройки.
+          ctx.fillStyle = '#2f312c';
+          for (let i = 0; i < 6; i++)
+            ctx.fillRect(w * 0.08, h * (0.2 + i * 0.1), w * 0.4, h * 0.04);
+          ctx.beginPath();
+          ctx.arc(w * 0.74, h * 0.5, h * 0.18, 0, Math.PI * 2);
+          ctx.fill();
         }
         if (piece.kind === 'camera') {
           // Объектив сверху.

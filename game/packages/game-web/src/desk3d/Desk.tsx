@@ -1,4 +1,4 @@
-import type { DeskItem } from '@bunker/shared';
+import { DEVICES_ON_WALL, type DeskItem } from '@bunker/shared';
 import { type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { Euler, PerspectiveCamera, Quaternion, Vector3 } from 'three';
@@ -65,11 +65,21 @@ const HOLD_PILE_MS = 500;
 const DRAG_PX = 4;
 /** Полёт со стола на доску, мс: потом карточка — на стене игры. */
 const FLY_MS = 750;
+/** Куда высыпается содержимое конверта (м): свободная середина стола перед игроком. */
+const SPILL_AT = { x: 0.1, z: 0.66 };
+/** Куда — изъятые устройства: левее листов, у клавиатуры. */
+const DEVICES_AT = { x: -0.22, z: 0.62 };
 /** DV-H (автор 24.11 — в игру): лист ложится на устройство и полого прогибается по нему. */
 const DRAPE = true;
 
 /** Изъятые устройства на столе — формы без экранов (DESK_DEVICES). */
-export const DEVICE_KIND: Record<string, string> = { '48': 'mobile', '49': 'pen', '24': 'camera' };
+export const DEVICE_KIND: Record<string, string> = {
+  '48': 'mobile',
+  '49': 'pen',
+  '24': 'camera',
+  '47': 'laptop',
+  '50': 'radio',
+};
 
 const UP = new Euler(Math.PI / 2, 0, 0);
 
@@ -223,15 +233,21 @@ export function Desk({
     let next = placed;
     if (fresh.length) {
       const now = performance.now();
-      const from = spillFrom(fresh[0]?.id ?? '') ?? { x: 0, z: 0.45 };
-      const laid = scatter(
-        fresh.map((it) => ({ id: it.id, kind: kindOf(it.id) })),
-        zone,
-        { x: from.x, z: from.z - 0.05 },
-        7,
-        0.12,
-        placed,
-      ).map((q, k) => ({ ...q, layer: fresh[k]?.layer ?? q.layer }));
+      // Вылетает из конверта, ложится перед игроком — на свободную середину стола (автор 24.11).
+      const from = spillFrom(fresh[0]?.id ?? '') ?? SPILL_AT;
+      // Устройства — первыми, вторым рядом (дальше от игрока: мельче и не заслоняют), друг на
+      // друга не ложатся; листы — перед игроком (их читают), сверху.
+      const solid = (kind: string) => Object.values(DEVICE_KIND).includes(kind);
+      const pick = (dev: boolean) =>
+        fresh
+          .filter((it) => !!DEVICE_KIND[it.id] === dev)
+          .map((it) => ({ id: it.id, kind: kindOf(it.id) }));
+      const devs = scatter(pick(true), zone, DEVICES_AT, 11, 0.1, placed, solid);
+      // Веером внахлёст: у каждого листа видна полоса (стол мал для десятка листов рядом).
+      const sheets = scatter(pick(false), zone, SPILL_AT, 7, 0.06, [...placed, ...devs]);
+      // Порядок укладки — порядок раскладки: что легло позже, то выше (лист внахлёст — поверх).
+      const base = Math.min(...fresh.map((it) => it.layer));
+      const laid = [...devs, ...sheets].map((q, k) => ({ ...q, layer: base + k }));
       laid.forEach((q, k) => {
         starts.current.set(q.id, { pos: deskPoint(room, from.x, from.z, 0.012), at: now + k * 60 });
       });
@@ -515,7 +531,10 @@ export function Desk({
         const bottomY = bottom ? ((1 - bottom.y) / 2) * room.vp.height : edge;
         line = edge - DESK_SAFE * Math.max(0, edge - bottomY);
       }
-      if (!d.wall && m.y < line && bp) d.wall = bp;
+      // Устройство на стену не уходит (DEVICES_ON_WALL): упирается в задний край стола.
+      const toWall = DEVICES_ON_WALL || !d.ids.some((id) => DEVICE_KIND[id]);
+      if (!toWall) d.wall = null;
+      else if (!d.wall && m.y < line && bp) d.wall = bp;
       else if (d.wall && m.y > line + WALL_HYST) d.wall = null;
       else if (d.wall) d.wall = bp ?? d.lastWall;
       // Переход плавный и лёгкий: сразу с места и мягко в конце (автор 24.11).

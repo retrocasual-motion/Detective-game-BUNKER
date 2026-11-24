@@ -3,6 +3,7 @@ import {
   type ContainerId,
   containerContents,
   DESK_DEVICES,
+  DEVICES_ON_WALL,
   NEVER_ON_WALL,
   OFF_WALL_IDS,
   openedOf,
@@ -271,11 +272,19 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
   ]);
   // Половины, сложенные в один лист (MG-A), на стене не висят — висит совмещённый.
   const parts = joinedParts(state.joined);
+  // Устройства стола на стене не висят (DEVICES_ON_WALL) — они на столе.
+  const deskOnly = (id: string) => !DEVICES_ON_WALL && DESK_DEVICES.has(id);
 
   const seen = new Set<string>();
   const items: WallItem[] = state.wall.items
     .filter((i) => {
-      if (!known.has(i.id) || seen.has(i.id) || parts.has(i.id) || NEVER_ON_WALL.has(i.id))
+      if (
+        !known.has(i.id) ||
+        seen.has(i.id) ||
+        parts.has(i.id) ||
+        NEVER_ON_WALL.has(i.id) ||
+        deskOnly(i.id)
+      )
         return false;
       seen.add(i.id);
       return true;
@@ -293,6 +302,15 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
     onDesk.add(d.id);
     return true;
   });
+  // Устройство вскрытого конверта, которого нет ни на столе, ни на стене (старое сохранение, «всё
+  // вскрыто»), — на стол: место решит стол.
+  const sealedNow = sealedIds(state);
+  let deskTop = desk.reduce((m, d) => Math.max(m, d.layer), 0);
+  for (const id of DESK_DEVICES)
+    if (deskOnly(id) && have.has(id) && !sealedNow.has(id) && !onDesk.has(id)) {
+      desk.push({ id, layer: ++deskTop });
+      onDesk.add(id);
+    }
 
   let z = items.reduce((max, i) => Math.max(max, i.z), 0);
   // Стартовое — на стену, кроме невскрытого (A-260) и того, что лежит на столе или в браузере.
@@ -305,6 +323,7 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
       sealed.has(id) ||
       parts.has(id) ||
       onDesk.has(id) ||
+      deskOnly(id) ||
       (!legacy && OFF_WALL_IDS.has(id)) ||
       NEVER_ON_WALL.has(id)
     )
@@ -324,7 +343,7 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
     ...state,
     wall: { ...state.wall, items, threads, notes: kept },
     ...(state.excerpts ? { excerpts } : {}),
-    ...(state.desk ? { desk } : {}),
+    ...(state.desk || desk.length ? { desk } : {}),
   };
 }
 

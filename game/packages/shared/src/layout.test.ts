@@ -168,15 +168,18 @@ describe('upgradeState', () => {
       wall: {
         camera: { x: 1, y: 2, zoom: 1 },
         items: [{ materialId: '03', x: 2000, y: 1500, z: 5, rot: 1 }],
-        threads: [{ id: 't', from: '03', to: '47', label: 'ключ' }],
+        // Нить к листу; к устройству (47) нити нет — устройства на столе (DEVICES_ON_WALL).
+        threads: [{ id: 't', from: '03', to: '08', label: 'ключ' }],
         arrivals: [],
       },
     };
     const got = upgradeState(v4, starting);
     expect(got?.view).toBe('wall');
     expect(got?.wall.items.find((i) => i.id === '03')).toMatchObject({ x: 2000, y: 1500 });
-    // Все стартовые, кроме конверта с диском (52, A-272), — на стене.
-    expect(got?.wall.items).toHaveLength(starting.length - 1 + PERSONS.length);
+    // Все стартовые, кроме конверта с диском (52, A-272) и пяти устройств (на столе, 3D-стол), —
+    // на стене.
+    expect(got?.desk?.map((d) => d.id).sort()).toEqual(['24', '47', '48', '49', '50']);
+    expect(got?.wall.items).toHaveLength(starting.length - 6 + PERSONS.length);
     expect(got?.wall.threads).toHaveLength(1);
   });
 
@@ -280,16 +283,30 @@ describe('конверты архива (A-260)', () => {
     expect(openContainer(o, starting, 'protocols')).toBe(o);
   });
 
-  it('3D-стол: конверт места — листы и 24, 48, 49 на стол; ноутбук и 50 — на стену', () => {
+  it('3D-стол: конверт места — листы и все пять устройств на стол, на стене ничего', () => {
     expect(sealedIds(s).has('48')).toBe(true);
     const o = openContainer(s, starting, 'scene');
     expect(sealedIds(o).has('48')).toBe(false);
     const desk = new Set(o.desk?.map((d) => d.id));
-    for (const id of ['22', '18', '51', '24', '48', '49']) expect(desk.has(id)).toBe(true);
-    expect(desk.has('47')).toBe(false);
-    expect(o.wall.items.some((i) => i.id === '47')).toBe(true);
-    expect(o.wall.items.some((i) => i.id === '48')).toBe(false);
+    for (const id of ['22', '18', '51', '24', '47', '48', '49', '50'])
+      expect(desk.has(id)).toBe(true);
+    expect(o.wall.notes.some((n) => n.id === containerLabelId('scene'))).toBe(false);
+    for (const id of ['22', '47', '48']) expect(o.wall.items.some((i) => i.id === id)).toBe(false);
     expect(sealedIds(o).has('30')).toBe(true);
+  });
+
+  it('3D-стол: устройство на стене (старое сохранение) — уходит на стол; невскрытое — нет', () => {
+    const o = openContainer(s, starting, 'scene');
+    const hung = {
+      ...o,
+      desk: o.desk?.filter((d) => d.id !== '47'),
+      wall: { ...o.wall, items: [...o.wall.items, { id: '47', x: 10, y: 10, z: 99, rot: 0 }] },
+    };
+    const r = reconcile(hung, starting);
+    expect(r.wall.items.some((i) => i.id === '47')).toBe(false);
+    expect(r.desk?.some((d) => d.id === '47' && d.x === undefined)).toBe(true);
+    // Конверт места не вскрыт — устройств на столе нет.
+    expect(reconcile(s, starting).desk ?? []).toEqual([]);
   });
 
   it('3D-стол: со стола на стену — висит там, где отпустили, со стола уходит', () => {

@@ -45,7 +45,6 @@ export function DeskLayer({
   visible: boolean;
 }) {
   const items = useGame((g) => g.state?.desk ?? NONE);
-  const opened = useGame((g) => g.state?.opened);
   const list = useGame((g) => g.materials);
   const materials = useMemo(
     () =>
@@ -93,11 +92,7 @@ export function DeskLayer({
   const spillFrom = (id: string) => {
     const c = CONTAINERS.find((cc) => containerContents(cc).includes(id));
     if (!c) return null;
-    // Где конверт лежал, пока был опечатан (вскрытый «Осмотр места» сдвигает остальные назад).
-    const [x, z] = envelopeSpot(
-      c.id,
-      (opened ?? []).filter((o) => o !== c.id),
-    );
+    const [x, z] = envelopeSpot(c.id);
     return { x, z };
   };
 
