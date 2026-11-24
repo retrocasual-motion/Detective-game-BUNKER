@@ -46,6 +46,26 @@ export function screenToDesk(
   return { x: hit.x / room.p, z: hit.z / room.p };
 }
 
+/**
+ * Точка экрана → точка на плоскости стены (px доски-экрана, как у `boardPoint`), без обрезки
+ * краями доски: и для промежутка между столом и доской; null — мимо.
+ */
+export function screenToWall(
+  cam: PerspectiveCamera,
+  room: Room,
+  sx: number,
+  sy: number,
+): { x: number; y: number } | null {
+  ndc.set((sx / room.vp.width) * 2 - 1, -(sy / room.vp.height) * 2 + 1);
+  ray.setFromCamera(ndc, cam);
+  if (!ray.ray.intersectPlane(wallPlane, hit)) return null;
+  return {
+    x: hit.x / BOARD_SCALE + room.vp.width / 2,
+    y: -hit.y / BOARD_SCALE + room.vp.height / 2,
+  };
+}
+const wallPlane = new Plane(new Vector3(0, 0, 1), 0);
+
 /** Точка стола → экран (для зоны: видна ли точка в кадре). */
 export function deskToScreen(cam: PerspectiveCamera, room: Room, x: number, z: number) {
   const v = deskPoint(room, x, z).project(cam);

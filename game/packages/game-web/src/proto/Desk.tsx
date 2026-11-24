@@ -2,7 +2,7 @@ import { type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { Euler, type Group, PerspectiveCamera, Quaternion, Vector3 } from 'three';
 import { Envelope } from '../hold/shapes.tsx';
-import { BOARD_SCALE, type Pose, type Room, screenToBoard } from '../room/camera.ts';
+import { BOARD_SCALE, type Pose, type Room } from '../room/camera.ts';
 import type { DeskObject } from '../room/decor.ts';
 import { cardH, cardW } from './Board.tsx';
 import {
@@ -21,7 +21,14 @@ import {
 } from './deskWorld.ts';
 import { Paper, type PaperTarget } from './Paper.tsx';
 import { footprints, Room3D } from './Room3D.tsx';
-import { boardPoint, deskPoint, deskToScreen, screenToDesk, syncCamera } from './space.ts';
+import {
+  boardPoint,
+  deskPoint,
+  deskToScreen,
+  screenToDesk,
+  screenToWall,
+  syncCamera,
+} from './space.ts';
 
 /**
  * Прототип 3D-стола: стол целиком — комната, вещи следователя, конверт, бумаги и изъятые
@@ -54,8 +61,10 @@ export interface Material {
 
 /** Подъём вещи в руке над тем, что под ней, м: чуть-чуть — видно, что взята (автор 23.11). */
 const LIFT = 0.02;
-/** Запас у заднего края стола, м: на стену — дальше края на столько, назад — ближе на столько. */
-const WALL_BAND = 0.02;
+/** Нижняя доля промежутка «задний край стола — низ доски», которая ещё считается столом. */
+const DESK_SAFE = 0.2;
+/** Запас на обратный путь у той же черты, px экрана: чтобы у черты не дёргалось. */
+const WALL_HYST = 6;
 /** Скорость перехода стол ↔ стена, 1/с (≈ 0,2 с, сразу с места). */
 const WALL_RATE = 15;
 /** Сколько держать, чтобы взять вместе с тем, что лежит сверху, мс. */
@@ -358,22 +367,23 @@ export function Desk({
   };
 
   // ── WL-A: на стену — туда, где отпустили; несколько — чуть вразбежку. ──
-  const sendToWall = (ids: string[], at: { x: number; y: number }) => {
-    const now = performance.now();
+  /** Место карточки на доске: точку у края прижать так, чтобы карточка целиком была на доске. */
+  const fitWall = (kind: string, ax: number, ay: number) => {
     const { vp } = room;
     const w = cardW(vp);
+    const h = cardH(vp, kind);
+    return {
+      x: Math.min(vp.width * 0.98 - 12 - w / 2, Math.max(vp.width * 0.02 + 12 + w / 2, ax)),
+      y: Math.min(vp.height * 0.975 - 12 - h / 2, Math.max(vp.height * 0.025 + 12 + h / 2, ay)),
+    };
+  };
+
+  const sendToWall = (ids: string[], at: { x: number; y: number }) => {
+    const now = performance.now();
     // Сверху вниз: первым — верхний.
     [...ids].reverse().forEach((id, k) => {
       const pc = ps.current.find((q) => q.id === id);
-      const h = cardH(vp, pc?.kind ?? 'sheet');
-      const x = Math.min(
-        vp.width * 0.98 - 12 - w / 2,
-        Math.max(vp.width * 0.02 + 12 + w / 2, at.x + k * 16),
-      );
-      const y = Math.min(
-        vp.height * 0.975 - 12 - h / 2,
-        Math.max(vp.height * 0.025 + 12 + h / 2, at.y + k * 12),
-      );
+      const { x, y } = fitWall(pc?.kind ?? 'sheet', at.x + k * 16, at.y + k * 12);
       flying.current.set(id, { x, y, since: now + k * 60 });
     });
     setTick((t) => t + 1);
@@ -543,13 +553,21 @@ export function Desk({
     if (d) {
       const m = pointer.current;
       const floor = screenToDesk(deskCam, room, m.x, m.y, 0);
-      const bp = screenToBoard({ x: m.x, y: m.y }, room.poses.desk, room);
+      // Точка стены под мышью — и в промежутке между столом и доской (к доске её прижмёт fitWall).
+      const bp = screenToWall(deskCam, room, m.x, m.y);
       if (bp) d.lastWall = bp;
-      // Стол ↔ стена — с запасом у края (автор 24.11: у края «резко туда и назад»): на стену —
-      // когда мышь ушла за край стола на пару сантиметров, назад — когда вернулась на столько же.
-      const fz = floor ? floor.z : Number.NEGATIVE_INFINITY;
-      if (!d.wall && fz < -WALL_BAND && bp) d.wall = bp;
-      else if (d.wall && fz > WALL_BAND) d.wall = null;
+      // Стол ↔ стена (автор 24.11): на стену — как только мышь ушла за задний край стола выше
+      // нижней доли DESK_SAFE промежутка «край стола — низ доски»; эта доля — ещё стол. Назад —
+      // ниже той же черты на WALL_HYST px, чтобы у черты не дёргалось.
+      let line = Number.POSITIVE_INFINITY; // стол не под мышью — уже стена
+      if (floor) {
+        const edge = deskToScreen(deskCam, room, floor.x, 0).y;
+        const bottom = bp ? boardPoint(room, bp.x, room.vp.height).project(deskCam) : null;
+        const bottomY = bottom ? ((1 - bottom.y) / 2) * room.vp.height : edge;
+        line = edge - DESK_SAFE * Math.max(0, edge - bottomY);
+      }
+      if (!d.wall && m.y < line && bp) d.wall = bp;
+      else if (d.wall && m.y > line + WALL_HYST) d.wall = null;
       else if (d.wall) d.wall = bp ?? d.lastWall;
       // И сам переход — плавный, а не скачком (без «примагничивания»), и лёгкий: сразу с места и
       // мягко в конце (автор 24.11: «тянется, как тяжёлый» — прежде разгонялся и тормозил).
@@ -697,7 +715,9 @@ export function Desk({
           const n = d.ids.length - 1 - k;
           const deskPos = t.pos.clone();
           const deskQuat = t.quat.clone();
-          onWall(t, pc, wa.x + n * 16, wa.y + n * 12, 40 + k * 1.5);
+          // Там же, где ляжет после отпускания: у края доски — прижата к ней.
+          const at = fitWall(pc.kind, wa.x + n * 16, wa.y + n * 12);
+          onWall(t, pc, at.x, at.y, 40 + k * 1.5);
           t.noShadow = false;
           t.pos.lerpVectors(deskPos, t.pos, d.w);
           // Лицом к себе, вертикально, как карточка доски (автор 24.11: «видеть, куда кладу»).
