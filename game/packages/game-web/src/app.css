@@ -2936,3 +2936,31 @@ button {
   margin: 0;
   color: var(--color-danger);
 }
+
+/* Чтение со стола подряд (DC-B): счёт, стрелки, «Оставить на столе». */
+.desk-run {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+.desk-run-count {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+.desk-run-nav {
+  display: flex;
+  gap: var(--space-1);
+}
+.desk-run-nav .tool {
+  flex: 1;
+  font-size: 1.2rem;
+}
+.desk-run .tool[aria-pressed="true"] {
+  outline: 2px solid var(--color-accent);
+}
+.desk-run-hint {
+  font-size: 0.75rem;
+  line-height: 1.25;
+  color: var(--color-text-muted);
+}

@@ -256,12 +256,33 @@ export function Desk({
           .map((it) => ({ id: it.id, kind: kindOf(it.id) }))
           .sort((a, b) => (dev ? area(b.kind) - area(a.kind) : 0));
       const devs = scatter(pick(true), zone, DEVICES_AT, 11, 0.1, placed, solid);
-      // Веером внахлёст: у каждого листа видна полоса (стол мал для десятка листов рядом).
-      // На радиопост листы не ложатся (TALL): для них он — преграда.
-      const sheets = scatter(pick(false), zone, SPILL_AT, 7, 0.06, [...placed, ...devs], (k) =>
-        TALL.has(k),
-      );
-      // Порядок укладки — порядок раскладки: что легло позже, то выше (лист внахлёст — поверх).
+      // Листы — ровной стопкой (DC-B, автор 25.11: стопка «к прочтению», без веера): место — одно,
+      // свободное от устройств; первый по описи — сверху. Чуть неровно, как сложенные руками.
+      const flat = pick(false);
+      const spot = flat.length
+        ? scatter(flat.slice(0, 1), zone, SPILL_AT, 7, 0.06, [...placed, ...devs], solid)[0]
+        : undefined;
+      const sheets: Piece[] = spot
+        ? flat
+            .map((it, k) => {
+              const [w, d, t] = sizeOf(it.kind);
+              const j = (n: number) => (((k * n) % 9) - 4) * 0.0012;
+              return {
+                id: it.id,
+                kind: it.kind,
+                w,
+                d,
+                t,
+                x: spot.x + j(37),
+                z: spot.z + j(53),
+                rot: spot.rot + j(29) * 4,
+                layer: 0,
+                stack: spot.id,
+              };
+            })
+            .reverse()
+        : [];
+      // Порядок укладки: что легло позже, то выше — первый лист описи сверху стопки.
       const base = Math.min(...fresh.map((it) => it.layer));
       const laid = [...devs, ...sheets].map((q, k) => ({ ...q, layer: base + k }));
       laid.forEach((q, k) => {

@@ -9,6 +9,7 @@ import {
   CARD_W,
   containerLabelId,
   defaultState,
+  fileFromDesk,
   GRID_TOP,
   hangFromDesk,
   inboxIds,
@@ -310,6 +311,25 @@ describe('конверты архива (A-260)', () => {
     expect(r.desk?.some((d) => d.id === '47' && d.x === undefined)).toBe(true);
     // Конверт места не вскрыт — устройств на столе нет, только газета.
     expect(reconcile(s, starting).desk?.map((d) => d.id)).toEqual([NEWSPAPER_ID]);
+  });
+
+  it('DC-B: прочитанное со стола — на стену группой под ярлыком конверта; вторая порция — без второго ярлыка', () => {
+    const o = openContainer(s, starting, 'protocols');
+    const label = containerLabelId('protocols');
+    const a = fileFromDesk(o, ['31', '30']);
+    expect(a.desk?.some((d) => ['30', '31'].includes(d.id))).toBe(false);
+    expect(a.desk?.some((d) => d.id === '32')).toBe(true);
+    const wall = a.wall.items.map((i) => i.id);
+    // Порядок — как в конверте; ярлык — над группой.
+    expect(wall.slice(-3)).toEqual([label, '30', '31']);
+    expect(a.wall.notes.filter((n) => n.id === label)).toHaveLength(1);
+    const b = fileFromDesk(a, ['32', 'нет-такого']);
+    expect(b.wall.items.filter((i) => i.id === label)).toHaveLength(1);
+    expect(b.wall.items.some((i) => i.id === '32')).toBe(true);
+    // Новое не ложится на прежнее.
+    const at = (st: typeof b, id: string) => st.wall.items.find((i) => i.id === id);
+    expect(at(b, '32')).not.toMatchObject({ x: at(b, '30')?.x, y: at(b, '30')?.y });
+    expect(reconcile(b, starting).wall.items.some((i) => i.id === '32')).toBe(true);
   });
 
   it('3D-стол: со стола на стену — висит там, где отпустили, со стола уходит', () => {

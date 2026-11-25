@@ -6,6 +6,7 @@ import {
   folderItemId,
   openedOf,
   SERVER_DISC_ID,
+  SPILL_CONTAINERS,
 } from '@bunker/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
@@ -54,8 +55,14 @@ export default function HeldThing({ held }: { held: Held }) {
     if (openedIds.includes(held.id))
       return <Opened key={`opened-${held.id}`} id={held.id} inside={inside} box={box} />;
     const items = inside.map((m) => ({ id: m, title: short(titles.get(m) ?? '') }));
-    // Вскрыли — в руках тот же конверт, уже вскрытый: содержимое стоит в нём (OP-D).
-    const open = () => afterLeaving(() => useGame.getState().openContainer(held.id));
+    // Вскрыли конверт архива (DC-B, автор 25.11; вместо OP-D): из рук — содержимое стопкой на стол,
+    // читать — щелчком по стопке. Коробки — как прежде: вскрытая в руках (EB-A).
+    const open = () =>
+      afterLeaving(() => {
+        const g = useGame.getState();
+        g.openContainer(held.id);
+        if (SPILL_CONTAINERS.has(held.id)) g.hold(null);
+      });
     return (
       <Held3D
         key={`sealed-${held.id}`}

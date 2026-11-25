@@ -136,7 +136,7 @@ export function DeskLayer({
           items={items}
           spillFrom={spillFrom}
           wallFit={wallFit}
-          onRead={(id) => useGame.getState().openViewer(id)}
+          onRead={(id) => useGame.getState().readDesk(id)}
           onSave={(next) => useGame.getState().setDesk(next)}
           onHang={(id, at) => {
             const st = useGame.getState().state;

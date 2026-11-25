@@ -9,11 +9,13 @@ import {
   type DeskItem,
   deviceOf,
   FOLDER_DOCS,
+  fileFromDesk,
   folderItemId,
   hangFromDesk,
   isWeb,
   type Join,
   type Material,
+  NEWSPAPER_ID,
   openAll,
   openContainer,
   openedOf,
@@ -154,6 +156,18 @@ interface GameStore {
   readFrom(materialId: string, back: Held): void;
   /** Куда вернуться, когда лист закрыт (readFrom). */
   backTo: Held | null;
+  /**
+   * Чтение со стола подряд (DC-B, автор 25.11): листы стола по порядку (с какого начали, дальше —
+   * сверху вниз), какие уже открывали и какие оставить на столе. Закрыли — прочитанное, кроме
+   * оставленного, висит на стене группой своего конверта.
+   */
+  deskRun: { ids: string[]; read: string[]; keep: string[] } | null;
+  /** Щелчок по листу на столе: открыть и читать стол подряд (газета — просто открыть). */
+  readDesk(materialId: string): void;
+  /** Следующий (+1) или предыдущий (−1) лист стола. */
+  deskStep(d: 1 | -1): void;
+  /** Оставить открытый лист на столе (или снова отпустить на стену). */
+  toggleKeep(): void;
   /** Открыть материал листом (экран устройства в 4a). */
   readMaterial(materialId: string): void;
   /** Повесить лист из «Входящих» на стену — в середину видимой части стены. */
@@ -333,6 +347,7 @@ export const useGame = create<GameStore>((set, get) => {
     foundId: null,
     wallFly: 0,
     backTo: null,
+    deskRun: null,
 
     dismissArrival() {
       set({ arrival: null });
@@ -411,6 +426,42 @@ export const useGame = create<GameStore>((set, get) => {
         phone: h?.id === '48' ? g.phone : null,
         camera: h?.id === '24' ? g.camera : false,
       }));
+    },
+
+    readDesk(materialId) {
+      const s = get().state;
+      if (!s) return;
+      const sheet = (id: string) => !DEVICE_IDS.has(id) && id !== NEWSPAPER_ID;
+      if (!sheet(materialId)) {
+        get().openViewer(materialId);
+        return;
+      }
+      const rest = [...(s.desk ?? [])]
+        .filter((d) => sheet(d.id) && d.id !== materialId)
+        .sort((a, b) => b.layer - a.layer)
+        .map((d) => d.id);
+      get().openViewer(materialId);
+      if (get().viewerId === materialId)
+        set({ deskRun: { ids: [materialId, ...rest], read: [materialId], keep: [] } });
+    },
+
+    deskStep(d) {
+      const run = get().deskRun;
+      const at = run ? run.ids.indexOf(get().viewerId ?? '') : -1;
+      const next = run && at >= 0 ? run.ids[at + d] : undefined;
+      if (!run || !next) return;
+      get().openViewer(next);
+      set({
+        deskRun: { ...run, read: run.read.includes(next) ? run.read : [...run.read, next] },
+      });
+    },
+
+    toggleKeep() {
+      const run = get().deskRun;
+      const id = get().viewerId;
+      if (!run || !id || !run.ids.includes(id)) return;
+      const keep = run.keep.includes(id) ? run.keep.filter((k) => k !== id) : [...run.keep, id];
+      set({ deskRun: { ...run, keep } });
     },
 
     readFrom(materialId, back) {
@@ -628,6 +679,17 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     closeViewer() {
+      // Читали стол подряд (DC-B): прочитанное, кроме оставленного, — на стену группой конверта.
+      const run = get().deskRun;
+      if (run) {
+        set({ deskRun: null });
+        const file = run.read.filter((id) => !run.keep.includes(id));
+        if (file.length) {
+          const before = onWallNow(get().state);
+          get().updateState((s) => fileFromDesk(s, file));
+          markNew(before);
+        }
+      }
       // Лист вынут из вещи в руках (readFrom) — вещь снова в руках.
       const back = get().viewerId ? get().backTo : null;
       set({

@@ -528,15 +528,30 @@ export function openContainer(
   const ids = fresh.filter((m) => !toDesk.includes(m));
   if (toDesk.length) state = { ...state, desk: spillOnDesk(state.desk ?? [], toDesk) };
   if (!ids.length) return { ...state, opened };
-  const labelW = Math.min(NOTE_STYLE.maxWidth, 60 + c.label.length * 15);
+  return hangGroup({ ...state, opened }, ids, { id: containerLabelId(id), text: c.label });
+}
+
+/**
+ * Повесить вещи группой на свободное место доски (A-260): под ярлыком `label`, если его ещё нет на
+ * стене; ярлык уже висит (вторая порция того же конверта) — группа без ярлыка.
+ */
+function hangGroup(
+  state: PlayerState,
+  ids: string[],
+  label: { id: string; text: string } | null,
+): PlayerState {
+  if (!ids.length) return state;
+  const withLabel = !!label && !state.wall.items.some((i) => i.id === label.id);
+  const labelW = label ? Math.min(NOTE_STYLE.maxWidth, 60 + label.text.length * 15) : 0;
+  const labelH = withLabel ? LABEL_H : 0;
   const noteW = new Map(state.wall.notes.map((n) => [n.id, n.width ?? NOTE_STYLE[n.kind].width]));
   const widthOf = (x: string) => noteW.get(x) ?? CARD_W;
   // Форма группы — та, что ляжет выше всех (потом левее): доска заполняется вширь.
   const size = (cols: number) => {
     const rows = Math.ceil(ids.length / cols);
     return {
-      w: Math.max(labelW, (cols - 1) * GRID_DX + CARD_W),
-      h: LABEL_H + (rows - 1) * GRID_DY + CARD_H,
+      w: Math.max(withLabel ? labelW : 0, (cols - 1) * GRID_DX + CARD_W),
+      h: labelH + (rows - 1) * GRID_DY + CARD_H,
     };
   };
   let best: { cols: number; at: { x: number; y: number } } | null = null;
@@ -550,29 +565,54 @@ export function openContainer(
   const cols = best?.cols ?? Math.min(GROUP_COLS, ids.length);
   const at = best?.at ?? onWall(0, BOARD_INNER.bottom - size(cols).h);
   let z = state.wall.items.reduce((m, i) => Math.max(m, i.z), 0);
-  const labelId = containerLabelId(id);
-  // Ярлык — в одну строку, по длине названия.
-  const label: Note = { id: labelId, kind: 'label', text: c.label, width: labelW };
   const placed: WallItem[] = [
-    { id: labelId, x: at.x, y: at.y, z: ++z, rot: 0 },
+    ...(withLabel && label ? [{ id: label.id, x: at.x, y: at.y, z: ++z, rot: 0 }] : []),
     ...ids.map((m, k) => ({
       id: m,
       x: at.x + (k % cols) * GRID_DX,
-      y: at.y + LABEL_H + Math.floor(k / cols) * GRID_DY,
+      y: at.y + labelH + Math.floor(k / cols) * GRID_DY,
       z: ++z,
       rot: hangTilt(m),
     })),
   ];
-  const keepNotes = state.wall.notes.filter((n) => n.id !== labelId);
+  const gone = new Set(ids);
+  const notes =
+    withLabel && label
+      ? [
+          ...state.wall.notes.filter((n) => n.id !== label.id),
+          // Ярлык — в одну строку, по длине названия.
+          { id: label.id, kind: 'label' as const, text: label.text, width: labelW },
+        ]
+      : state.wall.notes;
   return {
     ...state,
-    opened,
+    desk: state.desk?.filter((d) => !gone.has(d.id)),
     wall: {
       ...state.wall,
-      items: [...state.wall.items.filter((i) => i.id !== labelId), ...placed],
-      notes: [...keepNotes, label],
+      items: [
+        ...state.wall.items.filter((i) => !gone.has(i.id) && !(withLabel && i.id === label?.id)),
+        ...placed,
+      ],
+      notes,
     },
   };
+}
+
+/**
+ * Прочитанное со стола — на стену (DC-B, автор 25.11): листы уходят со стола и висят группами — по
+ * конверту, из которого они, под его ярлыком (вторая порция — рядом, без ярлыка); не из конверта —
+ * группой без ярлыка. Порядок внутри группы — как в конверте.
+ */
+export function fileFromDesk(state: PlayerState, ids: readonly string[]): PlayerState {
+  const onDesk = new Set((state.desk ?? []).map((d) => d.id));
+  const want = ids.filter((id) => onDesk.has(id));
+  let next = state;
+  for (const c of CONTAINERS) {
+    const mine = containerContents(c).filter((m) => want.includes(m));
+    if (mine.length) next = hangGroup(next, mine, { id: containerLabelId(c.id), text: c.label });
+  }
+  const rest = want.filter((id) => !CONTAINERS.some((c) => containerContents(c).includes(id)));
+  return hangGroup(next, rest, null);
 }
 
 /** Высыпать на стол: порядок — как в конверте, первое — снизу; места ещё нет (решит стол). */
