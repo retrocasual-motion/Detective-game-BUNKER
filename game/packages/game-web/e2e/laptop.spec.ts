@@ -6,7 +6,7 @@ import { expect, sheet, test, toWall } from './fixtures.ts';
  * экраном к игроку, графический ключ, мини-ОС эпохи; файлы остаются на ноутбуке.
  */
 
-const KEY = [5, 1, 2, 3, 6, 9, 8, 7, 4];
+const KEY = [2, 4, 8, 6]; // A-283
 
 /** Ноутбук со стола — в руки — щелчок по экрану: экран крупно. */
 async function laptopUp(page: Page) {

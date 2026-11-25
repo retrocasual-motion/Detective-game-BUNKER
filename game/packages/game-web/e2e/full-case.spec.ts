@@ -428,7 +428,7 @@ test('QA-C: всё дело через интерфейс — от нового 
     await expect(page.getByTestId('laptop-view')).toBeVisible();
     await page.locator('.lap-avatar').first().dblclick();
     await opened(page, ['L947']);
-    await drawKey(page, [5, 1, 2, 3, 6, 9, 8, 7, 4]);
+    await drawKey(page, [2, 4, 8, 6]);
     await expect(page.getByTestId('laptop-desktop')).toBeVisible();
     await opened(page, ['L560', 'L561', 'L562', 'L563', 'L564', 'L565']);
     await handsFree(page);
