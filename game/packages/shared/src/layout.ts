@@ -250,11 +250,27 @@ export function upgradeState(raw: unknown, materials: Material[]): PlayerState |
 }
 
 /**
+ * Сохранение до FM-B (автор 25.11): устройства лежали в «Осмотре места» и вскрывались вместе с ним.
+ * Вскрыт «Осмотр места», а пакета «Изъятое» в `opened` нет, и устройства уже были у игрока (на
+ * столе, на стене или сохранение до 3D-стола, без `desk`) — пакет тоже вскрыт.
+ */
+function seizedFromScene(state: PlayerState): PlayerState {
+  const opened = state.opened;
+  if (!opened?.includes('scene') || opened.includes('seized')) return state;
+  const had =
+    state.desk === undefined ||
+    state.desk.some((d) => DESK_DEVICES.has(d.id)) ||
+    state.wall.items.some((i) => DESK_DEVICES.has(i.id));
+  return had ? { ...state, opened: [...opened, 'seized'] } : state;
+}
+
+/**
  * Приводит сохранённое состояние к текущему контенту: неизвестное убирает; недостающих
  * персонажей и стартовые материалы вешает на их начальные места. Открытое по ходу дела
  * на стену само не вешается — оно во «Входящих».
  */
 export function reconcile(state: PlayerState, materials: Material[]): PlayerState {
+  state = seizedFromScene(state);
   const seenNotes = new Set<string>();
   const notes: Note[] = state.wall.notes.filter((n) => {
     if (seenNotes.has(n.id)) return false;

@@ -287,16 +287,29 @@ describe('конверты архива (A-260)', () => {
     expect(openContainer(o, starting, 'protocols')).toBe(o);
   });
 
-  it('3D-стол: конверт места — листы и все пять устройств на стол, на стене ничего', () => {
+  it('FM-B: папка «Осмотр места» — листы на стол; устройства — в пакете «Изъятое», пока его не вскрыли', () => {
     expect(sealedIds(s).has('48')).toBe(true);
     const o = openContainer(s, starting, 'scene');
-    expect(sealedIds(o).has('48')).toBe(false);
-    const desk = new Set(o.desk?.map((d) => d.id));
-    for (const id of ['22', '18', '51', '24', '47', '48', '49', '50'])
-      expect(desk.has(id)).toBe(true);
-    expect(o.wall.notes.some((n) => n.id === containerLabelId('scene'))).toBe(false);
-    for (const id of ['22', '47', '48']) expect(o.wall.items.some((i) => i.id === id)).toBe(false);
-    expect(sealedIds(o).has('30')).toBe(true);
+    const desk = () => new Set(o.desk?.map((d) => d.id));
+    for (const id of ['22', '18', '51']) expect(desk().has(id)).toBe(true);
+    // Устройства — ещё в пакете: не видны, не на столе.
+    expect(sealedIds(o).has('48')).toBe(true);
+    for (const id of ['24', '47', '48', '49', '50']) expect(desk().has(id)).toBe(false);
+    expect(reconcile(o, starting).opened).toEqual(['scene']);
+    const b = openContainer(o, starting, 'seized');
+    expect(sealedIds(b).has('48')).toBe(false);
+    const onDesk = new Set(b.desk?.map((d) => d.id));
+    for (const id of ['24', '47', '48', '49', '50']) expect(onDesk.has(id)).toBe(true);
+    expect(b.wall.notes.some((n) => n.id === containerLabelId('scene'))).toBe(false);
+    for (const id of ['22', '47', '48']) expect(b.wall.items.some((i) => i.id === id)).toBe(false);
+    expect(sealedIds(b).has('30')).toBe(true);
+  });
+
+  it('FM-B: сохранение до пакета — «Осмотр места» вскрыт с устройствами: пакет тоже вскрыт', () => {
+    const { desk: _, ...before3d } = { ...s, opened: ['scene' as const] };
+    expect(reconcile(before3d, starting).opened).toEqual(['scene', 'seized']);
+    const onDesk = { ...s, opened: ['scene' as const], desk: [{ id: '47', layer: 1 }] };
+    expect(reconcile(onDesk, starting).opened).toEqual(['scene', 'seized']);
   });
 
   it('3D-стол: устройство на стене (старое сохранение) — уходит на стол; невскрытое — нет', () => {

@@ -8,7 +8,7 @@ import type { PlayerState } from './schemas.ts';
  * названием конверта.
  */
 
-export type ContainerId = 'protocols' | 'scene' | 'bunker' | 'personal' | 'bank';
+export type ContainerId = 'protocols' | 'scene' | 'seized' | 'bunker' | 'personal' | 'bank';
 
 export interface Container {
   id: ContainerId;
@@ -27,8 +27,17 @@ export const CONTAINERS: readonly Container[] = [
   { id: 'protocols', label: 'Протоколы опроса', files: range(30, 36) },
   {
     id: 'scene',
-    label: 'Осмотр места происшествия и изъятое',
+    label: 'Осмотр места происшествия',
     files: ['22', '23', '25', '26', '27', '51', '18', '19', '20', '21'],
+  },
+  /**
+   * Изъятое при осмотре (FM-B, автор 25.11): вещдоки лежат не в папке с отчётами, а отдельно —
+   * в пакете вещдоков с красной лентой; потянули ленту — устройства на столе.
+   */
+  {
+    id: 'seized',
+    label: 'Изъятое при осмотре места',
+    files: [],
     devices: ['24', '47', '48', '49', '50'],
   },
   {
@@ -59,11 +68,21 @@ export const CONTAINER_IDS = CONTAINERS.map((c) => c.id) as [ContainerId, ...Con
 export const DEVICE_IDS: ReadonlySet<string> = new Set(CONTAINERS.flatMap((c) => c.devices ?? []));
 
 /**
- * 3D-стол (автор 24.11, вместо A-260 п. 3): эти конверты при вскрытии высыпаются на стол —
- * листы и устройства из DESK_DEVICES ложатся свободно; игрок сам вешает их на стену. Коробки
- * «Личные вещи» и из банка — пока как раньше, на стену.
+ * 3D-стол (автор 24.11, вместо A-260 п. 3; DC-B — 25.11): содержимое при вскрытии ложится на стол —
+ * листы стопкой, устройства из DESK_DEVICES свободно; прочитанное игрок отправляет на стену, закрыв
+ * чтение. Коробки «Личные вещи» и из банка — пока как раньше, на стену.
  */
-export const SPILL_CONTAINERS: ReadonlySet<ContainerId> = new Set(['protocols', 'scene', 'bunker']);
+export const SPILL_CONTAINERS: ReadonlySet<ContainerId> = new Set([
+  'protocols',
+  'scene',
+  'seized',
+  'bunker',
+]);
+/**
+ * Папки дела (FM-B, автор 25.11: «папки и пакеты прямо на столе»): бумаги не опечатаны — щелчок по
+ * папке, и листы стопкой на столе. Пакет вещдоков и коробки вскрывают руками (лента, OG-B).
+ */
+export const FOLDER_IDS: ReadonlySet<ContainerId> = new Set(['protocols', 'scene', 'bunker']);
 /**
  * Изъятые устройства, которые лежат на столе свободно и двигаются, как листы (автор 24.11: «все
  * устройства… ноутбук и радиопост тоже»): камера 24, ноутбук 47, телефон 48, ручка 49,

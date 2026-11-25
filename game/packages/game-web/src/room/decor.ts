@@ -235,9 +235,8 @@ export function roomPolys(r: Room, col: Col): Poly[] {
  * Устройства — из описи (24, 47–50); пакеты 40–46 лежат в коробке.
  */
 /**
- * Конверты архива C4 (324 × 229 мм) — стопкой внахлёст, от дальнего к ближнему: в начале дела —
- * посередине перед игроком. Вскрыли «Осмотр места…» — на это место выложено изъятое (устройства),
- * оставшиеся конверты сдвинуты назад, за ноутбук (автор 19.11: «улики ближе к нам, крупно»).
+ * Папки дела (FM-B, автор 25.11; были конверты архива C4, A-260) — стопкой внахлёст, слева спереди;
+ * пакет вещдоков «Изъятое» — правее. Середина стола свободна: туда ложится открытое — стопкой (DC-B).
  */
 type EnvelopeId = Exclude<ContainerId, 'personal' | 'bank'>;
 const ENVELOPE_AT: Record<EnvelopeId, [number, number]> = {
@@ -247,8 +246,15 @@ const ENVELOPE_AT: Record<EnvelopeId, [number, number]> = {
   bunker: [-0.46, 0.45],
   scene: [-0.45, 0.54],
   protocols: [-0.44, 0.63],
+  // Пакет вещдоков «Изъятое» (FM-B) — правее папок, перед коробкой «Личные вещи».
+  seized: [-0.12, 0.41],
 };
+/** Папки дела — стопкой внахлёст (FM-B, вместо конвертов A-260). */
 const ENVELOPE_ORDER = ['bunker', 'scene', 'protocols'] as const;
+/** Папка-скоросшиватель: 30 × 23,5 см, закладка с названием у дальнего края. */
+const FOLDER: [number, number] = [0.3, 0.235];
+/** Пакет вещдоков 33 × 25 см (крафт, 13 × 10″) — лежит плашмя, лента поперёк клапана. */
+const BAG: [number, number] = [0.33, 0.25];
 
 /** Где лежит конверт на столе (доли p: x, z): отсюда его содержимое высыпается на 3D-стол. */
 export function envelopeSpot(id: ContainerId): [number, number] {
@@ -260,7 +266,6 @@ export function envelopeSpot(id: ContainerId): [number, number] {
  */
 const PC_X = 0.63;
 const PC_Z = 0.19;
-const C4: [number, number] = [0.324, 0.229];
 /**
  * Короб с пачками — у стены правее середины; на нём — коробка из банка. Пока меньше настоящего
  * (BX-A — 38 × 30 × 25): 30 × 22 × 15, чтобы не спорил с компьютером (автор 19.11; размеры — на
@@ -447,24 +452,37 @@ export function deskObjects(
           },
         ]),
     // Газета (E44, A-260) — на 3D-столе: свободный лист, лежит перед игроком (автор 25.11).
-    // Конверты архива (A-260): опечатаны, у каждого — название; вскрытый со стола уходит. C4,
-    // стопкой внахлёст: у дальних видна полоска с названием — по ней и щёлкают.
+    // Папки дела (FM-B, автор 25.11; вместо конвертов A-260): не опечатаны, у каждой — закладка с
+    // названием; открытая со стола уходит — листы стопкой на столе. Стопкой внахлёст: у дальних видна
+    // полоска с названием — по ней и щёлкают.
     ...envelopes.map((id, k) => {
       const at = ENVELOPE_AT;
       const [x, z] = at[id];
       const c = CONTAINERS.find((cc) => cc.id === id);
       const lift = k * 0.008;
       const next = envelopes[k + 1];
-      const nearEdge = next ? at[next][1] - C4[1] / 2 : z + C4[1] / 2;
-      const farEdge = z - C4[1] / 2;
+      const nearEdge = next ? at[next][1] - FOLDER[1] / 2 : z + FOLDER[1] / 2;
+      const farEdge = z - FOLDER[1] / 2;
+      // Закладки — вразбивку, как у настоящих папок (слева, посередине, справа).
+      const tabX = x + (((k % 3) - 1) * FOLDER[0]) / 3;
       return {
         key: `envelope-${id}`,
-        label: `Конверт «${c?.label ?? id}», опечатан — вскрыть`,
+        label: `Папка «${c?.label ?? id}» — открыть`,
         boxes: [
-          box(x, z, C4[0], C4[1], 0.008, col('--color-archive-envelope'), lift),
-          box(x + 0.12, z - 0.08, 0.035, 0.025, 0.003, col('--color-seal'), lift + 0.008),
+          box(x, z, FOLDER[0], FOLDER[1], 0.006, col('--color-case-folder'), lift),
+          box(tabX, farEdge - 0.008, 0.09, 0.018, 0.006, col('--color-case-folder'), lift),
+          // Обрез стопки листов внутри — чуть светлее картона.
+          box(
+            x,
+            z + 0.004,
+            FOLDER[0] - 0.01,
+            FOLDER[1] - 0.012,
+            0.002,
+            col('--color-case-folder-edge'),
+            lift + 0.006,
+          ),
         ],
-        hit: [box(x, (farEdge + nearEdge) / 2, C4[0], nearEdge - farEdge, 0.008, '', lift)],
+        hit: [box(x, (farEdge + nearEdge) / 2, FOLDER[0], nearEdge - farEdge, 0.008, '', lift)],
         hotspot: { kind: 'container' as const, id },
         tag: c?.label ?? id,
         tagInside: true,
@@ -472,6 +490,41 @@ export function deskObjects(
         testId: `container-${id}`,
       };
     }),
+    // Пакет вещдоков «Изъятое при осмотре места» (FM-B): крафт, красная лента поперёк клапана,
+    // белый ярлык; вскрыли (потянули ленту) — устройства на столе, пакет уходит.
+    ...(opened.includes('seized')
+      ? []
+      : [
+          {
+            key: 'envelope-seized',
+            label: 'Пакет вещдоков «Изъятое при осмотре места», опечатан — вскрыть',
+            boxes: [
+              box(...ENVELOPE_AT.seized, BAG[0], BAG[1], 0.01, col('--color-evidence-bag')),
+              box(
+                ENVELOPE_AT.seized[0],
+                ENVELOPE_AT.seized[1] - BAG[1] / 2 + 0.05,
+                BAG[0],
+                0.025,
+                0.002,
+                col('--color-seal'),
+                0.01,
+              ),
+              box(
+                ENVELOPE_AT.seized[0] + 0.06,
+                ENVELOPE_AT.seized[1] + 0.04,
+                0.13,
+                0.08,
+                0.002,
+                col('--color-paper-sheet'),
+                0.01,
+              ),
+            ],
+            hotspot: { kind: 'container' as const, id: 'seized' as const },
+            tag: 'Изъятое при осмотре места',
+            tagInside: true,
+            testId: 'container-seized',
+          },
+        ]),
     // Конверт с диском сервера (A-272, AC-2): у компьютера, правее дисковода; подсвечен, пока диск не
     // вставлен; вставили — пустой конверт уходит, диск остаётся в компьютере.
     ...(discOn === 'envelope'

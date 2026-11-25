@@ -255,7 +255,8 @@ export function Desk({
           .filter((it) => !!DEVICE_KIND[it.id] === dev)
           .map((it) => ({ id: it.id, kind: kindOf(it.id) }))
           .sort((a, b) => (dev ? area(b.kind) - area(a.kind) : 0));
-      const devs = scatter(pick(true), zone, DEVICES_AT, 11, 0.1, placed, solid);
+      // Устройства обходят всё, что уже лежит (стопки, газету): под листами их не было бы видно.
+      const devs = scatter(pick(true), zone, DEVICES_AT, 11, 0.1, placed, () => true);
       // Листы — ровной стопкой (DC-B, автор 25.11: стопка «к прочтению», без веера): место — одно,
       // свободное от устройств; первый по описи — сверху. Чуть неровно, как сложенные руками.
       const flat = pick(false);

@@ -20,14 +20,20 @@ const pieces = (page: Page) =>
   );
 const ids = async (page: Page) => (await pieces(page)).map((q) => q.id).sort();
 
-/** Взять конверт со стола, вскрыть (DC-B): конверт уходит из рук, содержимое — стопкой на стол. */
+/**
+ * Открыть со стола (FM-B, DC-B): папку — щелчком, листы сразу стопкой на столе; пакет вещдоков —
+ * в руки и потянуть ленту: пакет уходит из рук, устройства — на столе.
+ */
 async function spill(page: Page, id: string) {
-  await page.getByTestId(`container-${id}`).click();
-  await expect(page.getByTestId('held')).toBeVisible();
   const saved = savedPut(page);
-  await page.getByTestId('envelope-open').dispatchEvent('click');
+  await page.getByTestId(`container-${id}`).click();
+  if (id === 'seized') {
+    await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /^Пакет вещдоков/);
+    await page.getByTestId('envelope-open').dispatchEvent('click');
+  }
   await expect(page.getByTestId('held')).toBeHidden();
   await saved;
+  await expect(page.getByTestId(`container-${id}`)).toHaveCount(0);
 }
 
 test('3D-стол (DC-B): конверт — стопкой на стол; читать подряд; прочитанное — на стену группой, оставленное — на столе; после перезагрузки так же', async ({
@@ -92,12 +98,15 @@ test('3D-стол: лист двигается и остаётся после п
   const moved = savedPut(page);
   await page.mouse.move(a?.x ?? 0, a?.y ?? 0);
   await page.mouse.down();
-  await page.mouse.move((a?.x ?? 0) - 120, (a?.y ?? 0) + 40, { steps: 15 });
+  // К игроку: слева — пакет вещдоков, справа — клавиатура.
+  await page.mouse.move((a?.x ?? 0) + 30, (a?.y ?? 0) + 90, { steps: 15 });
   await page.waitForTimeout(400);
   await page.mouse.up();
   await moved;
   const after = (await pieces(page)).find((q) => q.id === '30');
-  expect(Math.abs((after?.x ?? 0) - (before?.x ?? 0))).toBeGreaterThan(0.05);
+  expect(
+    Math.hypot((after?.x ?? 0) - (before?.x ?? 0), (after?.z ?? 0) - (before?.z ?? 0)),
+  ).toBeGreaterThan(0.05);
   await page.reload();
   await expect.poll(() => desk(page)).toBe(true);
   await expect
@@ -120,15 +129,18 @@ test('3D-стол: лист двигается и остаётся после п
   await expect(sheet(page, '30')).toBeVisible();
 });
 
-test('3D-стол: «Осмотр места» — стопка листов и все пять устройств на столе; телефон — в руки', async ({
+test('3D-стол: «Осмотр места» — папка стопкой; пакет «Изъятое» — все пять устройств на столе; телефон — в руки', async ({
   page,
 }) => {
   await spill(page, 'scene');
-  const scene = ['15', '18', '19', '20', '21', '22', '23', '25', '26', '27', '51'];
+  const sheets = ['15', '18', '19', '20', '21', '22', '23', '25', '26', '27', '51'];
+  await expect.poll(() => ids(page)).toEqual(sheets);
+  await spill(page, 'seized');
   const devices = ['24', '47', '48', '49', '50'];
-  await expect.poll(() => ids(page)).toEqual([...scene, ...devices].sort());
+  await expect.poll(() => ids(page)).toEqual([...sheets, ...devices].sort());
   await expect(page.getByTestId('device-48')).toHaveCount(0);
-  await page.waitForTimeout(1500);
+  // Устройства долетают из пакета не сразу.
+  await page.waitForTimeout(2500);
   await page.screenshot({ path: 'test-results/desk3d-scene.png' });
   // Щелчок по телефону на столе — он в руках.
   const t = await grab(page, '48');

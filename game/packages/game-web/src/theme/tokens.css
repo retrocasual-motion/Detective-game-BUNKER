@@ -56,6 +56,10 @@
   --color-tray-edge: #dfe8eebb;
   /* Конверты архива, крышка коробки, печать, газета (A-260, 09.11). */
   --color-archive-envelope: #b58f5a;
+  /* Папка дела (FM-B, автор 25.11) — манильский картон; пакет вещдоков — крафт. */
+  --color-case-folder: #d4b77c;
+  --color-case-folder-edge: #b89a5e;
+  --color-evidence-bag: #a07b4c;
   --color-box-lid: #9a8462;
   --color-seal: #8e2b25;
   --color-newspaper: #d8d3c6;

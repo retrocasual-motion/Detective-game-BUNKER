@@ -68,7 +68,13 @@ export default function HeldThing({ held }: { held: Held }) {
         key={`sealed-${held.id}`}
         mode={box ? 'free' : 'flip'}
         half={[1.6, 1.2]}
-        label={box ? `Коробка «${c.label}»` : `Конверт «${c.label}»`}
+        label={
+          box
+            ? `Коробка «${c.label}»`
+            : held.id === 'seized'
+              ? `Пакет вещдоков «${c.label}»`
+              : `Конверт «${c.label}»`
+        }
         onClose={close}
       >
         {held.id === 'bank' ? (

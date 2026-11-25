@@ -1,4 +1,4 @@
-import { CARD_W, type ContainerId, SERVER_DISC_ID } from '@bunker/shared';
+import { CARD_W, type ContainerId, FOLDER_IDS, SERVER_DISC_ID } from '@bunker/shared';
 import { useMemo, useState } from 'react';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
@@ -153,9 +153,11 @@ export function DeskHotspots({
                 // клавиатура.
                 if (!(disc === 'out' && e.detail > 0))
                   useGame.getState().hold({ type: 'device', id: SERVER_DISC_ID });
-              } else if (h?.kind === 'container')
-                useGame.getState().hold({ type: 'container', id: h.id });
-              else if (h) {
+              } else if (h?.kind === 'container') {
+                // Папка дела (FM-B): не опечатана — щелчок, и листы стопкой на столе (DC-B).
+                if (FOLDER_IDS.has(h.id)) useGame.getState().openContainer(h.id);
+                else useGame.getState().hold({ type: 'container', id: h.id });
+              } else if (h) {
                 // Эпилог открыт — подсветка снята.
                 if (o.key === 'epilogue') markEpilogueRead();
                 openViewer(h.id);
