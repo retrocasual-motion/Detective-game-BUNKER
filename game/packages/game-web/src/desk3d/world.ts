@@ -47,8 +47,8 @@ const SIZE: Record<string, [number, number, number]> = {
   laptop: [0.34, 0.24, 0.032],
   radio: [0.26, 0.16, 0.1],
 };
-/** Листы и устройства на столе меньше настоящих — как вещи следователя (DESK_SCALE, автор 25.11). */
-const ITEM_SCALE = 0.85;
+/** Листы и устройства на столе меньше настоящих — как вещи следователя (DESK_SCALE, автор 25.11: ×0,85, затем +5 %). */
+const ITEM_SCALE = 0.89;
 export const sizeOf = (kind: string): [number, number, number] => {
   const [w, d, t] = SIZE[kind] ?? (SIZE.sheet as [number, number, number]);
   return [w * ITEM_SCALE, d * ITEM_SCALE, t];
