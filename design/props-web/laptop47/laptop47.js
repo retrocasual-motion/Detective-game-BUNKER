@@ -9,12 +9,20 @@
 // opts:
 //   lidAngle      — угол открытия крышки в радианах (0 — закрыта, по умолчанию 1.92 ≈ 110°)
 //   textureSize   — ширина больших canvas-текстур (по умолчанию 2048; для телефона 1024–1536)
-//   stickerUrl    — путь к PNG наклейки (по умолчанию ./sticker_47_v3_rgba.png рядом с модулем)
-//   photoTextures — { lid, deck, bottom, left, right, bezel } : THREE.Texture — фото-текстуры граней
+//   pbr           — true (по умолчанию): грани одеты в фото-карты GEN18 (цвет, нормали, шероховатость, AO),
+//                   мелкий рельеф плиткой, пыль в щелях, смещение сетки на боках и решётках дна;
+//                   false — прежний процедурный режим (всё рисуется кодом, файлы карт не нужны)
+//   pbrBase       — папка карт (по умолчанию ./textures/pbr/ рядом с модулем; файлы берутся из её подпапки pack/)
+//   lowPower      — телефон: сетки под смещение вдвое реже, карты вдвое меньше (по умолчанию — само:
+//                   грубый указатель или сторона окна меньше 700)
+//   stickerUrl    — путь к PNG наклейки (по умолчанию ./sticker_47_v4_rgba.png рядом с модулем)
+//   stickerRoughUrl — карта шероховатости наклейки (по умолчанию ./sticker_47_v4_rough.png)
+//   photoTextures — { lid, deck, bottom, left, right, bezel } : THREE.Texture — только при pbr: false
 //   anisotropy    — анизотропная фильтрация (по умолчанию 8)
 //   onChange      — вызывается, когда что-то догрузилось (наклейка) и нужен новый кадр
 //
-// group.userData: setLidAngle(a), lidAngle, applyPhotoTexture(slot, texture), stats, dims, dispose()
+// group.userData: setLidAngle(a), lidAngle, ready (Promise: карты догружены), applyPhotoTexture(slot, texture),
+//                 stats, dims, dispose()
 
 // ---------- размеры (по классу 14" бизнес-ноутбука 2009 г., обобщённо) ----------
 const W = 0.335, D = 0.238;          // ширина, глубина
@@ -30,9 +38,12 @@ const LD = LZ1 - LZ0;
 const DECK_Y = (HB + HF) / 2;
 
 // раскладка верхней панели (координаты x, z)
-const TRAY = { x0: -0.1425, x1: 0.1425, z0: -0.086, z1: 0.020, depth: 0.0036 };
-const PADHOLE = { x0: -0.0485, x1: 0.0245, z0: 0.0355, z1: 0.0945, depth: 0.0012 };
-const U = 0.01887, ROW = 0.0185, FROW = 0.0115, KGAP = 0.0010;
+// Ниша клавиатуры и тачпад поставлены по фото GEN18 (26.11): ниша до z = 25,5 мм (ряды 19,3 мм вместо 18,5),
+// тачпад сдвинут к переднему краю на ≈ 5 мм — так рамка ниши и кромки тачпада на фото совпадают с геометрией.
+const TRAY = { x0: -0.1425, x1: 0.1425, z0: -0.086, z1: 0.0255, depth: 0.0036 };
+const PADHOLE = { x0: -0.0489, x1: 0.0250, z0: 0.0398, z1: 0.1005, depth: 0.0012 };
+const PAD_SPLIT = 0.0852;            // граница площадки тачпада и кнопок по Z
+const U = 0.01887, ROW = 0.0193, FROW = 0.0125, KGAP = 0.0010;
 const SCREEN = { w: 0.306, h: 0.192, zc: LZ0 + 0.021 + 0.096 };
 const STICKER = { w: 0.0664, h: 0.0524, x: 0.092, z: 0.030 };
 const GRAIN_TILE = 0.016;            // метров на один повтор плитки фактуры
@@ -178,7 +189,7 @@ function outline(hw, hd, r, seg, cx, cz) {
 // боковая «лента» плиты: профиль [[inset, y, wear], ...] снизу вверх вдоль контура.
 // Нормали — аналитические; длинные плоские участки подпираются добавочными кольцами.
 function sideGeo(THREE, p) {
-  const { hw, hd, r, cx = 0, cz = 0, seg = 8, inward = false, uvScale = 1 / GRAIN_TILE, wearAmp = 1 } = p;
+  const { hw, hd, r, cx = 0, cz = 0, seg = 8, inward = false, uvScale = 1 / GRAIN_TILE, wearAmp = 1, skip = null } = p;
   // подпорные кольца
   const prof = [];
   for (let i = 0; i < p.profile.length; i++) {
@@ -229,6 +240,7 @@ function sideGeo(THREE, p) {
     }
   }
   for (let i = 0; i < nr - 1; i++) for (let j = 0; j < nc - 1; j++) {
+    if (skip && skip(prof[i], prof[i + 1], j)) continue; // «окно» в ленте — туда встанет своя плотная сетка
     const a = i * nc + j, b = (i + 1) * nc + j, c = i * nc + j + 1, d = (i + 1) * nc + j + 1;
     if (inward) idx.push(a, c, b, b, c, d); else idx.push(a, b, c, b, d, c);
   }
@@ -267,15 +279,15 @@ function capGeo(THREE, p) {
   return g;
 }
 // небольшая скруглённая «плитка» (кнопка, ножка): бок + верх одной геометрией
-function chip(THREE, hw, hd, r, h, bevel, up = true, seg = 4) {
+function chipParts(THREE, hw, hd, r, h, bevel, up = true, seg = 4, capUv) {
   const s = up ? 1 : -1;
   const prof = up
     ? [[0, 0], [0, h - bevel], [bevel * 0.3, h - bevel * 0.3], [bevel, h]]
     : [[bevel, -h], [bevel * 0.3, -h + bevel * 0.3], [0, -h + bevel], [0, 0]];
-  return mergeGeos(THREE, [
-    sideGeo(THREE, { hw, hd, r, profile: prof, seg }),
-    capGeo(THREE, { hw: hw - bevel, hd: hd - bevel, r: Math.max(r - bevel, 1e-4), y: s * h, up, seg }),
-  ]);
+  return {
+    side: sideGeo(THREE, { hw, hd, r, profile: prof, seg }),
+    cap: capGeo(THREE, { hw: hw - bevel, hd: hd - bevel, r: Math.max(r - bevel, 1e-4), y: s * h, up, seg, uv: capUv }),
+  };
 }
 
 // ---------- раскладка клавиатуры (латинская QWERTY) ----------
@@ -318,10 +330,18 @@ function keyLayout() {
 // =====================================================================================
 export function buildLaptop47(THREE, opts = {}) {
   const t0 = now();
-  const o = Object.assign({ lidAngle: 1.92, textureSize: 2048, photoTextures: {}, anisotropy: 8, seed: 47, onChange: null }, opts);
-  if (!o.stickerUrl) {
-    try { o.stickerUrl = new URL('./sticker_47_v3_rgba.png', import.meta.url).href; } catch (e) { o.stickerUrl = './sticker_47_v3_rgba.png'; }
+  const o = Object.assign({ lidAngle: 1.92, textureSize: 2048, photoTextures: {}, anisotropy: 8, seed: 47, onChange: null, pbr: true }, opts);
+  const rel = (p) => { try { return new URL(p, import.meta.url).href; } catch (e) { return p; } };
+  if (!o.stickerUrl) { // по умолчанию наклейка v4 и её карта шероховатости
+    o.stickerUrl = rel('./sticker_47_v4_rgba.png');
+    if (o.stickerRoughUrl === undefined) o.stickerRoughUrl = rel('./sticker_47_v4_rough.png');
   }
+  const PBR = o.pbr !== false;
+  const pbrBase = o.pbrBase || rel('./textures/pbr/');
+  // слабое устройство (телефон): сетки под смещение вдвое реже, карты вдвое меньше
+  const LOW = o.lowPower != null ? !!o.lowPower
+    : (typeof window !== 'undefined' && ((window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || Math.min(window.innerWidth, window.innerHeight) < 700));
+  const DENS = LOW ? 0.5 : 1;
   const TS = Math.max(512, Math.min(2048, o.textureSize | 0));
   const rng = rngFactory(o.seed);
   const rr = (a, b) => a + (b - a) * rng();
@@ -377,7 +397,7 @@ export function buildLaptop47(THREE, opts = {}) {
     return tex(out, false, true);
   })();
 
-  const COL_BODY = '#1d1f22', COL_KEY = '#17181a', COL_LID = '#1f2125', COL_BOTTOM = '#1b1c1f';
+  const COL_BODY = '#1d1f22', COL_KEY = PBR ? '#2b2b2c' : '#17181a', COL_LID = '#1f2125', COL_BOTTOM = '#1b1c1f';
   const DUST = '168,162,150';
 
   function dustSpecks(c, n, x0, y0, x1, y1, aMax = 0.3, rMax = 1.3) {
@@ -843,6 +863,183 @@ export function buildLaptop47(THREE, opts = {}) {
     P.usb(286, 2.6);
   };
 
+  // ============================== карты PBR (фото GEN18) ==============================
+  // Файлы готовит tools/prep_pbr.py в папку <pbrBase>pack/. Карты грузятся сами; пока их нет, вещь скрыта.
+  const loads = [];
+  function loadTex(file, srgb, repeat, opt = {}) {
+    const t = new THREE.Texture();
+    t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+    t.anisotropy = o.anisotropy;
+    if (repeat) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    if (opt.noMip) { t.generateMipmaps = false; t.minFilter = THREE.LinearFilter; }
+    disposables.push(t);
+    loads.push(new Promise((res) => {
+      if (typeof Image === 'undefined') { res(false); return; }
+      const img = new Image();
+      img.onload = () => {
+        let src = img;
+        const sc = opt.scale || (LOW ? 0.5 : 1);
+        if (sc < 1) { // телефон: вдвое меньше по стороне — вчетверо меньше видеопамяти
+          try {
+            const cv = mkCanvas(img.naturalWidth * sc, img.naturalHeight * sc), cx = cv.getContext('2d');
+            cx.imageSmoothingQuality = 'high'; cx.drawImage(img, 0, 0, cv.width, cv.height); cx.getImageData(0, 0, 1, 1); src = cv;
+          } catch (e) { src = img; }
+        }
+        t.image = src; t.needsUpdate = true; res(true);
+      };
+      img.onerror = () => { console.warn('[laptop47] нет карты ' + file); res(false); };
+      img.src = pbrBase + 'pack/' + file;
+    }));
+    return t;
+  }
+  const TILE_GRAIN = 0.030, TILE_BRUSH = 0.040, TILE_DUST = 0.024, TILE_SMUDGE = 0.100; // метров на повтор
+  const P = PBR ? {
+    grainA: loadTex('grain_a.jpg', true, true), grainN: loadTex('grain_n.jpg', false, true), brushN: loadTex('brushed_n.jpg', false, true),
+    dust: loadTex('dust.jpg', false, true), smudge: loadTex('smudge.jpg', false, true), keysWear: loadTex('keys_wear.jpg', false, false, { scale: 1 }),
+    face: {}, disp: {},
+  } : null;
+  if (PBR) {
+    for (const f of ['deck', 'bottom', 'lid', 'bezel', 'left', 'right']) {
+      P.face[f] = { a: loadTex(f + '_a.jpg', true), n: loadTex(f + '_n.jpg', false), orc: loadTex(f + '_orc.jpg', false) };
+    }
+    for (const f of ['left', 'right', 'bottom']) P.disp[f] = loadTex(f + '_d.png', false, false, { noMip: true, scale: 1 });
+    // плитка зерна на «общих» деталях (кромки, валик, клавиши): их UV — в долях GRAIN_TILE
+    P.grainA.repeat.set(GRAIN_TILE / TILE_GRAIN, GRAIN_TILE / TILE_GRAIN);
+    P.grainN.repeat.set(GRAIN_TILE / TILE_GRAIN, GRAIN_TILE / TILE_GRAIN);
+  }
+  // Общий оттенок пластика. Фото — нейтрально-серые; под тёплой лампой серый уходит в коричневый,
+  // поэтому цвет чуть сдвинут в холод и притемнён до угольного (свет сцены не меняется).
+  // Главное — блик: у тёмного пластика почти весь видимый свет — отражение лампы, и оно несёт её цвет.
+  // Поэтому отражению дан холодный оттенок (specularColor), обратный теплу лампы по умолчанию.
+  const TINT = new THREE.Color(0.48, 0.56, 0.70);
+  const SPEC = new THREE.Color(0.70, 0.84, 1.0);
+  const GEN_TINT = TINT.clone().multiplyScalar(0.86);   // плитка зерна светлее фото граней — выравниваем
+
+  // Материал грани с фото-картами. Поверх стандартного шейдера:
+  //  • мелкий рельеф: нормали плитки (зерно / шлифовка) добавляются к нормали грани (смешение UDN);
+  //  • пыль: маска плитки × карта «щелей» (канал B) — серый цвет, шероховатость 1;
+  //  • отпечатки: плитка чуть меняет шероховатость в заданной полосе грани;
+  //  • AO немного гасит и прямой свет (в three карта AO действует только на рассеянный);
+  //  • band: лента бока базы — фото проецируется сбоку, к углам, переду и заду плавно переходит в плитку зерна.
+  function pbrMat(face, c = {}) {
+    const F = P.face[face];
+    const size = c.size || [W, D];
+    const m = new THREE.MeshPhysicalMaterial({
+      map: F.a, normalMap: F.n, roughnessMap: F.orc, roughness: 1, metalness: 0, color: c.tint || TINT, specularColor: SPEC,
+      normalScale: new THREE.Vector2(c.normal || 0.8, c.normal || 0.8),
+    });
+    if (!c.band) { m.aoMap = F.orc; m.aoMapIntensity = 0.85; }
+    if (c.vertexColors) m.vertexColors = true;
+    if (c.disp) { m.displacementMap = c.disp; m.displacementScale = -c.depth; m.displacementBias = 0; }
+    const detTile = c.detTile || TILE_GRAIN;
+    const u = {
+      uDetN: { value: c.detN || P.grainN },
+      uDet: { value: new THREE.Vector3(size[0] / detTile, size[1] / detTile, c.detail == null ? 0.35 : c.detail) },
+      uDust: { value: P.dust },
+      uDustP: { value: new THREE.Vector3(size[0] / TILE_DUST, size[1] / TILE_DUST, c.dust == null ? 1.0 : c.dust) },
+      uSmudge: { value: P.smudge },
+      uSmP: { value: new THREE.Vector3(size[0] / TILE_SMUDGE, size[1] / TILE_SMUDGE, c.smudge || 0) },
+      uSmZone: { value: new THREE.Vector2(...(c.smudgeZone || [0, 1])) },
+      uAoDirect: { value: c.aoDirect == null ? 0.45 : c.aoDirect },
+    };
+    if (c.band) {
+      u.uGenA = { value: P.grainA };
+      u.uGen = { value: new THREE.Vector3(GRAIN_TILE / TILE_GRAIN, GRAIN_TILE / TILE_GRAIN, 0.62) };
+      u.uGenTint = { value: GEN_TINT };
+      u.uSide = { value: c.band };
+    }
+    m.userData.p47 = u;
+    m.onBeforeCompile = (sh) => {
+      Object.assign(sh.uniforms, u);
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec2 vFaceUv;' + (c.band ? '\nvarying vec2 vGenUv;\nvarying vec3 vObjN;\nuniform float uSide;' : ''))
+        .replace('#include <uv_vertex>', '#include <uv_vertex>\n' + (c.band ? `
+          vGenUv = uv; vObjN = normal;
+          vFaceUv = vec2(0.5 - uSide * position.z / ${D.toFixed(4)}, (position.y + 0.001) / 0.034);
+          vMapUv = vFaceUv; vNormalMapUv = vFaceUv; vRoughnessMapUv = vFaceUv;` : 'vFaceUv = uv;'));
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', `#include <common>
+          varying vec2 vFaceUv;
+          uniform sampler2D uDetN; uniform vec3 uDet;
+          uniform sampler2D uDust; uniform vec3 uDustP;
+          uniform sampler2D uSmudge; uniform vec3 uSmP; uniform vec2 uSmZone;
+          uniform float uAoDirect;
+          float p47dust = 0.0;
+          float p47w = 1.0;
+          ${c.band ? 'varying vec2 vGenUv; varying vec3 vObjN; uniform sampler2D uGenA; uniform vec3 uGen; uniform vec3 uGenTint;' : ''}`)
+        .replace('#include <map_fragment>', `#include <map_fragment>
+          {
+            vec3 orc = texture2D( roughnessMap, vRoughnessMapUv ).rgb;
+            diffuseColor.rgb *= mix( 1.0, orc.r, uAoDirect );
+            // плитка пыли берётся дважды (вторая — повёрнута и другого шага) и смешивается по крупному пятну:
+            // так комки не выстраиваются в ровный ряд с шагом плитки
+            vec2 duv = vFaceUv * uDustP.xy;
+            float dmix = smoothstep( 0.38, 0.62, texture2D( uSmudge, duv * 0.19 + 0.13 ).r );
+            float dtex = mix( texture2D( uDust, duv ).r, texture2D( uDust, duv.yx * 1.37 + vec2( 0.31, 0.67 ) ).r, dmix );
+            p47dust = clamp( dtex * orc.b * uDustP.z, 0.0, 1.0 );
+            ${c.band ? `p47w = smoothstep( 0.35, 0.75, abs( normalize( vObjN ).x ) );
+            p47dust *= p47w * smoothstep( 0.15, 0.22, vFaceUv.y ); // у нижней кромки фото — край кадра, не щель
+            diffuseColor.rgb = mix( texture2D( uGenA, vGenUv * uGen.xy ).rgb * uGenTint, diffuseColor.rgb, p47w );` : ''}
+            diffuseColor.rgb = mix( diffuseColor.rgb, vec3( 0.195, 0.178, 0.150 ), p47dust * 0.85 );
+          }`)
+        .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+          {
+            ${c.band ? 'roughnessFactor = mix( uGen.z, roughnessFactor, p47w );' : ''}
+            float zone = clamp( ( vFaceUv.y - uSmZone.x ) / ( uSmZone.y - uSmZone.x ), 0.0, 1.0 );
+            float sm = texture2D( uSmudge, vFaceUv * uSmP.xy ).r;
+            roughnessFactor = clamp( roughnessFactor * ( 1.0 - zone * uSmP.z * ( sm - 0.45 ) * 2.0 ), 0.06, 1.0 );
+            roughnessFactor = mix( roughnessFactor, 1.0, p47dust );
+          }`)
+        .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+          {
+            ${c.band ? 'normal = normalize( mix( nonPerturbedNormal, normal, p47w ) );' : ''}
+            vec2 dUv = ${c.band ? 'vGenUv * uGen.xy' : 'vFaceUv * uDet.xy'};
+            mat3 tbD = getTangentFrame( - vViewPosition, nonPerturbedNormal, dUv );
+            vec3 dn = texture2D( uDetN, dUv ).xyz * 2.0 - 1.0;
+            normal = normalize( normal + ( tbD[0] * dn.x + tbD[1] * dn.y ) * uDet.z * ( 1.0 - 0.6 * p47dust ) );
+          }`);
+    };
+    m.customProgramCacheKey = () => 'laptop47-pbr-' + (c.band ? 'band' : 'face') + (c.disp ? '-d' : '');
+    disposables.push(m);
+    return m;
+  }
+  // «общий» пластик без фото: плитка зерна (цвет + нормали)
+  const genMat = (rough, extra = {}) => {
+    const m = new THREE.MeshPhysicalMaterial(Object.assign({ map: P.grainA, normalMap: P.grainN, normalScale: new THREE.Vector2(0.7, 0.7), color: GEN_TINT, specularColor: SPEC, roughness: rough, metalness: 0 }, extra));
+    disposables.push(m); return m;
+  };
+  // плотная сетка под смещение: fn(s, t) -> [x, y, z, u, v], нормаль одна на всю сетку
+  function gridGeo(nu, nv, fn, n) {
+    nu = Math.max(2, Math.round(nu)); nv = Math.max(2, Math.round(nv));
+    const cnt = (nu + 1) * (nv + 1);
+    const pos = new Float32Array(cnt * 3), nor = new Float32Array(cnt * 3), uv = new Float32Array(cnt * 2);
+    const idx = new Uint32Array(nu * nv * 6);
+    let k = 0;
+    for (let j = 0; j <= nv; j++) for (let i = 0; i <= nu; i++, k++) {
+      const q = fn(i / nu, j / nv);
+      pos[k * 3] = q[0]; pos[k * 3 + 1] = q[1]; pos[k * 3 + 2] = q[2];
+      nor[k * 3] = n[0]; nor[k * 3 + 1] = n[1]; nor[k * 3 + 2] = n[2];
+      uv[k * 2] = q[3]; uv[k * 2 + 1] = q[4];
+    }
+    // обход — так, чтобы лицевая сторона смотрела по нормали
+    const A = fn(0, 0), B = fn(1, 0), C = fn(0, 1);
+    const e1 = [B[0] - A[0], B[1] - A[1], B[2] - A[2]], e2 = [C[0] - A[0], C[1] - A[1], C[2] - A[2]];
+    const cr = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
+    const flip = cr[0] * n[0] + cr[1] * n[1] + cr[2] * n[2] < 0;
+    k = 0;
+    for (let j = 0; j < nv; j++) for (let i = 0; i < nu; i++) {
+      const a = j * (nu + 1) + i, b = a + 1, c2 = a + nu + 1, d = c2 + 1;
+      if (flip) { idx[k++] = a; idx[k++] = c2; idx[k++] = b; idx[k++] = b; idx[k++] = c2; idx[k++] = d; }
+      else { idx[k++] = a; idx[k++] = b; idx[k++] = c2; idx[k++] = b; idx[k++] = d; idx[k++] = c2; }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+    g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    g.setIndex(new THREE.BufferAttribute(idx, 1));
+    return g;
+  }
+
   // ============================== сборка ==============================
   const root = new THREE.Group();
   root.name = 'laptop_47';
@@ -861,33 +1058,89 @@ export function buildLaptop47(THREE, opts = {}) {
   };
   const grainNS = (s) => new THREE.Vector2(s, s);
 
-  const T = { deck: drawDeck(), bottom: drawBottom(), lid: drawLid(), bezel: drawBezel(), keys: drawKeys(), pad: drawPad() };
+  const T = PBR ? { keys: drawKeys() } : { deck: drawDeck(), bottom: drawBottom(), lid: drawLid(), bezel: drawBezel(), keys: drawKeys(), pad: drawPad() };
   const tTex = now();
 
-  const mBody = std({ color: COL_BODY, roughness: 0.6, normalMap: grainTex, normalScale: grainNS(0.45), vertexColors: true });
-  const mDeck = surfMaterial(T.deck);
-  const mBottom = surfMaterial(T.bottom);
-  const mLid = surfMaterial(T.lid);
-  const mLidRim = std({ color: '#1c1d20', roughness: 0.55, normalMap: grainTex, normalScale: grainNS(0.4), vertexColors: true });
-  const mBezel = surfMaterial(T.bezel);
+  const deckUV = (x, z) => [(x + W / 2) / W, 1 - (z + D / 2) / D];
+  const bottomUV = (x, z) => [(W / 2 - x) / W, 1 - (z + D / 2) / D];
+
+  let mBody, mDeck, mBottom, mLid, mLidRim, mBezel, mPad, mBtn, mRubber, mBar, mFootTop, mBtnTop;
+  if (PBR) {
+    mBody = [-1, 1].map((sgn) => pbrMat(sgn < 0 ? 'left' : 'right', { band: sgn, size: [D, 0.034], vertexColors: true, dust: 0.9 }));
+    mDeck = pbrMat('deck', { size: [W, D], dust: 0.75 });
+    mBottom = pbrMat('bottom', { size: [W, D], dust: 1.0, detail: 0.4 });
+    // крышка: мелкая шлифовка плиткой нормалей (линии вдоль ширины), отпечатки — у свободного края, где её берут
+    mLid = pbrMat('lid', { size: [W, LD], detN: P.brushN, detTile: TILE_BRUSH, detail: 0.45, dust: 0.25, smudge: 0.08, smudgeZone: [0.2, 0.02] });
+    mBezel = pbrMat('bezel', { size: [W, LD], dust: 0.9, detail: 0.35, smudge: 0.08, smudgeZone: [0.9, 0.97] });
+    mLidRim = genMat(0.58, { vertexColors: true });
+    mBar = genMat(0.58);
+    mBtn = genMat(0.5, { vertexColors: true });
+    mRubber = genMat(0.9, { color: GEN_TINT.clone().multiplyScalar(0.55), vertexColors: true });
+    mPad = mDeck; mBtnTop = mDeck; mFootTop = mBottom;
+  } else {
+    mBody = std({ color: COL_BODY, roughness: 0.6, normalMap: grainTex, normalScale: grainNS(0.45), vertexColors: true });
+    mDeck = surfMaterial(T.deck);
+    mBottom = surfMaterial(T.bottom);
+    mLid = surfMaterial(T.lid);
+    mLidRim = std({ color: '#1c1d20', roughness: 0.55, normalMap: grainTex, normalScale: grainNS(0.4), vertexColors: true });
+    mBar = std({ color: '#1c1d20', roughness: 0.55, normalMap: grainTex, normalScale: grainNS(0.4) });
+    mBezel = surfMaterial(T.bezel);
+    mPad = surfMaterial(T.pad, { normalScale: grainNS(0.5) });
+    mBtn = std({ color: '#1b1c1e', roughness: 0.4, normalMap: grainTex, normalScale: grainNS(0.3), vertexColors: true });
+    mRubber = std({ color: '#161616', roughness: 0.88, normalMap: grainTex, normalScale: grainNS(1.0), vertexColors: true });
+    mBtnTop = mBtn; mFootTop = mRubber;
+  }
   const mDark = std({ color: '#060606', roughness: 0.9 });
-  const mTray = std({ map: drawTray(), roughness: 0.92 });
-  const mPad = surfMaterial(T.pad, { normalScale: grainNS(0.5) });
-  const mBtn = std({ color: '#1b1c1e', roughness: 0.4, normalMap: grainTex, normalScale: grainNS(0.3), vertexColors: true });
+  // дно ниши клавиатуры: в режиме фото — чёрное, пыль и ворсинки из плитки-маски (видны в щелях между клавишами)
+  const mTray = PBR ? std({ map: P.dust, color: '#3a4250', roughness: 1 }) : std({ map: drawTray(), roughness: 0.92 });
   const mMetal = std({ color: '#9a9b9e', metalness: 1, roughness: 0.3 });
-  const mRubber = std({ color: '#161616', roughness: 0.88, normalMap: grainTex, normalScale: grainNS(1.0), vertexColors: true });
 
   // ----- база -----
   const baseProfile = [[0.0050, 0, 0], [0.0030, 0.0007, 0.6], [0.0012, 0.0022, 0.7], [0.0003, 0.0042, 0.25], [0, 0.0060, 0],
     [0, HB - 0.0030, 0], [0.0003, HB - 0.0018, 0.3], [0.0009, HB - 0.0007, 0.9], [0.0018, HB, 0.45]];
-  mesh(wedge(sideGeo(THREE, { hw: W / 2, hd: D / 2, r: R, profile: baseProfile })), mBody, 'base_side');
-  const deckUV = (x, z) => [(x + W / 2) / W, 1 - (z + D / 2) / D];
+  const SIDE_Y0 = 0.0060, SIDE_Y1 = HB - 0.0030, SEG = 8;   // плоская часть бока (до клина)
+  {
+    // в режиме фото в ленте бока вырезаны два «окна» (левый и правый бок) под плотные сетки со смещением
+    const skip = PBR ? (a, b, j) => a[0] === 0 && b[0] === 0 && a[1] > SIDE_Y0 - 1e-6 && b[1] < SIDE_Y1 + 1e-6 && (j === 2 * (SEG + 1) - 1 || j === 4 * (SEG + 1) - 1) : null;
+    const g = wedge(sideGeo(THREE, { hw: W / 2, hd: D / 2, r: R, profile: baseProfile, seg: SEG, skip }));
+    if (PBR) { // две группы: левая половина — фото левого бока, правая — правого
+      const src = g.index.array, pos = g.attributes.position, L = [], Rr = [];
+      for (let i = 0; i < src.length; i += 3) {
+        const cx = pos.getX(src[i]) + pos.getX(src[i + 1]) + pos.getX(src[i + 2]);
+        (cx < 0 ? L : Rr).push(src[i], src[i + 1], src[i + 2]);
+      }
+      g.setIndex(L.concat(Rr)); g.addGroup(0, L.length, 0); g.addGroup(L.length, Rr.length, 1);
+    }
+    mesh(g, mBody, 'base_side');
+  }
   mesh(wedge(capGeo(THREE, {
     hw: W / 2 - 0.0018, hd: D / 2 - 0.0018, r: R - 0.0018, y: HB, up: true, uv: deckUV,
     holes: [Object.assign({ r: 0.0015 }, TRAY), Object.assign({ r: 0.0015 }, PADHOLE)],
   })), mDeck, 'deck');
-  const bottomUV = (x, z) => [(W / 2 - x) / W, 1 - (z + D / 2) / D];
-  mesh(capGeo(THREE, { hw: W / 2 - 0.005, hd: D / 2 - 0.005, r: R - 0.005, y: 0, up: false, uv: bottomUV }), mBottom, 'bottom');
+  // решётки дна: в режиме фото — отверстия в плите и плотные сетки со смещением (щели уходят вглубь)
+  const VENTS = [{ x0: 0.0005, x1: 0.0195, z0: -0.046, z1: 0.062, dx: 0.0010, dz: 0.0003 }, { x0: -0.130, x1: -0.089, z0: -0.042, z1: -0.001, dx: 0.0007, dz: 0.0003 }];
+  mesh(capGeo(THREE, { hw: W / 2 - 0.005, hd: D / 2 - 0.005, r: R - 0.005, y: 0, up: false, uv: bottomUV, holes: PBR ? VENTS.map((v) => Object.assign({ r: 0 }, v)) : [] }), mBottom, 'bottom');
+  if (PBR) {
+    const mVent = pbrMat('bottom', { size: [W, D], dust: 1.0, detail: 0.4, disp: P.disp.bottom, depth: 0.0020 });
+    VENTS.forEach((v, i) => {
+      const g = gridGeo((v.x1 - v.x0) / v.dx * DENS, (v.z1 - v.z0) / v.dz * DENS, (s, t) => {
+        const x = v.x0 + (v.x1 - v.x0) * s, z = v.z0 + (v.z1 - v.z0) * t, q = bottomUV(x, z);
+        return [x, 0, z, q[0], q[1]];
+      }, [0, -1, 0]);
+      mesh(g, mVent, 'vent_' + i, root, 3);
+    });
+    // бока: плоская часть — сетка со смещением по карте глубины (гнёзда, решётка выдува, щели)
+    for (const sgn of [-1, 1]) {
+      const name = sgn < 0 ? 'left' : 'right';
+      const mSide = pbrMat(name, { size: [D, 0.034], dust: 0.9, disp: P.disp[name], depth: 0.0048 });
+      const z0 = -(D / 2 - R), z1 = D / 2 - R;
+      const g = gridGeo((z1 - z0) / 0.00036 * DENS, (SIDE_Y1 - SIDE_Y0) / 0.00036 * DENS, (s, t) => {
+        const z = z0 + (z1 - z0) * s, y = (SIDE_Y0 + (SIDE_Y1 - SIDE_Y0) * t) * hTop(z) / HB;
+        return [sgn * W / 2, y, z, 0.5 - sgn * z / D, (y + 0.001) / 0.034];
+      }, [sgn, 0, 0]);
+      mesh(g, mSide, 'side_' + name, root, 3);
+    }
+  }
 
   // всё, что лежит на наклонной верхней панели
   const deckTop = new THREE.Group();
@@ -898,7 +1151,7 @@ export function buildLaptop47(THREE, opts = {}) {
     mesh(sideGeo(THREE, { hw, hd, r: 0.0015, cx, cz, inward: true, profile: [[0, -H.depth - 0.0002], [0, 0.00005]], seg: 3 }), mDark, name + '_walls', deckTop, 2);
     mesh(capGeo(THREE, { hw, hd, r: 0, cx, cz, y: -H.depth, up: true, uv: floorUV }), floorMat, name + '_floor', deckTop, 2);
   };
-  holeBox(TRAY, 'tray', mTray, (x, z) => [(x - TRAY.x0) / (TRAY.x1 - TRAY.x0), 1 - (z - TRAY.z0) / (TRAY.z1 - TRAY.z0)]);
+  holeBox(TRAY, 'tray', mTray, PBR ? (x, z) => [x / 0.030, z / 0.030] : (x, z) => [(x - TRAY.x0) / (TRAY.x1 - TRAY.x0), 1 - (z - TRAY.z0) / (TRAY.z1 - TRAY.z0)]);
   holeBox(PADHOLE, 'pad', mDark);
 
   // ----- клавиши: один InstancedMesh, размер клавиши — атрибутом (скосы не растягиваются) -----
@@ -919,7 +1172,13 @@ export function buildLaptop47(THREE, opts = {}) {
         .replace('#include <begin_vertex>', 'vec3 transformed = position + vec3(aCorner.x * aGrow.x, 0.0, aCorner.y * aGrow.y);');
     };
     const uKb = { value: new THREE.Vector4(TRAY.x0, TRAY.z0, 1 / (TRAY.x1 - TRAY.x0), 1 / (TRAY.z1 - TRAY.z0)) };
-    const mKeys = std({ map: T.keys.map, roughnessMap: T.keys.orm, roughness: 1, normalMap: grainTex, normalScale: grainNS(0.3) });
+    // материал клавиш: надписи и лоск — свой холст; зерно — плитка с фото; в режиме фото крупные пятна лоска
+    // дополнительно берутся с фото по месту (keys_wear — размытая шероховатость ниши клавиатуры)
+    const mKeys = PBR
+      ? new THREE.MeshPhysicalMaterial({ map: T.keys.map, roughnessMap: T.keys.orm, roughness: 1, normalMap: P.grainN, normalScale: grainNS(0.55), color: TINT, specularColor: SPEC })
+      : std({ map: T.keys.map, roughnessMap: T.keys.orm, roughness: 1, normalMap: grainTex, normalScale: grainNS(0.3) });
+    disposables.push(mKeys);
+    const uKeyWear = { value: PBR ? P.keysWear : null };
     mKeys.onBeforeCompile = (sh) => {
       sh.uniforms.uKb = uKb;
       patchPos(sh);
@@ -935,8 +1194,14 @@ export function buildLaptop47(THREE, opts = {}) {
             vRoughnessMapUv = kUv;
           #endif
         }`);
+      if (PBR) {
+        sh.uniforms.uKeyWear = uKeyWear;
+        sh.fragmentShader = sh.fragmentShader
+          .replace('#include <common>', '#include <common>\nuniform sampler2D uKeyWear;')
+          .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = clamp( roughnessFactor * mix( 0.70, 1.30, texture2D( uKeyWear, vRoughnessMapUv ).r ), 0.08, 1.0 );');
+      }
     };
-    mKeys.customProgramCacheKey = () => 'laptop47-keys';
+    mKeys.customProgramCacheKey = () => 'laptop47-keys' + (PBR ? '-pbr' : '');
     const inst = new THREE.InstancedMesh(kg, mKeys, keys.length);
     inst.name = 'keys';
     const m4 = new THREE.Matrix4();
@@ -954,16 +1219,22 @@ export function buildLaptop47(THREE, opts = {}) {
   }
 
   // ----- тачпад и две кнопки -----
+  // В режиме фото площадка и верх кнопок берут свой участок фото верхней панели (те же UV, что у плиты).
   {
-    const px0 = PADHOLE.x0 + 0.0008, px1 = PADHOLE.x1 - 0.0008, pz0 = PADHOLE.z0 + 0.0008, pz1 = 0.0795;
+    const px0 = PADHOLE.x0 + 0.0006, px1 = PADHOLE.x1 - 0.0006, pz0 = PADHOLE.z0 + 0.0006, pz1 = PAD_SPLIT;
     const cx = (px0 + px1) / 2, cz = (pz0 + pz1) / 2, hw = (px1 - px0) / 2, hd = (pz1 - pz0) / 2;
     const padSide = sideGeo(THREE, { hw, hd, r: 0.0012, cx, cz, seg: 3, profile: [[0, -PADHOLE.depth], [0, -0.0005], [0.0003, -0.00025]] });
     mesh(padSide, mBtn, 'touchpad_side', deckTop, 2);
-    mesh(capGeo(THREE, { hw: hw - 0.0003, hd: hd - 0.0003, r: 0.001, cx, cz, y: -0.00025, up: true, seg: 3, uv: (x, z) => [(x - px0) / (px1 - px0), 1 - (z - pz0) / (pz1 - pz0)] }), mPad, 'touchpad', deckTop, 2);
-    const bz0 = 0.0805, bz1 = PADHOLE.z1 - 0.0008, mid = (px0 + px1) / 2;
+    const padUV = PBR ? deckUV : (x, z) => [(x - px0) / (px1 - px0), 1 - (z - pz0) / (pz1 - pz0)];
+    mesh(capGeo(THREE, { hw: hw - 0.0003, hd: hd - 0.0003, r: 0.001, cx, cz, y: -0.00025, up: true, seg: 3, uv: padUV }), mPad, 'touchpad', deckTop, 2);
+    const bz0 = PAD_SPLIT + 0.0012, bz1 = PADHOLE.z1 - 0.0006, mid = (px0 + px1) / 2;
     for (const [bx0, bx1, name] of [[px0, mid - 0.0005, 'pad_button_l'], [mid + 0.0005, px1, 'pad_button_r']]) {
-      const b = mesh(chip(THREE, (bx1 - bx0) / 2, (bz1 - bz0) / 2, 0.0014, PADHOLE.depth + 0.0003, 0.0006), mBtn, name, deckTop);
-      b.position.set((bx0 + bx1) / 2, -PADHOLE.depth, (bz0 + bz1) / 2);
+      const bx = (bx0 + bx1) / 2, bz = (bz0 + bz1) / 2;
+      const parts = chipParts(THREE, (bx1 - bx0) / 2, (bz1 - bz0) / 2, 0.0014, PADHOLE.depth + 0.0003, 0.0006, true, 4, PBR ? (x, z) => deckUV(x + bx, z + bz) : undefined);
+      for (const [g, mat, suffix] of [[parts.side, mBtn, '_side'], [parts.cap, mBtnTop, '']]) {
+        const b = mesh(g, mat, name + suffix, deckTop);
+        b.position.set(bx, -PADHOLE.depth, bz);
+      }
     }
     // кнопка питания
     const pb = mesh(new THREE.CylinderGeometry(0.0042, 0.0046, 0.0009, 28), std({ color: '#3a3a3d', roughness: 0.35, metalness: 0.6 }), 'power_button', deckTop);
@@ -981,38 +1252,54 @@ export function buildLaptop47(THREE, opts = {}) {
     b.position.set(s * 0.130, HY, HZ);
   }
 
-  // ----- ножки -----
+  // ----- ножки (в режиме фото верх ножки — участок фото дна: на фото ножки стоят там же) -----
   FEET.forEach(([fx, fz], i) => {
-    const f = mesh(chip(THREE, 0.0095, 0.0042, 0.0025, 0.0013, 0.0006, false), mRubber, 'foot_' + i);
-    f.position.set(fx, 0, fz);
+    const parts = chipParts(THREE, 0.0095, 0.0042, 0.0025, 0.0013, 0.0006, false, 4, PBR ? (x, z) => bottomUV(x + fx, z + fz) : undefined);
+    for (const [g, mat, suffix] of [[parts.side, mRubber, '_side'], [parts.cap, mFootTop, '']]) {
+      const f = mesh(g, mat, 'foot_' + i + suffix);
+      f.position.set(fx, 0, fz);
+    }
   });
 
-  // ----- наклейка HEXON на дне -----
-  const mSticker = std({ transparent: true, roughness: 0.62, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, alphaTest: 0.02 });
+  // ----- наклейка HEXON на дне (v4: в стёртой зоне клей полупрозрачный, сквозь него виден пластик дна) -----
+  const mSticker = std({ transparent: true, roughness: 0.62, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, alphaTest: 0.02, depthWrite: false });
   const sticker = mesh(new THREE.PlaneGeometry(STICKER.w, STICKER.h), mSticker, 'sticker_hexon_47', root, 2);
   sticker.rotation.order = 'YXZ'; sticker.rotation.set(Math.PI / 2, Math.PI, 0);
   sticker.position.set(STICKER.x, -0.0002, STICKER.z);
   sticker.visible = false;
   const setSticker = (t) => { mSticker.map = t; mSticker.needsUpdate = true; sticker.visible = true; if (o.onChange) o.onChange(); };
+  const shrinkImage = (img, maxW) => { // на телефоне не нужно держать 1652×1302 в памяти
+    try {
+      const sc = Math.min(1, maxW / img.naturalWidth);
+      const cv = mkCanvas(img.naturalWidth * sc, img.naturalHeight * sc);
+      const cx = cv.getContext('2d'); cx.imageSmoothingQuality = 'high';
+      cx.drawImage(img, 0, 0, cv.width, cv.height); cx.getImageData(0, 0, 1, 1); return cv;
+    } catch (e) { return img; }
+  };
+  const STICKER_PX = LOW ? 1024 : 1652;
   if (o.stickerTexture) setSticker(o.stickerTexture);
   else if (typeof Image !== 'undefined') {
-    const img = new Image();
-    img.onload = () => { // уменьшаем до 1024 по ширине: на телефоне не нужно держать 1652×1302 в памяти
-      let src = img;
-      try {
-        const sc = Math.min(1, 1024 / img.naturalWidth);
-        const cv = mkCanvas(img.naturalWidth * sc, img.naturalHeight * sc);
-        const cx = cv.getContext('2d'); cx.imageSmoothingQuality = 'high';
-        cx.drawImage(img, 0, 0, cv.width, cv.height); cx.getImageData(0, 0, 1, 1); src = cv;
-      } catch (e) { src = img; }
-      const t = new THREE.Texture(src); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = o.anisotropy; t.needsUpdate = true;
-      disposables.push(t); setSticker(t);
-    };
-    img.onerror = () => { if (o.onChange) o.onChange(); };
-    img.src = o.stickerUrl;
+    loads.push(new Promise((res) => {
+      const img = new Image();
+      img.onload = () => {
+        const t = new THREE.Texture(shrinkImage(img, STICKER_PX)); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = o.anisotropy; t.needsUpdate = true;
+        disposables.push(t); setSticker(t); res(true);
+      };
+      img.onerror = () => { if (o.onChange) o.onChange(); res(false); };
+      img.src = o.stickerUrl;
+    }));
+    if (o.stickerRoughUrl) loads.push(new Promise((res) => { // карта шероховатости: бумага матовая, плёнка клея блестит
+      const img = new Image();
+      img.onload = () => {
+        const t = new THREE.Texture(shrinkImage(img, STICKER_PX)); t.colorSpace = THREE.NoColorSpace; t.anisotropy = o.anisotropy; t.needsUpdate = true;
+        disposables.push(t); mSticker.roughnessMap = t; mSticker.roughness = 1; mSticker.needsUpdate = true; if (o.onChange) o.onChange(); res(true);
+      };
+      img.onerror = () => { res(false); };
+      img.src = o.stickerRoughUrl;
+    }));
   }
 
-  // ----- полосы портов -----
+  // ----- полосы портов (процедурные): в режиме фото — только задняя, бока сделаны фото и смещением -----
   const strips = {};
   const addStrip = (slot, lenM, painter, place) => {
     const t = drawPorts(lenM, STRIP_H, painter);
@@ -1021,11 +1308,13 @@ export function buildLaptop47(THREE, opts = {}) {
     place(s); strips[slot] = m;
   };
   const stripY = 0.0058 + STRIP_H / 2;
-  addStrip('left', D - 2 * R, paintLeft, (s) => { s.rotation.y = -Math.PI / 2; s.position.set(-W / 2 - 0.00012, stripY, 0); });
-  addStrip('right', D - 2 * R, paintRight, (s) => { s.rotation.y = Math.PI / 2; s.position.set(W / 2 + 0.00012, stripY, 0); });
+  if (!PBR) {
+    addStrip('left', D - 2 * R, paintLeft, (s) => { s.rotation.y = -Math.PI / 2; s.position.set(-W / 2 - 0.00012, stripY, 0); });
+    addStrip('right', D - 2 * R, paintRight, (s) => { s.rotation.y = Math.PI / 2; s.position.set(W / 2 + 0.00012, stripY, 0); });
+  }
   addStrip('back', W - 2 * R, paintBack, (s) => { s.rotation.y = Math.PI; s.position.set(0, 0.0072 + STRIP_H / 2, -D / 2 - 0.00012); });
-  // стойки VGA (шестигранники)
-  for (const zmm of [30.4, 52.2]) {
+  // стойки VGA (шестигранники) — только без фото: на фото бока они уже есть
+  if (!PBR) for (const zmm of [30.4, 52.2]) {
     const p = mesh(new THREE.CylinderGeometry(0.0021, 0.0023, 0.0016, 6), mMetal, 'vga_post', root, 2);
     p.rotation.z = Math.PI / 2; p.position.set(-W / 2 - 0.0007, 0.0058 + STRIP_H - 0.005, -(D / 2 - R) + zmm / 1000);
   }
@@ -1049,9 +1338,12 @@ export function buildLaptop47(THREE, opts = {}) {
     const screen = mesh(new THREE.PlaneGeometry(SCREEN.w, SCREEN.h), mScreen, 'screen', lid, 2);
     screen.rotation.x = Math.PI / 2; screen.position.set(0, -t + 0.0008, SCREEN.zc);
     // валик петли вдоль нижней кромки крышки (пластик) — закрывает просвет между бочонками
-    const bar = mesh(barrelGeo(0.0047, 0.236, 0.0006), mLidRim, 'lid_hinge_bar', lid);
+    const bar = mesh(barrelGeo(0.0047, 0.236, 0.0006), mBar, 'lid_hinge_bar', lid);
     bar.geometry.deleteAttribute('color');
-    bar.material = std({ color: '#1c1d20', roughness: 0.55, normalMap: grainTex, normalScale: grainNS(0.4) });
+    { // UV валика — в долях плитки зерна (у LatheGeometry они 0…1 на всю деталь, фактура растягивалась)
+      const uv = bar.geometry.attributes.uv;
+      for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * (2 * Math.PI * 0.0047) / GRAIN_TILE, uv.getY(i) * 0.236 / GRAIN_TILE);
+    }
   }
   const setLidAngle = (a) => {
     a = Math.max(0, Math.min(2.4, a));
@@ -1059,8 +1351,8 @@ export function buildLaptop47(THREE, opts = {}) {
     lid.rotation.x = SLOPE - a;
   };
 
-  // ----- фото-текстуры (когда появятся): подмена карты цвета соответствующей грани -----
-  const photoSlots = { lid: mLid, deck: mDeck, bottom: mBottom, bezel: mBezel, left: strips.left, right: strips.right };
+  // ----- подмена карты цвета грани своей текстурой (только процедурный режим, pbr: false) -----
+  const photoSlots = PBR ? {} : { lid: mLid, deck: mDeck, bottom: mBottom, bezel: mBezel, left: strips.left, right: strips.right };
   const applyPhotoTexture = (slot, t) => {
     const m = photoSlots[slot];
     if (!m || !t) return false;
@@ -1074,18 +1366,28 @@ export function buildLaptop47(THREE, opts = {}) {
   for (const k of Object.keys(o.photoTextures || {})) applyPhotoTexture(k, o.photoTextures[k]);
 
   // ----- итог -----
-  let tris = 0;
+  let tris = 0, dispTris = 0;
   for (const m of allMeshes) {
     const g = m.geometry, n = (g.index ? g.index.count : g.attributes.position.count) / 3;
     tris += n * (m.isInstancedMesh ? m.count : 1);
+    if (/^(vent_|side_)/.test(m.name)) dispTris += n;
   }
+  const stats = { triangles: Math.round(tris), displacedTriangles: Math.round(dispTris), meshes: allMeshes.length, keys: keys.length, textureSize: TS, pbr: PBR, lowPower: LOW, texturesMs: Math.round(tTex - t0), buildMs: 0, mapsMs: 0, mapsMissing: 0 };
+  // ready — когда догрузились все карты и наклейка; до этого вещь скрыта (иначе она мигнула бы чёрной)
+  if (PBR) root.visible = false;
+  const ready = Promise.all(loads).then((res) => {
+    stats.mapsMs = Math.round(now() - t0); stats.mapsMissing = res.filter((r) => !r).length;
+    root.visible = true;
+    if (o.onChange) o.onChange();
+    return stats;
+  });
   root.userData = {
-    lidAngle: 0, setLidAngle, applyPhotoTexture,
+    lidAngle: 0, setLidAngle, applyPhotoTexture, ready,
     dims: { W, D, HB, HF, LT, hingeY: HY, hingeZ: HZ, lidDepth: LD },
-    stats: { triangles: Math.round(tris), meshes: allMeshes.length, keys: keys.length, textureSize: TS, texturesMs: Math.round(tTex - t0), buildMs: 0 },
+    stats,
     dispose() { for (const d of disposables) d.dispose && d.dispose(); },
   };
   setLidAngle(o.lidAngle);
-  root.userData.stats.buildMs = Math.round(now() - t0);
+  stats.buildMs = Math.round(now() - t0);
   return root;
 }

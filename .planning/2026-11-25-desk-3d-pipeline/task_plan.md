@@ -47,3 +47,13 @@ Phase 5
 | Error | Resolution |
 |-------|------------|
 | Первый рендер пересвечен (лампа 60 Вт) | 5 Вт + заполняющий 0,6 |
+
+### Phase 6: GEN18 — PBR-карты для WEB-C (автор 26.11: «самая максимальная реалистичность… roughness, bump, displacement… можешь генерировать»)
+- [x] Ключ kie (переменная учётной записи), скрипт kie_batch.ps1 из ветки claude/kie-batch
+- [x] Ортовиды модели как первый референс раскладки (layout/L_*.jpg, наклейка стёрта inpaint)
+- [x] Задание design/references/kie_GEN18_laptop47_pbr.json: T1–T6 (грани, 4K/2K), M1–M4 (макро 2K) — 210 кредитов
+- [x] Прогон пачки, проверка брака
+- [x] make_maps.py → albedo/height/normal/rough/ao + макро
+- [x] Fable 5.2: подключить карты и displacement в laptop47.js
+- [x] Снимки, публикация, коммит
+- **Status:** in_progress

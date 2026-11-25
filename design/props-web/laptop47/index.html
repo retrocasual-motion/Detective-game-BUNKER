@@ -48,7 +48,7 @@
   <div id="vignette"></div>
   <div id="top">
     <h1>Материал № 47 · ноутбук</h1>
-    <p>проба WEB-C: вещь построена кодом, без файлов-моделей</p>
+    <p>проба WEB-C: форма — кодом, поверхности — фото-карты</p>
   </div>
   <div id="panel">
     <div id="hint">Ведите пальцем или мышью — вещь поворачивается под лампой. Щипок или колесо — ближе и дальше.</div>
@@ -140,29 +140,13 @@ scene.add(new THREE.HemisphereLight(0x39424f, 0x0a0806, 0.35));
 let dirty = true;
 const invalidate = () => { dirty = true; };
 const texSize = coarse || small ? 1536 : 2048;
-const laptop = buildLaptop47(THREE, { lidAngle: 1.92, textureSize: texSize, anisotropy: Math.min(8, renderer.capabilities.getMaxAnisotropy()), onChange: invalidate });
+// #pbr=0 — прежний процедурный режим (для сравнения); #low=1 — как на телефоне (редкие сетки, карты вдвое меньше)
+const laptop = buildLaptop47(THREE, { lidAngle: 1.92, textureSize: texSize, anisotropy: Math.min(8, renderer.capabilities.getMaxAnisotropy()), onChange: invalidate,
+  pbr: params.get('pbr') !== '0', lowPower: params.get('low') ? params.get('low') === '1' : (coarse || small) });
 const holder = new THREE.Group();   // его и крутит игрок
 const inner = new THREE.Group();    // сдвиг, чтобы центр вещи был в центре кадра
 inner.add(laptop); holder.add(inner); scene.add(holder);
 const dims = laptop.userData.dims;
-
-// ---- фото-текстуры граней (появятся позже): список в ./textures/manifest.json ----
-const PHOTO = { 'lp2_lid.jpg': 'lid', 'lp3_deck.jpg': 'deck', 'lp4_bottom.jpg': 'bottom', 'lp5_left.jpg': 'left', 'lp5_right.jpg': 'right', 'lp6_bezel.jpg': 'bezel' };
-(async () => {
-  let names = null;
-  try {
-    const r = await fetch('./textures/manifest.json', { cache: 'no-cache' });
-    if (r.ok) names = ((await r.json()).files || []).filter((n) => PHOTO[n]);
-  } catch (e) { /* списка нет — проверим файлы по одному */ }
-  if (names === null) {
-    names = [];
-    await Promise.all(Object.keys(PHOTO).map(async (n) => {
-      try { const r = await fetch('./textures/' + n, { method: 'HEAD' }); if (r.ok) names.push(n); } catch (e) { /* нет файла */ }
-    }));
-  }
-  const loader = new THREE.TextureLoader();
-  for (const n of names) loader.load('./textures/' + n, (t) => laptop.userData.applyPhotoTexture(PHOTO[n], t), undefined, () => {});
-})();
 
 // ---- состояние вида ----
 const qOf = (x, y, z, order = 'YXZ') => new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z, order));
@@ -176,6 +160,9 @@ const VIEWS = {
   back:   { q: qOf(0.25, Math.PI - 0.3, 0), zoom: 0.8, lid: 0, focus: null },
   lid:    { q: qOf(0.55, -0.4, 0), zoom: 0.8, lid: 0, focus: null },
   keys:   { q: qOf(0.62, 0.0, 0), zoom: 0.42, lid: LID_OPEN, focus: new THREE.Vector3(-0.02, 0.02, -0.02) },
+  ports:  { q: qOf(0.10, 1.38, 0), zoom: 0.30, lid: 0, focus: new THREE.Vector3(-0.1675, 0.012, -0.045) },
+  portsr: { q: qOf(0.10, -1.38, 0), zoom: 0.30, lid: 0, focus: new THREE.Vector3(0.1675, 0.012, -0.045) },
+  vents:  { q: qOf(1.22, 0.5, 0).multiply(qOf(0, 0, Math.PI)), zoom: 0.30, lid: 0, focus: new THREE.Vector3(-0.03, 0, 0.0) },
   sticker:{ q: qOf(0.74, 0.1, 0).multiply(qOf(0, 0, Math.PI)), zoom: 0.33, lid: 0, focus: new THREE.Vector3(0.085, 0, 0.03) },
 };
 const st = { q: new THREE.Quaternion(), zoom: 1, lid: LID_OPEN, focusK: 0, focus: new THREE.Vector3() };
@@ -307,7 +294,7 @@ function frame(t) {
 // служебные ракурсы для снимков: #view=front|bottom|detail (без анимации)
 if (viewName && VIEWS[viewName]) {
   const v = VIEWS[viewName];
-  if (viewName === 'bottom' || viewName === 'sticker') flipped = true;
+  if (viewName === 'bottom' || viewName === 'sticker' || viewName === 'vents') flipped = true;
   lidOpen = v.lid > 0 || flipped;
   applyView(v, true); syncButtons();
   hint.style.opacity = '0';
@@ -315,9 +302,11 @@ if (viewName && VIEWS[viewName]) {
   applyView(VIEWS.front, true);
 }
 if (params.get('zoom')) { st.zoom = tg.zoom = parseFloat(params.get('zoom')); }
-const s = laptop.userData.stats;
-document.documentElement.dataset.laptop47 = JSON.stringify(s);
-console.info('[laptop47]', JSON.stringify(s));
+laptop.userData.ready.then((s) => {
+  document.documentElement.dataset.laptop47 = JSON.stringify(s);
+  console.info('[laptop47]', JSON.stringify(s));
+  invalidate();
+});
 requestAnimationFrame(frame);
 // служебное: #act=flip,lid,home — нажать кнопки по очереди (для проверки без рук)
 for (const [i, a] of (params.get('act') || '').split(',').filter(Boolean).entries()) {

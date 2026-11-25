@@ -1,0 +1,87 @@
+{
+  "_about": "GEN18 — ноутбук 47 (WEB-C): фото граней строго по раскладке модели (первый референс — ортовид модели из laptop47.js) и бесшовные макро-фактуры для карт roughness/bump/normal/displacement. Запуск: design/tools/kie/kie_batch.ps1 (ветка claude/kie-batch). Автор 26.11: «можешь генерировать все необходимые текстуры». Наклейки HEXON здесь нет — она кладётся своим файлом. Паспорт износа общий, без примет.",
+  "outDir": "E:\\Projects\\bunker-media\\probes\\3d\\47_laptop_web\\gen18",
+  "resolution": "4K",
+  "aspect": "3:2",
+  "refs": {
+    "L_DECK": "E:\\Projects\\bunker-media\\probes\\3d\\47_laptop_web\\gen18\\layout\\L_deck_tex.jpg",
+    "L_LID": "E:\\Projects\\bunker-media\\probes\\3d\\47_laptop_web\\gen18\\layout\\L_lid_tex.jpg",
+    "L_BOTTOM": "E:\\Projects\\bunker-media\\probes\\3d\\47_laptop_web\\gen18\\layout\\L_bottom_tex.jpg",
+    "L_BEZEL": "E:\\Projects\\bunker-media\\probes\\3d\\47_laptop_web\\gen18\\layout\\L_bezel_tex.jpg",
+    "L_LEFT": "E:\\Projects\\bunker-media\\probes\\3d\\47_laptop_web\\gen18\\layout\\L_left_tex.jpg",
+    "L_RIGHT": "E:\\Projects\\bunker-media\\probes\\3d\\47_laptop_web\\gen18\\layout\\L_right_tex.jpg",
+    "R4_TOP": "E:\\Projects\\bunker-media\\references\\real\\R4_devices\\Dell_Latitude_E6400_-_Top.jpg",
+    "R7_01": "E:\\Projects\\bunker-media\\references\\real\\R7_asset_tags\\R7-01_dell_e6400_bottom.jpg",
+    "R7_03": "E:\\Projects\\bunker-media\\references\\real\\R7_asset_tags\\R7-03_thinkpad_t60_bottom.jpg",
+    "R7_06": "E:\\Projects\\bunker-media\\references\\real\\R7_asset_tags\\R7-06_t61_worn_bottom.jpg",
+    "R8_01": "E:\\Projects\\bunker-media\\references\\real\\R8_laptop_views\\R8-01_dell_latitude_e6400_back.jpg",
+    "R8_02": "E:\\Projects\\bunker-media\\references\\real\\R8_laptop_views\\R8-02_dell_latitude_e6400_left_side.jpg",
+    "R8_05": "E:\\Projects\\bunker-media\\references\\real\\R8_laptop_views\\R8-05_dell_latitude_e6400_model_no_pp27l_3176.jpg",
+    "R8_06": "E:\\Projects\\bunker-media\\references\\real\\R8_laptop_views\\R8-06_dell_latitude_e6400_model_no_pp27l_3177.jpg",
+    "R8_11": "E:\\Projects\\bunker-media\\references\\real\\R8_laptop_views\\R8-11_keyboard_thinkpad_t400.jpg",
+    "R8_13": "E:\\Projects\\bunker-media\\references\\real\\R8_laptop_views\\R8-13_thinkpad_t400.jpg"
+  },
+  "jobs": [
+    {
+      "label": "T1_deck",
+      "refs": ["L_DECK", "R8_11", "R8_05"],
+      "prompt": "T1 (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight top-down orthographic photograph of the keyboard deck of a generic black business laptop from 2009, with exactly the same framing as the first image: the base fills the frame and the same plain flat medium grey background surrounds it. Keep exactly the outline, the rounded corners, and the position, size and shape of every part from the first image: every key of the keyboard in the same place, the speaker grille strip above the keyboard, the round power button, the three tiny indicator lights, the two hinges at the top edge, the touchpad and its two buttons. Do not add, move or remove any part. All keycaps completely blank: no letters, numbers or symbols on any key. Materials like the other reference photographs: matte charcoal plastic with a fine even sand-blasted grain, black keycaps with a slightly smoother matte finish, thin dark gaps between keys. Used every day for about a year: the palm rest left and right of the touchpad worn smooth to a soft satin sheen in two oval areas, the space bar and the most used keys slightly shiny, the touchpad polished in its centre, edges and corners slightly rubbed lighter, fine grey dust and a few lint fibres in the key gaps, along the seams and around the hinges. No other marks: no scratches, cracks, dents, stains, stickers. Lit with soft completely even shadowless photo-tent light: no highlights, no reflections, no gradient, no vignetting. Natural colours, everything sharp. No text, no logo, no people."
+    },
+    {
+      "label": "T2_lid",
+      "refs": ["L_LID", "R4_TOP", "R7_06"],
+      "prompt": "T2 (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight top-down orthographic photograph of the outer side of the closed lid of a generic black business laptop from 2009, with exactly the same framing as the first image: the lid fills the frame and the same plain flat medium grey background surrounds it; the hinge side is at the top. Keep exactly the outline and the rounded corners of the first image. Like the second reference photograph but without any logo or emblem: matte charcoal plastic with a very fine, subtle straight brushed texture running left to right, a thin rubbed rim around the edge. Used daily for about a year and carried in a bag: very fine faint scuff lines across the surface, slightly lighter and smoother rubbed corners and front edge, faint greasy fingerprints near the front edge centre where the lid is opened, a little dust along the hinge side. No other marks: no scratches, cracks, dents, stains, stickers, no logo. Lit with soft completely even shadowless photo-tent light: no highlights, no reflections, no gradient, no vignetting. Natural colours, everything sharp. No text, no people."
+    },
+    {
+      "label": "T3_bottom",
+      "refs": ["L_BOTTOM", "R7_01", "R7_03", "R7_06"],
+      "prompt": "T3 (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight orthographic photograph of the underside of a generic black business laptop from 2009, with exactly the same framing as the first image: the underside fills the frame and the same plain flat medium grey background surrounds it. Keep exactly the outline and the position, size and shape of every part from the first image: the battery cover along the top edge with its two latches, the large service cover with its screws and its three small grilles, the long slotted ventilation grille in the middle, every screw in its recessed hole, the four rubber feet in the corners, the seams. Do not add, move or remove any part. The large area left of the centre stays plain empty plastic. Materials like the other reference photographs: matte black plastic with a fine textured grain, dark grey rubber feet, black screws with cross heads. Used daily for about a year and slid across desks: fine straight parallel scuff lines across the surface, slightly lighter rubbed areas around the feet and along the front edge, the rubber feet a little worn and dusty, grey dust in the grilles, seams and screw holes. No labels, no stickers, no glue residue, no scratches, cracks or stains. Lit with soft completely even shadowless photo-tent light: no highlights, no reflections, no gradient, no vignetting. Natural colours, everything sharp. No text, no numbers, no symbols, no logo, no people."
+    },
+    {
+      "label": "T4_bezel",
+      "resolution": "2K",
+      "refs": ["L_BEZEL", "R8_05", "R8_13"],
+      "prompt": "T4 (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight front orthographic photograph of the inside of the lid of a generic black business laptop from 2009, with exactly the same framing as the first image: the lid fills the frame and the same plain flat medium grey background surrounds it. Keep exactly the outline, the bezel widths and the screen area of the first image. Matte black plastic bezel with a fine grain around a switched-off matte black screen; two small dark rubber bumpers near the top corners. A year of daily use: faint fingerprints on the bezel at the top centre and on the sides where the lid is opened, a little fine dust along the bottom edge of the screen and in the bezel seam. No other marks. Lit with soft completely even shadowless photo-tent light: no reflections on the screen, no highlights, no gradient. Natural colours, everything sharp. No webcam logo, no text, no logo, no stickers, no people."
+    },
+    {
+      "label": "T5_left",
+      "aspect": "21:9",
+      "refs": ["L_LEFT", "R8_02", "R8_06"],
+      "prompt": "T5 (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight orthographic side view photograph of the left edge of a closed generic black business laptop from 2009 lying flat, the edge filling the full width of the frame as a long thin horizontal strip in the middle, with the same plain flat medium grey background above and below. Keep exactly the outline and the position, size and shape of every part from the first image: the hinge barrel at the top left, the lock slot, the round power socket, the VGA port with two screw posts, two USB ports, the long slotted vent, the card slot, the seam between base and lid. Do not add, move or remove any part. Real ports with dark depth inside, metal shields visible in the USB and VGA openings, matte charcoal plastic with a fine grain. Edges lightly rubbed from a year in a bag, a little grey dust in the port openings and the vent. No scratches or other marks. Lit with soft completely even shadowless light: no highlights, no gradient. Natural colours, everything sharp. No text, no symbols or icons next to the ports, no logo, no people."
+    },
+    {
+      "label": "T6_right",
+      "aspect": "21:9",
+      "refs": ["L_RIGHT", "R8_06", "R8_01"],
+      "prompt": "T6 (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight orthographic side view photograph of the right edge of a closed generic black business laptop from 2009 lying flat, the edge filling the full width of the frame as a long thin horizontal strip in the middle, with the same plain flat medium grey background above and below. Keep exactly the outline and the position, size and shape of every part from the first image: the hinge barrel at the top right, the optical drive tray with its small eject button, the two round audio jacks, the two USB ports, the seam between base and lid. Do not add, move or remove any part. Real ports with dark depth inside, metal shields visible in the USB openings, matte charcoal plastic with a fine grain, the drive tray front slightly smoother. Edges lightly rubbed from a year in a bag, a little grey dust in the openings. No scratches or other marks. Lit with soft completely even shadowless light: no highlights, no gradient. Natural colours, everything sharp. No text, no symbols or icons next to the ports, no logo, no people."
+    },
+    {
+      "label": "M1_grain",
+      "resolution": "2K",
+      "aspect": "1:1",
+      "refs": ["R7_06"],
+      "prompt": "M1 (file label, not part of the image, never draw it). Seamless tileable macro photograph texture, perfectly flat and straight top-down, of matte black textured ABS plastic from a 2009 business laptop casing, like the plastic in the reference photograph: a fine even sand-blasted micro grain, about 3 by 3 centimetres of surface filling the whole frame. Uniform everywhere so that it tiles without visible seams or repeating spots. Lit with soft completely even shadowless light: no highlights, no gradient, no vignetting. No scratches, no dust, no marks, no edges, no objects, no text."
+    },
+    {
+      "label": "M2_brushed",
+      "resolution": "2K",
+      "aspect": "1:1",
+      "refs": ["R4_TOP"],
+      "prompt": "M2 (file label, not part of the image, never draw it). Seamless tileable macro photograph texture, perfectly flat and straight top-down, of the outer lid of a 2009 business laptop: matte charcoal plastic with a very fine, subtle straight brushed texture running exactly left to right, like a fine-brushed plastic finish, about 4 by 4 centimetres of surface filling the whole frame. The brushed lines are thin, irregular in length and very low in contrast, not wood grain. Uniform everywhere so that it tiles without visible seams. Soft completely even shadowless light: no highlights, no gradient, no vignetting. No scratches, no marks, no edges, no objects, no logo, no text."
+    },
+    {
+      "label": "M3_dust",
+      "resolution": "2K",
+      "aspect": "1:1",
+      "refs": [],
+      "prompt": "M3 (file label, not part of the image, never draw it). Seamless tileable macro photograph texture, flat top-down: fine light grey household dust lying on a perfectly flat pure black matte surface, the kind that collects in laptop key gaps and vents: tiny specks of different sizes, a few short thin lint fibres and fluffy clumps, unevenly scattered with denser and sparser areas, about 2 by 2 centimetres of surface. The black background stays pure black between the dust. Uniform overall density so that it tiles without visible seams. Soft even light, no highlights, no gradient. No hair, no crumbs, no objects, no text."
+    },
+    {
+      "label": "M4_smudge",
+      "resolution": "2K",
+      "aspect": "1:1",
+      "refs": [],
+      "prompt": "M4 (file label, not part of the image, never draw it). Seamless tileable photograph texture, flat top-down: faint greasy fingerprints and soft skin smudges on smooth matte black plastic, lit by a broad soft reflection so the smudges show only as slightly lighter, slightly shinier satin areas against the matte surface; several partial fingerprints with fine ridges and soft wiped areas, scattered unevenly, about 10 by 10 centimetres of surface. Uniform overall density so that it tiles without visible seams. No scratches, no dust, no stains, no other marks, no edges, no objects, no text."
+    }
+  ]
+}
