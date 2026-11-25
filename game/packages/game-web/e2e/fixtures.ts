@@ -87,7 +87,7 @@ export const savedPut = (page: Page) =>
 type DeskHook = { grab(id: string): { x: number; y: number } | null; settled(): boolean };
 
 /** Всё высыпанное на 3D-стол долетело и лежит. */
-async function deskSettled(page: Page) {
+export async function deskSettled(page: Page) {
   await expect
     .poll(
       () =>
@@ -130,7 +130,9 @@ export async function takeDevice(page: Page, id: string) {
  * прочитанное висит на стене группой папки.
  */
 export async function readFolder(page: Page, id: string, top: string) {
-  await page.getByTestId(`container-${id}`).click();
+  // Как с клавиатуры: перед папкой на 3D-столе может лежать устройство и взять щелчок мышью
+  // (щелчок мышью по папке проверяет archive.spec).
+  await page.getByTestId(`container-${id}`).dispatchEvent('click');
   await expect(page.getByTestId(`container-${id}`)).toHaveCount(0);
   await deskSettled(page);
   let last: { x: number; y: number } | null = null;

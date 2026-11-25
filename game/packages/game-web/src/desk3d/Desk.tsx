@@ -212,6 +212,26 @@ export function Desk({
   const save = (list: readonly Piece[]) =>
     onSave(list.map((q) => ({ id: q.id, x: q.x, z: q.z, rot: q.rot, layer: q.layer })));
 
+  // ── На столе появилась вещь следователя (эпилог, коробка из банка, короб пачек): листы и
+  // устройства, что лежали на её месте, отходят на ближайшее свободное (иначе её не взять). ──
+  // biome-ignore lint/correctness/useExhaustiveDependencies: только когда сменились вещи стола
+  useEffect(() => {
+    const d = drag.current;
+    let moved = false;
+    const next = ps.current.map((q) => {
+      if (d?.ids.includes(q.id) || flying.current.has(q.id)) return q;
+      if (!blocked.some((b) => overlap(q, b))) return q;
+      const fix = nearestFree([q], zone, 1.2, 0.01);
+      if (!fix) return q;
+      moved = true;
+      return { ...q, x: q.x + fix.dx, z: q.z + fix.dz };
+    });
+    if (!moved) return;
+    ps.current = next;
+    setPieces(next);
+    save(next);
+  }, [blocked]);
+
   // ── Сохранение → стол: что лежит, где; без места — высыпать у конверта. ──
   // biome-ignore lint/correctness/useExhaustiveDependencies: пересчёт — только когда сменился стол игрока
   useEffect(() => {

@@ -3,7 +3,9 @@ import { expect, STRIP, sheet, test, toWall } from './fixtures.ts';
 
 /** Коробка с пачками в руках → пачка в руках. */
 async function stackInHands(page: Page, id: string) {
-  await page.getByTestId('device-29').click();
+  // Короб — как с клавиатуры: перед ним на 3D-столе может лежать устройство (радиопост) и
+  // накрывать его щелчок мышью; здесь проверяются пачки, а не щелчок по коробу.
+  await page.getByTestId('device-29').dispatchEvent('click');
   await page.getByTestId(`stack-${id}`).dispatchEvent('click');
   await expect(page.getByTestId('stack-leaf')).toHaveCount(1);
 }

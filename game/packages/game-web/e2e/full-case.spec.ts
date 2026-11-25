@@ -2,7 +2,7 @@ import { readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Page } from '@playwright/test';
-import { expect, readFolder, STRIP, sheet, test } from './fixtures.ts';
+import { expect, readFolder, STRIP, sheet, takeDevice, test } from './fixtures.ts';
 
 /**
  * QA-C (общая проверка 20.11): робот проходит всё дело через интерфейс, как игрок — от нового
@@ -257,7 +257,9 @@ async function edgeOn(page: Page) {
 async function deviceUp(page: Page, id: string, label: RegExp) {
   await toDesk(page);
   await handsFree(page);
-  await page.getByTestId(`device-${id}`).click();
+  // Изъятые устройства — на 3D-столе (24, 47–50); остальные (29, L462) — нарисованы.
+  if (['24', '47', '48', '49', '50'].includes(id)) await takeDevice(page, id);
+  else await page.getByTestId(`device-${id}`).click();
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', label);
 }
 
