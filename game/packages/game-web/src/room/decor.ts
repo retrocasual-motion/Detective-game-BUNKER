@@ -123,7 +123,7 @@ export const INBOX_SHOWN = 6;
  * Лоток «Входящие» на столе: в самом левом заднем углу (автор 25.11, разметка на снимке), доли p.
  * Левый край стола виден до 0,3 м от стены (дальше его срезает край экрана) — лоток в этой полосе.
  */
-export const INBOX_AT: [number, number] = [-0.98, 0.19];
+export const INBOX_AT: [number, number] = [-0.93, 0.19];
 /** Лист в лотке — A4 лёжа (29,7 × 21 см); следующий сдвинут к игроку, у прежних видна полоска. */
 const LETTER: [number, number] = [0.297, 0.21];
 const LETTER_STEP = 0.016;
@@ -257,7 +257,7 @@ const ENVELOPE_AT: Record<EnvelopeId, [number, number]> = {
   protocols: [-0.54, 0.63],
   // Короб вещдоков «Изъятое» (автор 25.11: устройства в тонком конверте — «невозможно физически»)
   // — у стены посередине; вскрыли — устройства ложатся тут же.
-  seized: [-0.01, 0.19],
+  seized: [-0.05, 0.19],
 };
 /** Папки дела — стопкой внахлёст (FM-B, вместо конвертов A-260). */
 const ENVELOPE_ORDER = ['bunker', 'scene', 'protocols'] as const;
@@ -274,14 +274,14 @@ export function envelopeSpot(id: ContainerId): [number, number] {
  * Где стоит компьютер следователя (дисковод под монитором), доли p: справа, у стены; правее и ближе
  * к игроку — телефон (автор 25.11, фото стола и разметка на снимке; было слева, −0,69).
  */
-const PC_X = 0.78;
+const PC_X = 0.62;
 const PC_Z = 0.19;
 /**
  * Короб с пачками — у стены правее середины; на нём — коробка из банка. Пока меньше настоящего
  * (BX-A — 38 × 30 × 25): 30 × 22 × 15, чтобы не спорил с компьютером (автор 19.11; размеры — на
  * этапе дизайна).
  */
-const PAPERS_AT: [number, number] = [0.37, 0.13];
+const PAPERS_AT: [number, number] = [0.27, 0.13];
 const PAPERS_H = 0.15;
 /** Конверт с диском сервера (A-272) — у дисковода, левее телефона. */
 const DISC_AT: [number, number] = [0.58, 0.56];
@@ -755,12 +755,56 @@ export function deskObjects(
   // Устройства лежат на столе, когда вскрыт конверт «Осмотр места происшествия и изъятое» (A-260);
   // коробка с пачками — когда вскрыт «Документация объекта и программы».
   // Камера, ручка и телефон — на 3D-столе свободно (или карточкой на стене), не нарисованы.
-  return all.filter(
-    (o) =>
-      !FREE_KEYS.has(o.key) &&
-      !(DEVICE_KEYS.has(o.key) && !opened.includes('scene')) &&
-      !(o.key === 'papers' && !opened.includes('bunker')),
-  );
+  return all
+    .filter(
+      (o) =>
+        !FREE_KEYS.has(o.key) &&
+        !(DEVICE_KEYS.has(o.key) && !opened.includes('scene')) &&
+        !(o.key === 'papers' && !opened.includes('bunker')),
+    )
+    .map((o) => shrink(o, r));
+}
+
+/**
+ * Вещи на столе меньше настоящих (автор 25.11: «всё великовато… меняй только размеры вещей»,
+ * камера — как была): каждая — в DESK_SCALE раз вокруг своей середины на столе, места не сдвигаются.
+ * Части одной вещи — вокруг общей точки (монитор с дисководом, лампа с цепочкой, лоток с письмами).
+ * Телефон уменьшен своей моделью (DESK_PHONE.scale): цифры на кнопках — по ней.
+ */
+export const DESK_SCALE = 0.85;
+
+function shrink(o: DeskObject, r: Room): DeskObject {
+  if (o.key === 'phone') return o;
+  const { p, deskY } = r;
+  const all = [...o.boxes, ...(o.hit ?? []), ...(o.discs ?? [])];
+  if (!all.length) return o;
+  const origin = (): [number, number] => {
+    if (o.key === 'monitor' || o.key === 'drive') return [PC_X * p, PC_Z * p];
+    if (o.key === 'lamp' || o.key === 'lamp-chain') return [LAMP_AT[0] * p, LAMP_AT[1] * p];
+    if (o.key.startsWith('inbox')) return [INBOX_AT[0] * p, INBOX_AT[1] * p];
+    const xs = all.flatMap((b) => [b.min[0], b.max[0]]);
+    const zs = all.flatMap((b) => [b.min[2], b.max[2]]);
+    return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...zs) + Math.max(...zs)) / 2];
+  };
+  const [ox, oz] = origin();
+  const S = DESK_SCALE;
+  const pt = (v: Vec3): Vec3 => [
+    ox + (v[0] - ox) * S,
+    deskY + (v[1] - deskY) * S,
+    oz + (v[2] - oz) * S,
+  ];
+  const one = <T extends { min: Vec3; max: Vec3; pivot?: [number, number] }>(b: T): T => ({
+    ...b,
+    min: pt(b.min),
+    max: pt(b.max),
+    ...(b.pivot ? { pivot: [ox + (b.pivot[0] - ox) * S, oz + (b.pivot[1] - oz) * S] } : {}),
+  });
+  return {
+    ...o,
+    boxes: o.boxes.map(one),
+    ...(o.hit ? { hit: o.hit.map(one) } : {}),
+    ...(o.discs ? { discs: o.discs.map(one) } : {}),
+  };
 }
 
 /** Изъятые устройства на столе (24, 47–50). */

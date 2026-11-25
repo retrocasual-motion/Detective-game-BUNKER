@@ -83,6 +83,11 @@ describe('вещи на столе не заходят друг в друга (�
     ['начало дела', deskObjects(r, col, [], [], 'none', 'envelope', 'none')],
     ['письма, коробка банка, эпилог', objs],
     ['всё вскрыто, кассета', deskObjects(r, col, ['L1'], undefined, 'none', 'out', 'open')],
+    // Короб пачек (вскрыта «Документация») рядом с ещё не вскрытым коробом вещдоков.
+    [
+      'короб пачек и короб вещдоков',
+      deskObjects(r, col, [], ['bunker'], 'none', 'envelope', 'none'),
+    ],
   ];
   // Части лотка и письма в нём — одна вещь.
   const group = (key: string) => (key.startsWith('inbox') ? 'inbox' : key);
