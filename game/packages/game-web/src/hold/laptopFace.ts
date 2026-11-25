@@ -13,7 +13,7 @@ export function paintLaptopFace(unlocked: boolean) {
       g.addColorStop(1, '#070c16');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
-      // Аватар: круг, в нём — угол знака.
+      // Картинка учётной записи: круг, в нём — стандартный силуэт (A-283: знака нет).
       const r = h * 0.045;
       const cx = w / 2;
       const cy = h * 0.2;
@@ -23,13 +23,7 @@ export function paintLaptopFace(unlocked: boolean) {
       ctx.fillStyle = '#0d1522';
       ctx.fill();
       ctx.clip();
-      ctx.strokeStyle = '#d9e2ee';
-      ctx.lineWidth = r * 0.18;
-      ctx.beginPath();
-      ctx.moveTo(cx - r * 1.2, cy - r * 0.25);
-      ctx.lineTo(cx + r * 0.25, cy - r * 0.25);
-      ctx.lineTo(cx + r * 0.25, cy + r * 1.2);
-      ctx.stroke();
+      userSilhouette(ctx, cx, cy, r);
       ctx.restore();
       ctx.strokeStyle = '#8fa3bd';
       ctx.lineWidth = r * 0.08;
@@ -91,13 +85,7 @@ export function paintLaptopFace(unlocked: boolean) {
     ctx.fillStyle = '#0d1522';
     ctx.fill();
     ctx.clip();
-    ctx.strokeStyle = '#d9e2ee';
-    ctx.lineWidth = r * 0.18;
-    ctx.beginPath();
-    ctx.moveTo(cx - r * 1.2, cy - r * 0.25);
-    ctx.lineTo(cx + r * 0.25, cy - r * 0.25);
-    ctx.lineTo(cx + r * 0.25, cy + r * 1.2);
-    ctx.stroke();
+    userSilhouette(ctx, cx, cy, r);
     ctx.restore();
     ctx.strokeStyle = '#8fa3bd';
     ctx.lineWidth = r * 0.05;
@@ -132,4 +120,21 @@ export function paintLaptopFace(unlocked: boolean) {
     );
     ctx.textAlign = 'start';
   };
+}
+
+/**
+ * Стандартная картинка учётной записи (A-283): силуэт человека — голова и плечи, как на экране входа
+ * (`LockScreen`, `UserPicture`). Рисуется в круге радиуса r с центром (cx, cy); круг уже обрезан.
+ */
+function userSilhouette(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
+  ctx.fillStyle = '#8fa3bd';
+  ctx.beginPath();
+  ctx.arc(cx, cy - r * 0.24, r * 0.34, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx - r * 0.72, cy + r);
+  ctx.bezierCurveTo(cx - r * 0.72, cy + r * 0.4, cx - r * 0.4, cy + r * 0.2, cx, cy + r * 0.2);
+  ctx.bezierCurveTo(cx + r * 0.4, cy + r * 0.2, cx + r * 0.72, cy + r * 0.4, cx + r * 0.72, cy + r);
+  ctx.closePath();
+  ctx.fill();
 }

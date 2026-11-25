@@ -35,6 +35,10 @@ services:
       AUTH: ${AUTH:-off}
       MAIL_TRANSPORT: ${MAIL_TRANSPORT:-none}
       PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8787}
+      # Медиа (T-…): папка bunker-media — томом, только чтение; нет её — игра рисует заглушки.
+      MEDIA_DIR: /media
+    volumes:
+      - ${MEDIA_HOST_DIR:-../../bunker-media}:/media:ro
     ports:
       - "${APP_PORT:-8787}:8787"
     depends_on:

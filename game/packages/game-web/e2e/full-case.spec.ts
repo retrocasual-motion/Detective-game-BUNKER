@@ -2,7 +2,7 @@ import { readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Page } from '@playwright/test';
-import { expect, STRIP, sheet, test } from './fixtures.ts';
+import { expect, lookAtSticker, STRIP, sheet, test } from './fixtures.ts';
 
 /**
  * QA-C (общая проверка 20.11): робот проходит всё дело через интерфейс, как игрок — от нового
@@ -422,12 +422,15 @@ test('QA-C: всё дело через интерфейс — от нового 
     await opened(page, ['L971', 'L970', 'L972', 'L974']);
   });
 
-  await test.step('ноутбук 47: картинка учётной записи крупно (L947), ключ (L560–L565)', async () => {
+  await test.step('ноутбук 47: наклейка на дне крупно (L947, A-283), ключ (L560–L565)', async () => {
     await deviceUp(page, '47', /Ноутбук/);
+    // Перевернуть дном и приблизить наклейку — обычными жестами вещи в руках (Z-A).
+    await lookAtSticker(page);
+    await opened(page, ['L947']);
+    // Правая кнопка — как было: экраном к себе.
+    await page.mouse.click(683, 384, { button: 'right' });
     await page.getByTestId('device-use').click();
     await expect(page.getByTestId('laptop-view')).toBeVisible();
-    await page.locator('.lap-avatar').first().dblclick();
-    await opened(page, ['L947']);
     await drawKey(page, [2, 4, 8, 6]);
     await expect(page.getByTestId('laptop-desktop')).toBeVisible();
     await opened(page, ['L560', 'L561', 'L562', 'L563', 'L564', 'L565']);
