@@ -30,7 +30,12 @@ async function openFolder(page: Page, id: string) {
 
 /** Короб вещдоков или коробку — в руки и вскрыть: короб уходит из рук, коробка остаётся вскрытой. */
 async function openSealed(page: Page, id: string) {
-  await page.getByTestId(`container-${id}`).click();
+  // За верх: перед коробом может лежать стопка листов — щелчок в середину взял бы лист (took.ts).
+  const box = await page.getByTestId(`container-${id}`).boundingBox();
+  await page.mouse.click(
+    (box?.x ?? 0) + (box?.width ?? 0) / 2,
+    (box?.y ?? 0) + (box?.height ?? 0) * 0.15,
+  );
   await page.getByTestId('envelope-open').dispatchEvent('click');
   if (id === 'seized') await expect(page.getByTestId('held')).toBeHidden();
   else {
