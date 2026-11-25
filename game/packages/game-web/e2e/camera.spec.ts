@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, test } from './fixtures.ts';
+import { expect, takeDevice, test } from './fixtures.ts';
 
 /**
  * Камера инженера (24; A-268 — изъята сама камера с картой; автор 17.11: «как телефон»): в руках
@@ -8,7 +8,7 @@ import { expect, test } from './fixtures.ts';
  */
 
 async function cameraUp(page: Page) {
-  await page.getByTestId('device-24').click();
+  await takeDevice(page, '24');
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Камера/);
   await page.getByTestId('device-use').click();
   await expect(page.getByTestId('held')).toHaveAttribute('data-focus', 'camera');

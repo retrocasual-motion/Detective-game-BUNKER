@@ -56,6 +56,20 @@ export const WallItemSchema = z.object({
 });
 export type WallItem = z.infer<typeof WallItemSchema>;
 
+/**
+ * Вещь на столе (3D-стол): метры стола — x от центра доски вправо, z от стены к игроку; rot —
+ * поворот вокруг вертикали, радианы; layer — порядок укладки (больше — лежит выше). Без x и z —
+ * только что высыпана из конверта: где лечь, решает стол (разброс у конверта).
+ */
+export const DeskItemSchema = z.object({
+  id: z.string().min(1).max(80),
+  x: z.number().min(-3).max(3).optional(),
+  z: z.number().min(-3).max(3).optional(),
+  rot: z.number().min(-7).max(7).optional(),
+  layer: z.number().int().min(0).max(1_000_000),
+});
+export type DeskItem = z.infer<typeof DeskItemSchema>;
+
 /** Нить между двумя вещами на стене; игра её не читает и не проверяет (T-5-A). */
 export const ThreadSchema = z.object({
   id: z.string().min(1).max(64),
@@ -260,6 +274,11 @@ export const PlayerStateSchema = z.object({
       epilogueRead: z.boolean().optional(),
     })
     .optional(),
+  /**
+   * Что лежит на столе свободно (3D-стол, автор 24.11): листы и изъятые устройства из вскрытых
+   * конвертов — место и порядок укладки. Нет поля — на столе свободно ничего не лежит.
+   */
+  desk: z.array(DeskItemSchema).max(300).optional(),
   /** Совмещённые на стене листы (WL-A, MG-A): «L990» — висит вместо своих половин. */
   joined: z
     .array(z.string().regex(/^L\d{3}$/))
