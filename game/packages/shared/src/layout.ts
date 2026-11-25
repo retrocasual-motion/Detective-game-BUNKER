@@ -467,7 +467,7 @@ export const WEB_MATERIALS: readonly string[] = [
 export const isWeb = (id: string) => WEB_MATERIALS.includes(id);
 
 export const DEVICE_MATERIALS: Readonly<Record<string, readonly string[]>> = {
-  // L947 — крупный план картинки учётной записи на экране входа.
+  // L947 — крупный план наклейки на дне ноутбука (A-283).
   '47': ['L560', 'L561', 'L562', 'L563', 'L564', 'L565', 'L947'],
   // Телефон Габриэля: содержимое после разблокировки и крупный план экрана блокировки.
   '48': ['L540', 'L949'],

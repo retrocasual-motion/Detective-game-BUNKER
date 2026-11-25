@@ -40,7 +40,6 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
   const [pen, setPen] = useState<{ x: number; y: number } | null>(null);
   const [state, setState] = useState<'idle' | 'wrong' | 'short' | 'check' | 'offline'>('idle');
   const [hint, setHint] = useState(false);
-  const [avatarBig, setAvatarBig] = useState(false);
   const svg = useRef<SVGSVGElement>(null);
   const wait = useFieldWait(FIELD);
 
@@ -164,23 +163,7 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
 
   return (
     <div className="lap-lock" data-testid="laptop-lock">
-      <button
-        type="button"
-        className={`lap-avatar${avatarBig ? ' lap-avatar-big' : ''}`}
-        data-testid="laptop-avatar"
-        aria-label="Картинка учётной записи"
-        title="Картинка учётной записи"
-        onWheel={(e) => {
-          if (e.deltaY < 0) zoomAvatar();
-          else setAvatarBig(false);
-        }}
-        onDoubleClick={() => (avatarBig ? setAvatarBig(false) : zoomAvatar())}
-      >
-        {/* Фрагмент знака: две линии под прямым углом — горизонтальная влево, вертикальная вниз (L947). */}
-        <svg viewBox="0 0 100 100" aria-hidden>
-          <path d="M-10 38 H62 V112" fill="none" stroke="#d9e2ee" strokeWidth="9" />
-        </svg>
-      </button>
+      <UserPicture testId="laptop-avatar" />
       <div className="lap-user">a.cole</div>
       <svg
         ref={svg}
@@ -242,16 +225,26 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
       <div className="lap-lock-foot">VAULTLINE · рабочее место руководителя программы</div>
     </div>
   );
+}
 
-  function zoomAvatar() {
-    setAvatarBig(true);
-    // Крупный план картинки (L947): в деле; висит — на самом ноутбуке (LW-A).
-    void postAction('ОСМОТР', '47 картинка учётной записи', 'увеличить')
-      .then((r) => {
-        if (r.released.length) useGame.getState().addFound(r.released, '47', []);
-      })
-      .catch(() => undefined);
-  }
+/**
+ * Картинка учётной записи (A-283): стандартная картинка системы — силуэт человека, без марок и
+ * знака; не увеличивается. Подсказка к ключу — наклейка на дне ноутбука (L947), не она.
+ */
+function UserPicture({ testId, big = false }: { testId?: string; big?: boolean }) {
+  return (
+    <span
+      className={`lap-avatar${big ? ' lap-avatar-welcome' : ''}`}
+      data-testid={testId}
+      role="img"
+      aria-label="Картинка учётной записи"
+    >
+      <svg viewBox="0 0 100 100" aria-hidden>
+        <circle cx="50" cy="38" r="17" fill="#8fa3bd" />
+        <path d="M14 100 C14 70 30 60 50 60 C70 60 86 70 86 100 Z" fill="#8fa3bd" />
+      </svg>
+    </span>
+  );
 }
 
 /**
@@ -269,11 +262,7 @@ export function Welcome({ onEnter }: { onEnter: () => void }) {
   return (
     <div className="lap-lock lap-welcome" data-testid="laptop-welcome">
       <div className="lap-welcome-card">
-        <span className="lap-avatar lap-avatar-big" aria-hidden>
-          <svg viewBox="0 0 100 100" aria-hidden>
-            <path d="M-10 38 H62 V112" fill="none" stroke="#d9e2ee" strokeWidth="9" />
-          </svg>
-        </span>
+        <UserPicture testId="laptop-welcome-avatar" big />
         <div className="lap-user">a.cole</div>
         <button type="button" className="lap-enter" data-testid="laptop-enter" onClick={onEnter}>
           Войти

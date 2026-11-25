@@ -9,6 +9,7 @@ import { onClickPart, setPartCursor, useScreenAnchor, useSpot } from './Held3D.t
 import { paintLaptopFace } from './laptopFace.ts';
 import { paintPhoneFace } from './phoneFace.ts';
 import { usePull } from './pull.tsx';
+import { StickerBottom } from './StickerBottom.tsx';
 import { type Painter, paintTexture } from './texture.ts';
 
 /**
@@ -613,6 +614,8 @@ function Laptop({ tag, onUse, on }: { tag: string; onUse: () => void; on: boolea
         <boxGeometry args={[2.8, 0.1, 1.9]} />
         <meshStandardMaterial color={DEVICE} roughness={0.6} />
       </mesh>
+      {/* Наклейка инвентарного номера на дне (A-283, L947): переверни и рассмотри. */}
+      <StickerBottom />
       <group position={[0, 0.2, -0.4]} rotation={[-0.12, 0, 0]}>
         <mesh>
           <boxGeometry args={[2.8, 1.85, 0.08]} />

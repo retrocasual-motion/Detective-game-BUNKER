@@ -42,6 +42,7 @@ const app = createApp({
   production: env.production,
   isReady: () => ready,
   webDist: env.webDist,
+  mediaDir: env.mediaDir,
   engine,
   auth: env.auth,
   mailer,

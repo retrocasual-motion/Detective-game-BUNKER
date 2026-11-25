@@ -1,12 +1,12 @@
 import type { Page } from '@playwright/test';
-import { expect, sheet, takeDevice, test, toWall } from './fixtures.ts';
+import { expect, lookAtSticker, sheet, takeDevice, test, toWall } from './fixtures.ts';
 
 /**
  * Ноутбук руководителя (этап 4c-1; решения автора 10.11 — SCR-C, UI-A, PL-A, CL-D, LW-A, PT-A):
  * экраном к игроку, графический ключ, мини-ОС эпохи; файлы остаются на ноутбуке.
  */
 
-const KEY = [5, 1, 2, 3, 6, 9, 8, 7, 4];
+const KEY = [2, 4, 8, 6]; // A-283
 
 /** Ноутбук со стола — в руки — щелчок по экрану: экран крупно. */
 async function laptopUp(page: Page) {
@@ -71,6 +71,48 @@ test('экран входа: a.cole, подсказка «наш первый з
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Ноутбук/);
 });
 
+const has = async (page: Page, id: string) => {
+  const r = await page.request.get('/api/materials');
+  return ((await r.json()) as { id: string }[]).some((m) => m.id === id);
+};
+
+test('картинка учётной записи — обычная (A-283): без знака; двойной щелчок и колесо ничего не открывают', async ({
+  page,
+}) => {
+  await laptopUp(page);
+  const avatar = page.getByTestId('laptop-avatar');
+  await expect(avatar).toBeVisible();
+  // Угла знака (две линии под прямым углом) больше нет — стандартный силуэт.
+  await expect(avatar.locator('path[stroke]')).toHaveCount(0);
+  await expect(avatar.locator('circle')).toHaveCount(1);
+  const before = await avatar.boundingBox();
+  await avatar.dblclick();
+  await avatar.hover();
+  await page.mouse.wheel(0, -300);
+  await page.waitForTimeout(800);
+  const after = await avatar.boundingBox();
+  expect(after?.width).toBe(before?.width);
+  expect(await has(page, 'L947')).toBe(false);
+});
+
+test('наклейка на дне (A-283, Z-A): перевернуть дном, приблизить колесом — L947 в деле; издалека — нет', async ({
+  page,
+}) => {
+  await takeDevice(page, '47');
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Ноутбук/);
+  // Только перевернуть, не приближая, — наклейка мелко: ничего не открыто.
+  await page.mouse.move(683, 500);
+  await page.mouse.down();
+  await page.mouse.move(683, 160, { steps: 15 });
+  await page.mouse.up();
+  await expect(page.getByTestId('laptop-sticker')).toBeVisible();
+  await page.waitForTimeout(600);
+  expect(await has(page, 'L947')).toBe(false);
+  await page.mouse.click(683, 384, { button: 'right' });
+  await lookAtSticker(page);
+  await expect.poll(() => has(page, 'L947'), { timeout: 10_000 }).toBe(true);
+});
+
 test('пять неверных ключей — поле молчит 2 минуты, отсчёт на экране (LK-A)', async ({ page }) => {
   await laptopUp(page);
   for (let k = 0; k < 5; k++) {
@@ -116,6 +158,8 @@ test('верный ключ — рабочий стол из канона, ча�
   // Снова к ноутбуку — ключ уже введён: экран приветствия, «Войти» — рабочий стол.
   await laptopUp(page);
   await expect(page.getByTestId('laptop-welcome')).toContainText('a.cole');
+  // На экране приветствия — та же стандартная картинка, без знака (A-283).
+  await expect(page.getByTestId('laptop-welcome-avatar').locator('path[stroke]')).toHaveCount(0);
   await page.getByTestId('laptop-enter').click();
   await expect(page.getByTestId('laptop-desktop')).toBeVisible();
 });
