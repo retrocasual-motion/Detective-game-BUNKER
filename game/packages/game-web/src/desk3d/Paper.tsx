@@ -337,10 +337,11 @@ export function Paper({
     });
   };
 
-  useFrame((_, dtRaw) => {
+  useFrame((state, dtRaw) => {
     const g = group.current;
     if (!g) return;
     const dt = Math.min(dtRaw, 1 / 30);
+    let drapeMoving = false;
     const pos = lp.current;
     if (!placed.current) {
       placed.current = true;
@@ -453,6 +454,7 @@ export function Paper({
           }
         }
         if (changed) {
+          drapeMoving = true;
           for (let i = 0; i < pa.count; i++) pa.setZ(i, z[i] ?? 0);
           pa.needsUpdate = true;
           sheetGeo.computeVertexNormals();
@@ -461,6 +463,17 @@ export function Paper({
       }
     }
     g.scale.setScalar(sc.current * kd);
+    // Холст рисует по требованию (D3-12): пока вещь движется — следующий кадр.
+    if (
+      waiting ||
+      drapeMoving ||
+      tween.current ||
+      target.mode !== 'rest' ||
+      Math.abs(target.scale - sc.current) > 1e-3 ||
+      Math.abs(want - hold.current) > 1e-3 ||
+      pos.distanceToSquared(target.pos) > 1e-4
+    )
+      state.invalidate();
     // Над запретным местом (вещь следователя, край) — лист краснеет: тень там не видна.
     const fm = faceMat.current;
     if (fm) {

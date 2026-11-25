@@ -26,7 +26,12 @@ const ids = async (page: Page) => (await pieces(page)).map((q) => q.id).sort();
  */
 async function spill(page: Page, id: string) {
   const saved = savedPut(page);
-  await page.getByTestId(`container-${id}`).click();
+  // За верх: перед коробом может лежать стопка листов — щелчок в середину взял бы лист (took.ts).
+  const box = await page.getByTestId(`container-${id}`).boundingBox();
+  await page.mouse.click(
+    (box?.x ?? 0) + (box?.width ?? 0) / 2,
+    (box?.y ?? 0) + (box?.height ?? 0) * 0.15,
+  );
   await expect(page.getByTestId('held')).toHaveAttribute(
     'aria-label',
     id === 'seized' ? /^Короб вещдоков/ : /^Папка/,

@@ -7,7 +7,7 @@ import {
   NEWSPAPER_ID,
   onWall,
 } from '@bunker/shared';
-import { Canvas, events } from '@react-three/fiber';
+import { Canvas, events, invalidate } from '@react-three/fiber';
 import { type RefObject, useEffect, useMemo, useRef } from 'react';
 import { screenToWorld } from '../canvas/math.ts';
 import type { Pose, Room } from '../room/camera.ts';
@@ -71,9 +71,28 @@ export function DeskLayer({
   const activeRef = useRef(active);
   activeRef.current = active;
 
+  // Камера комнаты сдвинулась (переход стол ↔ стена) — кадр 3D-слою: он рисует по требованию.
+  useEffect(() => {
+    let raf = 0;
+    let last = '';
+    const watch = () => {
+      const p = live.current;
+      const key = p ? `${p.eye.join(',')}|${p.rx}|${p.ry}` : '';
+      if (key !== last) {
+        last = key;
+        invalidate();
+      }
+      raf = requestAnimationFrame(watch);
+    };
+    raf = requestAnimationFrame(watch);
+    return () => cancelAnimationFrame(raf);
+  }, [live]);
+
   useEffect(() => {
     const move = (e: PointerEvent) => {
       pointer.current = { x: e.clientX, y: e.clientY };
+      // Мышь у стола — наведение и протяжка видны сразу.
+      if (activeRef.current) invalidate();
     };
     window.addEventListener('pointermove', move, { capture: true });
     window.addEventListener('pointerdown', move, { capture: true });
@@ -111,6 +130,10 @@ export function DeskLayer({
     <div className="desk3d" style={{ visibility: visible ? 'visible' : 'hidden' }}>
       <Canvas
         flat
+        // По требованию (D3-12): кадр — на ввод у стола, переход камеры, движение вещей; в покое и у
+        // стены холст не рисует (в CI с программной графикой непрерывная отрисовка съедала процессор
+        // и переход камеры не доигрывал).
+        frameloop="demand"
         dpr={[1, 2]}
         gl={{ alpha: true, antialias: true }}
         style={{ pointerEvents: 'none' }}
