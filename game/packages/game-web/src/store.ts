@@ -56,8 +56,14 @@ function freeArea(vp: { width: number; height: number }) {
   };
 }
 
-/** Что в руках: конверт или коробка архива — или изъятое устройство (по номеру материала). */
-export type Held = { type: 'container'; id: ContainerId } | { type: 'device'; id: string };
+/**
+ * Что в руках: конверт или коробка архива (вскрытые — картотекой, OP-D), пакет личных вещей из
+ * коробки (EB-A, по номеру описи) — или изъятое устройство (по номеру материала).
+ */
+export type Held =
+  | { type: 'container'; id: ContainerId }
+  | { type: 'bag'; id: string; inBox?: boolean }
+  | { type: 'device'; id: string };
 
 /** 'error' — сбой связи, повторяем; 'rejected' — сервер отказал по существу, нужна перезагрузка. */
 export type SaveStatus = 'saved' | 'saving' | 'error' | 'rejected';
@@ -132,6 +138,13 @@ interface GameStore {
   fieldBlockedUntil: Record<string, number>;
   blockField(field: string, ms: number): void;
   hold(h: Held | null): void;
+  /**
+   * Прочитать лист, вынутый из вещи в руках (OP-D, EB-A): лист открыт, закрыли — вещь снова в
+   * руках на том же месте (вскрытый конверт, коробка, пакет).
+   */
+  readFrom(materialId: string, back: Held): void;
+  /** Куда вернуться, когда лист закрыт (readFrom). */
+  backTo: Held | null;
   /** Открыть материал листом (экран устройства в 4a). */
   readMaterial(materialId: string): void;
   /** Повесить лист из «Входящих» на стену — в середину видимой части стены. */
@@ -310,6 +323,7 @@ export const useGame = create<GameStore>((set, get) => {
     freshWall: [],
     foundId: null,
     wallFly: 0,
+    backTo: null,
 
     dismissArrival() {
       set({ arrival: null });
@@ -378,6 +392,11 @@ export const useGame = create<GameStore>((set, get) => {
         phone: h?.id === '48' ? g.phone : null,
         camera: h?.id === '24' ? g.camera : false,
       }));
+    },
+
+    readFrom(materialId, back) {
+      get().openViewer(materialId);
+      if (get().viewerId === materialId) set({ held: null, backTo: back });
     },
 
     readMaterial(materialId) {
@@ -537,7 +556,13 @@ export const useGame = create<GameStore>((set, get) => {
         set({ held: { type: 'device', id: materialId } });
         return;
       }
-      set({ viewerId: materialId, find: find ?? null, excerpt: excerpt ?? null });
+      // Новый лист поверх закрытого просмотрщика — не из вещи в руках: возвращаться некуда.
+      set((g) => ({
+        viewerId: materialId,
+        find: find ?? null,
+        excerpt: excerpt ?? null,
+        backTo: g.viewerId ? g.backTo : null,
+      }));
     },
 
     takePiece(key) {
@@ -584,7 +609,15 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     closeViewer() {
-      set({ viewerId: null, find: null, excerpt: null });
+      // Лист вынут из вещи в руках (readFrom) — вещь снова в руках.
+      const back = get().viewerId ? get().backTo : null;
+      set({
+        viewerId: null,
+        find: null,
+        excerpt: null,
+        backTo: null,
+        ...(back ? { held: back } : {}),
+      });
     },
 
     revealOnWall(found) {

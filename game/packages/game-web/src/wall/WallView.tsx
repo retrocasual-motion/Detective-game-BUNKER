@@ -437,7 +437,10 @@ export function WallView() {
         const p = pieceOf(id);
         if (p)
           openViewer(p.from, undefined, { title: p.title, from: 0, to: 0, section: p.section });
-      } else openViewer(id);
+      } else if (useGame.getState().materials.find((m) => m.id === id)?.kind === 'bag')
+        // Пакет личных вещей — в руки, как у стола (EB-A, OPEN-A).
+        useGame.getState().hold({ type: 'bag', id });
+      else openViewer(id);
     },
     [openViewer],
   );

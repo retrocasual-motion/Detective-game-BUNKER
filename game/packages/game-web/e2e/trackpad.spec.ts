@@ -31,6 +31,7 @@ test.describe('тачпад (TP-C)', () => {
   test('лист: щипок приближает, два пальца сдвигают приближённый лист', async ({ page }) => {
     await toWall(page);
     await sheet(page, '43').click(STRIP);
+    await page.getByTestId('bag-open').click();
     const paper = page.getByTestId('viewer-paper');
     const w0 = (await paper.boundingBox())?.width ?? 0;
     await page.mouse.move(700, 380);

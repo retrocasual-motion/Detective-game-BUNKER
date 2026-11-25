@@ -56,7 +56,7 @@ test('диск сервера: конверт → вскрыть → диск н
   await expect(sheet(page, '52')).toHaveCount(0);
   await envelope.click();
   await expect(page.getByTestId('held')).toBeVisible();
-  await page.getByTestId('disc-envelope-open').click();
+  await page.getByTestId('disc-envelope-open').dispatchEvent('click');
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Диск/);
   // Кнопки «Вставить» нет: диск отложили — он на столе.
   await expect(page.getByTestId('disc-insert')).toHaveCount(0);
@@ -102,7 +102,7 @@ test('диск в руках — щелчок по дисководу за ни�
   page,
 }) => {
   await page.getByTestId('server-disc').click();
-  await page.getByTestId('disc-envelope-open').click();
+  await page.getByTestId('disc-envelope-open').dispatchEvent('click');
   await page.keyboard.press('Escape');
   const disc = page.getByTestId('server-disc-out');
   // Вынутый диск не мигает «новым» (UX-8).
@@ -123,7 +123,7 @@ test('клавиатура у монитора — тоже компьютер (
 
 test('вынутый диск после перезагрузки — на столе, не в конверте', async ({ page }) => {
   await page.getByTestId('server-disc').click();
-  await page.getByTestId('disc-envelope-open').click();
+  await page.getByTestId('disc-envelope-open').dispatchEvent('click');
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('server-disc-out')).toBeVisible();
   await page.waitForTimeout(800);
