@@ -2937,23 +2937,33 @@ button {
   color: var(--color-danger);
 }
 
-/* Чтение со стола подряд (DC-B): счёт, стрелки, «Оставить на столе». */
+/* Чтение со стола подряд (DC-B): неподвижная полоса внизу по центру (автор 25.11: не прыгает
+   вместе с листом) — счёт, стрелки, «Оставить на столе». */
 .desk-run {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-3);
+  translate: -50% 0;
+  z-index: 5;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  margin-top: var(--space-2);
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  background: rgb(20 22 26 / 88%);
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 4px;
 }
 .desk-run-count {
   font-size: 0.85rem;
   color: var(--color-text-muted);
+  white-space: nowrap;
 }
 .desk-run-nav {
   display: flex;
   gap: var(--space-1);
 }
 .desk-run-nav .tool {
-  flex: 1;
+  min-width: 44px;
   font-size: 1.2rem;
 }
 .desk-run .tool[aria-pressed="true"] {
@@ -2961,6 +2971,6 @@ button {
 }
 .desk-run-hint {
   font-size: 0.75rem;
-  line-height: 1.25;
   color: var(--color-text-muted);
+  white-space: nowrap;
 }

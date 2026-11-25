@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, savedPut, sheet, test, toWall } from './fixtures.ts';
+import { deskSettled, expect, savedPut, sheet, test, toWall } from './fixtures.ts';
 
 // Новое дело, как у игрока: папки дела и пакет вещдоков на столе не открыты (A-260, FM-B).
 test.use({ sealed: true });
@@ -17,16 +17,18 @@ const grab = (page: Page, id: string) =>
     id,
   );
 
-/** Папка дела (FM-B): не опечатана — щелчок, и листы стопкой на столе (DC-B). */
+/** Папка дела (FM-B; автор 25.11 — в руки, покрутить, открыть): листы стопкой на столе (DC-B). */
 async function openFolder(page: Page, id: string) {
   const saved = savedPut(page);
   await page.getByTestId(`container-${id}`).click();
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /^Папка «/);
+  await page.getByTestId('envelope-open').dispatchEvent('click');
   await saved;
   await expect(page.getByTestId(`container-${id}`)).toHaveCount(0);
   await expect(page.getByTestId('held')).toBeHidden();
 }
 
-/** Пакет вещдоков или коробку — в руки и вскрыть: пакет уходит из рук, коробка остаётся вскрытой. */
+/** Короб вещдоков или коробку — в руки и вскрыть: короб уходит из рук, коробка остаётся вскрытой. */
 async function openSealed(page: Page, id: string) {
   await page.getByTestId(`container-${id}`).click();
   await page.getByTestId('envelope-open').dispatchEvent('click');
@@ -46,7 +48,7 @@ async function drag(page: Page, dx: number, dy = 0) {
   await page.mouse.up();
 }
 
-test('старт: на стене персонажи и 01–07; на столе папки, пакет вещдоков, коробка, газета; устройств нет', async ({
+test('старт: на стене персонажи и 01–07; на столе папки, короб вещдоков, коробка, газета; устройств нет', async ({
   page,
 }) => {
   await expect(sheet(page, '07')).toBeAttached();
@@ -64,17 +66,17 @@ test('старт: на стене персонажи и 01–07; на столе
   await expect.poll(() => pieces(page)).toEqual(['15']);
 });
 
-test('щелчок по пакету вещдоков — он в руках: протянуть — перевернуть; лента видна только спереди; Esc — положить, ничего не вскрыто', async ({
+test('щелчок по папке — она в руках: протянуть — перевернуть; обложку открывают только спереди; Esc — положить, ничего не открыто', async ({
   page,
 }) => {
-  await page.getByTestId('container-seized').click();
+  await page.getByTestId('container-protocols').click();
   const held = page.getByTestId('held');
-  await expect(held).toHaveAttribute('aria-label', 'Пакет вещдоков «Изъятое при осмотре места»');
+  await expect(held).toHaveAttribute('aria-label', 'Папка «Протоколы опроса»');
   await expect(held).toHaveAttribute('data-side', 'front');
   await expect(page.getByTestId('envelope-open')).toBeVisible();
   await drag(page, 260);
   await expect(held).toHaveAttribute('data-side', 'back');
-  // Лента — на лице: с оборота её не потянуть.
+  // Обложка — на лице: с оборота её не открыть.
   await expect(page.getByTestId('envelope-open')).toBeHidden();
   // Немного протянуть и отпустить — ложится обратно оборотом, не боком.
   await drag(page, 60);
@@ -85,7 +87,7 @@ test('щелчок по пакету вещдоков — он в руках: п
   await expect(held).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(held).toBeHidden();
-  await expect(page.getByTestId('container-seized')).toBeVisible();
+  await expect(page.getByTestId('container-protocols')).toBeVisible();
   await expect.poll(() => pieces(page)).toEqual(['15']);
 });
 
@@ -99,31 +101,31 @@ async function pull(page: Page, x: number, y: number, dx: number, dy: number) {
   await page.waitForTimeout(500);
 }
 
-test('OG-B: клапан пакета тянут мышью — вскрыт; за клапан пакет не крутится, не дотянули — цел; крышку коробки — так же', async ({
+test('OG-B: обложку папки тянут мышью — открыта; за обложку папка не крутится, не дотянули — закрыта; крышку коробки — так же', async ({
   page,
 }) => {
-  await page.getByTestId('container-seized').click();
+  await page.getByTestId('container-protocols').click();
   const held = page.getByTestId('held');
-  const sealed = 'Пакет вещдоков «Изъятое при осмотре места»';
+  const sealed = 'Папка «Протоколы опроса»';
   await expect(held).toHaveAttribute('aria-label', sealed);
   const seal = await page.getByTestId('envelope-open').boundingBox();
-  if (!seal) throw new Error('ленты не видно');
-  // Точка на клапане — над лентой.
+  if (!seal) throw new Error('обложки не видно');
+  // Точка на обложке.
   const x = seal.x + seal.width / 2;
   const y = seal.y + seal.height / 2 - 40;
-  // Вбок за клапан: пакет не повернулся, клапан не дотянут — лёг обратно.
+  // Вбок за обложку: папка не повернулась, обложка не дотянута — легла обратно.
   await pull(page, x, y, 260, 0);
   await expect(held).toHaveAttribute('data-side', 'front');
   await expect(held).toHaveAttribute('aria-label', sealed);
   // Вверх чуть-чуть — тоже не вскрыт.
   await pull(page, x, y, 0, -40);
   await expect(held).toHaveAttribute('aria-label', sealed);
-  // Дотянули — вскрыт: пакет уходит из рук, устройства — на столе (DC-B, FM-B).
+  // Дотянули — открыта: папка уходит из рук, листы — стопкой на столе (DC-B, FM-B).
   const saved = savedPut(page);
   await pull(page, x, y, 10, -220);
   await saved;
   await expect(held).toBeHidden();
-  await expect.poll(async () => (await pieces(page)).includes('47')).toBe(true);
+  await expect.poll(async () => (await pieces(page)).includes('30')).toBe(true);
 
   // Коробка: тянут пломбу с крышкой вверх.
   await page.getByTestId('container-personal').click();
@@ -134,12 +136,13 @@ test('OG-B: клапан пакета тянут мышью — вскрыт; з
   await expect(held).toHaveAttribute('aria-label', /Коробка «Личные вещи» · вскрыт/);
 });
 
-test('папка — щелчком стопкой на стол (FM-B, DC-B): прочитали и закрыли — группа на стене светится; после перезагрузки так же', async ({
+test('папка — в руки и открыть, стопкой на стол (FM-B, DC-B): прочитали и закрыли — группа на стене светится; после перезагрузки так же', async ({
   page,
 }) => {
   await openFolder(page, 'protocols');
   await expect.poll(async () => (await pieces(page)).length).toBe(8);
   await page.waitForTimeout(1200);
+  await deskSettled(page);
   const top = await grab(page, '30');
   await page.mouse.click(top?.x ?? 0, top?.y ?? 0);
   await expect(page.getByTestId('viewer')).toContainText('Протокол опроса');
@@ -162,7 +165,7 @@ test('папка — щелчком стопкой на стол (FM-B, DC-B): �
   await expect(page.getByTestId('container-protocols')).toHaveCount(0);
 });
 
-test('«Осмотр места» — листы; пакет «Изъятое» — устройства на столе; коробка вскрывается', async ({
+test('«Осмотр места» — листы; короб «Изъятое» — устройства на столе; коробка вскрывается', async ({
   page,
 }) => {
   await openFolder(page, 'scene');
@@ -192,7 +195,9 @@ test('«Личные вещи» — семь пакетов (EB-A): пакет �
   // Мышью — по ярлыку пакета: он поднимается и выходит из коробки.
   const tab = await page.getByTestId('unpack-40').boundingBox();
   if (!tab) throw new Error('нет ярлыка');
-  await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2, { steps: 4 });
+  // Сразу на ярлык (без пути над соседними пакетами — они приподнимаются при наведении).
+  await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2);
+  await page.waitForTimeout(400);
   await page.mouse.click(tab.x + tab.width / 2, tab.y + tab.height / 2);
   await expect(held).toHaveAttribute('aria-label', 'Пакет · Личные вещи Л. Моро');
   await page.getByTestId('bag-open').click();
@@ -228,6 +233,7 @@ test('поиск не видит неоткрытого; после открыт
 test('газета на столе — бумажный номер; сайт газеты — закладки на компьютере', async ({ page }) => {
   await expect.poll(() => pieces(page)).toEqual(['15']);
   await page.waitForTimeout(600);
+  await deskSettled(page);
   const g = await grab(page, '15');
   await page.mouse.click(g?.x ?? 0, g?.y ?? 0);
   await expect(page.getByTestId('viewer')).toContainText('номер от 16 ноября 2009');

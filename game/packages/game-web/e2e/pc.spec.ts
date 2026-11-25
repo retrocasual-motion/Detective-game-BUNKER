@@ -116,10 +116,7 @@ test('диск в руках — щелчок по дисководу за ни�
   await expect(icon(page, SERVER)).toBeVisible();
 });
 
-test('клавиатура у монитора — тоже компьютер (UX-10)', async ({ page }) => {
-  await page.getByTestId('computer-keyboard').click();
-  await expect(page.getByTestId('computer')).toBeVisible();
-});
+// Клавиатуры на столе нет (автор 25.11: «пока уберём клавиатуру»).
 
 test('вынутый диск после перезагрузки — на столе, не в конверте', async ({ page }) => {
   await page.getByTestId('server-disc').click();

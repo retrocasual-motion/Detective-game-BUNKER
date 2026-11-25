@@ -1,5 +1,5 @@
-import { CARD_W, type ContainerId, FOLDER_IDS, SERVER_DISC_ID } from '@bunker/shared';
-import { useMemo, useState } from 'react';
+import { CARD_W, type ContainerId, SERVER_DISC_ID } from '@bunker/shared';
+import { useMemo, useRef, useState } from 'react';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
 import { deskTookPress } from '../desk3d/took.ts';
@@ -10,6 +10,7 @@ import { moveItem } from '../wall/wall-actions.ts';
 import { type Room, screenToBoard } from './camera.ts';
 import { type Bank, type DiscOnDesk, deskObjects, type Epilogue, screenRect } from './decor.ts';
 import { insertServerDisc } from './drive.ts';
+import { lampDrag, lampHover, lampTug, useLamp } from './lamp.ts';
 
 const noColor = () => '#000000';
 
@@ -57,6 +58,8 @@ export function DeskHotspots({
   const openViewer = useGame((g) => g.openViewer);
   const setComputerOpen = useGame((g) => g.setComputerOpen);
   const updateState = useGame((g) => g.updateState);
+  /** Цепочку лампы потянули мышью — щелчок после этого не второй рывок. */
+  const lampPulled = useRef(false);
   const spots = useMemo(
     () =>
       deskObjects(room, noColor, inbox, opened, epilogue, disc, bank)
@@ -93,6 +96,28 @@ export function DeskHotspots({
               // Нажатие взял лист или устройство перед вещью (3D-стол, took.ts).
               if (deskTookPress()) return;
               const h = o.hotspot;
+              // Цепочка лампы (автор 25.11): тянут вниз — цепочка за мышью; дотянули — щёлк.
+              if (h?.kind === 'lamp' && e.button === 0) {
+                const y0 = e.clientY;
+                lampPulled.current = false;
+                const move = (ev: PointerEvent) => {
+                  const dy = ev.clientY - y0;
+                  if (dy > 4) lampPulled.current = true;
+                  if (lampPulled.current) lampDrag(dy / 40);
+                };
+                const up = () => {
+                  window.removeEventListener('pointermove', move);
+                  window.removeEventListener('pointerup', up);
+                  window.removeEventListener('pointercancel', up);
+                  if (!lampPulled.current) return;
+                  if (useLamp.getState().pull > 0.5) lampTug();
+                  else lampDrag(useLamp.getState().hover ? 0.15 : 0);
+                };
+                window.addEventListener('pointermove', move);
+                window.addEventListener('pointerup', up);
+                window.addEventListener('pointercancel', up);
+                return;
+              }
               // Вынутый диск (A-272, DD-A): зажать и дотащить до дисковода под монитором — он
               // вставится сам; щелчок без сдвига — диск в руки (прочитать надпись).
               if (h?.kind === 'disc' && disc === 'out') {
@@ -144,12 +169,20 @@ export function DeskHotspots({
                 onClick: () => openViewer(id),
               });
             }}
+            onPointerEnter={o.hotspot?.kind === 'lamp' ? () => lampHover(true) : undefined}
+            onPointerLeave={o.hotspot?.kind === 'lamp' ? () => lampHover(false) : undefined}
             onClick={(e) => {
               if (e.detail > 0 && deskTookPress()) return;
               const h = o.hotspot;
               // Лист мышью открывает перетаскивание (щелчок без сдвига — там же); здесь —
               // только клавиатура.
               if (o.key.startsWith('inbox-') && e.detail > 0) return;
+              if (h?.kind === 'lamp') {
+                // Щелчок (или клавиатура) — рывок цепочки; протяжку уже обработало нажатие.
+                if (!lampPulled.current) lampTug();
+                lampPulled.current = false;
+                return;
+              }
               if (h?.kind === 'computer') setComputerOpen(true);
               else if (h?.kind === 'deskphone') useGame.getState().setDeskPhone(true);
               else if (h?.kind === 'disc') {
@@ -158,9 +191,8 @@ export function DeskHotspots({
                 if (!(disc === 'out' && e.detail > 0))
                   useGame.getState().hold({ type: 'device', id: SERVER_DISC_ID });
               } else if (h?.kind === 'container') {
-                // Папка дела (FM-B): не опечатана — щелчок, и листы стопкой на столе (DC-B).
-                if (FOLDER_IDS.has(h.id)) useGame.getState().openContainer(h.id);
-                else useGame.getState().hold({ type: 'container', id: h.id });
+                // Папка, короб, коробка — в руки: покрутить, открыть (автор 25.11, вторая правка).
+                useGame.getState().hold({ type: 'container', id: h.id });
               } else if (h) {
                 // Эпилог открыт — подсветка снята.
                 if (o.key === 'epilogue') markEpilogueRead();

@@ -1,7 +1,15 @@
 import { DEVICES_ON_WALL, type DeskItem } from '@bunker/shared';
 import { type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
-import { Euler, PerspectiveCamera, Quaternion, Vector3 } from 'three';
+import {
+  Euler,
+  type Object3D,
+  PerspectiveCamera,
+  Quaternion,
+  Raycaster,
+  Vector2,
+  Vector3,
+} from 'three';
 import { BOARD_SCALE, type Pose, type Room } from '../room/camera.ts';
 import type { DeskObject } from '../room/decor.ts';
 import { footprints } from './Occluders.tsx';
@@ -173,7 +181,7 @@ export function Desk({
    */
   enabled: RefObject<boolean>;
 }) {
-  const { camera } = useThree();
+  const { camera, scene } = useThree();
   const { p } = room;
   // Камера стола — для зоны и протяжки (в покое у стола камера в этой позе).
   const deskCam = useMemo(() => {
@@ -524,6 +532,8 @@ export function Desk({
       const v = deskPoint(room, x, z, h).project(deskCam);
       return { x: ((v.x + 1) / 2) * room.vp.width, y: ((1 - v.y) / 2) * room.vp.height };
     };
+    const ray = new Raycaster();
+    const ndc = new Vector2();
     const w = window as unknown as { __desk?: unknown };
     w.__desk = {
       // Видимая точка вещи: её часть, которую ничего не накрывает (на столе внахлёст).
@@ -536,17 +546,36 @@ export function Desk({
         for (let a = -0.45; a <= 0.451; a += 0.15)
           for (let b = -0.45; b <= 0.451; b += 0.15) pts.push([a, b]);
         let best: { x: number; z: number; far: number } | null = null;
+        const top = (hCache.current.h.get(id) ?? 0) + pc.t;
+        // Луч из камеры через эту точку экрана первым попадает в саму вещь: её не заслоняет ни
+        // вещь следователя, ни устройство повыше перед ней.
+        const seen = (x: number, z: number) => {
+          const s = at(x, z, top);
+          ray.setFromCamera(
+            ndc.set((s.x / room.vp.width) * 2 - 1, -(s.y / room.vp.height) * 2 + 1),
+            deskCam,
+          );
+          for (const h of ray.intersectObjects(scene.children, true)) {
+            // Невидимые служебные меши (зоны захвата) не заслоняют.
+            if (!h.object.visible) continue;
+            let o: Object3D | null = h.object;
+            while (o && !o.name.startsWith('paper-')) o = o.parent;
+            // Первым — меш без вещи (заслонка вещи следователя) или другая вещь: не видно.
+            return o?.name === `paper-${id}`;
+          }
+          return false;
+        };
         for (const [u, v] of pts) {
           const x = pc.x + u * pc.w * c + v * pc.d * sn;
           const z = pc.z - u * pc.w * sn + v * pc.d * c;
-          if (topAt(ps.current, x, z)?.id !== id) continue;
+          if (topAt(ps.current, x, z)?.id !== id || !seen(x, z)) continue;
           const far = Math.min(
             1,
             ...ps.current.filter((q) => q.id !== id).map((q) => Math.hypot(q.x - x, q.z - z)),
           );
           if (!best || far > best.far) best = { x, z, far };
         }
-        return best ? at(best.x, best.z, (hCache.current.h.get(id) ?? 0) + pc.t) : null;
+        return best ? at(best.x, best.z, top) : null;
       },
       desk: (x: number, z: number) => at(x, z),
       // Высыпанное долетело (полёт из конверта — около секунды после старта, с запасом).
@@ -562,7 +591,7 @@ export function Desk({
     return () => {
       w.__desk = undefined;
     };
-  }, [room, deskCam, blocked]);
+  }, [room, deskCam, blocked, scene]);
 
   // ── Кадр: камера, затем цель каждой вещи. ──
   useFrame((_, dtRaw) => {

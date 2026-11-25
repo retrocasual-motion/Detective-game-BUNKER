@@ -33,6 +33,8 @@ export type Hotspot =
   | { kind: 'disc' }
   /** Телефон следователя (6a-3): подойти и позвонить. */
   | { kind: 'deskphone' }
+  /** Цепочка лампы (автор 25.11): включить или выключить. */
+  | { kind: 'lamp' }
   | { kind: 'container'; id: ContainerId }
   | { kind: 'material'; id: string };
 
@@ -72,6 +74,13 @@ export type DiscOnDesk = 'envelope' | 'out' | 'none';
 
 /** Коробка из банка на столе: нет, пришла (подсвечена), вскрыта. */
 export type Bank = 'none' | 'box' | 'open';
+
+/** Лампа на столе (автор 25.11): горит ли и насколько потянута цепочка (0…1). */
+export interface LampLook {
+  on: boolean;
+  pull: number;
+}
+export const LAMP_IDLE: LampLook = { on: true, pull: 0 };
 
 /** Эпилог на столе: нет, пришёл и не открыт (подсвечен), открыт. */
 export type Epilogue = 'none' | 'fresh' | 'read';
@@ -114,7 +123,7 @@ export const INBOX_SHOWN = 6;
  * Лоток «Входящие» на столе: в самом левом заднем углу (автор 25.11, разметка на снимке), доли p.
  * Левый край стола виден до 0,3 м от стены (дальше его срезает край экрана) — лоток в этой полосе.
  */
-export const INBOX_AT: [number, number] = [-0.93, 0.19];
+export const INBOX_AT: [number, number] = [-0.98, 0.19];
 /** Лист в лотке — A4 лёжа (29,7 × 21 см); следующий сдвинут к игроку, у прежних видна полоска. */
 const LETTER: [number, number] = [0.297, 0.21];
 const LETTER_STEP = 0.016;
@@ -243,18 +252,19 @@ const ENVELOPE_AT: Record<EnvelopeId, [number, number]> = {
   // 3D-стол (автор 24.11: «освобождаем середину стола»): стопкой у стены, между коробкой «Личные
   // вещи» и коробом пачек; середина спереди — пустая, туда высыпается вскрытый конверт.
   // Автор 25.11 (фото стола; «ближе к нам»): слева спереди, перед лампой и коробкой.
-  bunker: [-0.46, 0.45],
-  scene: [-0.45, 0.54],
-  protocols: [-0.44, 0.63],
-  // Пакет вещдоков «Изъятое» (FM-B) — правее папок, перед коробкой «Личные вещи».
-  seized: [-0.12, 0.41],
+  bunker: [-0.56, 0.45],
+  scene: [-0.55, 0.54],
+  protocols: [-0.54, 0.63],
+  // Короб вещдоков «Изъятое» (автор 25.11: устройства в тонком конверте — «невозможно физически»)
+  // — у стены посередине; вскрыли — устройства ложатся тут же.
+  seized: [-0.01, 0.19],
 };
 /** Папки дела — стопкой внахлёст (FM-B, вместо конвертов A-260). */
 const ENVELOPE_ORDER = ['bunker', 'scene', 'protocols'] as const;
 /** Папка-скоросшиватель: 30 × 23,5 см, закладка с названием у дальнего края. */
 const FOLDER: [number, number] = [0.3, 0.235];
-/** Пакет вещдоков 33 × 25 см (крафт, 13 × 10″) — лежит плашмя, лента поперёк клапана. */
-const BAG: [number, number] = [0.33, 0.25];
+/** Короб вещдоков 42 × 32 × 20 см: в нём ноутбук, радиопост, камера, телефон, ручка. */
+const SEIZED_BOX: [number, number, number] = [0.42, 0.32, 0.2];
 
 /** Где лежит конверт на столе (доли p: x, z): отсюда его содержимое высыпается на 3D-стол. */
 export function envelopeSpot(id: ContainerId): [number, number] {
@@ -264,24 +274,22 @@ export function envelopeSpot(id: ContainerId): [number, number] {
  * Где стоит компьютер следователя (дисковод под монитором), доли p: справа, у стены; правее и ближе
  * к игроку — телефон (автор 25.11, фото стола и разметка на снимке; было слева, −0,69).
  */
-const PC_X = 0.63;
+const PC_X = 0.78;
 const PC_Z = 0.19;
 /**
  * Короб с пачками — у стены правее середины; на нём — коробка из банка. Пока меньше настоящего
  * (BX-A — 38 × 30 × 25): 30 × 22 × 15, чтобы не спорил с компьютером (автор 19.11; размеры — на
  * этапе дизайна).
  */
-const PAPERS_AT: [number, number] = [0.15, 0.13];
+const PAPERS_AT: [number, number] = [0.37, 0.13];
 const PAPERS_H = 0.15;
-/** Конверт с диском сервера (A-272) — у компьютера, перед клавиатурой (справа край экрана). */
-const DISC_AT: [number, number] = [0.55, 0.7];
+/** Конверт с диском сервера (A-272) — у дисковода, левее телефона. */
+const DISC_AT: [number, number] = [0.58, 0.56];
 /**
  * Лампа банкира — у стены, сразу правее лотка «Входящие» (автор 25.11): центр основания, доли p.
  * Абажур нависает над лотком; основание ни с чем не пересекается.
  */
-export const LAMP_AT: [number, number] = [-0.62, 0.1];
-/** Клавиатура — перед монитором, повёрнута с ним; выехавший лоток дисковода до неё не достаёт. */
-const KEYBOARD_AT: [number, number] = [PC_X - 0.19, PC_Z + 0.3];
+export const LAMP_AT: [number, number] = [-0.7, 0.1];
 
 export function deskObjects(
   r: Room,
@@ -298,6 +306,8 @@ export function deskObjects(
   drive: DriveLook = DRIVE_IDLE,
   /** Телефон на столе: снята ли трубка, какая кнопка утоплена (6a-3). */
   phone: PhoneLook = PHONE_IDLE,
+  /** Лампа: горит ли, насколько потянута цепочка (0…1). */
+  lamp: LampLook = LAMP_IDLE,
 ): DeskObject[] {
   const { p, deskY } = r;
   const box = (
@@ -394,11 +404,16 @@ export function deskObjects(
   const [LX, LZ] = LAMP_AT;
   const brass = col('--color-lamp-brass');
   const shadeGreen = col('--color-lamp-shade');
+  const shadeLit = col('--color-lamp-shade-lit');
+  const lampOn = lamp.on;
+  // Цепочка: 10 см от абажура вниз; потянули — длиннее на 4 см.
+  const chainLen = 0.1 + 0.04 * lamp.pull;
+  const [CHAIN_X, CHAIN_Z] = [LX + 0.08, LZ + 0.07];
   // Коробка из банка — на коробе с пачками, если он уже на столе.
   const onPapers = opened.includes('bunker') ? PAPERS_H : 0;
   const [BX, BZ] = PAPERS_AT;
   // Проигрыватель с кассетой (UX-9): слева, перед лотком «Входящие», ничем не закрыт.
-  const [CS_X, CS_Z] = [-0.88, 0.44];
+  const [CS_X, CS_Z] = [-0.95, 0.45];
   // Экран включён (автор 19.11): синий рабочий стол бюро и панель задач внизу — видно, что
   // компьютер работает и на него можно нажать.
   monitor.screen = col('--color-pc-screen-on');
@@ -409,17 +424,30 @@ export function deskObjects(
       key: 'lamp',
       label: 'Лампа',
       boxes: [
-        // Лампа банкира (автор 25.11, фото стола): латунное основание 24 × 15 см ступенькой,
-        // стойка, зелёный абажур 38 × 15 см на высоте 33 см, цепочка выключателя.
-        box(LX, LZ, 0.24, 0.15, 0.018, brass),
-        box(LX, LZ, 0.15, 0.09, 0.014, brass, 0.018),
-        box(LX, LZ, 0.024, 0.024, 0.3, brass, 0.032),
-        box(LX, LZ + 0.03, 0.38, 0.15, 0.055, shadeGreen, 0.33),
-        box(LX, LZ + 0.03, 0.34, 0.08, 0.03, shadeGreen, 0.385),
-        box(LX - 0.195, LZ + 0.03, 0.012, 0.03, 0.03, brass, 0.34),
-        box(LX + 0.195, LZ + 0.03, 0.012, 0.03, 0.03, brass, 0.34),
-        box(LX + 0.09, LZ + 0.09, 0.004, 0.004, 0.13, brass, 0.2),
+        // Лампа банкира (автор 25.11, фото стола; вторая правка — меньше): латунное основание
+        // 19 × 12 см ступенькой, стойка, зелёный абажур 30 × 12 см на высоте 27 см.
+        box(LX, LZ, 0.19, 0.12, 0.016, brass),
+        box(LX, LZ, 0.12, 0.075, 0.012, brass, 0.016),
+        box(LX, LZ, 0.02, 0.02, 0.242, brass, 0.028),
+        box(LX, LZ + 0.025, 0.3, 0.12, 0.045, lampOn ? shadeLit : shadeGreen, 0.27),
+        box(LX, LZ + 0.025, 0.27, 0.065, 0.025, lampOn ? shadeLit : shadeGreen, 0.315),
+        box(LX - 0.155, LZ + 0.025, 0.01, 0.025, 0.025, brass, 0.28),
+        box(LX + 0.155, LZ + 0.025, 0.01, 0.025, 0.025, brass, 0.28),
       ],
+    },
+    {
+      // Цепочка выключателя (автор 25.11): навели — чуть подаётся, потянули или щёлкнули — лампа
+      // включается или выключается.
+      key: 'lamp-chain',
+      label: lampOn
+        ? 'Лампа — выключить (потянуть цепочку)'
+        : 'Лампа — включить (потянуть цепочку)',
+      boxes: [
+        box(CHAIN_X, CHAIN_Z, 0.004, 0.004, chainLen, brass, 0.27 - chainLen),
+        box(CHAIN_X, CHAIN_Z, 0.012, 0.012, 0.016, brass, 0.27 - chainLen - 0.016),
+      ],
+      hotspot: { kind: 'lamp' as const },
+      testId: 'lamp-chain',
     },
     {
       key: 'radio',
@@ -442,9 +470,10 @@ export function deskObjects(
             boxes: [
               // Коробка 33 × 23 × 16 см (как коробка «В руках»), крышка и лента пломбы.
               // У стены, между лампой и коробом пачек (автор 25.11, фото стола), без пересечений.
-              box(-0.22, 0.14, 0.33, 0.23, 0.16, col('--color-box')),
-              box(-0.22, 0.14, 0.34, 0.24, 0.015, col('--color-box-lid'), 0.16),
-              box(-0.22, 0.14, 0.03, 0.24, 0.017, col('--color-seal'), 0.16),
+              // Меньше (автор 25.11): 28 × 20 × 14 см.
+              box(-0.37, 0.13, 0.28, 0.2, 0.14, col('--color-box')),
+              box(-0.37, 0.13, 0.29, 0.21, 0.015, col('--color-box-lid'), 0.14),
+              box(-0.37, 0.13, 0.03, 0.21, 0.017, col('--color-seal'), 0.14),
             ],
             hotspot: { kind: 'container' as const, id: 'personal' as const },
             tag: 'Личные вещи',
@@ -490,38 +519,50 @@ export function deskObjects(
         testId: `container-${id}`,
       };
     }),
-    // Пакет вещдоков «Изъятое при осмотре места» (FM-B): крафт, красная лента поперёк клапана,
-    // белый ярлык; вскрыли (потянули ленту) — устройства на столе, пакет уходит.
+    // Короб вещдоков «Изъятое при осмотре места» (автор 25.11; вместо пакета FM-B): картон, крышка,
+    // красная лента вещдоков поперёк, белая бирка; вскрыли — устройства на столе, короб уходит.
     ...(opened.includes('seized')
       ? []
       : [
           {
             key: 'envelope-seized',
-            label: 'Пакет вещдоков «Изъятое при осмотре места», опечатан — вскрыть',
+            label: 'Короб вещдоков «Изъятое при осмотре места», опечатан — вскрыть',
             boxes: [
-              box(...ENVELOPE_AT.seized, BAG[0], BAG[1], 0.01, col('--color-evidence-bag')),
               box(
-                ENVELOPE_AT.seized[0],
-                ENVELOPE_AT.seized[1] - BAG[1] / 2 + 0.05,
-                BAG[0],
-                0.025,
-                0.002,
-                col('--color-seal'),
-                0.01,
+                ...ENVELOPE_AT.seized,
+                SEIZED_BOX[0],
+                SEIZED_BOX[1],
+                SEIZED_BOX[2],
+                col('--color-box'),
               ),
               box(
-                ENVELOPE_AT.seized[0] + 0.06,
-                ENVELOPE_AT.seized[1] + 0.04,
-                0.13,
-                0.08,
-                0.002,
+                ...ENVELOPE_AT.seized,
+                SEIZED_BOX[0] + 0.01,
+                SEIZED_BOX[1] + 0.01,
+                0.015,
+                col('--color-box-lid'),
+                SEIZED_BOX[2],
+              ),
+              box(
+                ...ENVELOPE_AT.seized,
+                SEIZED_BOX[0] + 0.012,
+                0.04,
+                0.017,
+                col('--color-seal'),
+                SEIZED_BOX[2],
+              ),
+              box(
+                ENVELOPE_AT.seized[0] + 0.1,
+                ENVELOPE_AT.seized[1] + 0.07,
+                0.12,
+                0.07,
+                0.003,
                 col('--color-paper-sheet'),
-                0.01,
+                SEIZED_BOX[2] + 0.015,
               ),
             ],
             hotspot: { kind: 'container' as const, id: 'seized' as const },
             tag: 'Изъятое при осмотре места',
-            tagInside: true,
             testId: 'container-seized',
           },
         ]),
@@ -667,16 +708,7 @@ export function deskObjects(
       tag: 'Изъято · 48',
       testId: 'device-48',
     },
-    {
-      key: 'keyboard',
-      label: 'Компьютер следователя',
-      // Меньше, перед монитором, повёрнута с ним (автор 24.11: «ближе к компьютеру… и меньше»;
-      // 25.11 — компьютер справа): середина стола свободна под 3D-стол.
-      boxes: turn([box(...KEYBOARD_AT, 0.3, 0.1, 0.022, edge)], -25, ...KEYBOARD_AT),
-      // Клавиатура у руки — щелчок открывает компьютер, как монитор и дисковод (UX-10, DA-4).
-      hotspot: { kind: 'computer' },
-      testId: 'computer-keyboard',
-    },
+    // Клавиатуры нет (автор 25.11: «пока уберём клавиатуру»).
     {
       key: 'phone',
       label: 'Телефон следователя — позвонить',
@@ -934,16 +966,16 @@ const colors = (el: Element): Col => {
 };
 
 /** Задний холст: комната, рама доски, столешница и пятно света лампы. */
-export function drawRoom(canvas: HTMLCanvasElement, pose: Pose, r: Room): void {
+export function drawRoom(canvas: HTMLCanvasElement, pose: Pose, r: Room, lampOn = true): void {
   const ctx = prepare(canvas, r);
   if (!ctx) return;
   const col = colors(canvas);
   ctx.fillStyle = col('--color-room-dark');
   ctx.fillRect(0, 0, r.vp.width, r.vp.height);
   for (const poly of roomPolys(r, col)) fill(ctx, poly, pose, r);
-  // Свет лампы на столе — мягкое пятно под абажуром.
+  // Свет лампы на столе — мягкое пятно под абажуром (лампа выключена — пятна нет).
   const c = toCamera([LAMP_AT[0] * r.p, r.deskY, (LAMP_AT[1] + 0.24) * r.p], pose, r.p);
-  if (c[2] < r.p - 1) {
+  if (lampOn && c[2] < r.p - 1) {
     const s = toScreen(c, r.p, r.vp);
     const rad = (0.55 * r.p * r.p) / (r.p - c[2]);
     const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, rad);
@@ -977,12 +1009,13 @@ export function drawObjects(
   bank: Bank = 'none',
   drive: DriveLook = DRIVE_IDLE,
   phone: PhoneLook = PHONE_IDLE,
+  lamp: LampLook = LAMP_IDLE,
 ): void {
   const ctx = prepare(canvas, r);
   if (!ctx) return;
   const col = colors(canvas);
   for (const o of sortObjects(
-    deskObjects(r, col, inbox, opened, epilogue, disc, bank, drive, phone),
+    deskObjects(r, col, inbox, opened, epilogue, disc, bank, drive, phone, lamp),
     pose.eye,
   )) {
     const boxes = o.ordered

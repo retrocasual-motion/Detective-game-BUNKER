@@ -300,6 +300,116 @@ export function Envelope({
   );
 }
 
+/** Папка дела в руках (FM-B): 30 × 23,5 см, как папка на столе; в единицах сцены. */
+const FOLDER_W = 3;
+const FOLDER_H = 2.35;
+const MANILA = '#d4b77c';
+const MANILA_IN = '#ccae72';
+
+/**
+ * Папка дела в руках (FM-B, автор 25.11, вторая правка: «нажать, чтобы мог крутить, и потом
+ * открыть»): манильский картон, закладка с названием, на обложке — номер дела и раздел. Обложку
+ * тянут вверх или щёлкают (OG-B, как клапан): она откидывается влево, под ней — перечень листов
+ * (как лист-перечень внутри обложки настоящей папки). Открыли — листы стопкой на столе (DC-B).
+ */
+export function CaseFolder({
+  title,
+  items,
+  onOpen,
+}: {
+  title: string;
+  items: Item[];
+  onOpen: () => void;
+}) {
+  const cover = useTexture(
+    () =>
+      paintTexture(FOLDER_W, FOLDER_H, MANILA, ({ ctx, w, h, text }) => {
+        ctx.fillStyle = INK;
+        text('Дело № 09-1128', w * 0.08, h * 0.12, w * 0.8, '58px Georgia, serif', 70);
+        text(title, w * 0.08, h * 0.24, w * 0.8, '700 104px Georgia, serif', 114);
+        text(
+          'Материалы дела · передано специалисту 16.11.2009',
+          w * 0.08,
+          h * 0.82,
+          w * 0.84,
+          '48px Georgia, serif',
+          58,
+        );
+      }),
+    [title],
+  );
+  const inside = useTexture(
+    () => paintTexture(FOLDER_W, FOLDER_H, MANILA_IN, (p) => paintList(p, items, p.h * 0.08)),
+    [items],
+  );
+  const tab = useTexture(
+    () =>
+      paintTexture(1.1, 0.26, MANILA, ({ ctx, w, h, text }) => {
+        ctx.fillStyle = INK;
+        text(title, w * 0.06, h * 0.18, w * 0.9, '600 40px Georgia, serif', 46);
+      }),
+    [title],
+  );
+  const hinge = useRef<Group>(null);
+  const pull = usePull({
+    id: 'cover',
+    label: 'Открыть папку',
+    testId: 'envelope-open',
+    onOpen,
+    // Обложка откидывается влево вокруг корешка (левый край).
+    apply: (t) => {
+      if (hinge.current) hinge.current.rotation.y = -t * Math.PI * 0.85;
+    },
+  });
+  return (
+    <group>
+      {/* Задняя стенка папки и стопка листов внутри. */}
+      <mesh position={[0, 0, -0.02]}>
+        <boxGeometry args={[FOLDER_W, FOLDER_H, 0.02]} />
+        <meshStandardMaterial color={MANILA} roughness={0.9} />
+      </mesh>
+      <mesh position={[0.04, -0.04, 0]}>
+        <boxGeometry args={[FOLDER_W - 0.16, FOLDER_H - 0.14, 0.02]} />
+        <meshStandardMaterial color="#efe9dc" roughness={0.95} />
+      </mesh>
+      {/* Закладка с названием — над верхним краем задней стенки. */}
+      <mesh position={[-FOLDER_W / 2 + 0.75, FOLDER_H / 2 + 0.12, -0.02]}>
+        <planeGeometry args={[1.1, 0.26]} />
+        <meshStandardMaterial map={tab} roughness={0.9} side={DoubleSide} />
+      </mesh>
+      {/* Зона захвата — правый край обложки (за него и открывают), неподвижна (как у клапана
+          конверта); за остальную папку её крутят. */}
+      <mesh position={[FOLDER_W / 2 - 0.35, 0, 0.03]} {...pull.handlers}>
+        <planeGeometry args={[0.7, FOLDER_H]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      {/* Обложка: петля — у левого края; лицо — название, изнанка — перечень. */}
+      <group ref={hinge} position={[-FOLDER_W / 2, 0, 0.018]}>
+        <group position={[FOLDER_W / 2, 0, 0]}>
+          <mesh raycast={noHit}>
+            <boxGeometry args={[FOLDER_W, FOLDER_H, 0.012]} />
+            <meshStandardMaterial
+              color={MANILA}
+              roughness={0.9}
+              emissive={MANILA}
+              emissiveIntensity={pull.hover ? 0.12 : 0}
+            />
+          </mesh>
+          <mesh position={[0, 0, 0.0065]} raycast={noHit}>
+            <planeGeometry args={[FOLDER_W, FOLDER_H]} />
+            <meshStandardMaterial map={cover} roughness={0.9} />
+          </mesh>
+          <mesh position={[0, 0, -0.0065]} rotation={[0, Math.PI, 0]} raycast={noHit}>
+            <planeGeometry args={[FOLDER_W, FOLDER_H]} />
+            <meshStandardMaterial map={inside} roughness={0.9} />
+          </mesh>
+        </group>
+      </group>
+      <group ref={pull.anchor} position={[FOLDER_W / 2 - 0.35, 0, 0.04]} />
+    </group>
+  );
+}
+
 /**
  * Коробка с пломбой: «Личные вещи» (A-260) или коробка вещдоков из банка (A-272, AC-4) — надпись
  * на передней стенке, опись на крышке. Крышку тянут вверх (OG-B): пломба через её край рвётся —

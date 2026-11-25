@@ -185,6 +185,17 @@ export function scatter(
   const solids = () => [...around, ...out].filter((o) => solid(o.kind));
   const near = (x: number, z: number) =>
     [...around, ...out].some((o) => Math.hypot(o.x - x, o.z - z) < gap);
+  // Не за высокой вещью (25.11: камера легла за радиопостом — с места игрока её не видно): перед
+  // кандидатом (ближе к игроку), в его полосе по ширине, нет ничего вдвое выше его самого.
+  const shadowed = (c: Piece) =>
+    [...around, ...out].some(
+      (o) =>
+        o.t > c.t * 2 &&
+        o.t > 0.02 &&
+        o.z > c.z &&
+        o.z - c.z < 0.45 &&
+        Math.abs(o.x - c.x) < (o.w + c.w) / 2,
+    );
   items.forEach((it, k) => {
     const [w, d, t] = sizeOf(it.kind);
     let placed: Piece | null = null;
@@ -205,7 +216,7 @@ export function scatter(
         stack: it.id,
       };
       if (!allowed(cand, { ...zone, blocked: [...zone.blocked, ...solids()] })) continue;
-      if (near(cand.x, cand.z)) continue;
+      if (near(cand.x, cand.z) || shadowed(cand)) continue;
       placed = cand;
     }
     if (!placed) {

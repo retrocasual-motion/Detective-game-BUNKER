@@ -1,5 +1,6 @@
 import type { Room } from '../room/camera.ts';
 import type { DeskObject } from '../room/decor.ts';
+import { useLamp } from '../room/lamp.ts';
 import { css3 } from './space.ts';
 import type { Rect } from './world.ts';
 
@@ -56,7 +57,9 @@ function DepthBox({ b }: { b: Box }) {
 
 /** Свет — как в прототипе: листы и устройства освещены, как нарисованная комната. */
 export function Occluders({ room, objects }: { room: Room; objects: DeskObject[] }) {
-  const lamp = objects.find((o) => o.key === 'lamp')?.boxes[2];
+  // Абажур — четвёртая коробка лампы (основание, ступенька, стойка, абажур).
+  const lamp = objects.find((o) => o.key === 'lamp')?.boxes[3];
+  const lampOn = useLamp((l) => l.on);
   const lampAt = lamp
     ? css3((lamp.min[0] + lamp.max[0]) / 2, lamp.max[1] + 4, (lamp.min[2] + lamp.max[2]) / 2)
     : null;
@@ -65,7 +68,7 @@ export function Occluders({ room, objects }: { room: Room; objects: DeskObject[]
       <ambientLight intensity={1.1} />
       <hemisphereLight args={['#c8c4bc', '#3a332b', 0.9]} />
       <directionalLight position={[room.p * 0.4, room.p * 2, room.p * 2.2]} intensity={1.4} />
-      {lampAt && (
+      {lampAt && lampOn && (
         <pointLight
           position={lampAt.toArray()}
           color="#ffd9a0"

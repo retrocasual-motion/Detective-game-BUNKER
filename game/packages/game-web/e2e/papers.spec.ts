@@ -297,8 +297,10 @@ test.describe('новое дело', () => {
     page,
   }) => {
     await expect(page.getByTestId('device-29')).toHaveCount(0);
-    // Папка (FM-B) открывается щелчком — короб пачек на столе.
+    // Папка (FM-B) — в руки и открыть: короб пачек на столе.
     await page.getByTestId('container-bunker').click();
+    await page.getByTestId('envelope-open').dispatchEvent('click');
+    await expect(page.getByTestId('held')).toBeHidden();
     await expect(page.getByTestId('device-29')).toHaveCount(1);
   });
 });

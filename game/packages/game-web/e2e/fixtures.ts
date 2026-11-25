@@ -131,8 +131,11 @@ export async function takeDevice(page: Page, id: string) {
  */
 export async function readFolder(page: Page, id: string, top: string) {
   // Как с клавиатуры: перед папкой на 3D-столе может лежать устройство и взять щелчок мышью
-  // (щелчок мышью по папке проверяет archive.spec).
+  // (щелчок мышью по папке проверяет archive.spec). Папка — в руки, открыть (автор 25.11).
   await page.getByTestId(`container-${id}`).dispatchEvent('click');
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /^Папка/);
+  await page.getByTestId('envelope-open').dispatchEvent('click');
+  await expect(page.getByTestId('held')).toBeHidden();
   await expect(page.getByTestId(`container-${id}`)).toHaveCount(0);
   await deskSettled(page);
   let last: { x: number; y: number } | null = null;

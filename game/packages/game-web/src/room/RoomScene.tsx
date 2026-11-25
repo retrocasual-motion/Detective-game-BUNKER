@@ -27,6 +27,7 @@ import {
   type Epilogue,
 } from './decor.ts';
 import { DRIVE_IDLE, type DriveLook } from './drive.ts';
+import { useLamp } from './lamp.ts';
 import { NavArrows } from './NavArrows.tsx';
 import { useViewport } from './useViewport.ts';
 import { VIEW_LABELS } from './views.ts';
@@ -85,6 +86,9 @@ export function RoomScene({
   // Телефон на столе объёмный: снятая трубка и утопленная кнопка рисуются на холсте.
   const offHook = useCall((c) => c.offHook);
   const pressed = useCall((c) => c.pressed);
+  // Лампа (автор 25.11): горит ли, насколько потянута цепочка.
+  const lampOn = useLamp((l) => l.on);
+  const lampPull = useLamp((l) => l.pull);
   const spot: CameraSpot = view === 'desk' && phoneOpen ? 'phone' : view;
   const [ph, setPh] = useState<Phase>({ from: room.poses[spot], to: spot, moving: false });
   const world = useRef<HTMLDivElement>(null);
@@ -100,12 +104,21 @@ export function RoomScene({
     const css = pose ? toCss(poseOps(pose, room.p)) : 'none';
     if (world.current) world.current.style.transform = css;
     if (phoneWorld.current) phoneWorld.current.style.transform = css;
-    if (pose && back.current) drawRoom(back.current, pose, room);
+    if (pose && back.current) drawRoom(back.current, pose, room, lampOn);
     if (pose && front.current)
-      drawObjects(front.current, pose, room, inbox, opened, epilogue, disc, bank, drive, {
-        offHook,
-        pressed,
-      });
+      drawObjects(
+        front.current,
+        pose,
+        room,
+        inbox,
+        opened,
+        epilogue,
+        disc,
+        bank,
+        drive,
+        { offHook, pressed },
+        { on: lampOn, pull: lampPull },
+      );
   };
 
   useLayoutEffect(() => {

@@ -3,6 +3,7 @@ import {
   type ContainerId,
   containerContents,
   DEVICE_IDS,
+  FOLDER_IDS,
   folderItemId,
   openedOf,
   SERVER_DISC_ID,
@@ -35,7 +36,7 @@ import Held3D, { afterLeaving, type Focus } from './Held3D.tsx';
 import { Folder, PaperStack, PapersBox } from './papers.tsx';
 import { RADIO_FOCUS, type RadioPart, RadioStand, SCREEN_PX } from './radioStand.tsx';
 import { ServerDiscHeld } from './serverDisc.tsx';
-import { Box, Device, Envelope } from './shapes.tsx';
+import { Box, CaseFolder, Device, Envelope } from './shapes.tsx';
 import { BagInHands, bagLabel, inventoryRows, Unpacked, type UnpackItem } from './unpack.tsx';
 
 /** Вещь в руках со сценой three.js — отдельный кусок сборки (грузится, когда вещь взяли). */
@@ -51,7 +52,8 @@ export default function HeldThing({ held }: { held: Held }) {
     const c = CONTAINERS.find((x) => x.id === held.id);
     if (!c) return null;
     const inside = containerContents(c).filter((m) => titles.has(m));
-    const box = held.id === 'personal' || held.id === 'bank';
+    const box = held.id === 'personal' || held.id === 'bank' || held.id === 'seized';
+    const folder = FOLDER_IDS.has(held.id);
     if (openedIds.includes(held.id))
       return <Opened key={`opened-${held.id}`} id={held.id} inside={inside} box={box} />;
     const items = inside.map((m) => ({ id: m, title: short(titles.get(m) ?? '') }));
@@ -69,11 +71,13 @@ export default function HeldThing({ held }: { held: Held }) {
         mode={box ? 'free' : 'flip'}
         half={[1.6, 1.2]}
         label={
-          box
-            ? `Коробка «${c.label}»`
-            : held.id === 'seized'
-              ? `Пакет вещдоков «${c.label}»`
-              : `Конверт «${c.label}»`
+          held.id === 'seized'
+            ? `Короб вещдоков «${c.label}»`
+            : box
+              ? `Коробка «${c.label}»`
+              : folder
+                ? `Папка «${c.label}»`
+                : `Конверт «${c.label}»`
         }
         onClose={close}
       >
@@ -85,8 +89,13 @@ export default function HeldThing({ held }: { held: Held }) {
             title="Aspen Bank"
             note="Ячейка № 845 · вскрыта 17.11.2009"
           />
+        ) : held.id === 'seized' ? (
+          // Короб вещдоков (автор 25.11, вместо пакета): ленту с крышкой тянут вверх.
+          <Box items={items} onOpen={open} title="Изъятое" note="При осмотре места · 5 предметов" />
         ) : box ? (
           <Box items={items} onOpen={open} />
+        ) : folder ? (
+          <CaseFolder title={c.label} items={items} onOpen={open} />
         ) : (
           <Envelope title={c.label} items={items} onOpen={open} />
         )}

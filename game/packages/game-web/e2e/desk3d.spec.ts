@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, savedPut, sheet, test, toWall } from './fixtures.ts';
+import { deskSettled, expect, savedPut, sheet, test, toWall } from './fixtures.ts';
 
 // Новое дело, как у игрока: конверты архива опечатаны (A-260).
 test.use({ sealed: true });
@@ -21,16 +21,17 @@ const pieces = (page: Page) =>
 const ids = async (page: Page) => (await pieces(page)).map((q) => q.id).sort();
 
 /**
- * Открыть со стола (FM-B, DC-B): папку — щелчком, листы сразу стопкой на столе; пакет вещдоков —
- * в руки и потянуть ленту: пакет уходит из рук, устройства — на столе.
+ * Открыть со стола (FM-B, DC-B; автор 25.11 — папку тоже в руки): папку или короб вещдоков — в руки
+ * и открыть: из рук уходит, листы стопкой (устройства) — на столе.
  */
 async function spill(page: Page, id: string) {
   const saved = savedPut(page);
   await page.getByTestId(`container-${id}`).click();
-  if (id === 'seized') {
-    await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /^Пакет вещдоков/);
-    await page.getByTestId('envelope-open').dispatchEvent('click');
-  }
+  await expect(page.getByTestId('held')).toHaveAttribute(
+    'aria-label',
+    id === 'seized' ? /^Короб вещдоков/ : /^Папка/,
+  );
+  await page.getByTestId('envelope-open').dispatchEvent('click');
   await expect(page.getByTestId('held')).toBeHidden();
   await saved;
   await expect(page.getByTestId(`container-${id}`)).toHaveCount(0);
@@ -55,6 +56,7 @@ test('3D-стол (DC-B): конверт — стопкой на стол; чи�
   await page.screenshot({ path: 'test-results/desk3d-stack.png' });
 
   // Щелчок по стопке — верхний лист (30), «1 из 7»; дальше — подряд.
+  await deskSettled(page);
   const top = await grab(page, '30');
   await page.mouse.click(top?.x ?? 0, top?.y ?? 0);
   await expect(page.getByTestId('viewer')).toBeVisible();
@@ -92,6 +94,7 @@ test('3D-стол: лист двигается и остаётся после п
   await spill(page, 'protocols');
   await page.waitForTimeout(1200);
   // Верхний лист стопки — протянуть по столу.
+  await deskSettled(page);
   const a = await grab(page, '30');
   expect(a).not.toBeNull();
   const before = (await pieces(page)).find((q) => q.id === '30');
@@ -115,6 +118,7 @@ test('3D-стол: лист двигается и остаётся после п
 
   // На стену: дотащить за задний край стола — висит там, со стола ушёл.
   await page.waitForTimeout(600);
+  await deskSettled(page);
   const b = await grab(page, '30');
   const hung = savedPut(page);
   await page.mouse.move(b?.x ?? 0, b?.y ?? 0);
@@ -143,6 +147,7 @@ test('3D-стол: «Осмотр места» — папка стопкой; п
   await page.waitForTimeout(2500);
   await page.screenshot({ path: 'test-results/desk3d-scene.png' });
   // Щелчок по телефону на столе — он в руках.
+  await deskSettled(page);
   const t = await grab(page, '48');
   await page.mouse.click(t?.x ?? 0, t?.y ?? 0);
   await expect(page.getByTestId('held')).toBeVisible();

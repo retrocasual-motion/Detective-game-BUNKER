@@ -63,7 +63,8 @@ export type CameraSpot = View | 'phone';
  * доли p (метры). Верх корпуса — плоскость с кнопками (DOM в той же 3D-сцене, что доска).
  */
 // Справа от компьютера и ближе к игроку, у края стола (автор 25.11, фото стола и разметка на снимке).
-export const DESK_PHONE = { x: 0.76, z: 0.45, w: 0.26, d: 0.16, h: 0.07 };
+// 25.11, вторая правка: меньше (scale) и правее, к правому краю стола; w, d, h — модели (26 × 16 см).
+export const DESK_PHONE = { x: 0.92, z: 0.45, w: 0.26, d: 0.16, h: 0.07, scale: 0.8 };
 
 /**
  * Камера вплотную к телефону (автор 20.11: «камера подлетает к телефону на столе»): взгляд сверху
@@ -71,12 +72,12 @@ export const DESK_PHONE = { x: 0.76, z: 0.45, w: 0.26, d: 0.16, h: 0.07 };
  */
 function phonePose(vp: Viewport, p: number, deskY: number): Pose {
   const pitch = 58;
-  const dist = (DESK_PHONE.w * p) / (0.6 * vp.width);
+  const dist = (DESK_PHONE.w * DESK_PHONE.scale * p) / (0.6 * vp.width);
   const a = rad(pitch);
   // Смотрим в точку чуть ближе к игроку середины телефона — он встаёт выше центра кадра.
   const tx = DESK_PHONE.x * p;
-  const ty = deskY - DESK_PHONE.h * p;
-  const tz = (DESK_PHONE.z + 0.035) * p;
+  const ty = deskY - DESK_PHONE.h * DESK_PHONE.scale * p;
+  const tz = (DESK_PHONE.z + 0.035 * DESK_PHONE.scale) * p;
   return {
     eye: [tx, ty - Math.sin(a) * dist * p, tz + Math.cos(a) * dist * p],
     rx: pitch,
@@ -95,7 +96,9 @@ export function roomFor(vp: Viewport): Room {
   const deskNear = 0.9 * p;
   // Глаз сидящего: над столом на 50 см, на 45 см позади ближнего края (откинулся на стуле) —
   // виден почти весь стол, ближние вещи не раздуты перспективой (RS-A, автор 19.11).
-  const eye: Pose['eye'] = [0, deskY - 0.5 * p, deskNear + 0.45 * p];
+  // 25.11 (автор: «всё великовато, нужно больше места»): сидит дальше от стола — 0,6 м от края
+  // (было 0,45): вещи мельче при настоящих размерах (RS-A), видно больше столешницы.
+  const eye: Pose['eye'] = [0, deskY - 0.5 * p, deskNear + 0.6 * p];
   // Взгляд вниз ровно настолько, чтобы верх доски был у верхнего края экрана.
   const halfFov = deg(Math.atan(vp.height / 2 / p));
   const toBoardTop = deg(Math.atan((eye[1] + boardHalfH) / eye[2]));

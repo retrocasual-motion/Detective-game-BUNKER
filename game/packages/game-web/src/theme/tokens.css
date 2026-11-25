@@ -28,6 +28,8 @@
   --color-lamp: #8f7a4a;
   /* Лампа банкира (автор 25.11, фото стола): зелёный стеклянный абажур, латунь. */
   --color-lamp-shade: #1f7a3a;
+  /* Горящая лампа — абажур светлее, стекло просвечивает. */
+  --color-lamp-shade-lit: #3aa65a;
   --color-lamp-brass: #b08d45;
   --color-lamp-light: rgb(255 214 140 / 22%);
   --color-box: #8a7656;
