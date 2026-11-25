@@ -78,6 +78,8 @@ jobs:
           curl -fsS localhost:8787/ | grep -q 'id="root"'
           # Сайт дела (A-272): хост сайта — своя страница сборки.
           curl -fsS -H 'Host: vaultline-program.localhost:8787' localhost:8787/ | grep -q 'id="site"'
+          # Медиа (T-…): папки bunker-media в CI нет — 404 (игра рисует заглушку), не ошибка сервера.
+          test "$(curl -s -o /dev/null -w '%{http_code}' localhost:8787/api/media/sticker-47)" = 404
       - name: Пакета игрока в образе нет (P-10)
         run: |
           docker compose exec -T app sh -c 'test ! -d /app/playtest'

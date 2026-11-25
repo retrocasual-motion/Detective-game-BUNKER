@@ -83,3 +83,23 @@ export async function bringIntoView(page: Page, id: string) {
 /** Сохранение ушло на сервер. */
 export const savedPut = (page: Page) =>
   page.waitForResponse((r) => r.url().endsWith('/api/state') && r.request().method() === 'PUT');
+
+/**
+ * Ноутбук в руках (A-283): протяжкой вверх наклонить дном к себе и колесом приблизить наклейку —
+ * как игрок, без кнопок. Невидимая кнопка наклейки (клавиатура) показывает, где она на экране.
+ */
+export async function lookAtSticker(page: Page) {
+  await page.mouse.move(683, 500);
+  await page.mouse.down();
+  await page.mouse.move(683, 160, { steps: 15 });
+  await page.mouse.up();
+  const spot = page.getByTestId('laptop-sticker');
+  await expect(spot).toBeVisible();
+  for (let i = 0; i < 14; i++) {
+    const b = await spot.boundingBox();
+    if (!b) break;
+    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+    await page.mouse.wheel(0, -120);
+    await page.waitForTimeout(120);
+  }
+}
