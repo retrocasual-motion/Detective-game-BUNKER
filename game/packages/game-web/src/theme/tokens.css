@@ -26,6 +26,9 @@
   --color-board-frame: #3d3024;
   --color-pin-hole: rgb(0 0 0 / 55%);
   --color-lamp: #8f7a4a;
+  /* Лампа банкира (автор 25.11, фото стола): зелёный стеклянный абажур, латунь. */
+  --color-lamp-shade: #1f7a3a;
+  --color-lamp-brass: #b08d45;
   --color-lamp-light: rgb(255 214 140 / 22%);
   --color-box: #8a7656;
   --color-phone: #2a2a2a;
@@ -48,6 +51,9 @@
   /* Подписи под телефоном: без прозрачности, контраст ≥ 4.5 к фону панели (UX-15). */
   --color-dp-heard-dim: #4a4a4a;
   --color-tray: #5c4a36;
+  /* Лоток «Входящие» — прозрачный пластик в один уровень (автор 25.11). */
+  --color-tray-clear: #c8d4dc66;
+  --color-tray-edge: #dfe8eebb;
   /* Конверты архива, крышка коробки, печать, газета (A-260, 09.11). */
   --color-archive-envelope: #b58f5a;
   --color-box-lid: #9a8462;

@@ -5,6 +5,8 @@ import {
   DESK_DEVICES,
   DEVICES_ON_WALL,
   NEVER_ON_WALL,
+  NEWSPAPER_AT,
+  NEWSPAPER_ID,
   OFF_WALL_IDS,
   openedOf,
   SPILL_CONTAINERS,
@@ -311,6 +313,18 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
       desk.push({ id, layer: ++deskTop });
       onDesk.add(id);
     }
+
+  // Газета (автор 25.11): у игрока, не на стене и не на столе — ложится перед ним, под всё остальное.
+  // Сохранение до конвертов (нет `opened`) — как раньше: газета на стене.
+  if (
+    state.opened !== undefined &&
+    have.has(NEWSPAPER_ID) &&
+    !seen.has(NEWSPAPER_ID) &&
+    !onDesk.has(NEWSPAPER_ID)
+  ) {
+    desk.unshift({ id: NEWSPAPER_ID, ...NEWSPAPER_AT, layer: 0 });
+    onDesk.add(NEWSPAPER_ID);
+  }
 
   let z = items.reduce((max, i) => Math.max(max, i.z), 0);
   // Стартовое — на стену, кроме невскрытого (A-260) и того, что лежит на столе или в браузере.

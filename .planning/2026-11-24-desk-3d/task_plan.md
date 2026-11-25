@@ -57,6 +57,11 @@ Phase 4
 - [ ] `DEVELOPMENT.md`, `ARCHITECTURE.md`
 - [ ] канон: A-284 (EN-A вместо A-260 п. 3) в `claude/DECISIONS_LOG.md` — одним пакетом
 - [ ] PR → `gh pr checks` → «мержим?»
+- [ ] после слияния: ярлык «БУНКЕР — играть» на рабочем столе вернуть на
+      `E:\Projects\Detective-game-BUNKER\ИГРАТЬ.cmd` (25.11 переведён на рабочую копию
+      `E:\Projects\BUNKER-desk3d`; её `game/.env` берёт базу основной папки — то же дело);
+      основную папку перевести на `main` с новым столом. Копия базы до 3D-стола —
+      `E:/Projects/BUNKER-backups/game-data-pg-before-desk-3d-2026-11-25`
 - **Status:** pending
 
 ## Decisions Made

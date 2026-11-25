@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sealedIds } from './archive.ts';
+import { NEWSPAPER_AT, NEWSPAPER_ID, sealedIds } from './archive.ts';
 import {
   addExcerpt,
   arrangeWall,
@@ -177,7 +177,7 @@ describe('upgradeState', () => {
     expect(got?.view).toBe('wall');
     expect(got?.wall.items.find((i) => i.id === '03')).toMatchObject({ x: 2000, y: 1500 });
     // Все стартовые, кроме конверта с диском (52, A-272) и пяти устройств (на столе, 3D-стол), —
-    // на стене.
+    // на стене (сохранение до конвертов: газета, как и прежде, тоже на стене).
     expect(got?.desk?.map((d) => d.id).sort()).toEqual(['24', '47', '48', '49', '50']);
     expect(got?.wall.items).toHaveLength(starting.length - 6 + PERSONS.length);
     expect(got?.wall.threads).toHaveLength(1);
@@ -269,10 +269,13 @@ describe('конверты архива (A-260)', () => {
     const o = openContainer(s, starting, 'protocols');
     expect(o.opened).toEqual(['protocols']);
     const ids = ['30', '31', '32', '33', '34', '35', '36'];
-    expect(o.desk?.map((d) => d.id)).toEqual(ids);
+    // Газета лежит на столе с начала дела (автор 25.11), высыпанное — поверх.
+    expect(o.desk?.[0]).toMatchObject({ id: NEWSPAPER_ID, ...NEWSPAPER_AT, layer: 0 });
+    const spilled = o.desk?.slice(1);
+    expect(spilled?.map((d) => d.id)).toEqual(ids);
     // Места ещё нет — разложит стол; порядок укладки растёт.
-    expect(o.desk?.every((d) => d.x === undefined && d.z === undefined)).toBe(true);
-    expect(o.desk?.map((d) => d.layer)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(spilled?.every((d) => d.x === undefined && d.z === undefined)).toBe(true);
+    expect(spilled?.map((d) => d.layer)).toEqual([1, 2, 3, 4, 5, 6, 7]);
     expect(o.wall.items.some((i) => ids.includes(i.id))).toBe(false);
     expect(o.wall.notes.some((n) => n.id === containerLabelId('protocols'))).toBe(false);
     expect(inboxIds(o, starting).some((id) => ids.includes(id))).toBe(false);
@@ -305,8 +308,8 @@ describe('конверты архива (A-260)', () => {
     const r = reconcile(hung, starting);
     expect(r.wall.items.some((i) => i.id === '47')).toBe(false);
     expect(r.desk?.some((d) => d.id === '47' && d.x === undefined)).toBe(true);
-    // Конверт места не вскрыт — устройств на столе нет.
-    expect(reconcile(s, starting).desk ?? []).toEqual([]);
+    // Конверт места не вскрыт — устройств на столе нет, только газета.
+    expect(reconcile(s, starting).desk?.map((d) => d.id)).toEqual([NEWSPAPER_ID]);
   });
 
   it('3D-стол: со стола на стену — висит там, где отпустили, со стола уходит', () => {
@@ -326,9 +329,15 @@ describe('конверты архива (A-260)', () => {
     const onWall = new Set(all.wall.items.map((i) => i.id));
     expect(onWall.has('25')).toBe(true);
     expect(['15', '16', '17'].some((id) => onWall.has(id))).toBe(false);
-    const { opened: _, ...legacy } = s;
+    // Сохранение до конвертов — и до 3D-стола: ни `opened`, ни `desk`.
+    const { opened: _, desk: __, ...legacy } = s;
     expect(sealedIds({ opened: undefined }).size).toBe(0);
     expect(reconcile(legacy, starting).wall.items.some((i) => i.id === '15')).toBe(true);
+    expect(reconcile(legacy, starting).desk?.some((d) => d.id === '15')).toBeFalsy();
+    // Газету со стола повесили на стену — на стол сама не возвращается.
+    const hung = hangFromDesk(reconcile(s, starting), NEWSPAPER_ID, 300, 300);
+    expect(reconcile(hung, starting).desk?.some((d) => d.id === NEWSPAPER_ID)).toBe(false);
+    expect(reconcile(hung, starting).wall.items.some((i) => i.id === NEWSPAPER_ID)).toBe(true);
   });
 });
 

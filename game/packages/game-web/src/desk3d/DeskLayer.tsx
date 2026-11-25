@@ -4,6 +4,7 @@ import {
   CONTAINERS,
   containerContents,
   type DeskItem,
+  NEWSPAPER_ID,
   onWall,
 } from '@bunker/shared';
 import { Canvas, events } from '@react-three/fiber';
@@ -51,7 +52,11 @@ export function DeskLayer({
       new Map<string, DeskMaterial>(
         list.map((m) => [
           m.id,
-          { title: m.title, kind: DEVICE_KIND[m.id] ?? m.kind, body: m.body },
+          {
+            title: m.title,
+            kind: m.id === NEWSPAPER_ID ? 'newspaper' : (DEVICE_KIND[m.id] ?? m.kind),
+            body: m.body,
+          },
         ]),
       ),
     [list],

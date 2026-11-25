@@ -36,15 +36,9 @@ test('3D-стол: конверт высыпается на стол; лист �
   await spill(page, 'protocols');
   await saved;
   // Все семь протоколов — на столе, не на стене и не во «Входящих».
-  await expect.poll(async () => (await pieces(page)).map((q) => q.id).sort()).toEqual([
-    '30',
-    '31',
-    '32',
-    '33',
-    '34',
-    '35',
-    '36',
-  ]);
+  await expect
+    .poll(async () => (await pieces(page)).map((q) => q.id).sort())
+    .toEqual(['30', '31', '32', '33', '34', '35', '36']);
   await expect(page.getByTestId('wall-n:archive-protocols')).toHaveCount(0);
   await expect(page.getByTestId('inbox-30')).toHaveCount(0);
   await page.waitForTimeout(1200);
@@ -102,7 +96,9 @@ test('3D-стол: «Осмотр места» — листы и камера, �
   await spill(page, 'scene');
   await expect
     .poll(async () => new Set((await pieces(page)).map((q) => q.id)))
-    .toEqual(new Set(['22', '23', '25', '26', '27', '51', '18', '19', '20', '21', '24', '48', '49']));
+    .toEqual(
+      new Set(['22', '23', '25', '26', '27', '51', '18', '19', '20', '21', '24', '48', '49']),
+    );
   await expect(page.getByTestId('device-47')).toBeVisible();
   await expect(page.getByTestId('device-50')).toBeVisible();
   await expect(page.getByTestId('device-48')).toHaveCount(0);

@@ -75,6 +75,8 @@ const RISE = 0.12;
 const PULL = 0.04;
 
 const PAPER = '#efe9dc';
+/** Газетная бумага — серее и темнее листа. */
+const NEWSPRINT = '#ddd8ca';
 /** Изъятые устройства на столе (формы без экранов): цвет корпуса и верха. */
 const DEVICE_LOOK: Record<string, { body: string; top: string }> = {
   mobile: { body: '#26282b', top: '#2c2f33' },
@@ -102,14 +104,46 @@ function plain(body: string): string[] {
 function paintFace(piece: Piece, title: string, body: string): CanvasTexture {
   const disc = piece.kind === 'disc';
   const photo = piece.kind === 'photos';
+  const news = piece.kind === 'newspaper';
   const device = DEVICE_LOOK[piece.kind];
   return paintTexture(
     piece.w * PX,
     piece.d * PX,
-    device ? device.top : disc ? '#e4ddcc' : photo ? '#f6f4ef' : PAPER,
+    device ? device.top : disc ? '#e4ddcc' : photo ? '#f6f4ef' : news ? NEWSPRINT : PAPER,
     ({ ctx, w, h, text }) => {
       const m = w * 0.08;
       ctx.fillStyle = '#1d1d1d';
+      if (news) {
+        // Газета: название у дальнего края, черта, заголовок номера и колонки текста.
+        const lines = plain(body);
+        let y = text(title, m * 0.6, m * 0.4, w - m * 1.2, '700 40px Georgia, serif', 46);
+        ctx.fillRect(m * 0.6, y + 4, w - m * 1.2, 5);
+        const head = body
+          .split('\n')
+          .find((l) => /^##\s/.test(l))
+          ?.replace(/^#+\s*/, '');
+        y = text(
+          head ?? lines[1] ?? '',
+          m * 0.6,
+          y + 22,
+          w - m * 1.2,
+          '700 34px Georgia, serif',
+          40,
+        );
+        ctx.fillStyle = 'rgb(0 0 0 / 38%)';
+        const cols = 3;
+        const gap = m * 0.4;
+        const cw = (w - m * 1.2 - gap * (cols - 1)) / cols;
+        for (let c = 0; c < cols; c++)
+          for (let ly = y + 16; ly < h - m * 0.5; ly += 15)
+            ctx.fillRect(
+              m * 0.6 + c * (cw + gap),
+              ly,
+              cw * (0.75 + ((ly * 7 + c * 13) % 25) / 100),
+              6,
+            );
+        return;
+      }
       if (device) {
         if (piece.kind === 'mobile') {
           // Экран — тёмное стекло с рамкой.
