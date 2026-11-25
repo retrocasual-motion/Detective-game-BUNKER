@@ -1,0 +1,116 @@
+<title>Стол, лампа, ноутбук 47</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b0907;
+    --panel: rgba(22, 18, 14, 0.82);
+    --line: rgba(255, 214, 170, 0.16);
+    --text: #e9dfd2;
+    --muted: #9c8f80;
+    --accent: #f2d7a0;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); overflow: hidden; }
+  body { font: 15px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
+  #stage { position: fixed; inset: 0; background: var(--bg); }
+  #view { display: block; width: 100%; height: 100%; touch-action: none; cursor: default; outline: none; }
+  #view.can { cursor: pointer; }
+  #view.grab { cursor: grab; }
+  #view.drag { cursor: grabbing; }
+  #vignette { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 46% 48%, rgba(0,0,0,0) 48%, rgba(0,0,0,0.46) 100%); }
+  #top { position: absolute; left: 0; right: 0; top: 0; pointer-events: none;
+    padding: 14px max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); }
+  #top h1 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  #top p { margin: 3px 0 0; font-size: 12px; color: #6f6458; }
+  #stats { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 12px; margin: 0; padding: 8px 10px; max-width: min(92vw, 520px);
+    font: 11px/1.45 ui-monospace, Menlo, Consolas, monospace; color: #cfc4b4; background: rgba(10, 8, 6, 0.72); border: 1px solid var(--line);
+    border-radius: 8px; white-space: pre-wrap; pointer-events: none; display: none; }
+  #panel { position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 10px max(16px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+  #hint { font-size: 12px; color: var(--muted); text-align: center; text-wrap: balance; max-width: 36em; transition: opacity 0.6s;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.8); }
+  #buttons { display: flex; gap: 8px; width: 100%; max-width: 520px; pointer-events: auto; transition: opacity 0.25s, transform 0.25s; }
+  #buttons[inert] { opacity: 0; transform: translateY(8px); pointer-events: none; }
+  button { flex: 1 1 0; min-width: 0; min-height: 46px; padding: 0 8px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--text);
+    font: inherit; font-weight: 550; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: background 0.15s, border-color 0.15s; }
+  button:hover { border-color: rgba(255, 214, 170, 0.34); background: rgba(34, 27, 20, 0.9); }
+  button:active { background: rgba(52, 40, 28, 0.95); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button[aria-pressed="true"] { border-color: rgba(242, 215, 160, 0.55); color: var(--accent); }
+  #fail { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; padding: 24px; text-align: center; color: var(--muted); }
+  @media (max-width: 430px) { button { font-size: 13.5px; padding: 0 4px; } }
+  @media (prefers-reduced-motion: reduce) { #hint, button, #buttons { transition: none; } }
+</style>
+
+<div id="stage">
+  <canvas id="view" tabindex="0" aria-label="Стол следователя: лампа и ноутбук, материал дела № 47. Нажмите на ноутбук, чтобы взять его в руки."></canvas>
+  <div id="vignette"></div>
+  <div id="top">
+    <h1>Стол · лампа · ноутбук № 47</h1>
+    <p id="sub">проба света: лампа стоит на месте, вещь поворачивается под ней</p>
+  </div>
+  <pre id="stats" aria-hidden="true"></pre>
+  <div id="panel">
+    <div id="hint"></div>
+    <div id="buttons" inert>
+      <button id="bFlip" type="button" aria-pressed="false">Перевернуть</button>
+      <button id="bLid" type="button" aria-pressed="true">Крышка</button>
+      <button id="bHome" type="button">Как было</button>
+      <button id="bPut" type="button">Положить</button>
+    </div>
+  </div>
+  <div id="fail">Не удалось запустить трёхмерный просмотр в этом браузере.</div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import { startDesk47 } from './desk47.js';
+
+const $ = (id) => document.getElementById(id);
+const hint = $('hint'), buttons = $('buttons');
+const params = new URLSearchParams(location.hash.replace(/^#/, ''));
+const coarse = window.matchMedia('(pointer: coarse)').matches;
+const HINTS = {
+  desk: coarse ? 'Коснитесь ноутбука — взять в руки. Лампа: касание — погасить, потянуть — передвинуть.'
+               : 'Щёлкните по ноутбуку — взять в руки. Лампа: щелчок — погасить, потянуть — передвинуть.',
+  inspect: coarse ? 'Ведите пальцем — вещь поворачивается под лампой. Щипок — ближе и дальше. Касание мимо — положить.'
+                  : 'Ведите мышью — вещь поворачивается под лампой. Колесо — ближе и дальше, зажатое колесо — сдвиг, правая кнопка — как было, Esc — положить.',
+};
+let quiet = !!params.get('view');
+if (params.get('stats') === '1') $('stats').style.display = 'block';
+let api;
+try {
+  api = startDesk47({
+    canvas: $('view'), stats: $('stats'),
+    onMode(mode, s) {
+      const inspect = mode === 'inspect';
+      if (inspect) buttons.removeAttribute('inert'); else buttons.setAttribute('inert', '');
+      $('bFlip').setAttribute('aria-pressed', String(s.flipped));
+      $('bLid').setAttribute('aria-pressed', String(s.lidOpen));
+      hint.textContent = HINTS[mode]; hint.style.opacity = quiet ? '0' : '1';
+    },
+    onFirstMove() { hint.style.opacity = '0'; },
+  });
+} catch (e) {
+  $('fail').style.display = 'flex';
+  throw e;
+}
+$('bFlip').addEventListener('click', () => api.flip());
+$('bLid').addEventListener('click', () => api.lid());
+$('bHome').addEventListener('click', () => api.home());
+$('bPut').addEventListener('click', () => { api.put(); $('view').focus({ preventScroll: true }); });
+</script>
