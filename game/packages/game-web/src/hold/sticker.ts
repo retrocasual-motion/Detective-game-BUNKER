@@ -10,10 +10,12 @@ const UNITS_PER_CM = 2.8 / 35;
 /** Наклейка 1492 × 1142 px ≈ 6 × 4,6 см; плоскость текстуры с полями грязи — 1652 × 1302 px. */
 const PX_PER_CM = 1492 / 6;
 
+/** На ноутбуке наклейка меньше настоящей на 30 % (автор 25.11: «меньше процентов на 30»). */
+const SHOWN = 0.7;
 /** Плоскость текстуры в единицах корпуса (ширина, высота). */
 export const STICKER_SIZE: [number, number] = [
-  (1652 / PX_PER_CM) * UNITS_PER_CM,
-  (1302 / PX_PER_CM) * UNITS_PER_CM,
+  (1652 / PX_PER_CM) * UNITS_PER_CM * SHOWN,
+  (1302 / PX_PER_CM) * UNITS_PER_CM * SHOWN,
 ];
 
 /**
