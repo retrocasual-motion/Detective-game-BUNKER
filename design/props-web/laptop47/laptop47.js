@@ -892,7 +892,7 @@ export function buildLaptop47(THREE, opts = {}) {
     }));
     return t;
   }
-  const TILE_GRAIN = 0.030, TILE_BRUSH = 0.040, TILE_DUST = 0.024, TILE_SMUDGE = 0.100; // метров на повтор
+  const TILE_GRAIN = 0.013, TILE_BRUSH = 0.040, TILE_DUST = 0.024, TILE_SMUDGE = 0.100; // метров на повтор
   const P = PBR ? {
     grainA: loadTex('grain_a.jpg', true, true), grainN: loadTex('grain_n.jpg', false, true), brushN: loadTex('brushed_n.jpg', false, true),
     dust: loadTex('dust.jpg', false, true), smudge: loadTex('smudge.jpg', false, true), keysWear: loadTex('keys_wear.jpg', false, false, { scale: 1 }),
@@ -1067,7 +1067,7 @@ export function buildLaptop47(THREE, opts = {}) {
   let mBody, mDeck, mBottom, mLid, mLidRim, mBezel, mPad, mBtn, mRubber, mBar, mFootTop, mBtnTop;
   if (PBR) {
     mBody = [-1, 1].map((sgn) => pbrMat(sgn < 0 ? 'left' : 'right', { band: sgn, size: [D, 0.034], vertexColors: true, dust: 0.9 }));
-    mDeck = pbrMat('deck', { size: [W, D], dust: 0.75 });
+    mDeck = pbrMat('deck', { size: [W, D], dust: 0.75, normal: 0.5, detail: 0.42 });
     mBottom = pbrMat('bottom', { size: [W, D], dust: 1.0, detail: 0.4 });
     // крышка: мелкая шлифовка плиткой нормалей (линии вдоль ширины), отпечатки — у свободного края, где её берут
     mLid = pbrMat('lid', { size: [W, LD], detN: P.brushN, detTile: TILE_BRUSH, detail: 0.45, dust: 0.25, smudge: 0.08, smudgeZone: [0.2, 0.02] });
