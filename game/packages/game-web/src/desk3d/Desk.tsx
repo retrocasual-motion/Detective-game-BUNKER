@@ -69,11 +69,17 @@ const FLY_MS = 750;
  * Куда высыпается содержимое конверта (м): свободная середина стола (автор 25.11, фото стола —
  * слева лоток и лампа, справа компьютер и телефон), листы — ближе к игроку.
  */
-const SPILL_AT = { x: 0.06, z: 0.5 };
+const SPILL_AT = { x: 0.08, z: 0.52 };
 /** Куда — изъятые устройства: середина у стены, за листами (крупные спереди закрыли бы стол). */
-const DEVICES_AT = { x: 0.06, z: 0.36 };
+const DEVICES_AT = { x: 0.08, z: 0.36 };
 /** DV-H (автор 24.11 — в игру): лист ложится на устройство и полого прогибается по нему. */
 const DRAPE = true;
+/**
+ * Устройства, на которые лист не ложится (автор 25.11: «радиопост слишком высокий… на него не
+ * нужно класть»; на камеру и ноутбук — пока можно): для листа они — преграда, как вещи следователя.
+ */
+const TALL = new Set(['radio']);
+const tall = (id: string) => TALL.has(DEVICE_KIND[id] ?? '');
 
 /** Изъятые устройства на столе — формы без экранов (DESK_DEVICES). */
 export const DEVICE_KIND: Record<string, string> = {
@@ -241,9 +247,9 @@ export function Desk({
       // Устройства — первыми, вторым рядом (дальше от игрока: мельче и не заслоняют), друг на
       // друга не ложатся; листы — перед игроком (их читают), сверху.
       const solid = (kind: string) => Object.values(DEVICE_KIND).includes(kind);
-      // Крупные устройства — первыми: им достаются места у стены (ноутбук и радиопост спереди
-      // заслонили бы полстола).
-      const area = (kind: string) => sizeOf(kind)[0] * sizeOf(kind)[1];
+      // Радиопост (на него листы не ложатся) и крупные устройства — первыми: им достаются места у
+      // стены (спереди заслонили бы полстола).
+      const area = (kind: string) => (TALL.has(kind) ? 1 : 0) + sizeOf(kind)[0] * sizeOf(kind)[1];
       const pick = (dev: boolean) =>
         fresh
           .filter((it) => !!DEVICE_KIND[it.id] === dev)
@@ -251,7 +257,10 @@ export function Desk({
           .sort((a, b) => (dev ? area(b.kind) - area(a.kind) : 0));
       const devs = scatter(pick(true), zone, DEVICES_AT, 11, 0.1, placed, solid);
       // Веером внахлёст: у каждого листа видна полоса (стол мал для десятка листов рядом).
-      const sheets = scatter(pick(false), zone, SPILL_AT, 7, 0.06, [...placed, ...devs]);
+      // На радиопост листы не ложатся (TALL): для них он — преграда.
+      const sheets = scatter(pick(false), zone, SPILL_AT, 7, 0.06, [...placed, ...devs], (k) =>
+        TALL.has(k),
+      );
       // Порядок укладки — порядок раскладки: что легло позже, то выше (лист внахлёст — поверх).
       const base = Math.min(...fresh.map((it) => it.layer));
       const laid = [...devs, ...sheets].map((q, k) => ({ ...q, layer: base + k }));
@@ -409,8 +418,9 @@ export function Desk({
         return { ...q, x: b.x + d.off.x, z: b.z + d.off.z };
       });
     const carries = [...d.base.keys()].some((id) => DEVICE_KIND[id]);
-    const devices =
-      DRAPE && !carries ? [] : all.filter((q) => DEVICE_KIND[q.id] && !d.base.has(q.id));
+    const devices = all.filter(
+      (q) => DEVICE_KIND[q.id] && !d.base.has(q.id) && (carries || !DRAPE || tall(q.id)),
+    );
     const fix = nearestFree(rects, { inside: zone.inside, blocked: [...zone.blocked, ...devices] });
     const fx = fix?.dx ?? 0;
     const fz = fix?.dz ?? 0;
@@ -559,10 +569,10 @@ export function Desk({
         // Край стола, вещи следователя и устройства — не пройти: путь к мыши — в обход; над
         // бумагами — проходит. DV-H: лист (без устройств в руке) ложится и на устройства.
         const carriesDevice = d.ids.some((id) => DEVICE_KIND[id]);
-        const devices =
-          DRAPE && !carriesDevice
-            ? []
-            : all.filter((q) => DEVICE_KIND[q.id] && !d.ids.includes(q.id));
+        const devices = all.filter(
+          (q) =>
+            DEVICE_KIND[q.id] && !d.ids.includes(q.id) && (carriesDevice || !DRAPE || tall(q.id)),
+        );
         for (const id of d.pass)
           if (!devices.some((q) => q.id === id && rects.some((r) => overlap(r, q))))
             d.pass.delete(id);
