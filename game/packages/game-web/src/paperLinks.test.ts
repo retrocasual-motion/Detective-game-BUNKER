@@ -23,7 +23,7 @@ describe('адреса сайтов в материалах — ссылки (A-
 
   it('в разметке — ссылка сайта; почта и прочие ссылки — текст', () => {
     const out = html(
-      'Адрес: vaultline-program.com. Почта <zapros@okrug-bureau.org>, www.example.com',
+      'Адрес: vaultline-program.com. Почта <zapros@blackwood-bi.org>, www.example.com',
     );
     expect(out).toContain('data-site="vaultline-program.com"');
     expect(out).not.toContain('mailto:');

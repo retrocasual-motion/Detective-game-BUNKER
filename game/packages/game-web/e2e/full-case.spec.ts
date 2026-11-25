@@ -612,7 +612,7 @@ test('QA-C: всё дело через интерфейс — от нового 
     await opened(page, ['L101']);
     tabs.push(await siteByLink(page, '05', 'skycell-mobile.com'));
     await opened(page, ['L178']);
-    tabs.push(await siteByLink(page, '01', 'okrug-bureau.org'));
+    tabs.push(await siteByLink(page, '01', 'blackwood-bi.org'));
     await opened(page, ['L181']);
     tabs.push(await siteByLink(page, '26', 'hexon-bio.com'));
     await opened(page, ['L163']);
