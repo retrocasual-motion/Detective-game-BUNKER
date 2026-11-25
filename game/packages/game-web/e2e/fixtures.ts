@@ -83,3 +83,78 @@ export async function bringIntoView(page: Page, id: string) {
 /** Сохранение ушло на сервер. */
 export const savedPut = (page: Page) =>
   page.waitForResponse((r) => r.url().endsWith('/api/state') && r.request().method() === 'PUT');
+
+type DeskHook = { grab(id: string): { x: number; y: number } | null; settled(): boolean };
+
+/** Всё высыпанное на 3D-стол долетело и лежит. */
+async function deskSettled(page: Page) {
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          () => (window as unknown as { __desk?: DeskHook }).__desk?.settled() ?? false,
+        ),
+      { intervals: [200], timeout: 10_000 },
+    )
+    .toBe(true);
+}
+
+/**
+ * Взять изъятое устройство со стола (3D-стол: 24, 47–50 лежат свободно, автор 24.11) — как игрок:
+ * дождаться, пока оно легло (точка на экране перестала меняться), и щёлкнуть по нему.
+ */
+export async function takeDevice(page: Page, id: string) {
+  await deskSettled(page);
+  const at = () =>
+    page.evaluate((i) => (window as unknown as { __desk?: DeskHook }).__desk?.grab(i) ?? null, id);
+  let last: { x: number; y: number } | null = null;
+  await expect
+    .poll(
+      async () => {
+        const now = await at();
+        const still = !!now && !!last && Math.hypot(now.x - last.x, now.y - last.y) < 0.5;
+        last = now;
+        return still;
+      },
+      { intervals: [200], timeout: 10_000 },
+    )
+    .toBe(true);
+  const pt = last as { x: number; y: number } | null;
+  if (!pt) throw new Error(`устройства ${id} нет на столе`);
+  await page.mouse.click(pt.x, pt.y);
+}
+
+/**
+ * Открыть папку дела (FM-B) и прочитать её стопку до конца (DC-B), как игрок: щелчок по папке —
+ * листы стопкой на столе; щелчок по верхнему — читать подряд «›» до последнего; закрыть —
+ * прочитанное висит на стене группой папки.
+ */
+export async function readFolder(page: Page, id: string, top: string) {
+  await page.getByTestId(`container-${id}`).click();
+  await expect(page.getByTestId(`container-${id}`)).toHaveCount(0);
+  await deskSettled(page);
+  let last: { x: number; y: number } | null = null;
+  await expect
+    .poll(
+      async () => {
+        const now = await page.evaluate(
+          (i) => (window as unknown as { __desk?: DeskHook }).__desk?.grab(i) ?? null,
+          top,
+        );
+        const still = !!now && !!last && Math.hypot(now.x - last.x, now.y - last.y) < 0.5;
+        last = now;
+        return still;
+      },
+      { intervals: [200], timeout: 10_000 },
+    )
+    .toBe(true);
+  const pt = last as { x: number; y: number } | null;
+  await page.mouse.click(pt?.x ?? 0, pt?.y ?? 0);
+  await expect(page.getByTestId('desk-run')).toBeVisible();
+  while (await page.getByTestId('desk-next').isEnabled())
+    await page.getByTestId('desk-next').click();
+  const filed = savedPut(page);
+  await page.keyboard.press('Escape');
+  await filed;
+  await expect(page.getByTestId('viewer')).toBeHidden();
+}

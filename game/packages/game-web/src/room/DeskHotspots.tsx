@@ -2,6 +2,7 @@ import { CARD_W, type ContainerId, FOLDER_IDS, SERVER_DISC_ID } from '@bunker/sh
 import { useMemo, useState } from 'react';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
+import { deskTookPress } from '../desk3d/took.ts';
 import { shownCamera, useGame } from '../store.ts';
 import { folderFieldAt, toVerdict, useCardDrop, wholeCard } from '../verdict/cards.ts';
 import { markEpilogueRead, verdictActive } from '../verdict/verdict-store.ts';
@@ -89,6 +90,8 @@ export function DeskHotspots({
             title={o.label}
             style={grow(r)}
             onPointerDown={(e) => {
+              // Нажатие взял лист или устройство перед вещью (3D-стол, took.ts).
+              if (deskTookPress()) return;
               const h = o.hotspot;
               // Вынутый диск (A-272, DD-A): зажать и дотащить до дисковода под монитором — он
               // вставится сам; щелчок без сдвига — диск в руки (прочитать надпись).
@@ -142,6 +145,7 @@ export function DeskHotspots({
               });
             }}
             onClick={(e) => {
+              if (e.detail > 0 && deskTookPress()) return;
               const h = o.hotspot;
               // Лист мышью открывает перетаскивание (щелчок без сдвига — там же); здесь —
               // только клавиатура.

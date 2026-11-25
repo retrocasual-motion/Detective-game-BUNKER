@@ -291,13 +291,12 @@ test('на стене коробка — карточкой «Изъято · 29
 test.describe('новое дело', () => {
   test.use({ sealed: true });
 
-  test('коробки нет, пока не вскрыт конверт «Документация объекта и программы»', async ({
+  test('коробки нет, пока не открыта папка «Документация объекта и программы»', async ({
     page,
   }) => {
     await expect(page.getByTestId('device-29')).toHaveCount(0);
+    // Папка (FM-B) открывается щелчком — короб пачек на столе.
     await page.getByTestId('container-bunker').click();
-    await page.getByTestId('envelope-open').dispatchEvent('click');
-    await page.keyboard.press('Escape');
     await expect(page.getByTestId('device-29')).toHaveCount(1);
   });
 });

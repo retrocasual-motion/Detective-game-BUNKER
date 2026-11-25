@@ -2,7 +2,7 @@ import { readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Page } from '@playwright/test';
-import { expect, STRIP, sheet, test } from './fixtures.ts';
+import { expect, readFolder, STRIP, sheet, test } from './fixtures.ts';
 
 /**
  * QA-C (общая проверка 20.11): робот проходит всё дело через интерфейс, как игрок — от нового
@@ -195,12 +195,24 @@ async function zoomSheet(page: Page, id: string) {
 
 // ───────────────────────── стол: конверты, вещи ─────────────────────────
 
+/** Первый лист папки (FM-B) — сверху её стопки на столе. */
+const FOLDER_TOP: Record<string, string> = { protocols: '30', scene: '22', bunker: '08' };
+
 async function openEnvelope(page: Page, id: string) {
   await toDesk(page);
+  // Папку — открыть и дочитать стопку (DC-B): листы на стене, как раньше после конверта.
+  const top = FOLDER_TOP[id];
+  if (top) {
+    await readFolder(page, id, top);
+    return;
+  }
   await page.getByTestId(`container-${id}`).click();
   await page.getByTestId('envelope-open').dispatchEvent('click');
-  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /» · вскрыт/);
-  await page.keyboard.press('Escape');
+  // Пакет вещдоков (FM-B) уходит из рук сам; коробка — остаётся вскрытой в руках.
+  if (id !== 'seized') {
+    await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /» · вскрыт/);
+    await page.keyboard.press('Escape');
+  }
   await expect(page.getByTestId('held')).toBeHidden();
 }
 
@@ -334,9 +346,22 @@ test('QA-C: всё дело через интерфейс — от нового 
   });
 
   await test.step('вскрыть конверты архива и коробку «Личные вещи»', async () => {
-    for (const id of ['protocols', 'scene', 'bunker', 'personal']) await openEnvelope(page, id);
-    for (const d of ['24', '29', '47', '48', '49', '50'])
-      await expect(page.getByTestId(`device-${d}`)).toBeVisible();
+    for (const id of ['protocols', 'scene', 'seized', 'bunker', 'personal'])
+      await openEnvelope(page, id);
+    await expect(page.getByTestId('device-29')).toBeVisible();
+    // Изъятые устройства — на 3D-столе (DESK_DEVICES).
+    for (const d of ['24', '47', '48', '49', '50'])
+      await expect
+        .poll(() =>
+          page.evaluate(
+            (i) =>
+              (window as unknown as { __desk?: { pieces(): { id: string }[] } }).__desk
+                ?.pieces()
+                .some((q) => q.id === i) ?? false,
+            d,
+          ),
+        )
+        .toBe(true);
   });
 
   await test.step('камера инженера: T — крупно (L905), DISP — время (L973)', async () => {

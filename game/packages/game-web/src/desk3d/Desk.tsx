@@ -14,6 +14,7 @@ import {
   screenToWall,
   syncCamera,
 } from './space.ts';
+import { markDeskTook } from './took.ts';
 import {
   allowed,
   drapes,
@@ -145,6 +146,7 @@ export function Desk({
   onHang,
   pointer,
   cursorEl,
+  enabled,
 }: {
   room: Room;
   pose: RefObject<Pose>;
@@ -165,6 +167,11 @@ export function Desk({
   pointer: RefObject<{ x: number; y: number }>;
   /** На чём показывать курсор «взять» (холст мышь не ловит — события идут через сцену). */
   cursorEl: RefObject<HTMLElement | null>;
+  /**
+   * Стол в покое (ничего не открыто, взгляд на столе): только тогда вещи берут. Луч на выключенном
+   * столе обрезан (`compute`), но нажатие может прийти и так — проверка здесь надёжнее.
+   */
+  enabled: RefObject<boolean>;
 }) {
   const { camera } = useThree();
   const { p } = room;
@@ -352,7 +359,9 @@ export function Desk({
 
   // ── Нажали на вещь. ──
   const onDown = (id: string, e: ThreeEvent<PointerEvent>) => {
-    if (e.button !== 0 || drag.current || flying.current.has(id)) return;
+    if (!enabled.current || e.button !== 0 || drag.current || flying.current.has(id)) return;
+    // Лист или устройство ближе нарисованной вещи — нажатие наше, не её кнопки (took.ts).
+    markDeskTook();
     const st: Press = {
       id,
       x0: e.clientX,
@@ -520,6 +529,8 @@ export function Desk({
         return best ? at(best.x, best.z, (hCache.current.h.get(id) ?? 0) + pc.t) : null;
       },
       desk: (x: number, z: number) => at(x, z),
+      // Высыпанное долетело (полёт из конверта — около секунды после старта, с запасом).
+      settled: () => [...starts.current.values()].every((s) => performance.now() > s.at + 1500),
       pieces: () =>
         ps.current.map((q) => ({ id: q.id, x: q.x, z: q.z, w: q.w, d: q.d, rot: q.rot })),
       blocked: () => blocked,

@@ -1,4 +1,4 @@
-import { expect, STRIP, sheet, test, toWall } from './fixtures.ts';
+import { expect, STRIP, sheet, takeDevice, test, toWall } from './fixtures.ts';
 
 /**
  * Записи там, где лежат (этап 4d; PL-A, автор 12.11): ручка-диктофон — назад · play · вперёд;
@@ -8,7 +8,7 @@ import { expect, STRIP, sheet, test, toWall } from './fixtures.ts';
 test('ручка-диктофон: play — расшифровка; вперёд — следующий файл; Esc — снова в руках', async ({
   page,
 }) => {
-  await page.getByTestId('device-49').click();
+  await takeDevice(page, '49');
   await page.getByTestId('device-use').click();
   await expect(page.getByTestId('pen-view')).toBeVisible();
   await expect(page.getByTestId('media-name')).toContainText('1 из 7');

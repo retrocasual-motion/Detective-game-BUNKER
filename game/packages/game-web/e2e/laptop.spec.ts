@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, sheet, test, toWall } from './fixtures.ts';
+import { expect, sheet, takeDevice, test, toWall } from './fixtures.ts';
 
 /**
  * Ноутбук руководителя (этап 4c-1; решения автора 10.11 — SCR-C, UI-A, PL-A, CL-D, LW-A, PT-A):
@@ -10,7 +10,7 @@ const KEY = [5, 1, 2, 3, 6, 9, 8, 7, 4];
 
 /** Ноутбук со стола — в руки — щелчок по экрану: экран крупно. */
 async function laptopUp(page: Page) {
-  await page.getByTestId('device-47').click();
+  await takeDevice(page, '47');
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Ноутбук/);
   await page.getByTestId('device-use').click();
   await expect(page.getByTestId('laptop-view')).toBeVisible();

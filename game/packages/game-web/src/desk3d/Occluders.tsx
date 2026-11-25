@@ -40,7 +40,13 @@ function DepthBox({ b }: { b: Box }) {
   return (
     <group position={[px, c.y, pz]} rotation={[0, b.yaw ?? 0, 0]}>
       {/* Рисуется первым: глубина готова до листов. */}
-      <mesh position={[c.x - px, 0, c.z - pz]} renderOrder={-1}>
+      {/* Ближе листа под мышью — нажатие этой вещи: дальше по лучу 3D-стол его не берёт (took.ts). */}
+      <mesh
+        position={[c.x - px, 0, c.z - pz]}
+        renderOrder={-1}
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerOver={(e) => e.stopPropagation()}
+      >
         <boxGeometry args={[w, h, d]} />
         <meshBasicMaterial colorWrite={false} />
       </mesh>

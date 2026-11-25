@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures.ts';
+import { expect, takeDevice, test } from './fixtures.ts';
 
 const DEVICES = ['24', '47', '48', '49', '50'];
 
@@ -18,7 +18,7 @@ test('на столе — изъятые устройства с бирками 
 test('щелчок по устройству — вещь в руках (этап 4a): вертеть мышью, щелчок по экрану — материал, Esc — положить', async ({
   page,
 }) => {
-  await page.getByTestId('device-50').click();
+  await takeDevice(page, '50');
   const held = page.getByTestId('held');
   await expect(held).toHaveAttribute('aria-label', /Радиопост/);
   // Протянуть — вещь вращается и остаётся в руках (это не щелчок мимо).
@@ -30,7 +30,7 @@ test('щелчок по устройству — вещь в руках (эта�
   await page.keyboard.press('Escape');
   await expect(held).toBeHidden();
   // С 4d радиопост — работа прямо на модели: вплотную к регистратору; Esc — снова в руках.
-  await page.getByTestId('device-50').click();
+  await takeDevice(page, '50');
   await page.getByTestId('device-use').click();
   await expect(held).toHaveAttribute('data-focus', 'recorder');
   await page.keyboard.press('Escape');
@@ -38,7 +38,7 @@ test('щелчок по устройству — вещь в руках (эта�
   await expect(held).toBeVisible();
   await page.keyboard.press('Escape');
   // Камера инженера (24, A-268) — как телефон: щелчок по экрану — вплотную; Esc — снова в руках.
-  await page.getByTestId('device-24').click();
+  await takeDevice(page, '24');
   await page.getByTestId('device-use').click();
   await expect(held).toHaveAttribute('data-focus', 'camera');
   await page.keyboard.press('Escape');

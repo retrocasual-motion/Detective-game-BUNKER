@@ -18,9 +18,15 @@ import { Occluders } from './Occluders.tsx';
 
 const NONE: readonly DeskItem[] = [];
 
-/** Цель щелчка — кнопка или поле страницы (предмет стола, стрелка, доска): 3D-стол её не берёт. */
-const isControl = (t: EventTarget | null) =>
-  t instanceof Element && !!t.closest('button, a, input, textarea, select, [role="button"]');
+/**
+ * Цель щелчка — кнопка или поле страницы (стрелка, доска, меню): 3D-стол её не берёт. Кнопки вещей
+ * следователя (`.desk-spot`) — не в счёт: лист перед вещью ближе к глазу, решает луч (took.ts).
+ */
+const isControl = (t: EventTarget | null) => {
+  if (!(t instanceof Element)) return false;
+  const c = t.closest('button, a, input, textarea, select, [role="button"]');
+  return !!c && !c.classList.contains('desk-spot');
+};
 
 /**
  * 3D-стол в комнате игры (MG-A, автор 24.11): прозрачный холст three.js поверх нарисованного стола,
@@ -145,6 +151,7 @@ export function DeskLayer({
             useGame.getState().hangFromDesk(id, w.x - CARD_W / 2, w.y - CARD_H / 2);
           }}
           pointer={pointer}
+          enabled={activeRef}
           cursorEl={scene}
         />
       </Canvas>
