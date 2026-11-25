@@ -107,7 +107,11 @@ export function usePull({
     setPartCursor('grabbing');
     const x0 = e.clientX;
     const y0 = e.clientY;
+    // Клапан идёт за мышью от того места, где он сейчас (с подъёмом от наведения), а «вскрыть или
+    // нет» решает только протяжка: подъём наведения доезжает за несколько кадров — на медленной
+    // машине его доля другая, порог не должен от неё зависеть.
     const base = s.now;
+    let pulled = 0;
     let moved = 0;
     s.dragging = true;
     s.to = base;
@@ -118,7 +122,8 @@ export function usePull({
       const dy = ev.clientY - y0;
       moved = Math.max(moved, Math.hypot(dx, dy));
       // Тянут вверх; вбок — тоже немного открывает (рука идёт не по линейке).
-      s.to = Math.min(1, Math.max(0, base + (-dy + Math.abs(dx) * 0.3) / PULL_PX));
+      pulled = (-dy + Math.abs(dx) * 0.3) / PULL_PX;
+      s.to = Math.min(1, Math.max(0, base + pulled));
       invalidate();
     };
     const end = () => {
@@ -132,7 +137,7 @@ export function usePull({
     };
     const up = () => {
       end();
-      if (moved < CLICK_PX || s.to >= 0.5) finish();
+      if (moved < CLICK_PX || pulled >= 0.5) finish();
     };
     // Ушли из окна посреди протяжки — клапан лёг обратно.
     const cancel = () => end();
