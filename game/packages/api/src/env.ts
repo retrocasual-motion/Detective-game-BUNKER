@@ -23,6 +23,11 @@ export const env = {
   pgPort: Number(e.PG_PORT ?? 5433),
   /** Собранный клиент; задаётся в Docker (в разработке клиент отдаёт Vite). */
   webDist: e.WEB_DIST ? fromRoot(e.WEB_DIST) : undefined,
+  /**
+   * Папка медиа `bunker-media` (T-…): по умолчанию — рядом с репозиторием (`E:/Projects/bunker-media`
+   * у автора); в Docker — том `/media`. Нет папки — медиа нет, игра рисует заглушки.
+   */
+  mediaDir: fromRoot(e.MEDIA_DIR ?? '../../bunker-media'),
   /** Вход (6a-1): `link` — по ссылке на почту; `off` — один игрок без входа, как раньше. */
   auth: (e.AUTH === 'off' ? 'off' : 'link') as 'off' | 'link',
   /**
@@ -33,7 +38,7 @@ export const env = {
     ? e.MAIL_TRANSPORT
     : 'mailpit') as 'mailpit' | 'memory' | 'none',
   mailpitUrl: e.MAILPIT_URL ?? 'http://127.0.0.1:8025',
-  mailFrom: e.MAIL_FROM ?? 'zapros@okrug-bureau.org',
+  mailFrom: e.MAIL_FROM ?? 'zapros@blackwood-bi.org',
   mailFromName: e.MAIL_FROM_NAME ?? 'Окружное бюро расследований',
   /** Адрес игры для ссылок в письмах: в разработке — Vite, в Docker — сам сервер. */
   publicUrl: (e.PUBLIC_URL ?? 'http://localhost:5173').replace(/\/$/, ''),

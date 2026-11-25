@@ -1,5 +1,6 @@
 import type { ContainerId, View } from '@bunker/shared';
 import { type ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { DeskLayer } from '../desk3d/DeskLayer.tsx';
 import { useCall } from '../deskphone/call.ts';
 import { closePhone } from '../deskphone/DeskPhone.tsx';
 import { PhoneFace } from '../deskphone/PhoneFace.tsx';
@@ -17,8 +18,16 @@ import {
   toCss,
 } from './camera.ts';
 import { DeskHotspots } from './DeskHotspots.tsx';
-import { type Bank, type DiscOnDesk, drawObjects, drawRoom, type Epilogue } from './decor.ts';
+import {
+  type Bank,
+  type DiscOnDesk,
+  deskObjects,
+  drawObjects,
+  drawRoom,
+  type Epilogue,
+} from './decor.ts';
 import { DRIVE_IDLE, type DriveLook } from './drive.ts';
+import { useLamp } from './lamp.ts';
 import { NavArrows } from './NavArrows.tsx';
 import { useViewport } from './useViewport.ts';
 import { VIEW_LABELS } from './views.ts';
@@ -77,9 +86,13 @@ export function RoomScene({
   // Телефон на столе объёмный: снятая трубка и утопленная кнопка рисуются на холсте.
   const offHook = useCall((c) => c.offHook);
   const pressed = useCall((c) => c.pressed);
+  // Лампа (автор 25.11): горит ли, насколько потянута цепочка.
+  const lampOn = useLamp((l) => l.on);
+  const lampPull = useLamp((l) => l.pull);
   const spot: CameraSpot = view === 'desk' && phoneOpen ? 'phone' : view;
   const [ph, setPh] = useState<Phase>({ from: room.poses[spot], to: spot, moving: false });
   const world = useRef<HTMLDivElement>(null);
+  const sceneEl = useRef<HTMLDivElement>(null);
   const phoneWorld = useRef<HTMLDivElement>(null);
   const back = useRef<HTMLCanvasElement>(null);
   const front = useRef<HTMLCanvasElement>(null);
@@ -91,12 +104,21 @@ export function RoomScene({
     const css = pose ? toCss(poseOps(pose, room.p)) : 'none';
     if (world.current) world.current.style.transform = css;
     if (phoneWorld.current) phoneWorld.current.style.transform = css;
-    if (pose && back.current) drawRoom(back.current, pose, room);
+    if (pose && back.current) drawRoom(back.current, pose, room, lampOn);
     if (pose && front.current)
-      drawObjects(front.current, pose, room, inbox, opened, epilogue, disc, bank, drive, {
-        offHook,
-        pressed,
-      });
+      drawObjects(
+        front.current,
+        pose,
+        room,
+        inbox,
+        opened,
+        epilogue,
+        disc,
+        bank,
+        drive,
+        { offHook, pressed },
+        { on: lampOn, pull: lampPull },
+      );
   };
 
   useLayoutEffect(() => {
@@ -139,9 +161,15 @@ export function RoomScene({
 
   const atDesk = !ph.moving && ph.to === 'desk';
   const atPhone = !ph.moving && ph.to === 'phone';
+  // 3D-стол (MG-A): вещи следователя — преграды и заслонки для листов; цвет не нужен.
+  const objects = useMemo(
+    () => deskObjects(room, () => '#000000', inbox, opened, epilogue, disc, bank),
+    [room, inbox, opened, epilogue, disc, bank],
+  );
 
   return (
     <div
+      ref={sceneEl}
       className="scene"
       data-testid="scene"
       data-view={ph.to === 'phone' ? 'desk' : ph.to}
@@ -203,6 +231,15 @@ export function RoomScene({
       <div ref={phoneWorld} className="world" hidden={flat}>
         <PhoneFace room={room} active={atPhone} />
       </div>
+      {/* 3D-стол (автор 24.11): листы и изъятое, что лежит свободно; поверх нарисованного. */}
+      <DeskLayer
+        room={room}
+        live={live}
+        scene={sceneEl}
+        objects={objects}
+        active={atDesk && !hideNav}
+        visible={!flat}
+      />
       {atDesk && (
         <DeskHotspots
           room={room}

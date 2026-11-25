@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import {
   type ActionInput,
   act,
@@ -18,6 +20,7 @@ import {
   ExcerptSchema,
   folderItemId,
   type Material,
+  MEDIA,
   PERSONS,
   type PlayerState,
   PlayerStateSchema,
@@ -62,6 +65,8 @@ export interface AppDeps {
   isReady?: () => boolean;
   /** Папка собранного клиента (production, Docker): сервер отдаёт и игру, и API. */
   webDist?: string;
+  /** Папка медиа `bunker-media` (T-…): файлы из списка MEDIA — по `/api/media/<имя>`. */
+  mediaDir?: string;
   /**
    * Движок правил (этап 2): правила и тексты всех материалов, закрытые материалы.
    * Только на сервере — в браузер уходят лишь открытые игроком (P-10).
@@ -161,7 +166,7 @@ const GAME_CONFIG = {
   unlimited: [
     'документ\\w* программ|поиск документ',
     // Поле игры — «архив номеров газеты»; форма банка («номер ячейки») сюда не попадает.
-    'газет|вестник|silverridge',
+    'газет|вестник|chronicle',
     'сеанс\\w* пользовател|сервер\\w* объект',
   ],
 };
@@ -172,6 +177,7 @@ export function createApp({
   production,
   isReady = () => true,
   webDist,
+  mediaDir,
   engine,
   now = () => Date.now(),
   auth = 'off',
@@ -211,6 +217,18 @@ export function createApp({
     if (!pid) return c.json({ error: 'нужен вход' }, 401);
     c.set('player', pid);
     return next();
+  });
+
+  // Медиа (T-…): только файлы из списка MEDIA; нет папки или файла — 404 (игра рисует заглушку).
+  app.get('/api/media/:name', async (c) => {
+    const m = Object.hasOwn(MEDIA, c.req.param('name')) ? MEDIA[c.req.param('name')] : undefined;
+    if (!m || !mediaDir) return c.notFound();
+    const body = await readFile(join(mediaDir, m.path)).catch(() => null);
+    if (!body) return c.notFound();
+    return c.body(new Uint8Array(body), 200, {
+      'content-type': m.type,
+      'cache-control': 'private, max-age=3600',
+    });
   });
 
   type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];

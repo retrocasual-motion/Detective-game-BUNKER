@@ -61,6 +61,7 @@
   color: #dfe6ef;
 }
 .lap-avatar {
+  display: block;
   width: 64px;
   height: 64px;
   padding: 0;
@@ -68,20 +69,15 @@
   border-radius: 50%;
   overflow: hidden;
   background: #0d1522;
-  cursor: zoom-in;
-  transition:
-    width 0.25s,
-    height 0.25s;
 }
 .lap-avatar svg {
   width: 100%;
   height: 100%;
   display: block;
 }
-.lap-avatar-big {
-  width: 200px;
-  height: 200px;
-  cursor: zoom-out;
+.lap-avatar-welcome {
+  width: 160px;
+  height: 160px;
 }
 .lap-user {
   margin: 10px 0 18px;
@@ -975,7 +971,6 @@
 }
 .lap-welcome .lap-avatar {
   display: block;
-  cursor: default;
 }
 .lap-enter {
   min-width: 140px;

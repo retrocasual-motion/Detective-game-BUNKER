@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, sheet, test } from './fixtures.ts';
+import { expect, sheet, takeDevice, test } from './fixtures.ts';
 
 /**
  * Телефон Габриэля (этап 4c-2; решения автора 11.11 — PH-A, PN-A, CALL-A, EM-A; SCR-C, LK-A,
@@ -7,7 +7,7 @@ import { expect, sheet, test } from './fixtures.ts';
  */
 
 async function phoneUp(page: Page) {
-  await page.getByTestId('device-48').click();
+  await takeDevice(page, '48');
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Телефон/);
   await page.getByTestId('device-use').click();
   await expect(page.getByTestId('phone-view')).toBeVisible();

@@ -53,7 +53,7 @@ export function PcBrowser() {
   const [page, setPage] = useState<
     { kind: 'archive' } | { kind: 'doc'; id: string } | { kind: 'text'; text: string }
   >({ kind: 'archive' });
-  const [typed, setTyped] = useState('silverridge-chronicle.com/arhiv');
+  const [typed, setTyped] = useState('blackwood-chronicle.com/arhiv');
   const [date, setDate] = useState('');
   const [msg, setMsg] = useState('');
   const field = 'архив номеров газеты';
@@ -75,7 +75,7 @@ export function PcBrowser() {
     } else setMsg(!r ? `${OFFLINE}.` : (r.reply ?? 'Выпуск за эту дату не оцифрован.'));
   };
   const go = (address: string) => {
-    if (/silverridge-chronicle\.com/.test(address)) {
+    if (/blackwood-chronicle\.com/.test(address)) {
       setPage({ kind: 'archive' });
       return;
     }
@@ -110,7 +110,7 @@ export function PcBrowser() {
             type="button"
             data-testid="pc-fav-17"
             onClick={() => {
-              setTyped('silverridge-chronicle.com/arhiv');
+              setTyped('blackwood-chronicle.com/arhiv');
               setPage({ kind: 'archive' });
             }}
           >

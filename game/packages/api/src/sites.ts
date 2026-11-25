@@ -46,7 +46,7 @@ export const SITES: readonly Site[] = [
   { domain: 'skycell-mobile.com', label: 'skycell-mobile', forms: [], page: 'L178' },
   { domain: 'healthway-nutrition.com', label: 'healthway-nutrition', forms: [], page: 'L179' },
   { domain: 'mesa-supply.com', label: 'mesa-supply', forms: [], page: 'L180' },
-  { domain: 'okrug-bureau.org', label: 'okrug-bureau', forms: [], page: 'L181' },
+  { domain: 'blackwood-bi.org', label: 'blackwood-bi', forms: [], page: 'L181' },
 ];
 
 /** Адрес, как его набрали или нашли в тексте: сайт реестра и путь. */

@@ -107,7 +107,36 @@ function handset(look: PhoneLook): Part[] {
   ];
 }
 
+/**
+ * Телефон на столе меньше модели (автор 25.11: «слишком большой»): части и зоны — от центра
+ * корпуса в DESK_PHONE.scale раз; модель внутри — в настоящих размерах (корпус 26 × 16 см).
+ */
+const S = DESK_PHONE.scale;
+const sx = (x: number) => CX + (x - CX) * S;
+const sz = (z: number) => CZ + (z - CZ) * S;
+const scalePart = (p: Part): Part => ({
+  ...p,
+  x: sx(p.x),
+  z: sz(p.z),
+  w: p.w * S,
+  d: p.d * S,
+  h: p.h * S,
+  lift: p.lift * S,
+  ...(p.pivot ? { pivot: [sx(p.pivot[0]), sz(p.pivot[1])] as [number, number] } : {}),
+});
+const scaleSpot = (p: Spot): Spot => ({
+  x: sx(p.x),
+  z: sz(p.z),
+  w: p.w * S,
+  d: p.d * S,
+  top: p.top * S,
+});
+
 export function phoneParts(look: PhoneLook = PHONE_IDLE): Part[] {
+  return modelParts(look).map(scalePart);
+}
+
+function modelParts(look: PhoneLook = PHONE_IDLE): Part[] {
   const keys: Part[] = KEYS.map((k) => {
     const [x, z] = keyCenter(k);
     const h = look.pressed === k ? KEY_PRESSED : KEY_H;
@@ -166,8 +195,26 @@ function softKeyParts(): Part[] {
   }));
 }
 
-/** Где надписи и зоны щелчка (верх брусков). */
+/** Где надписи и зоны щелчка (верх брусков) — в масштабе телефона на столе. */
 export function phoneSpots(look: PhoneLook = PHONE_IDLE) {
+  const m = modelSpots(look);
+  const map = <K extends string>(r: Record<K, Spot>) =>
+    Object.fromEntries(Object.entries(r).map(([k, v]) => [k, scaleSpot(v as Spot)])) as Record<
+      K,
+      Spot
+    >;
+  return {
+    ...m,
+    lcd: scaleSpot(m.lcd),
+    keys: map(m.keys),
+    soft: map(m.soft),
+    handset: scaleSpot(m.handset),
+    body: scaleSpot(m.body),
+    ridge: scaleSpot(m.ridge),
+  };
+}
+
+function modelSpots(look: PhoneLook = PHONE_IDLE) {
   const keys = Object.fromEntries(
     KEYS.map((k) => {
       const [x, z] = keyCenter(k);

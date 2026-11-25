@@ -517,7 +517,7 @@ export function Browser({
       /^www\./,
       '',
     );
-    if (bare !== 'silverridge-chronicle.com') {
+    if (bare !== 'blackwood-chronicle.com') {
       if (user) openSite(address);
       setPage({ body: SITE_ELSEWHERE, material: null });
       return;
@@ -535,7 +535,7 @@ export function Browser({
     const m =
       r?.released[0] ??
       mats.find((x) => x.title.includes(host)) ??
-      (host === 'silverridge-chronicle.com' ? mats.find((x) => x.id === '17') : undefined);
+      (host === 'blackwood-chronicle.com' ? mats.find((x) => x.id === '17') : undefined);
     if (m) setPage({ body: m.body, material: m.id });
     else
       setPage({

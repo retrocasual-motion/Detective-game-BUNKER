@@ -223,7 +223,7 @@ test('сайты без замков (NF-B, A-273): оператор, произ
     ['skycell-mobile.com', 'lawful@skycell-mobile.com'],
     ['healthway-nutrition.com', '+7 800 555-31-20'],
     ['mesa-supply.com', '+7 495 555-18-44'],
-    ['okrug-bureau.org', 'duty@okrug-bureau.org'],
+    ['blackwood-bi.org', 'duty@blackwood-bi.org'],
   ];
   for (const [address, text] of pages) {
     const tab = await site(page, address);

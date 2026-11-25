@@ -116,7 +116,7 @@ test('найденное не на стене (газета на столе) —
   page,
 }) => {
   await page.getByTestId('search-tab').click();
-  await page.getByTestId('search-input').fill('Вестник Сильвер-Ридж');
+  await page.getByTestId('search-input').fill('Вестник Блэквуда');
   await page.getByTestId('search-15').locator('.search-hit').first().click();
   await expect(page.getByTestId('viewer')).toBeVisible();
   await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'desk');

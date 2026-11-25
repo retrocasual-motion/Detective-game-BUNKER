@@ -1,24 +1,41 @@
-import { expect, test } from './fixtures.ts';
+import type { Page } from '@playwright/test';
+import { expect, takeDevice, test } from './fixtures.ts';
 
 const DEVICES = ['24', '47', '48', '49', '50'];
 
-test('на столе — изъятые устройства с бирками «Изъято», все на экране', async ({ page }) => {
-  for (const id of DEVICES) {
-    const d = page.getByTestId(`device-${id}`);
-    await expect(d).toBeInViewport();
-    await expect(d).toContainText(`Изъято · ${id}`);
-  }
+/** Изъятые устройства лежат на 3D-столе (автор 24.11) — и каждое видно на экране. */
+async function devicesOnScreen(page: Page) {
+  const vp = page.viewportSize() ?? { width: 1366, height: 768 };
+  for (const id of DEVICES)
+    await expect
+      .poll(async () => {
+        const pt = await page.evaluate(
+          (i) =>
+            (
+              window as unknown as {
+                __desk?: { grab(id: string): { x: number; y: number } | null };
+              }
+            ).__desk?.grab(i) ?? null,
+          id,
+        );
+        return !!pt && pt.x > 0 && pt.x < vp.width && pt.y > 0 && pt.y < vp.height;
+      })
+      .toBe(true);
+}
+
+test('на столе — изъятые устройства, все на экране', async ({ page }) => {
+  await devicesOnScreen(page);
   await expect(page.getByTestId('computer-monitor')).toBeInViewport();
-  // Вскрытой коробки «Личные вещи» на столе нет (R.4); «Входящие» — справа, у лампы.
+  // Вскрытой коробки «Личные вещи» на столе нет (R.4); «Входящие» — в левом углу (автор 25.11).
   await expect(page.getByTestId('container-personal')).toHaveCount(0);
   const tray = await page.getByTestId('inbox-tray').boundingBox();
-  expect((tray?.x ?? 0) + (tray?.width ?? 0) / 2).toBeGreaterThan(683);
+  expect((tray?.x ?? 0) + (tray?.width ?? 0) / 2).toBeLessThan(683);
 });
 
 test('щелчок по устройству — вещь в руках (этап 4a): вертеть мышью, щелчок по экрану — материал, Esc — положить', async ({
   page,
 }) => {
-  await page.getByTestId('device-50').click();
+  await takeDevice(page, '50');
   const held = page.getByTestId('held');
   await expect(held).toHaveAttribute('aria-label', /Радиопост/);
   // Протянуть — вещь вращается и остаётся в руках (это не щелчок мимо).
@@ -30,7 +47,7 @@ test('щелчок по устройству — вещь в руках (эта�
   await page.keyboard.press('Escape');
   await expect(held).toBeHidden();
   // С 4d радиопост — работа прямо на модели: вплотную к регистратору; Esc — снова в руках.
-  await page.getByTestId('device-50').click();
+  await takeDevice(page, '50');
   await page.getByTestId('device-use').click();
   await expect(held).toHaveAttribute('data-focus', 'recorder');
   await page.keyboard.press('Escape');
@@ -38,7 +55,7 @@ test('щелчок по устройству — вещь в руках (эта�
   await expect(held).toBeVisible();
   await page.keyboard.press('Escape');
   // Камера инженера (24, A-268) — как телефон: щелчок по экрану — вплотную; Esc — снова в руках.
-  await page.getByTestId('device-24').click();
+  await takeDevice(page, '24');
   await page.getByTestId('device-use').click();
   await expect(held).toHaveAttribute('data-focus', 'camera');
   await page.keyboard.press('Escape');
@@ -71,7 +88,7 @@ for (const vp of [
 ]) {
   test(`${vp.width}×${vp.height}: устройства и монитор на экране`, async ({ page }) => {
     await page.setViewportSize(vp);
-    for (const id of DEVICES) await expect(page.getByTestId(`device-${id}`)).toBeInViewport();
+    await devicesOnScreen(page);
     await expect(page.getByTestId('computer-monitor')).toBeInViewport();
   });
 }

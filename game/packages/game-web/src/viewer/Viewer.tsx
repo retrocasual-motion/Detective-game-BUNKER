@@ -33,7 +33,7 @@ interface ViewerProps {
 /** Щелчок сразу после открытия — второй щелчок двойного клика, а не «закрыть». */
 const OPEN_GUARD_MS = 400;
 const INSIDE =
-  '.viewer-paper, .viewer-tools, .to-petition, .viewer-closeup, .viewer-stack-hit, .viewer-corner';
+  '.viewer-paper, .viewer-tools, .to-petition, .viewer-closeup, .viewer-stack-hit, .viewer-corner, .desk-run';
 
 /** Текст узла разметки (первая ячейка строки описи пачки). */
 type TextNode = { type: string; value?: string; children?: TextNode[] };
@@ -65,6 +65,10 @@ export function Viewer({ materialId }: ViewerProps) {
   const searchOpen = useGame((g) => g.searchOpen);
   const openedAt = useRef(Date.now());
   const downOutside = useRef(false);
+  // Читают стол подряд (DC-B): какой это лист по счёту, оставлен ли на столе.
+  const run = useGame((g) => g.deskRun);
+  const runAt = run ? run.ids.indexOf(materialId) : -1;
+  const kept = !!run?.keep.includes(materialId);
   const inInbox = useGame((g) =>
     g.state ? inboxIds(g.state, g.materials).includes(materialId) : false,
   );
@@ -248,12 +252,18 @@ export function Viewer({ materialId }: ViewerProps) {
         return;
       }
       if (e.key === 'Escape') dismiss();
-      else if (e.key === 'ArrowRight' || e.key === 'PageDown') goTo(page + 1);
-      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') goTo(page - 1);
+      // Последняя страница — дальше следующий лист стола (DC-B); первая — назад, предыдущий.
+      else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        if (page < sheet.pages - 1 || runAt < 0) goTo(page + 1);
+        else useGame.getState().deskStep(1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        if (page > 0 || runAt < 0) goTo(page - 1);
+        else useGame.getState().deskStep(-1);
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [dismiss, goTo, page]);
+  }, [dismiss, goTo, page, sheet.pages, runAt]);
 
   if (!material && !person) return null;
 
@@ -482,6 +492,49 @@ export function Viewer({ materialId }: ViewerProps) {
           )}
         </div>
       </div>
+      {run && runAt >= 0 && (
+        <div className="desk-run" data-testid="desk-run">
+          <span className="desk-run-count" data-testid="desk-run-count">
+            Со стола · {runAt + 1} из {run.ids.length}
+          </span>
+          <span className="desk-run-nav">
+            <button
+              type="button"
+              className="tool"
+              data-testid="desk-prev"
+              aria-label="Предыдущий лист"
+              title="Предыдущий лист (←)"
+              disabled={runAt === 0}
+              onClick={() => useGame.getState().deskStep(-1)}
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className="tool"
+              data-testid="desk-next"
+              aria-label="Следующий лист"
+              title="Следующий лист (→)"
+              disabled={runAt === run.ids.length - 1}
+              onClick={() => useGame.getState().deskStep(1)}
+            >
+              ›
+            </button>
+          </span>
+          <button
+            type="button"
+            className="tool"
+            data-testid="desk-keep"
+            aria-pressed={kept}
+            onClick={() => useGame.getState().toggleKeep()}
+          >
+            {kept ? 'Остаётся на столе' : 'Оставить на столе'}
+          </button>
+          <small className="desk-run-hint">
+            {kept ? 'Лист останется на столе.' : 'Закроете — прочитанное повиснет на стене.'}
+          </small>
+        </div>
+      )}
       {sheet.closeup && (
         <aside className="viewer-closeup" data-testid="viewer-closeup">
           {sheet.closeup}

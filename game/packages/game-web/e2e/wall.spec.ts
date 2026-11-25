@@ -49,12 +49,13 @@ const PERSONS = [
   'Р. Хейл',
 ];
 
-test('конверты вскрыты: на стене все персонажи и 48 материалов (газета на столе, сайт — в закладках); групп описи нет', async ({
+test('всё открыто: на стене все персонажи и 43 материала (газета и устройства — на столе, сайт — в закладках); групп описи нет', async ({
   page,
 }) => {
   for (const name of PERSONS)
     await expect(page.locator('.paper-person', { hasText: name })).toHaveCount(1);
-  await expect(page.locator('[data-wall-item]')).toHaveCount(48 + PERSONS.length);
+  await expect(page.locator('[data-wall-item]')).toHaveCount(43 + PERSONS.length);
+  for (const id of ['24', '47', '48', '49', '50']) await expect(sheet(page, id)).toHaveCount(0);
   await expect(sheet(page, '15')).toHaveCount(0);
   await expect(page.locator('.column-label')).toHaveCount(0);
 });
@@ -70,17 +71,12 @@ test('щелчок по листу открывает его; по персон�
   await expect(page.getByTestId('viewer')).toBeHidden();
 });
 
-test('предметы со стола висят карточками с номером бирки; щелчок — взять в руки (ITEM-A, OPEN-A)', async ({
+test('пакет личных вещей висит карточкой с номером бирки; щелчок — взять в руки (ITEM-A, OPEN-A)', async ({
   page,
 }) => {
-  for (const id of ['24', '40', '47', '50']) {
-    await expect(sheet(page, id)).toContainText(`Изъято · ${id}`);
-  }
-  // Устройство — в руках (этап 4a); щелчок по экрану ноутбука — экран крупно (4c-1).
-  await sheet(page, '47').click(STRIP);
-  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Ноутбук/);
-  await page.getByTestId('device-use').click();
-  await expect(page.getByTestId('laptop-view')).toBeVisible();
+  await expect(sheet(page, '40')).toContainText('Изъято · 40');
+  await sheet(page, '40').click(STRIP);
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /^Пакет/);
 });
 
 test('куда отпустили, там и висит: без «магнита» и без следов кнопок; после перезагрузки там же', async ({
