@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, lookAtSticker, sheet, test, toWall } from './fixtures.ts';
+import { expect, lookAtSticker, sheet, takeDevice, test, toWall } from './fixtures.ts';
 
 /**
  * Ноутбук руководителя (этап 4c-1; решения автора 10.11 — SCR-C, UI-A, PL-A, CL-D, LW-A, PT-A):
@@ -10,7 +10,7 @@ const KEY = [2, 4, 8, 6]; // A-283
 
 /** Ноутбук со стола — в руки — щелчок по экрану: экран крупно. */
 async function laptopUp(page: Page) {
-  await page.getByTestId('device-47').click();
+  await takeDevice(page, '47');
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Ноутбук/);
   await page.getByTestId('device-use').click();
   await expect(page.getByTestId('laptop-view')).toBeVisible();
@@ -98,7 +98,7 @@ test('картинка учётной записи — обычная (A-283): �
 test('наклейка на дне (A-283, Z-A): перевернуть дном, приблизить колесом — L947 в деле; издалека — нет', async ({
   page,
 }) => {
-  await page.getByTestId('device-47').click();
+  await takeDevice(page, '47');
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /Ноутбук/);
   // Только перевернуть, не приближая, — наклейка мелко: ничего не открыто.
   await page.mouse.move(683, 500);

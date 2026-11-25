@@ -17,7 +17,7 @@
 | Что | Значение | Где в пакете |
 |---|---|---|
 | Номер дела | 09-1128 | везде |
-| Бюро | окружное бюро расследований округа Сильвер-Ридж (Колорадо); следователь Б. Коннор | 00–05, протоколы |
+| Бюро | окружное бюро расследований округа Блэквуд (Колорадо); следователь Б. Коннор | 00–05, протоколы |
 | Дата вводной | понедельник 16.11.2009 | 00, 01 |
 | Календарь заезда 2009 | день N = N октября 2009; день 0 (приёмка) = 30.09.2009 | 09–12, 37–38, L390 |
 | Этап A (2008) | 22.09.2008 — 20.10.2008 (v2, A-242; в v1 — по 21.10); день 15 = 06.10.2008 | L388, L981, 16 |
@@ -71,7 +71,7 @@
 
 | Адрес / телефон | Значение |
 |---|---|
-| Бюро | zapros@okrug-bureau.org; сайт okrug-bureau.org |
+| Бюро | zapros@blackwood-bi.org; сайт blackwood-bi.org |
 | VAULTLINE | vaultline-program.com; documents@vaultline-program.com |
 | HEXON BIO | hexon-bio.com |
 | Radio Solutions | radiosolutions-inc.com (табличка FR-07-112) |
@@ -79,7 +79,7 @@
 | Ящик Эммы | e.pierce.uk@mailbridge.net |
 | Покупатель | octon-labs.net; j.mercer@octon-labs.net |
 | The Signal | the-signal-news.com |
-| Газета округа | silverridge-chronicle.com (закладка) |
+| Газета округа | blackwood-chronicle.com (закладка) |
 | Оператор связи | SkyCell Mobile, skycell-mobile.com, lawful@skycell-mobile.com |
 | HealthWay (горячая линия на коробке) | +7 800 555-31-20; healthway-nutrition.com |
 | Mesa Supply | +7 495 555-18-44; заказ CS-2291 от 04.10.2009, отгружен 11.10, не доставлен; mesa-supply.com |

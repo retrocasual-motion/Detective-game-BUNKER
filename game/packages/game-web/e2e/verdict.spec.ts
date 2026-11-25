@@ -42,7 +42,13 @@ test('форма: пять вопросов по одному, проверка,
   await expect(question(page)).toHaveText('Почему этот человек так поступил?');
   await page.getByTestId('verdict-corner').click();
   // Газета (15) лежит на столе: «Помним» — Том Бернар.
-  await page.getByTestId('newspaper').click();
+  // На 3D-столе (автор 25.11) — щелчок по самой газете.
+  const paper = await page.evaluate(() =>
+    (
+      window as unknown as { __desk: { grab(id: string): { x: number; y: number } | null } }
+    ).__desk.grab('15'),
+  );
+  await page.mouse.click(paper?.x ?? 0, paper?.y ?? 0);
   await expect(page.getByTestId('viewer-whole-to-folder')).toHaveText('В заключение целиком');
   await page.getByTestId('viewer-whole-to-folder').click();
   await page.keyboard.press('Escape');

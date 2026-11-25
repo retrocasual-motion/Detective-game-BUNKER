@@ -1,0 +1,316 @@
+<title>Ноутбук 47 в руках</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0c0a08;
+    --panel: rgba(22, 18, 14, 0.82);
+    --line: rgba(255, 214, 170, 0.16);
+    --text: #e9dfd2;
+    --muted: #9c8f80;
+    --accent: #ffc58c;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); overflow: hidden; }
+  body { font: 15px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
+  #stage { position: fixed; inset: 0; background: var(--bg); }
+  #view { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; outline: none; }
+  #view.drag { cursor: grabbing; }
+  #vignette { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 42% 42%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.5) 100%); }
+  #top { position: absolute; left: 0; right: 0; top: 0; pointer-events: none;
+    padding: 14px max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); }
+  #top h1 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  #top p { margin: 3px 0 0; font-size: 12px; color: #6f6458; }
+  #panel { position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 10px max(16px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+  #hint { font-size: 12px; color: var(--muted); text-align: center; text-wrap: balance; max-width: 34em; transition: opacity 0.6s; }
+  #buttons { display: flex; gap: 8px; width: 100%; max-width: 440px; pointer-events: auto; }
+  button { flex: 1 1 0; min-width: 0; min-height: 46px; padding: 0 10px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--text);
+    font: inherit; font-weight: 550; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: background 0.15s, border-color 0.15s; }
+  button:hover { border-color: rgba(255, 214, 170, 0.34); background: rgba(34, 27, 20, 0.9); }
+  button:active { background: rgba(52, 40, 28, 0.95); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button[aria-pressed="true"] { border-color: rgba(255, 197, 140, 0.55); color: var(--accent); }
+  #fail { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; padding: 24px; text-align: center; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) { #hint, button { transition: none; } }
+</style>
+
+<div id="stage">
+  <canvas id="view" tabindex="0" aria-label="Ноутбук, материал дела № 47. Ведите, чтобы повернуть."></canvas>
+  <div id="vignette"></div>
+  <div id="top">
+    <h1>Материал № 47 · ноутбук</h1>
+    <p>проба WEB-C: форма — кодом, поверхности — фото-карты</p>
+  </div>
+  <div id="panel">
+    <div id="hint">Ведите пальцем или мышью — вещь поворачивается под лампой. Щипок или колесо — ближе и дальше.</div>
+    <div id="buttons">
+      <button id="bFlip" type="button" aria-pressed="false">Перевернуть</button>
+      <button id="bLid" type="button" aria-pressed="true">Крышка</button>
+      <button id="bHome" type="button">Как было</button>
+    </div>
+  </div>
+  <div id="fail">Не удалось запустить трёхмерный просмотр в этом браузере.</div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { buildLaptop47 } from './laptop47.js';
+
+const canvas = document.getElementById('view');
+const hint = document.getElementById('hint');
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const params = new URLSearchParams(location.hash.replace(/^#/, ''));
+const viewName = params.get('view');
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+} catch (e) {
+  document.getElementById('fail').style.display = 'flex';
+  throw e;
+}
+const coarse = window.matchMedia('(pointer: coarse)').matches;
+const small = Math.min(window.innerWidth, window.innerHeight) < 700;
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 2 : 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.AgXToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0c0a08);
+const camera = new THREE.PerspectiveCamera(26, 1, 0.05, 6);
+
+// ---- свет: тёплая настольная лампа сбоку-сверху, слабый холодный заполняющий ----
+const LAMP_POS = new THREE.Vector3(-0.50, 0.62, 0.26);
+// Цвет лампы по арт-библии — #ffc58c. На чёрном пластике без другого света он даёт «шоколадный» корпус,
+// поэтому по умолчанию взят тот же тон, наполовину приведённый к белому (как баланс белого у камеры).
+// Сравнить с точным цветом: добавить к адресу #lamp=ffc58c
+const lampHex = /^[0-9a-f]{6}$/i.test(params.get('lamp') || '') ? params.get('lamp') : 'ffdfc5';
+const lamp = new THREE.SpotLight(new THREE.Color('#' + lampHex), parseFloat(params.get('li') || '6'), 3, 0.42, 0.75, 2);
+lamp.position.copy(LAMP_POS);
+lamp.castShadow = true;
+lamp.shadow.mapSize.set(coarse || small ? 1536 : 2048, coarse || small ? 1536 : 2048);
+lamp.shadow.camera.near = 0.35; lamp.shadow.camera.far = 1.6;
+lamp.shadow.bias = -0.00025; lamp.shadow.normalBias = 0.0006; lamp.shadow.radius = 3.5;
+scene.add(lamp, lamp.target);
+const fill = new THREE.DirectionalLight(0x8fb0e0, 0.55);
+fill.position.set(0.8, 0.5, 0.1);
+scene.add(fill);
+scene.add(new THREE.HemisphereLight(0x39424f, 0x0a0806, 0.35));
+
+// ---- карта окружения: тёмная комната с тёплым пятном лампы (для мягких бликов) ----
+{
+  const env = new THREE.Scene();
+  const room = new THREE.Mesh(new THREE.SphereGeometry(5, 24, 16), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.018, 0.021, 0.027), side: THREE.BackSide }));
+  env.add(room);
+  const panel = (pos, size, rgb) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(size[0], size[1]), new THREE.MeshBasicMaterial({ color: new THREE.Color(rgb[0], rgb[1], rgb[2]), side: THREE.DoubleSide }));
+    m.position.copy(pos); m.lookAt(0, 0, 0); env.add(m);
+  };
+  panel(LAMP_POS.clone().normalize().multiplyScalar(2.2), [1.0, 0.8], [26, 20, 15.5]);   // абажур лампы
+  panel(new THREE.Vector3(-1.2, 1.9, 0.9), [2.2, 1.2], [0.5, 0.36, 0.25]);                  // тёплый отсвет потолка
+  panel(new THREE.Vector3(2.4, 0.5, -1.6), [2.2, 2.6], [0.5, 0.66, 0.95]);                  // холодное окно сзади-справа
+  panel(new THREE.Vector3(0, -2.2, 0.4), [3, 3], [0.09, 0.06, 0.04]);                       // стол снизу
+  const pm = new THREE.PMREMGenerator(renderer);
+  scene.environment = pm.fromScene(env, 0.035).texture;
+  scene.environmentIntensity = 0.3;
+  pm.dispose();
+}
+
+// ---- вещь ----
+let dirty = true;
+const invalidate = () => { dirty = true; };
+const texSize = coarse || small ? 1536 : 2048;
+// #pbr=0 — прежний процедурный режим (для сравнения); #low=1 — как на телефоне (редкие сетки, карты вдвое меньше)
+const laptop = buildLaptop47(THREE, { lidAngle: 1.92, textureSize: texSize, anisotropy: Math.min(8, renderer.capabilities.getMaxAnisotropy()), onChange: invalidate,
+  pbr: params.get('pbr') !== '0', lowPower: params.get('low') ? params.get('low') === '1' : (coarse || small) });
+const holder = new THREE.Group();   // его и крутит игрок
+const inner = new THREE.Group();    // сдвиг, чтобы центр вещи был в центре кадра
+inner.add(laptop); holder.add(inner); scene.add(holder);
+const dims = laptop.userData.dims;
+
+// ---- состояние вида ----
+const qOf = (x, y, z, order = 'YXZ') => new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z, order));
+const LID_OPEN = 1.92;
+const VIEWS = {
+  front:  { q: qOf(0.02, -0.52, 0), zoom: 1.0, lid: LID_OPEN, focus: null },
+  bottom: { q: qOf(0.74, 0.22, 0).multiply(qOf(0, 0, Math.PI)), zoom: 0.80, lid: 0, focus: null },
+  detail: { q: qOf(0.42, -0.36, 0), zoom: 0.36, lid: LID_OPEN, focus: new THREE.Vector3(0.060, 0.020, 0.058) },
+  side:   { q: qOf(0.05, 1.25, 0), zoom: 0.62, lid: 0, focus: null },
+  right:  { q: qOf(0.05, -1.25, 0), zoom: 0.62, lid: 0, focus: null },
+  back:   { q: qOf(0.25, Math.PI - 0.3, 0), zoom: 0.8, lid: 0, focus: null },
+  lid:    { q: qOf(0.55, -0.4, 0), zoom: 0.8, lid: 0, focus: null },
+  keys:   { q: qOf(0.62, 0.0, 0), zoom: 0.42, lid: LID_OPEN, focus: new THREE.Vector3(-0.02, 0.02, -0.02) },
+  ports:  { q: qOf(0.10, 1.38, 0), zoom: 0.30, lid: 0, focus: new THREE.Vector3(-0.1675, 0.012, -0.045) },
+  portsr: { q: qOf(0.10, -1.38, 0), zoom: 0.30, lid: 0, focus: new THREE.Vector3(0.1675, 0.012, -0.045) },
+  vents:  { q: qOf(1.22, 0.5, 0).multiply(qOf(0, 0, Math.PI)), zoom: 0.30, lid: 0, focus: new THREE.Vector3(-0.03, 0, 0.0) },
+  sticker:{ q: qOf(0.74, 0.1, 0).multiply(qOf(0, 0, Math.PI)), zoom: 0.33, lid: 0, focus: new THREE.Vector3(0.085, 0, 0.03) },
+};
+const st = { q: new THREE.Quaternion(), zoom: 1, lid: LID_OPEN, focusK: 0, focus: new THREE.Vector3() };
+const tg = { q: new THREE.Quaternion(), zoom: 1, lid: LID_OPEN, focusK: 0 };
+let flipped = false, lidOpen = true;
+
+function applyView(v, snap) {
+  tg.q.copy(v.q); tg.zoom = v.zoom; tg.lid = v.lid;
+  tg.focusK = v.focus ? 1 : 0;
+  if (v.focus) st.focus.copy(v.focus);
+  if (snap || reduceMotion.matches) { st.q.copy(tg.q); st.zoom = tg.zoom; st.lid = tg.lid; st.focusK = tg.focusK; }
+  invalidate();
+}
+function syncButtons() {
+  document.getElementById('bFlip').setAttribute('aria-pressed', String(flipped));
+  document.getElementById('bLid').setAttribute('aria-pressed', String(lidOpen));
+}
+
+// центр кадра — середина габарита при текущем угле крышки
+const autoFocus = new THREE.Vector3();
+function computeAutoFocus(a) {
+  const tipY = dims.hingeY + dims.lidDepth * Math.sin(a), tipZ = dims.hingeZ + dims.lidDepth * Math.cos(a);
+  const top = Math.max(dims.HB + dims.LT, tipY);
+  const zMin = Math.min(-dims.D / 2, tipZ), zMax = Math.max(dims.D / 2, tipZ);
+  autoFocus.set(0, top / 2, (zMin + zMax) / 2);
+}
+
+const CAM_DIR = new THREE.Vector3(0, Math.sin(0.56), Math.cos(0.56));
+let fitDist = 1;
+function resize() {
+  const w = canvas.clientWidth || window.innerWidth, h = canvas.clientHeight || window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitDist = Math.max(1.12, 1.10 / camera.aspect);
+  camera.updateProjectionMatrix();
+  invalidate();
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ---- управление: крутится сама вещь, лампа стоит на месте ----
+const pointers = new Map();
+let pinch0 = 0, zoom0 = 1, moved = false;
+const qd = new THREE.Quaternion(), AX = new THREE.Vector3(1, 0, 0), AY = new THREE.Vector3(0, 1, 0);
+function rotateBy(dx, dy) {
+  const k = 0.0052;
+  qd.setFromAxisAngle(AY, dx * k); tg.q.premultiply(qd);
+  qd.setFromAxisAngle(AX, dy * k); tg.q.premultiply(qd);
+  tg.q.normalize();
+  invalidate();
+}
+canvas.addEventListener('pointerdown', (e) => {
+  if (e.button === 2) return;
+  canvas.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  canvas.classList.add('drag');
+  if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); zoom0 = tg.zoom; }
+});
+canvas.addEventListener('pointermove', (e) => {
+  const p = pointers.get(e.pointerId);
+  if (!p) return;
+  const dx = e.clientX - p.x, dy = e.clientY - p.y;
+  p.x = e.clientX; p.y = e.clientY;
+  if (pointers.size === 1) {
+    rotateBy(dx, dy);
+    if (!moved && Math.abs(dx) + Math.abs(dy) > 2) { moved = true; hint.style.opacity = '0'; }
+  } else if (pointers.size === 2) {
+    const [a, b] = [...pointers.values()];
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (pinch0 > 0) { tg.zoom = THREE.MathUtils.clamp(zoom0 * pinch0 / d, 0.3, 1.5); invalidate(); }
+  }
+});
+const endPointer = (e) => { pointers.delete(e.pointerId); if (!pointers.size) canvas.classList.remove('drag'); pinch0 = 0; };
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', endPointer);
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  tg.zoom = THREE.MathUtils.clamp(tg.zoom * Math.exp(e.deltaY * 0.0012), 0.3, 1.5);
+  invalidate();
+}, { passive: false });
+function goHome() { flipped = false; lidOpen = true; applyView(VIEWS.front, false); syncButtons(); }
+canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); goHome(); });
+canvas.addEventListener('keydown', (e) => {
+  const s = 24;
+  if (e.key === 'ArrowLeft') rotateBy(-s, 0); else if (e.key === 'ArrowRight') rotateBy(s, 0);
+  else if (e.key === 'ArrowUp') rotateBy(0, -s); else if (e.key === 'ArrowDown') rotateBy(0, s);
+  else return;
+  e.preventDefault();
+});
+document.getElementById('bHome').addEventListener('click', goHome);
+document.getElementById('bFlip').addEventListener('click', () => {
+  flipped = !flipped;
+  if (flipped) applyView(VIEWS.bottom, false);                      // дно показывают закрытым
+  else applyView(Object.assign({}, VIEWS.front, { lid: lidOpen ? LID_OPEN : 0 }), false);
+  syncButtons();
+});
+document.getElementById('bLid').addEventListener('click', () => {
+  lidOpen = flipped ? true : !lidOpen;
+  if (flipped) { flipped = false; applyView(VIEWS.front, false); }
+  else { tg.lid = lidOpen ? LID_OPEN : 0; if (reduceMotion.matches) st.lid = tg.lid; invalidate(); }
+  syncButtons();
+});
+
+// ---- кадр ----
+const camPos = new THREE.Vector3(), tmp = new THREE.Vector3();
+let last = performance.now();
+function frame(t) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (t - last) / 1000); last = t;
+  const snap = reduceMotion.matches;
+  const kq = snap ? 1 : 1 - Math.exp(-dt * 16), ks = snap ? 1 : 1 - Math.exp(-dt * 7);
+  let moving = false;
+  if (st.q.angleTo(tg.q) > 1e-4) { st.q.slerp(tg.q, kq); moving = true; } else st.q.copy(tg.q);
+  for (const key of ['zoom', 'lid', 'focusK']) {
+    if (Math.abs(st[key] - tg[key]) > 1e-4) { st[key] += (tg[key] - st[key]) * ks; moving = true; } else st[key] = tg[key];
+  }
+  if (!moving && !dirty) return;
+  dirty = false;
+  laptop.userData.setLidAngle(st.lid);
+  computeAutoFocus(st.lid);
+  tmp.copy(autoFocus).lerp(st.focus, st.focusK);
+  inner.position.copy(tmp).multiplyScalar(-1);
+  holder.quaternion.copy(st.q);
+  camPos.copy(CAM_DIR).multiplyScalar(fitDist * st.zoom);
+  camera.position.copy(camPos); camera.lookAt(0, 0, 0);
+  renderer.render(scene, camera);
+}
+
+// служебные ракурсы для снимков: #view=front|bottom|detail (без анимации)
+if (viewName && VIEWS[viewName]) {
+  const v = VIEWS[viewName];
+  if (viewName === 'bottom' || viewName === 'sticker' || viewName === 'vents') flipped = true;
+  lidOpen = v.lid > 0 || flipped;
+  applyView(v, true); syncButtons();
+  hint.style.opacity = '0';
+} else {
+  applyView(VIEWS.front, true);
+}
+if (params.get('zoom')) { st.zoom = tg.zoom = parseFloat(params.get('zoom')); }
+laptop.userData.ready.then((s) => {
+  document.documentElement.dataset.laptop47 = JSON.stringify(s);
+  console.info('[laptop47]', JSON.stringify(s));
+  invalidate();
+});
+requestAnimationFrame(frame);
+// служебное: #act=flip,lid,home — нажать кнопки по очереди (для проверки без рук)
+for (const [i, a] of (params.get('act') || '').split(',').filter(Boolean).entries()) {
+  const id = { flip: 'bFlip', lid: 'bLid', home: 'bHome' }[a];
+  if (id) setTimeout(() => document.getElementById(id).click(), 400 + i * 1500);
+}
+</script>

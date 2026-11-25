@@ -3,7 +3,9 @@ import { expect, STRIP, sheet, test, toWall } from './fixtures.ts';
 
 /** Коробка с пачками в руках → пачка в руках. */
 async function stackInHands(page: Page, id: string) {
-  await page.getByTestId('device-29').click();
+  // Короб — как с клавиатуры: перед ним на 3D-столе может лежать устройство (радиопост) и
+  // накрывать его щелчок мышью; здесь проверяются пачки, а не щелчок по коробу.
+  await page.getByTestId('device-29').dispatchEvent('click');
   await page.getByTestId(`stack-${id}`).dispatchEvent('click');
   await expect(page.getByTestId('stack-leaf')).toHaveCount(1);
 }
@@ -291,13 +293,14 @@ test('на стене коробка — карточкой «Изъято · 29
 test.describe('новое дело', () => {
   test.use({ sealed: true });
 
-  test('коробки нет, пока не вскрыт конверт «Документация объекта и программы»', async ({
+  test('коробки нет, пока не открыта папка «Документация объекта и программы»', async ({
     page,
   }) => {
     await expect(page.getByTestId('device-29')).toHaveCount(0);
+    // Папка (FM-B) — в руки и открыть: короб пачек на столе.
     await page.getByTestId('container-bunker').click();
     await page.getByTestId('envelope-open').dispatchEvent('click');
-    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('held')).toBeHidden();
     await expect(page.getByTestId('device-29')).toHaveCount(1);
   });
 });

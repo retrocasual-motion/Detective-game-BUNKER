@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, STRIP, sheet, test, toWall } from './fixtures.ts';
+import { expect, STRIP, sheet, takeDevice, test, toWall } from './fixtures.ts';
 
 /**
  * Блокнот следователя и папка запроса поверх всего (правка автора 11.11, DV-A): файлы
@@ -18,7 +18,7 @@ async function isOnTop(page: Page, testId: string) {
 }
 
 async function laptopUp(page: Page) {
-  await page.getByTestId('device-47').click();
+  await takeDevice(page, '47');
   await page.getByTestId('device-use').click();
   await expect(page.getByTestId('laptop-lock')).toBeVisible();
 }

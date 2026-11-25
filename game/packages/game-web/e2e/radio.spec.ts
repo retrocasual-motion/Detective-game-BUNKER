@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, test } from './fixtures.ts';
+import { expect, takeDevice, test } from './fixtures.ts';
 
 /**
  * Стойка радиопоста (этап 4d-1; решения автора 12.11 — PL-A, ST-A, NV-A с правками, PM-A, K8,
@@ -13,7 +13,7 @@ const at = (day: number, h: number, m: number, s = 0) =>
   (day - 12) * 86400 + h * 3600 + m * 60 + s - (21 * 3600 + 43 * 60 + 12);
 
 async function radioUp(page: Page) {
-  await page.getByTestId('device-50').click();
+  await takeDevice(page, '50');
   await expect(page.getByTestId('held')).toBeVisible();
   await page.getByTestId('device-use').click();
   await expect(page.getByTestId('held')).toHaveAttribute('data-focus', 'recorder');
@@ -128,7 +128,7 @@ test('пуск идёт по записи; метка сохраняется; с
 test('приёмник вплотную: ручка ведёт стрелку, переключатель щёлкается; отложили — как при изъятии', async ({
   page,
 }) => {
-  await page.getByTestId('device-50').click();
+  await takeDevice(page, '50');
   await page.getByTestId('radio-receiver').click();
   const held = page.getByTestId('held');
   await expect(held).toHaveAttribute('data-focus', 'receiver');
@@ -156,7 +156,7 @@ test('приёмник вплотную: ручка ведёт стрелку, �
   await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
   await expect(held).toHaveCount(0);
-  await page.getByTestId('device-50').click();
+  await takeDevice(page, '50');
   await page.getByTestId('radio-receiver').click();
   await expect(hint).toHaveAttribute('data-needle', '0.380');
   await expect(hint).toHaveAttribute('data-mode', 'ПОИСК');
@@ -200,7 +200,7 @@ test('вплотную: щелчок по панели регистратора 
 test('переключатель: щелчок по кружку — в другое положение, зажать и потянуть вбок — туда', async ({
   page,
 }) => {
-  await page.getByTestId('device-50').click();
+  await takeDevice(page, '50');
   await page.getByTestId('radio-receiver').click();
   const hint = page.getByTestId('radio-receiver-hint');
   const sw = await page.getByTestId('radio-switch').boundingBox();

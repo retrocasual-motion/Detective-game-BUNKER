@@ -916,5 +916,105 @@
   "prompt": "design/references/CHAT_PASTE_GEN11_east_stair_stB.txt, S5-3",
   "refs": "S1_eaststair_v4, S2_eaststair_v2 (генерации), R2_long_hall",
   "verdict": "автор: не понятно, как падает Адам — нужна схема и «до/после»"
+ },
+ {
+  "file": "references/objects/S1_sticker_v1.png",
+  "date": "2026-11-25",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN14_laptop_sticker.txt, S1-1",
+  "refs": "R7-06, R7-08, R7-09, R7-02",
+  "verdict": "слабый износ; естественно, но знак уцелел бы почти весь"
+ },
+ {
+  "file": "references/objects/S1_sticker_v2.png",
+  "date": "2026-11-25",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN14_laptop_sticker.txt, S1-2",
+  "refs": "R7-06, R7-08, R7-09, R7-02",
+  "verdict": "слабый износ; почти квадратная"
+ },
+ {
+  "file": "references/objects/S2_sticker_v1.png",
+  "date": "2026-11-25",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN14_laptop_sticker.txt, S2-1",
+  "refs": "R7-06, R7-08, R7-09, R7-02",
+  "verdict": "граница по линейке, угол — ровный прямоугольник; искусственно"
+ },
+ {
+  "file": "references/objects/S2_sticker_v2.png",
+  "date": "2026-11-25",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN14_laptop_sticker.txt, S2-2",
+  "refs": "R7-06, R7-08, R7-09, R7-02",
+  "verdict": "ЛУЧШИЙ МАТЕРИАЛ — основа P-B (собрана по своей маске)"
+ },
+ {
+  "file": "references/objects/S3_sticker_v1.png",
+  "date": "2026-11-25",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN14_laptop_sticker.txt, S3-1",
+  "refs": "R7-06, R7-08, R7-09, R7-02",
+  "verdict": "слишком сильный износ"
+ },
+ {
+  "file": "references/objects/S3_sticker_v2.png",
+  "date": "2026-11-25",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN14_laptop_sticker.txt, S3-2",
+  "refs": "R7-06, R7-08, R7-09, R7-02",
+  "verdict": "прямая граница, мятая"
+ },
+ {
+  "file": "references/objects/Z1_sticker_v1.png",
+  "date": "2026-11-25",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN15_sticker_zone_map.txt, Z1-1",
+  "refs": "S2-2, P-A_zone_map",
+  "verdict": "P-A: островок мал, клочки с краской на клею"
+ },
+ {
+  "file": "references/objects/Z1_sticker_v2.png",
+  "date": "2026-11-25",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN15_sticker_zone_map.txt, Z1-2",
+  "refs": "S2-2, P-A_zone_map",
+  "verdict": "P-A: островок по карте, естественный край; запасной к P-B"
+ },
+ {
+  "file": "references/objects/Z2_sticker_v1.png",
+  "date": "2026-11-25",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN15_sticker_zone_map.txt, Z2-1",
+  "refs": "S2-2, P-A_zone_map, R7-08, R7-09",
+  "verdict": "P-A: островок мал, лишняя клетка внизу на бумаге — утечка знака"
+ },
+ {
+  "file": "references/objects/Z2_sticker_v2.png",
+  "date": "2026-11-25",
+  "model_asked": "nano_banana_pro",
+  "model_recorded": "nano_banana_2",
+  "resolution": "2k",
+  "prompt": "design/references/CHAT_PASTE_GEN15_sticker_zone_map.txt, Z2-2",
+  "refs": "S2-2, P-A_zone_map, R7-08, R7-09",
+  "verdict": "P-A: карта не соблюдена, видны лишние клетки — брак"
  }
 ]

@@ -59,7 +59,7 @@ beforeEach(async () => {
   mailer = createMailer({
     transport: 'memory',
     mailpitUrl: '',
-    from: { email: 'zapros@okrug-bureau.org', name: 'Бюро' },
+    from: { email: 'zapros@blackwood-bi.org', name: 'Бюро' },
   });
 });
 
