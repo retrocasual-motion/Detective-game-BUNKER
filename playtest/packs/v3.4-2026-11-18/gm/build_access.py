@@ -121,11 +121,11 @@ site("url-radiosolutions", r"radiosolutions-inc\.com", ["L177"], "Открыт �
 site("url-mailbridge", r"mailbridge\.net", ["L249"], "Открыт сайт mailbridge.net.")
 site("url-octon", r"octon-labs\.net", ["L272"], "Открыт сайт octon-labs.net.")
 site("url-signal", r"the-signal-news\.com", ["L296"], "Открыт сайт the-signal-news.com.")
-site("url-newspaper", r"silverridge-chronicle\.com", [], "Сайт газеты: архив номеров — в закладках браузера (файл 17); сегодняшний номер — на столе (файл 15). Выпуск архива открывается по дате.")
+site("url-newspaper", r"blackwood-chronicle\.com", [], "Сайт газеты: архив номеров — в закладках браузера (файл 17); сегодняшний номер — на столе (файл 15). Выпуск архива открывается по дате.")
 site("url-skycell", r"skycell-mobile\.com", ["L178"], "Открыт сайт skycell-mobile.com.")  # NF-B, A-273: тарифы, покрытие, запросы органов
 site("url-healthway", r"healthway-nutrition\.com", ["L179"], "Открыт сайт healthway-nutrition.com.")  # NF-B, A-273 (NC-B): справки по партиям — номер горячей линии на сайте
 site("url-mesa", r"mesa-supply\.com", ["L180"], "Открыт сайт mesa-supply.com.")  # NF-B, A-273 (CS-B): статус заказа — по телефону на сайте
-site("url-bureau", r"okrug-bureau\.org", ["L181"], "Открыт сайт okrug-bureau.org.")  # NF-B, A-273: новости, приёмная
+site("url-bureau", r"blackwood-bi\.org", ["L181"], "Открыт сайт blackwood-bi.org.")  # NF-B, A-273: новости, приёмная
 site("url-aspen", r"aspen-bank\.com", ["L130"], "Открыт сайт aspen-bank.com.")  # A-250 п. 3, A-272: главная, «Сейфовые ячейки» с формой «Сообщить о смерти арендатора»
 
 # ---------- ЗВОНОК ----------
@@ -173,7 +173,7 @@ rule(id="pw-archive", action="ПАРОЛЬ", target=r"^(?!.*(номер|газе
      target_label="хранилище документов HEXON BIO — архив проекта VL-31: пароль владельца", accept=[r"^0417$"],
      requires=["L735"], requires_reply="Такого поля ввода в деле нет.",
      release=["L736", "L737", "L738"], ok="Пароль принят. Архив открыт.", fail="Неверный пароль.")
-NP = r"номер|газет|выпуск|вестник|silverridge"
+NP = r"номер|газет|выпуск|вестник|chronicle"
 NOT_DIG = "Выпуск за эту дату не оцифрован."
 def issue(rid, d, m, y, rel):
     rule(id=rid, action="ПАРОЛЬ", target=NP, target_label="архив номеров газеты: дата выпуска",
