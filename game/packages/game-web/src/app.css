@@ -120,8 +120,10 @@ button {
   border-radius: var(--radius);
   pointer-events: auto;
 }
+/* Под курсором — нейтральный тонкий контур (RV-2): жёлтый — только у нового («сюда смотреть»), чтобы
+   два смысла не путались. */
 .desk-spot:hover {
-  border-color: var(--color-accent);
+  border-color: rgb(255 255 255 / 40%);
 }
 .desk-label {
   position: absolute;

@@ -126,6 +126,8 @@ export function Slider({ onUnlock }: { onUnlock: () => void }) {
   const track = useRef<HTMLDivElement>(null);
   const [x, setX] = useState(0);
   const drag = useRef<{ start: number; max: number } | null>(null);
+  /** Насколько тянули ползунок: щелчок без протяжки — тоже открыть (RV-32, тачпад). */
+  const moved = useRef(0);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && !typing(e.target)) onUnlock();
@@ -149,8 +151,8 @@ export function Slider({ onUnlock }: { onUnlock: () => void }) {
         aria-label="slide to unlock"
         style={{ translate: `${x}px 0`, transition: drag.current ? 'none' : undefined }}
         onClick={(e) => {
-          // С клавиатуры (Enter, пробел) — сразу открыть.
-          if (e.detail === 0) onUnlock();
+          // С клавиатуры (Enter, пробел) или щелчком без протяжки — открыть (RV-32).
+          if (e.detail === 0 || moved.current < 4) onUnlock();
         }}
         onPointerDown={(e: PointerEvent<HTMLButtonElement>) => {
           const t = track.current;
@@ -159,11 +161,13 @@ export function Slider({ onUnlock }: { onUnlock: () => void }) {
             start: e.clientX,
             max: t.offsetWidth - e.currentTarget.offsetWidth - 8,
           };
+          moved.current = 0;
           e.currentTarget.setPointerCapture(e.pointerId);
         }}
         onPointerMove={(e) => {
           const d = drag.current;
           if (!d) return;
+          moved.current = Math.max(moved.current, Math.abs(e.clientX - d.start));
           setX(Math.min(d.max, Math.max(0, (e.clientX - d.start) / scale())));
         }}
         onPointerUp={() => {

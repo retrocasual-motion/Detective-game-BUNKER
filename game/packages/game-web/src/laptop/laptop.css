@@ -987,3 +987,19 @@
 .lap-enter:hover {
   background: linear-gradient(#4b88da, #2a62b6);
 }
+
+/* Ключ щелчками (RV-32): «Войти» и «Сбросить» под сеткой. */
+.lap-lock-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 6px;
+}
+.lap-lock-row button {
+  padding: 4px 14px;
+  border: 1px solid #8aa0bd;
+  border-radius: 4px;
+  background: #2b3a52;
+  color: #e9eef6;
+  font: inherit;
+}

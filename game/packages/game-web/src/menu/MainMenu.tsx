@@ -16,6 +16,10 @@ export function MainMenu() {
   const screen = useMenu((m) => m.screen);
   const go = useMenu((m) => m.go);
   const sent = useVerdict((v) => v.status.sent);
+  // Дела ещё нет (ничего не открывали) — «Начать дело», а не «Продолжить» (RV-47).
+  const fresh = useGame(
+    (g) => !!g.state && !(g.state.opened ?? []).length && !(g.state.looked ?? []).length,
+  );
   const [panel, setPanel] = useState<'none' | 'settings' | 'confirm'>('none');
   const [calm, setCalm] = useState(reducedMotion);
   const [busy, setBusy] = useState(false);
@@ -79,7 +83,7 @@ export function MainMenu() {
               data-testid="menu-continue"
               onClick={() => go('game')}
             >
-              {sent ? 'Вернуться к делу' : 'Продолжить дело'}
+              {sent ? 'Вернуться к делу' : fresh ? 'Начать дело' : 'Продолжить дело'}
             </button>
             <button type="button" data-testid="menu-new" onClick={() => setPanel('confirm')}>
               Новое дело
@@ -190,6 +194,15 @@ export function Credits() {
   const screen = useMenu((m) => m.screen);
   const go = useMenu((m) => m.go);
   const sent = useVerdict((v) => v.status.sent);
+  // Esc — в главное меню, как кнопка (RV-47).
+  useEffect(() => {
+    if (screen !== 'credits') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') go('menu');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [screen, go]);
   if (screen !== 'credits') return null;
   return (
     <div className="main-menu credits" data-testid="credits">

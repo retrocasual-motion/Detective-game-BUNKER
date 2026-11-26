@@ -746,7 +746,12 @@ export const useGame = create<GameStore>((set, get) => {
       set({ discInserting: true, held: null });
     },
     discInserted() {
-      set({ discInserting: false, computerOpen: true, pcMaterial: null });
+      // Компьютер открывается сам, только если игрок за эти секунды ничего не открыл (RV-33): раньше
+      // он ложился поверх блокнота, листа или вещи в руках.
+      const g = get();
+      const busy =
+        !!g.viewerId || !!g.held || g.notebookOpen || g.deskPhone || g.searchOpen || !!g.pen;
+      set({ discInserting: false, ...(busy ? {} : { computerOpen: true, pcMaterial: null }) });
     },
 
     setFolderOpen(open) {

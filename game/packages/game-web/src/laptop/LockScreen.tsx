@@ -40,6 +40,12 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
   const [pen, setPen] = useState<{ x: number; y: number } | null>(null);
   const [state, setState] = useState<'idle' | 'wrong' | 'short' | 'check' | 'offline'>('idle');
   const [hint, setHint] = useState(false);
+  /**
+   * Ключ щелчками (RV-32): щелчок по точке без протяжки — точка в ключ; дальше — щелчки по точкам и
+   * «Войти». Раньше одиночный щелчок сразу проверялся как ключ из одной точки и сбрасывался.
+   */
+  const [clicks, setClicks] = useState(false);
+  const downAt = useRef<{ x: number; y: number } | null>(null);
   const svg = useRef<SVGSVGElement>(null);
   const wait = useFieldWait(FIELD);
 
@@ -129,6 +135,12 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
     cancelReset();
     e.currentTarget.setPointerCapture(e.pointerId);
     setState('idle');
+    downAt.current = { x: e.clientX, y: e.clientY };
+    // Набирают щелчками — точку добавить, а не начать заново.
+    if (clicks) {
+      if (n) setPath((list) => add(list, n));
+      return;
+    }
     setPath(n ? [n] : []);
     setPen(p);
   };
@@ -140,10 +152,25 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
     const n = dotAt(p);
     if (n) setPath((list) => add(list, n));
   };
-  const up = () => {
-    if (!pen) return;
+  const up = (e: PointerEvent<SVGSVGElement>) => {
+    const d = downAt.current;
+    downAt.current = null;
+    if (clicks || !pen) return;
     setPen(null);
+    // Щелчок без протяжки — набор щелчками: точка уже в ключе, ждём следующих и «Войти».
+    if (d && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 6) {
+      if (path.length) setClicks(true);
+      return;
+    }
     void submit(path);
+  };
+  const enter = () => {
+    setClicks(false);
+    void submit(path);
+  };
+  const clear = () => {
+    setClicks(false);
+    setPath([]);
   };
 
   // Клавиатура: цифры 1–9 — точки, Enter — войти, Backspace — назад.
@@ -152,7 +179,7 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
       if (wait > 0 || state === 'check' || typing(e.target)) return;
       if (/^[1-9]$/.test(e.key)) setPath((list) => add(list, Number(e.key)));
       else if (e.key === 'Backspace') setPath((list) => list.slice(0, -1));
-      else if (e.key === 'Enter') void submit(path);
+      else if (e.key === 'Enter') enter();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -207,8 +234,20 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
               ? 'Неверный ключ'
               : state === 'short'
                 ? 'Соедините не меньше четырёх точек'
-                : 'Нарисуйте ключ'}
+                : clicks
+                  ? 'Щёлкайте по точкам, затем «Войти»'
+                  : 'Нарисуйте ключ или щёлкайте по точкам'}
       </div>
+      {clicks && (
+        <div className="lap-lock-row">
+          <button type="button" data-testid="laptop-enter" onClick={enter}>
+            Войти
+          </button>
+          <button type="button" data-testid="laptop-clear" onClick={clear}>
+            Сбросить
+          </button>
+        </div>
+      )}
       <button
         type="button"
         className="lap-hint"

@@ -332,3 +332,11 @@ test('выписка с ноутбука: по ссылке — сразу фа�
   await expect(page.getByTestId('laptop-welcome')).toHaveCount(0);
   await expect(page.getByTestId('lap-notepad')).toBeVisible();
 });
+
+test('RV-32: ключ щелчками по точкам и «Войти» — тоже входит', async ({ page }) => {
+  await laptopUp(page);
+  for (const n of KEY) await page.getByTestId(`laptop-dot-${n}`).click();
+  await expect(page.getByTestId('laptop-lock-msg')).toContainText('«Войти»');
+  await page.getByTestId('laptop-enter').click();
+  await expect(page.getByTestId('laptop-desktop')).toBeVisible();
+});
