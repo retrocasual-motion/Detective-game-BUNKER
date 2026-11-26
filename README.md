@@ -67,6 +67,7 @@ Skills лежат в `.claude/skills/`. В Claude Code они подключаю
 | `game/docs/` | технический план (`TECH_PLAN.md`), затем решения по технике и стеку |
 | `game/packages/` | код игры (карта — `game/docs/ARCHITECTURE.md`) |
 | `ИГРАТЬ.cmd` | запустить игру на своём компьютере двойным щелчком (подробно — `game/docs/DEVELOPMENT.md`, раздел 3) |
+| `vscode-tasks/` | задания на изменения игры из сессий дизайна — список в `vscode-tasks/README.md` |
 
 ### Часть 3. Дизайн: визуал и медиа
 
