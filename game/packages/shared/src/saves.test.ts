@@ -1,17 +1,17 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import form from './fixtures/saves/v5-form.json' with { type: 'json' };
+import late from './fixtures/saves/v5-late.json' with { type: 'json' };
+import mid from './fixtures/saves/v5-mid.json' with { type: 'json' };
 import { readSaved, reconcile } from './layout.ts';
 import { type Material, type PlayerState, STATE_VERSION } from './schemas.ts';
 
 /**
  * Замороженные сохранения (RV-78): срезы ночной проверки 26.11 — середина дела, конец, форма
  * заключения (версия 5). Любая правка схемы или перевода версий должна поднимать их без потерь: раньше
- * правка схемы молча стирала стену (RV-49). Новый образец — новым файлом, старые не менять.
+ * правка схемы молча стирала стену (RV-49). Новый образец — новым файлом и строкой здесь; старые не
+ * менять.
  */
-const dir = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'saves');
-const files = readdirSync(dir).filter((f) => f.endsWith('.json'));
+const SAVES: Record<string, unknown> = { 'v5-mid': mid, 'v5-late': late, 'v5-form': form };
 
 const mat = (id: string): Material => ({
   id,
@@ -38,13 +38,9 @@ function materialsOf(s: PlayerState): Material[] {
 }
 
 describe('замороженные сохранения (RV-78)', () => {
-  it('образцы есть', () => {
-    expect(files.length).toBeGreaterThanOrEqual(3);
-  });
-
-  for (const f of files) {
+  for (const [f, sample] of Object.entries(SAVES)) {
     it(`${f}: поднимается до текущей версии без потерь и стабильно`, () => {
-      const raw = JSON.parse(readFileSync(join(dir, f), 'utf8')) as PlayerState;
+      const raw = JSON.parse(JSON.stringify(sample)) as PlayerState;
       const materials = materialsOf(raw);
       const { state, dropped } = readSaved(raw, materials);
       expect(dropped).toEqual([]);

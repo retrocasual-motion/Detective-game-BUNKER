@@ -65,9 +65,11 @@ for (const [id, query] of [
   test(`RV-23: таблица листа ${id} читается целиком — не шире листа`, async ({ page }) => {
     await toWall(page);
     await openBySearch(page, id, query);
+    // Таблица не шире того, что её держит: строки листа или обёртки широкой таблицы.
     const fit = await page.evaluate(() => {
-      const box = document.querySelector('.viewer-paper .paper-table-scroll');
-      return box ? { scroll: box.scrollWidth, client: box.clientWidth } : null;
+      const t = document.querySelector('.viewer-paper table');
+      const box = t?.parentElement;
+      return t && box ? { scroll: t.getBoundingClientRect().width, client: box.clientWidth } : null;
     });
     expect(fit).not.toBeNull();
     expect(fit?.scroll ?? 0).toBeLessThanOrEqual((fit?.client ?? 0) + 1);

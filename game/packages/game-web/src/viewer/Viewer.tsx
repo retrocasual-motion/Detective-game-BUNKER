@@ -89,14 +89,15 @@ export function tableTooWide(table: MdNode): boolean {
  */
 const PAPER: Components = {
   ...NO_LINKS,
-  table: ({ node, ...props }) => (
-    <div className="paper-table-scroll">
-      <table
-        {...props}
-        className={node && tableTooWide(node as unknown as MdNode) ? 'paper-table-wide' : undefined}
-      />
-    </div>
-  ),
+  // Обычная таблица — как была: обёртка с прокруткой не делится по страницам листа (опись пачки).
+  table: ({ node, ...props }) =>
+    node && tableTooWide(node as unknown as MdNode) ? (
+      <div className="paper-table-scroll">
+        <table {...props} className="paper-table-wide" />
+      </div>
+    ) : (
+      <table {...props} />
+    ),
 };
 
 export function Viewer({ materialId }: ViewerProps) {
