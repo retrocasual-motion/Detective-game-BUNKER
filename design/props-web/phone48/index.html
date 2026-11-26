@@ -26,7 +26,7 @@
   <div id="vignette"></div>
   <div id="top"><h1>Материал № 48 · телефон</h1><p>проба WEB-C: форма — кодом, поверхности — фото-карты</p></div>
   <div id="panel">
-    <div id="hint">Один палец — поворот. Два пальца — ближе-дальше и сдвиг. Мышь: колесо — ближе, зажатое колесо — сдвиг, правая кнопка — как было.</div>
+    <div id="hint">Один палец — поворот. Два пальца — ближе-дальше и сдвиг. Кнопки под экраном нажимаются. Мышь: колесо — ближе, зажатое колесо — сдвиг, правая кнопка — как было.</div>
     <div id="buttons"><button id="bFlip" type="button" aria-pressed="false">Перевернуть</button><button id="bSet" type="button">Карты 2K</button><button id="bHome" type="button">Как было</button></div>
   </div>
 </div>
@@ -116,6 +116,16 @@ if (params.get('zoom')) { st.zoom = tg.zoom = parseFloat(params.get('zoom')); }
 const ZMIN = 0.14, ZMAX = 1.6, PAN_LIM = 0.09;
 const clampZ = (z) => Math.min(ZMAX, Math.max(ZMIN, z));
 const ptr = new Map(); let pinch = 0, mid = null, panBtn = false;
+// кнопки под экраном нажимаются: луч от пальца до первой поверхности вещи; если это кнопка — она уходит вниз, пока палец на ней
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(); let keyHeld = null, downAt = null;
+function keyAt(e) {
+  const r = canvas.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  scene.updateMatrixWorld(); ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObject(phone, true)[0];
+  return hit && phone.userData.keys.includes(hit.object.name) ? hit.object.name : null;
+}
+const releaseKey = () => { if (keyHeld) { phone.userData.setKeyPressed(keyHeld, false); keyHeld = null; } };
+
 const worldPerPx = () => 2 * Math.tan(camera.fov * Math.PI / 360) * fitDist * st.zoom / canvas.clientHeight;
 function panBy(dx, dy) {
   const k = worldPerPx();
@@ -126,6 +136,8 @@ canvas.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefau
 canvas.addEventListener('pointerdown', (e) => {
   if (e.button === 2) { home(); return; }
   panBtn = e.button === 1 || e.shiftKey; canvas.setPointerCapture(e.pointerId); ptr.set(e.pointerId, [e.clientX, e.clientY]); pinch = 0; mid = null;
+  releaseKey();
+  if (ptr.size === 1 && !panBtn) { keyHeld = keyAt(e); downAt = [e.clientX, e.clientY]; if (keyHeld) phone.userData.setKeyPressed(keyHeld, true); }
 });
 canvas.addEventListener('pointermove', (e) => {
   const p = ptr.get(e.pointerId); if (!p) return;
@@ -133,6 +145,7 @@ canvas.addEventListener('pointermove', (e) => {
   ptr.set(e.pointerId, [e.clientX, e.clientY]);
   if (ptr.size === 1) {
     if (panBtn) { panBy(dx, dy); return; }
+    if (keyHeld) { if (Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 7) return; releaseKey(); }   // палец поехал — это уже поворот
     const k = 0.008 * Math.min(1, Math.max(0.3, st.zoom * 1.6));   // вплотную поворот медленнее
     tg.q.premultiply(new THREE.Quaternion().setFromAxisAngle(v3(0, 1, 0), dx * k)).premultiply(new THREE.Quaternion().setFromAxisAngle(v3(1, 0, 0), dy * k)); invalidate();
   } else if (ptr.size === 2) {
@@ -142,7 +155,7 @@ canvas.addEventListener('pointermove', (e) => {
     pinch = d; mid = m; invalidate();
   }
 });
-const up = (e) => { ptr.delete(e.pointerId); pinch = 0; mid = null; }; canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+const up = (e) => { ptr.delete(e.pointerId); pinch = 0; mid = null; releaseKey(); }; canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
 canvas.addEventListener('wheel', (e) => { e.preventDefault(); tg.zoom = clampZ(tg.zoom * Math.exp(e.deltaY * 0.0012)); invalidate(); }, { passive: false });
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 function home() { flipped = false; document.getElementById('bFlip').setAttribute('aria-pressed', 'false'); applyView(VIEWS.front); }

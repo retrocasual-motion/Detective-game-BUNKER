@@ -159,7 +159,7 @@ def metal_gain(region, target):
 # светлые крапинки пыли на металле срезаются до фона (шлифовка тоньше и слабее — она остаётся):
 # усиленные «металлом», они давали блестящую крошку вокруг кнопок
 fmed = np.dstack([med8(f[..., c], 0.4) for c in range(3)])
-fmet = np.minimum(f, fmed + 0.06); gm = fmet.mean(2, keepdims=True); fmet = gm + (fmet - gm) * 0.4
+fmet = np.minimum(f, fmed + 0.03); gm = fmet.mean(2, keepdims=True); fmet = gm + (fmet - gm) * 0.4
 alb_m = np.zeros_like(f)
 for region, target in ((band, 0.42), (ring, 0.74), (ear, 0.74)):
     alb_m += soft(region)[..., None] * np.clip(fmet * metal_gain(region, target), 0, 0.97)
@@ -179,7 +179,8 @@ alb = alb * (1 - lint[..., None]) + np.float32([0.205, 0.21, 0.215]) * lint[...,
 base = np.full(L.shape, 0.10, np.float32)
 base[screen] = 0.13; base[pill] = 0.46; base[band] = 0.34; base[ring] = 0.14; base[ear] = 0.24; base[inner] = 0.08
 base = blur(base, 0.08)
-hp = L - blur(L, 0.35)
+Lb = np.minimum(L, med8(L, 0.4) + 0.03)                                          # яркость без крапинок пыли
+hp = Lb - blur(Lb, 0.35)
 rough = base + plastic * (0.38 * scr + 0.05 * haze) + soft(band) * np.clip(hp * 3.0, -0.10, 0.14) + ear_hole * 0.6
 rough = np.clip(rough * (1 - lint) + 0.95 * lint, 0.05, 1.0)
 met = np.clip(wm[..., 0] - ear_hole, 0, 1) * (1 - lint)
@@ -225,7 +226,10 @@ for region, measure in ((reg_call, lambda q: q[..., 1] - np.maximum(q[..., 0], q
         zone = np.clip(1.9 - np.hypot(kX - 40.5, kYm - (kyc + 0.95)) / 1.0, 0, 1)[..., None]
         near_ = np.maximum(near_, zone)
     ka = ka * (1 - near_) + (kb * (1 - m[..., None]) + col * m[..., None]) * near_
-kn = nrm[r0:r1]; ko = np.dstack([met, rough, ao])[r0:r1]
+kn = nrm[r0:r1].copy(); ko = np.dstack([met, rough, ao])[r0:r1].copy()
+zs = np.clip(1.9 - np.hypot(X[r0:r1] - 40.5, Y[r0:r1] - (kyc + 0.95)) / 1.0, 0, 1)   # след значка «питание» — и здесь
+ko[..., 1] = ko[..., 1] * (1 - zs) + float(np.median(rough[pill])) * zs
+kn = kn * (1 - zs[..., None]) + np.float32([0, 0, 1]) * zs[..., None]; kn /= np.linalg.norm(kn, axis=2, keepdims=True)
 u8_ = lambda a_: (np.clip(a_, 0, 1) * 255).round().astype(np.uint8)
 n_img_ = lambda n_: cv2.cvtColor(((n_ * 0.5 + 0.5) * 255).round().astype(np.uint8), cv2.COLOR_RGB2BGR)
 cv2.imwrite(os.path.join(OUT, 'src', 'keys_albedo.png'), u8_(ka))
