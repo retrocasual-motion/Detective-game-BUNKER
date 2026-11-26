@@ -137,7 +137,7 @@ test('поверх ноутбука: цифры и Enter в блокноте н�
   await text(page).pressSequentially('5123');
   await page.keyboard.press('Enter');
   await page.waitForTimeout(400);
-  await expect(page.getByTestId('laptop-lock-msg')).toHaveText('Нарисуйте ключ');
+  await expect(page.getByTestId('laptop-lock-msg')).toHaveText('Нарисуйте ключ или щёлкайте по точкам');
   await expect(page.getByTestId('laptop-view')).toBeVisible();
   const after = await frame.boundingBox();
   const pad = await page.getByTestId('notebook').boundingBox();
