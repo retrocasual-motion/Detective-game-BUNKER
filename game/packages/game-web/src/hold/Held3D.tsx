@@ -11,6 +11,7 @@ import {
 import { type Group, type Object3D, PerspectiveCamera, Quaternion, Vector3 } from 'three';
 import { useFreeArea } from '../device/deviceView.tsx';
 import { useEscLayer } from '../esc.ts';
+import { watchGl } from '../glLost.tsx';
 import { wheelIntent, zoomFactor } from '../input.ts';
 import { reducedMotion } from '../motion.ts';
 import { MAX_DT, SETTLED } from './animate.ts';
@@ -114,11 +115,15 @@ export function useScreenAnchor(ref: RefObject<Object3D | null>, w: number, h: n
   });
 }
 
-/** Щелчок по части вещи — только если мышь почти не двигалась (иначе вещь вращали). */
+/**
+ * Щелчок по части вещи — только если мышь почти не двигалась (иначе вещь вращали). Порог — только
+ * для мыши: кнопка с клавиатуры срабатывает всегда, и после вращения мышью тоже (RV-37).
+ */
 export function onClickPart(fn: () => void) {
   return (e?: ThreeEvent<MouseEvent> | { stopPropagation(): void }) => {
     e?.stopPropagation();
-    if ((gestureNow?.current.moved ?? 0) < CLICK_PX) fn();
+    const mouse = !!e && 'nativeEvent' in e && (e.nativeEvent as MouseEvent).detail !== 0;
+    if (!mouse || (gestureNow?.current.moved ?? 0) < CLICK_PX) fn();
   };
 }
 
@@ -612,6 +617,7 @@ export default function Held3D({
         camera={{ position: [0, 0, CAM_Z], fov: 30 }}
         dpr={[1, 2]}
         frameloop="demand"
+        onCreated={watchGl}
         onPointerMissed={(e) => {
           // Только щелчок левой: правая — «как было» или «отойти» (её «мимо» — не «положить»).
           if (e.type !== 'click') return;

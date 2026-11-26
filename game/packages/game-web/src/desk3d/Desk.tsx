@@ -10,6 +10,7 @@ import {
   Vector2,
   Vector3,
 } from 'three';
+import { reducedMotion } from '../motion.ts';
 import { BOARD_SCALE, type Pose, type Room } from '../room/camera.ts';
 import type { DeskObject } from '../room/decor.ts';
 import { footprints } from './Occluders.tsx';
@@ -195,7 +196,7 @@ export function Desk({
    */
   enabled: RefObject<boolean>;
 }) {
-  const { camera, scene } = useThree();
+  const { camera, scene, invalidate } = useThree();
   const { p } = room;
   // Камера стола — для зоны и протяжки (в покое у стола камера в этой позе).
   const deskCam = useMemo(() => {
@@ -466,7 +467,11 @@ export function Desk({
     };
     if (pileOf(ps.current, id).length > 1)
       st.timer = window.setTimeout(() => {
-        if (press.current === st && !drag.current) st.pile = true;
+        if (press.current === st && !drag.current) {
+          st.pile = true;
+          // Подсветка «беру стопкой» — сразу, и без движения мыши (RV-14: тачпад, кадр по требованию).
+          invalidate();
+        }
       }, HOLD_PILE_MS);
     press.current = st;
     setCursor('grabbing');
@@ -719,7 +724,7 @@ export function Desk({
       else if (d.wall) d.wall = bp ?? d.lastWall;
       // Переход плавный и лёгкий: сразу с места и мягко в конце (автор 24.11).
       const goal = d.wall ? 1 : 0;
-      d.w += (goal - d.w) * (1 - Math.exp(-dt * WALL_RATE));
+      d.w += (goal - d.w) * (reducedMotion() ? 1 : 1 - Math.exp(-dt * WALL_RATE));
       if (Math.abs(goal - d.w) < 0.002) d.w = goal;
       const pt = d.wall ? null : screenToDesk(deskCam, room, m.x, m.y, LIFT);
       if (pt) {
@@ -873,7 +878,9 @@ export function Desk({
 
     // Долетели до стены — карточки на стене игры, вещи со стола убраны.
     const arrived: string[] = [];
-    for (const [id, f] of flying.current) if (now - f.since > FLY_MS) arrived.push(id);
+    // «Уменьшить движение» (RV-6): со стола на доску — сразу.
+    const flyMs = reducedMotion() ? 0 : FLY_MS;
+    for (const [id, f] of flying.current) if (now - f.since > flyMs) arrived.push(id);
     if (arrived.length) {
       for (const id of arrived) {
         const f = flying.current.get(id);

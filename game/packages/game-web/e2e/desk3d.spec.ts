@@ -186,3 +186,24 @@ test('устройство проходит мимо другого (автор 
   // Прошёл мимо ноутбука и встал перед ним, а не упёрся сзади.
   expect(radio?.z ?? 0).toBeGreaterThan(laptop?.z ?? 0);
 });
+
+test('потеря изображения 3D (RV-11): плашка «обновите страницу»; вернул браузер — плашки нет', async ({
+  page,
+}) => {
+  type R = { forceContextLoss(): void; forceContextRestore(): void };
+  const lose = (restore: boolean) =>
+    page.evaluate((r) => {
+      const gl = (window as unknown as { __gl?: R[] }).__gl?.[0];
+      if (!gl) return false;
+      if (r) gl.forceContextRestore();
+      else gl.forceContextLoss();
+      return true;
+    }, restore);
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { __gl?: unknown[] }).__gl?.length ?? 0))
+    .toBeGreaterThan(0);
+  expect(await lose(false)).toBe(true);
+  await expect(page.getByTestId('gl-lost')).toContainText('Обновить страницу');
+  await lose(true);
+  await expect(page.getByTestId('gl-lost')).toBeHidden();
+});
