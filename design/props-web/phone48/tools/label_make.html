@@ -1,0 +1,188 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Ярлык бюро для телефона 48 — вёрстка кодом (форма та же, что у ноутбука 47)</title>
+<style>body{margin:12px;background:#333;color:#ddd;font:13px system-ui}canvas{display:block;margin:8px 0;max-width:100%;background:#000}</style>
+<p>Ярлык вещественного доказательства 70 × 40 мм, 220 пикс/см (1540 × 880). Текст — вёрстка canvas, почерк — Segoe Script (изредка Segoe Print) с разбросом на каждую букву.
+Снять карты: <code>python tools/label_make.py</code> (страница должна быть открыта с сервера).</p>
+<canvas id="color"></canvas><canvas id="normal"></canvas><canvas id="rough"></canvas>
+<script>
+// Ничего не генерируется нейросетью: знак бюро — готовый файл, остальное рисуется здесь.
+// Содержание (решение автора 26.11, вариант B-A + уточнение «Предмет № 47»):
+//   знак бюро · ВЕЩЕСТВЕННОЕ ДОКАЗАТЕЛЬСТВО · Дело № 09-1128 · Предмет № 47 · Описание: ноутбук, чёрный ·
+//   Дата изъятия: 28.10.2009 · Изъял: росчерк без читаемого имени · номер формы «Ф. ВД-1» (правило FN-B).
+const MM = 22, WMM = 70, HMM = 40, W = WMM * MM, H = HMM * MM;
+const INK_PRINT = '#1C346E';
+let seed = 4848;
+const rnd = () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+const rr = (a, b) => a + (b - a) * rnd();
+const mk = (id) => { const c = id ? document.getElementById(id) : document.createElement('canvas'); c.width = W; c.height = H; return c; };
+const blob = (ctx, x, y, rx, ry, rgb, a) => {
+  ctx.save(); ctx.translate(x, y); ctx.scale(rx, ry);
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+  g.addColorStop(0, `rgba(${rgb},${a})`); g.addColorStop(0.6, `rgba(${rgb},${a * 0.45})`); g.addColorStop(1, `rgba(${rgb},0)`);
+  ctx.fillStyle = g; ctx.fillRect(-1, -1, 2, 2); ctx.restore();
+};
+
+async function build() {
+  await Promise.all([document.fonts.load('80px "Segoe Script"'), document.fonts.load('80px "Segoe Print"'), document.fonts.load('600 44px Bahnschrift')]);
+  const mark = new Image(); mark.src = '../bureau_blackwood_mark.png'; await mark.decode();
+
+  const cc = mk('color'), c = cc.getContext('2d');
+  const hc = mk(), g = hc.getContext('2d', { willReadFrequently: true });       // высота: 128 — плоскость
+  const rc = mk('rough'), r = rc.getContext('2d');
+  const ink = mk(), k = ink.getContext('2d');                                  // слой ручки
+
+  // ---- бумага ----
+  c.fillStyle = '#e6e0d0'; c.fillRect(0, 0, W, H);
+  g.fillStyle = 'rgb(128,128,128)'; g.fillRect(0, 0, W, H);
+  r.fillStyle = 'rgb(218,218,218)'; r.fillRect(0, 0, W, H);                    // 0,855 — матовая бумага
+  for (let i = 0; i < 60; i++) blob(c, rr(0, W), rr(0, H), rr(60, 300), rr(40, 200), rnd() < 0.5 ? '255,252,240' : '190,180,150', rr(0.03, 0.09));
+  // волокна бумаги
+  for (let i = 0; i < 2600; i++) {
+    const x = rr(0, W), y = rr(0, H), a = rr(0, Math.PI), l = rr(4, 22), light = rnd() < 0.55;
+    c.strokeStyle = light ? `rgba(255,255,250,${rr(0.05, 0.16)})` : `rgba(120,110,90,${rr(0.03, 0.09)})`; c.lineWidth = rr(0.5, 1.2);
+    c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + Math.cos(a) * l * 0.5 + rr(-3, 3), y + Math.sin(a) * l * 0.5 + rr(-3, 3), x + Math.cos(a) * l, y + Math.sin(a) * l); c.stroke();
+    g.strokeStyle = `rgba(${light ? 255 : 0},${light ? 255 : 0},${light ? 255 : 0},0.05)`; g.lineWidth = 1.2;
+    g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke();
+  }
+
+  // ---- типографская печать (одна краска, синий бюро) ----
+  c.save();
+  c.globalAlpha = 0.9; c.strokeStyle = INK_PRINT; c.fillStyle = INK_PRINT;
+  c.lineWidth = 0.22 * MM; c.strokeRect(1.3 * MM, 1.3 * MM, W - 2.6 * MM, H - 2.6 * MM);
+  c.drawImage(mark, 2.9 * MM, 2.2 * MM, 8.6 * MM, 8.6 * MM);
+  const fit = (text, font, x, y, maxW) => { c.font = font; const w = c.measureText(text).width; c.save(); c.translate(x, y); if (w > maxW) c.scale(maxW / w, 1); c.fillText(text, 0, 0); c.restore(); return Math.min(w, maxW); };
+  c.textBaseline = 'alphabetic';
+  try { c.letterSpacing = '1.5px'; } catch (e) {}
+  fit('ВЕЩЕСТВЕННОЕ ДОКАЗАТЕЛЬСТВО', `700 ${3.75 * MM}px Bahnschrift, "Arial Narrow", Arial, sans-serif`, 13.2 * MM, 8.1 * MM, 53.6 * MM);
+  try { c.letterSpacing = '0px'; } catch (e) {}
+  c.lineWidth = 0.3 * MM; c.beginPath(); c.moveTo(13.2 * MM, 10.2 * MM); c.lineTo(66.8 * MM, 10.2 * MM); c.stroke();
+  const rows = [['Дело №', '09-1128'], ['Предмет №', '48'], ['Описание:', 'телефон, чёрный'], ['Дата изъятия:', '28.10.2009'], ['Изъял:', null]];
+  const Y0 = 16.0, DY = 5.0, lines = [];
+  rows.forEach(([lab, val], i) => {
+    const y = (Y0 + DY * i) * MM;
+    c.font = `500 ${2.25 * MM}px Bahnschrift, Arial, sans-serif`;
+    c.fillText(lab, 3.4 * MM, y - 0.25 * MM);
+    const x0 = 3.4 * MM + c.measureText(lab).width + 1.1 * MM;
+    c.lineWidth = 0.14 * MM; c.beginPath(); c.moveTo(x0, y); c.lineTo(66.6 * MM, y); c.stroke();
+    lines.push({ x0, y, val });
+  });
+  c.font = `500 ${1.15 * MM}px Bahnschrift, Arial, sans-serif`; c.textAlign = 'right';
+  c.fillText('Ф. ВД-1', 66.6 * MM, 37.95 * MM);
+  c.restore();
+  // печать неидеальна: мелкие непропечатки
+  for (let i = 0; i < 900; i++) { c.fillStyle = `rgba(230,224,208,${rr(0.25, 0.7)})`; c.fillRect(rr(0, W), rr(0, 16.5 * MM), rr(0.6, 2), rr(0.6, 2)); }
+
+  // ---- ручка: синяя шариковая, неровно, с разным нажимом ----
+  k.textBaseline = 'alphabetic'; k.lineJoin = 'round'; k.lineCap = 'round';
+  // Каждая буква рисуется отдельно и своей рукой: свой размер, растяжение, наклон, сдвиг по строке, нажим и толщина,
+  // а сам контур слегка «ведёт» (волна по строкам и столбцам пикселей) — две одинаковые буквы не совпадают.
+  // Изредка буква берётся из второй рукописной гарнитуры (Segoe Print) — как у человека, пишущего одну букву двумя способами.
+  const gl = document.createElement('canvas'), gw = document.createElement('canvas');
+  const seen = {};
+  const hand = (text, x, y, size) => {
+    let drift = rr(-0.6, 0.2) * MM * 0.2, slope = rr(-0.022, -0.006);          // строка чуть ползёт вверх
+    let lean = rr(-0.03, 0.03), leanV = 0;                                      // наклон плавает вдоль строки
+    for (const ch of text) {
+      if (ch === ' ') { x += size * rr(0.26, 0.40); continue; }
+      const n = seen[ch] = (seen[ch] || 0) + 1;                                 // какое по счёту появление этой буквы
+      const alt = /[а-яё]/i.test(ch) && !/[тдгик]/i.test(ch) && (n % 3 === 2 ? rnd() < 0.55 : rnd() < 0.07);
+      const s = size * rr(0.90, 1.10) * (alt ? 0.93 : 1);
+      const font = `${s}px ${alt ? '"Segoe Print", "Segoe Script"' : '"Segoe Script", "Segoe Print"'}, cursive`;
+      k.font = font;
+      const w = k.measureText(ch).width;
+      const press = rr(0.55, 1.0), pad = Math.ceil(s * 0.7), cw = Math.ceil(w + 2 * pad), chh = Math.ceil(s * 2.4), by = Math.round(s * 1.5);
+      gl.width = gw.width = cw; gl.height = gw.height = chh;
+      const a = gl.getContext('2d'), b = gw.getContext('2d');
+      a.font = font; a.textBaseline = 'alphabetic'; a.lineJoin = 'round'; a.lineCap = 'round';
+      a.fillStyle = `rgba(27,48,138,${press})`; a.strokeStyle = `rgba(27,48,138,${press * 0.8})`; a.lineWidth = rr(0.5, 2.9);
+      a.fillText(ch, pad, by); a.strokeText(ch, pad, by);
+      // контур «ведёт»: строки пикселей сдвигаются по горизонтали, затем столбцы — по вертикали
+      const ax = s * rr(0.012, 0.040), fx = rr(1.2, 3.2) * Math.PI / s, px = rr(0, 6.28), bx = rr(-0.035, 0.035);
+      for (let r0 = 0; r0 < chh; r0++) b.drawImage(gl, 0, r0, cw, 1, ax * Math.sin(r0 * fx + px) + bx * (r0 - by), r0, cw, 1);
+      a.clearRect(0, 0, cw, chh);
+      const ay = s * rr(0.010, 0.032), fy = rr(1.0, 3.0) * Math.PI / s, py = rr(0, 6.28);
+      for (let c0 = 0; c0 < cw; c0++) a.drawImage(gw, c0, 0, 1, chh, c0, ay * Math.sin(c0 * fy + py), 1, chh);
+      leanV = leanV * 0.6 + rr(-0.035, 0.035); lean = Math.max(-0.09, Math.min(0.07, lean + leanV * 0.5));
+      k.save(); k.translate(x, y + drift + rr(-2.6, 2.4)); k.rotate(lean + rr(-0.045, 0.045)); k.transform(rr(0.90, 1.10), 0, rr(-0.20, 0.03), rr(0.93, 1.07), 0, 0);
+      k.drawImage(gl, -pad, -by);
+      k.restore();
+      x += w * rr(0.89, 1.04) + (ch === '-' ? size * 0.06 : 0); drift += slope * w;
+    }
+    return x;
+  };
+  hand('09-1128', lines[0].x0 + 3.0 * MM, lines[0].y - 0.5 * MM, 3.55 * MM);
+  hand('48', lines[1].x0 + 3.6 * MM, lines[1].y - 0.55 * MM, 3.75 * MM);
+  hand('телефон, чёрный', lines[2].x0 + 2.2 * MM, lines[2].y - 0.6 * MM, 3.35 * MM);
+  hand('28.10.2009', lines[3].x0 + 2.6 * MM, lines[3].y - 0.45 * MM, 3.5 * MM);
+  { // подпись-росчерк: петли и хвост, ни одной читаемой буквы
+    const x = lines[4].x0 + 5.5 * MM, y = lines[4].y - 0.3 * MM, u = MM;
+    k.strokeStyle = 'rgba(27,48,138,0.9)';
+    const seg = (pts, w) => { k.lineWidth = w; k.beginPath(); k.moveTo(x + pts[0] * u, y + pts[1] * u); for (let i = 2; i < pts.length; i += 6) k.bezierCurveTo(x + pts[i] * u, y + pts[i + 1] * u, x + pts[i + 2] * u, y + pts[i + 3] * u, x + pts[i + 4] * u, y + pts[i + 5] * u); k.stroke(); };
+    seg([0, -0.3, 0.6, -4.4, 2.4, -4.9, 2.2, -1.6, 2.0, 0.9, 0.4, 1.2, 1.5, -1.4, 2.6, -3.6, 4.2, -3.9, 4.0, -1.5, 3.9, 0.2, 4.9, -0.4, 5.5, -1.6], 2.6);
+    seg([5.5, -1.6, 6.0, -2.6, 6.5, -2.4, 6.7, -1.2, 6.9, -0.2, 7.4, -1.9, 7.9, -2.0, 8.3, -2.1, 8.2, -0.5, 8.9, -0.9, 9.6, -1.3, 9.9, -2.3, 10.6, -1.8], 2.2);
+    seg([10.6, -1.8, 11.4, -1.2, 11.9, -0.6, 13.2, -1.5, 16.0, -3.3, 20.5, -3.1, 24.5, -2.2], 1.8);
+    seg([3.2, 1.3, 8.0, 0.2, 14.0, 0.5, 19.0, 0.1], 1.5);                  // подчёркивающий хвост
+  }
+  // нажим: местами паста ложится слабее, редкие пропуски шарика
+  k.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < 260; i++) blob(k, rr(0, W), rr(13 * MM, H), rr(8, 40), rr(6, 26), '0,0,0', rr(0.12, 0.42));
+  for (let i = 0; i < 1500; i++) { k.fillStyle = `rgba(0,0,0,${rr(0.3, 0.9)})`; k.fillRect(rr(0, W), rr(13 * MM, H), rr(0.6, 1.8), rr(0.6, 1.8)); }
+  k.globalCompositeOperation = 'source-over';
+  c.drawImage(ink, 0, 0);
+  // паста чуть блестит и продавливает бумагу
+  r.save(); r.globalCompositeOperation = 'multiply';
+  { const t = mk(), tc = t.getContext('2d'); tc.fillStyle = '#fff'; tc.fillRect(0, 0, W, H); tc.globalCompositeOperation = 'source-atop'; tc.drawImage(ink, 0, 0);
+    const id = tc.getImageData(0, 0, W, H), src = k.getImageData(0, 0, W, H).data, d = id.data;
+    for (let i = 0; i < d.length; i += 4) { const a = src[i + 3] / 255; d[i] = d[i + 1] = d[i + 2] = 255 - a * 80; d[i + 3] = 255; }
+    tc.putImageData(id, 0, 0); r.drawImage(t, 0, 0);
+    for (let i = 0; i < d.length; i += 4) { const a = src[i + 3] / 255; d[i] = d[i + 1] = d[i + 2] = 0; d[i + 3] = a * 150; }
+    tc.putImageData(id, 0, 0); g.filter = 'blur(1.2px)'; g.drawImage(t, 0, 0); g.filter = 'none'; }
+  r.restore();
+
+  // ---- следы обращения ----
+  // края засалены пальцами: желтее и чуть глаже, сильнее у угла, за который берут (левый нижний), и справа вверху
+  const edge = (x, y, rx, ry, a) => { blob(c, x, y, rx, ry, '150,120,70', a); blob(r, x, y, rx, ry, '150,150,150', a * 1.4); };
+  for (let i = 0; i < 90; i++) {
+    const t = rnd(), side = Math.floor(rr(0, 4));
+    const x = side === 0 ? 0 : side === 1 ? W : t * W, y = side === 2 ? 0 : side === 3 ? H : t * H;
+    edge(x, y, rr(20, 70), rr(20, 70), rr(0.05, 0.14));
+  }
+  edge(0.5 * MM, H - 0.5 * MM, 9 * MM, 7 * MM, 0.26); edge(3 * MM, H - 2 * MM, 5 * MM, 4 * MM, 0.16);
+  edge(W - 1 * MM, 1 * MM, 8 * MM, 6 * MM, 0.2); edge(W, H * 0.62, 3.5 * MM, 6 * MM, 0.14);
+  for (let i = 0; i < 5; i++) edge(rr(0.2, 0.8) * W, rr(0.3, 0.9) * H, rr(4, 7) * MM, rr(3, 5) * MM, rr(0.03, 0.06));   // отпечатки по полю
+  // залом: правый верхний угол отгибали (там он и приподнят), второй — слабый у левого нижнего
+  const crease = (x0, y0, x1, y1, s) => {
+    const nx = -(y1 - y0), ny = x1 - x0, l = Math.hypot(nx, ny), ox = nx / l, oy = ny / l;
+    c.lineCap = 'round';
+    c.strokeStyle = `rgba(255,255,248,${0.55 * s})`; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke();
+    c.strokeStyle = `rgba(95,85,65,${0.30 * s})`; c.lineWidth = 2.4; c.beginPath(); c.moveTo(x0 + ox * 2.2, y0 + oy * 2.2); c.lineTo(x1 + ox * 2.2, y1 + oy * 2.2); c.stroke();
+    g.strokeStyle = `rgba(255,255,255,${0.75 * s})`; g.lineWidth = 3; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+    g.strokeStyle = `rgba(0,0,0,${0.5 * s})`; g.lineWidth = 3; g.beginPath(); g.moveTo(x0 + ox * 3, y0 + oy * 3); g.lineTo(x1 + ox * 3, y1 + oy * 3); g.stroke();
+    r.strokeStyle = `rgba(255,255,255,${0.5 * s})`; r.lineWidth = 3; r.beginPath(); r.moveTo(x0, y0); r.lineTo(x1, y1); r.stroke();
+    for (let i = 0; i < 40; i++) { const t = rnd(); c.fillStyle = `rgba(255,255,250,${rr(0.2, 0.6) * s})`; c.fillRect(x0 + (x1 - x0) * t + rr(-2, 2), y0 + (y1 - y0) * t + rr(-2, 2), rr(1, 3), rr(1, 2)); }
+  };
+  // один залом: правый верхний угол отгибали — там он и отошёл (подъём этого угла — в phone48.js, labLift)
+  crease(W - 15.5 * MM, 0, W, 11.5 * MM, 1.0);
+  // по самому краю бумага чуть темнее и взлохмачена
+  c.strokeStyle = 'rgba(110,95,70,0.22)'; c.lineWidth = 3; c.strokeRect(0, 0, W, H);
+  for (let i = 0; i < 500; i++) { const s = Math.floor(rr(0, 4)), t = rnd(); c.fillStyle = `rgba(${rnd() < 0.5 ? '250,248,240' : '120,105,80'},${rr(0.2, 0.5)})`; c.fillRect(s === 0 ? rr(0, 3) : s === 1 ? W - rr(1, 4) : t * W, s === 2 ? rr(0, 3) : s === 3 ? H - rr(1, 4) : t * H, rr(1, 3), rr(1, 3)); }
+  // пылинки и шум
+  const noise = (ctx, amp) => { const id = ctx.getImageData(0, 0, W, H), d = id.data; for (let i = 0; i < d.length; i += 4) { const n = (rnd() - 0.5) * amp; d[i] += n; d[i + 1] += n; d[i + 2] += n; } ctx.putImageData(id, 0, 0); };
+  noise(c, 9); noise(r, 14); noise(g, 10);
+
+  // ---- нормали из высоты (OpenGL, +Y вверх) ----
+  const nc = mk('normal'), n = nc.getContext('2d');
+  const src = g.getImageData(0, 0, W, H).data, out = n.createImageData(W, H), d = out.data, K = 2.4 / 255;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const xl = Math.max(0, x - 1), xr = Math.min(W - 1, x + 1), yu = Math.max(0, y - 1), yd = Math.min(H - 1, y + 1);
+    const dx = (src[(y * W + xr) * 4] - src[(y * W + xl) * 4]) * K, dy = (src[(yd * W + x) * 4] - src[(yu * W + x) * 4]) * K;
+    const inv = 1 / Math.sqrt(dx * dx + dy * dy + 1), i = (y * W + x) * 4;
+    d[i] = (-dx * inv * 0.5 + 0.5) * 255; d[i + 1] = (dy * inv * 0.5 + 0.5) * 255; d[i + 2] = (inv * 0.5 + 0.5) * 255; d[i + 3] = 255;
+  }
+  n.putImageData(out, 0, 0);
+  window.__label = { color: cc, normal: nc, rough: rc };
+  document.documentElement.dataset.ready = '1';
+}
+build();
+</script>
