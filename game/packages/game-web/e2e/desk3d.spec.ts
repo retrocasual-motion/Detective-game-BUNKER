@@ -111,8 +111,8 @@ test('3D-стол: лист двигается и остаётся после п
   const moved = savedPut(page);
   await page.mouse.move(a?.x ?? 0, a?.y ?? 0);
   await page.mouse.down();
-  // К игроку: слева — пакет вещдоков, справа — клавиатура.
-  await page.mouse.move((a?.x ?? 0) + 30, (a?.y ?? 0) + 90, { steps: 15 });
+  // К середине стола: папка «Протоколы» — справа у переднего края (ряд папок, автор 26.11).
+  await page.mouse.move((a?.x ?? 0) - 160, (a?.y ?? 0) - 40, { steps: 15 });
   await page.waitForTimeout(400);
   await page.mouse.up();
   await moved;
@@ -162,4 +162,27 @@ test('3D-стол: «Осмотр места» — папка стопкой; п
   await page.mouse.click(t?.x ?? 0, t?.y ?? 0);
   await expect(page.getByTestId('held')).toBeVisible();
   await page.keyboard.press('Escape');
+});
+
+test('устройство проходит мимо другого (автор 26.11): приёмник — вперёд через ноутбук', async ({
+  page,
+}) => {
+  await spill(page, 'seized');
+  await page.waitForTimeout(1200);
+  await deskSettled(page);
+  const at = async (id: string) => (await pieces(page)).find((q) => q.id === id);
+  const laptop = await at('47');
+  const radio0 = await at('50');
+  expect((radio0?.z ?? 0) < (laptop?.z ?? 0)).toBe(true);
+  const g = await grab(page, '50');
+  const saved = savedPut(page);
+  await page.mouse.move(g?.x ?? 0, g?.y ?? 0);
+  await page.mouse.down();
+  await page.mouse.move((g?.x ?? 0) - 40, (g?.y ?? 0) + 170, { steps: 20 });
+  await page.waitForTimeout(300);
+  await page.mouse.up();
+  await saved;
+  const radio = await at('50');
+  // Прошёл мимо ноутбука и встал перед ним, а не упёрся сзади.
+  expect(radio?.z ?? 0).toBeGreaterThan(laptop?.z ?? 0);
 });

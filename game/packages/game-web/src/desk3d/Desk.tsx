@@ -81,6 +81,14 @@ const FLY_MS = 750;
 const SPILL_AT = { x: 0.08, z: 0.52 };
 /** Куда — изъятые устройства: середина у стены, за листами (крупные спереди закрыли бы стол). */
 const DEVICES_AT = { x: 0.08, z: 0.36 };
+/** Места устройств после вскрытия короба «Изъятое» (автор 26.11, снимок раскладки), м и радианы. */
+const DEVICE_SPOTS: Record<string, { x: number; z: number; rot: number }> = {
+  '50': { x: -0.04, z: 0.18, rot: 0 },
+  '47': { x: -0.1, z: 0.37, rot: 0 },
+  '24': { x: 0.15, z: 0.36, rot: 0 },
+  '49': { x: 0.16, z: 0.45, rot: -0.05 },
+  '48': { x: 0.3, z: 0.44, rot: -0.35 },
+};
 /** DV-H (автор 24.11 — в игру): лист ложится на устройство и полого прогибается по нему. */
 const DRAPE = true;
 /**
@@ -299,7 +307,33 @@ export function Desk({
           .map((it) => ({ id: it.id, kind: kindOf(it.id) }))
           .sort((a, b) => (dev ? area(b.kind) - area(a.kind) : 0));
       // Устройства обходят всё, что уже лежит (стопки, газету): под листами их не было бы видно.
-      const devs = scatter(pick(true), zone, DEVICES_AT, 11, 0.1, placed, () => true);
+      // Своё место каждого устройства (автор 26.11, снимок): приёмник сзади посередине, ноутбук перед
+      // ним, камера и ручка правее, телефон справа. Занято — рядом, как прежде.
+      const devs: Piece[] = [];
+      const loose: { id: string; kind: string }[] = [];
+      for (const it of pick(true)) {
+        const at = DEVICE_SPOTS[it.id];
+        const [w, d, t] = sizeOf(it.kind);
+        const cand: Piece | null = at
+          ? {
+              id: it.id,
+              kind: it.kind,
+              w,
+              d,
+              t,
+              x: at.x,
+              z: at.z,
+              rot: at.rot,
+              layer: 0,
+              stack: it.id,
+            }
+          : null;
+        const free =
+          cand && allowed(cand, zone) && ![...placed, ...devs].some((q) => overlap(q, cand));
+        if (cand && free) devs.push(cand);
+        else loose.push(it);
+      }
+      devs.push(...scatter(loose, zone, DEVICES_AT, 11, 0.1, [...placed, ...devs], () => true));
       // Листы — ровной стопкой (DC-B, автор 25.11: стопка «к прочтению», без веера): место — одно,
       // свободное от устройств; первый по описи — сверху. Чуть неровно, как сложенные руками.
       // Каждая группа — своей стопкой на своём месте (VZ-A, ST-B, OPS-A): стартовые листы, опись на
@@ -705,7 +739,10 @@ export function Desk({
         for (const id of d.pass)
           if (!devices.some((q) => q.id === id && rects.some((r) => overlap(r, q))))
             d.pass.delete(id);
-        const obstacles = devices.filter((q) => !d.pass.has(q.id));
+        // Устройства на пути — не преграда (автор 26.11: «тяну приёмник вперёд — ноутбук мешает, хочу
+        // мимо»): вещь в руке проходит поверх них; отпустили на устройстве — встаёт рядом (drop).
+        const obstacles: Piece[] = [];
+        void devices;
         const ck = obstacles.map((q) => q.id).join(',');
         if (d.cacheKey !== ck) {
           d.cache = new Map();
