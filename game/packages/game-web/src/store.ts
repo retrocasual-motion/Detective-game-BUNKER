@@ -39,19 +39,10 @@ import {
 } from '@bunker/shared';
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import {
-  ackExcerpts,
-  getExcerpts,
-  getMaterials,
-  getState,
-  PAGE_ID,
-  postAction,
-  putState,
-} from './api.ts';
+import { getMaterials, getState, PAGE_ID, postAction, putState } from './api.ts';
 import { clampToBounds } from './canvas/math.ts';
 import { todayKey } from './clock.ts';
 import { createSaver } from './save.ts';
-import { openSite } from './site.ts';
 import { moveItem } from './wall/wall-actions.ts';
 
 const screen = () => ({ width: window.innerWidth, height: window.innerHeight });
@@ -161,6 +152,14 @@ interface GameStore {
   /** Компьютер следователя открыт на этом материале (поиск, 4c-3). */
   pcMaterial: string | null;
   openPc(material: string | null): void;
+  /**
+   * Сайт дела, который открыть в браузере компьютера следователя (A-288 п. 9): ссылка в листе,
+   * записке, выписке. `at` — новый переход (тот же адрес ещё раз — тоже переход); `letter` — письмо
+   * веб-почты, на котором выписали.
+   */
+  pcSite: { address: string; letter?: number; at: number } | null;
+  /** Ссылка на сайт дела из листа, записки, выписки: компьютер следователя, браузер, страница. */
+  openSite(address: string, letter?: number): void;
   /**
    * Вскрыть конверт архива или коробку (A-260): содержимое конвертов — на стол (3D-стол, автор
    * 24.11), коробок — на стену группой.
@@ -354,44 +353,6 @@ export const useGame = create<GameStore>((set, get) => {
       const s = get().saveStatus;
       if (s === 'error' || s === 'saving') e.preventDefault();
     });
-    // Выписки с сайтов (A-272, DB-B): ждут на сервере — повесить, сохранить, убрать из очереди.
-    const takeExcerpts = async () => {
-      const list = await getExcerpts();
-      if (!list.length) return;
-      for (const x of list) get().pinExcerpt(x);
-      await saver.flush();
-      // Подтвердить серверу — только когда стена с выписками сохранена (F10): иначе выписки
-      // остаются в очереди и придут снова при следующем возвращении во вкладку.
-      if (get().saveStatus !== 'saved') return;
-      await ackExcerpts(list.map((x) => x.id));
-    };
-    // Игрок вернулся из вкладки сайта (A-272): открытое там — в игре (коробка банка, кабинет).
-    let lookedAt = 0;
-    let lookLater: ReturnType<typeof setTimeout> | null = null;
-    const look = () => {
-      const now = Date.now();
-      if (document.hidden || !get().state || get().elsewhere) return;
-      // Не чаще раза в 1,5 с; вернулись раньше — проверить чуть позже, а не пропустить: иначе
-      // открытое на сайте (коробка банка) появится лишь при следующем возвращении.
-      if (now - lookedAt < 1500) {
-        if (!lookLater)
-          lookLater = setTimeout(
-            () => {
-              lookLater = null;
-              look();
-            },
-            1500 - (now - lookedAt),
-          );
-        return;
-      }
-      lookedAt = now;
-      getMaterials()
-        .then((m) => get().addReleased(m))
-        .then(() => takeExcerpts())
-        .catch(() => undefined);
-    };
-    window.addEventListener('focus', look);
-    document.addEventListener('visibilitychange', look);
     // Одна вкладка с делом (R2-02): новая говорит «я здесь» — прежняя досылает своё и перестаёт
     // сохранять, иначе её старое состояние (таймер письма и т. п.) затёрло бы работу в новой.
     if ('BroadcastChannel' in window) {
@@ -432,6 +393,7 @@ export const useGame = create<GameStore>((set, get) => {
     computerOpen: false,
     deskPhone: false,
     pcMaterial: null,
+    pcSite: null,
     held: null,
     laptop: null,
     phone: null,
@@ -459,6 +421,16 @@ export const useGame = create<GameStore>((set, get) => {
 
     setComputerOpen(open) {
       set({ computerOpen: open, pcMaterial: null });
+    },
+
+    openSite(address, letter) {
+      set({
+        computerOpen: true,
+        pcMaterial: null,
+        pcSite: { address, ...(letter ? { letter } : {}), at: Date.now() },
+        held: null,
+        viewerId: null,
+      });
     },
 
     openPc(material) {
@@ -724,9 +696,10 @@ export const useGame = create<GameStore>((set, get) => {
         get().openViewer(x.material, find);
         return;
       }
+      // С сайта — сайт в браузере компьютера следователя, выписанные слова подсвечены (A-288).
       if (x.place.kind === 'site') {
-        const hash = `#x=${encodeURIComponent(x.text)}${x.place.letter ? `&l=${x.place.letter}` : ''}`;
-        openSite(x.place.address ?? '', window, hash);
+        get().openSite(x.place.address ?? '', x.place.letter);
+        set({ find });
         return;
       }
       const screen = x.place.screen;

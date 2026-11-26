@@ -1,10 +1,20 @@
 import type { Locator, Page } from '@playwright/test';
-import { expect, test, toWall } from './fixtures.ts';
+import { expect, leavePc, siteInPc, test, toWall } from './fixtures.ts';
 
 /**
  * Выписки на стену (A-272, AC-6; DB-B): выделить слова на сайте или на экране устройства →
  * «На стену» → каталожка с источником; «открыть» — источник на этом месте; снять со стены.
  */
+
+const lit = (page: Page) =>
+  page.evaluate(
+    () =>
+      // Экран устройства подсвечивает своей подсветкой (RV-26), лист — своей.
+      ((CSS as unknown as { highlights: Map<string, Set<Range>> }).highlights.get('screen-find')
+        ?.size ?? 0) +
+      ((CSS as unknown as { highlights: Map<string, Set<Range>> }).highlights.get('case-find')
+        ?.size ?? 0),
+  );
 
 /** Выделить слова внутри элемента и отпустить мышь — как рукой. */
 async function select(el: Locator, words: string) {
@@ -25,45 +35,30 @@ async function select(el: Locator, words: string) {
   }, words);
 }
 
-async function site(page: Page, address: string): Promise<Page> {
-  const r = await page.request.post('/api/site/open', { data: { address } });
-  const { url } = (await r.json()) as { url: string };
-  const tab = await page.context().newPage();
-  await tab.goto(url);
-  await expect(tab.getByTestId('site')).toBeVisible();
-  return tab;
-}
-
-test('с сайта: выделить → «На стену» → в игре каталожка с источником; «открыть» — сайт на этом месте; снять', async ({
+test('с сайта: выделить → «На стену» → сразу каталожка с источником; щелчок — сайт на этом месте; снять', async ({
   page,
 }) => {
-  const vl = await site(page, 'vaultline-program.com');
+  const vl = await siteInPc(page, 'vaultline-program.com');
   await select(vl.locator('.site-main'), 'Месяц тишины');
-  await vl.getByTestId('site-to-wall').click();
-  await expect(vl.getByTestId('site-pinned')).toContainText('На стене');
-  // Вернулся в игру — выписка на стене.
-  await page.bringToFront();
-  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await page.getByTestId('pc-to-wall').click();
+  // Выписка на стене сразу (A-288 п. 9: очереди и вкладки нет).
+  await leavePc(page);
   await toWall(page);
   const card = page.locator('.paper-excerpt');
   await expect(card).toHaveCount(1);
   await expect(card).toContainText('Месяц тишины');
   await expect(card).toContainText('vaultline-program.com');
-  // Щелчок по выписке — сайт во вкладке, слова подсвечены (хеш выписки в адресе; UX-13).
-  const [tab] = await Promise.all([
-    page.context().waitForEvent('page'),
-    card.locator('.excerpt-text').click(),
-  ]);
-  await expect(tab.getByTestId('site')).toBeVisible();
-  await expect(tab).toHaveURL(/#x=/);
+  // Щелчок по выписке — сайт в браузере компьютера, слова подсвечены (UX-13, RV-26).
+  await card.locator('.excerpt-text').click();
+  await expect(page.getByTestId('pc-web').getByTestId('site')).toBeVisible();
+  await expect.poll(() => lit(page)).toBeGreaterThan(0);
   // Снять выписку со стены.
-  await page.bringToFront();
+  await leavePc(page);
   await card.hover();
   await page.getByRole('button', { name: 'Снять выписку' }).click();
   await expect(page.locator('.paper-excerpt')).toHaveCount(0);
-  // После перезагрузки — очередь пуста, выписка не вернулась.
+  // После перезагрузки выписка не вернулась.
   await page.reload();
-  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await toWall(page);
   await expect(page.locator('.paper-excerpt')).toHaveCount(0);
 });
@@ -115,15 +110,6 @@ async function selectAcross(el: Locator, from: string, to: string) {
 }
 
 /** Сколько мест подсвечено (CSS Custom Highlight «case-find»). */
-const lit = (page: Page) =>
-  page.evaluate(
-    () =>
-      // Экран устройства подсвечивает своей подсветкой (RV-26), лист — своей.
-      ((CSS as unknown as { highlights: Map<string, Set<Range>> }).highlights.get('screen-find')
-        ?.size ?? 0) +
-      ((CSS as unknown as { highlights: Map<string, Set<Range>> }).highlights.get('case-find')
-        ?.size ?? 0),
-  );
 
 test('строка журнала через ячейки → «На стену»; по ссылке — слова подсвечены (7.4, 21.11)', async ({
   page,

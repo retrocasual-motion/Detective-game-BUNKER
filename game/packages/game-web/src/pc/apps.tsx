@@ -1,12 +1,12 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { postAction } from '../api.ts';
-import { SITE_ELSEWHERE } from '../laptop/apps.tsx';
 import { formatWait, OFFLINE, useFieldWait } from '../lock.ts';
 import { NO_LINKS, remarkSites } from '../paperLinks.tsx';
-import { openSite } from '../site.ts';
+import { domainOf, goToSite } from '../site.ts';
+import { CaseSite } from '../sites/CaseSite.tsx';
 import { useGame } from '../store.ts';
 import { dateForEngine, forScreen, issueOf, normalizeDate } from './content.ts';
 
@@ -44,16 +44,26 @@ export function DocWindow({ id }: { id: string }) {
 }
 
 /** Ячейки, по которым можно щёлкнуть, — короткие значения (код, терминал, маршрут), не время. */
+type PcPage =
+  | { kind: 'archive' }
+  | { kind: 'doc'; id: string }
+  | { kind: 'text'; text: string }
+  | { kind: 'site'; address: string; letter?: number };
+
+const ARCHIVE = 'blackwood-chronicle.com/arhiv';
+
 /**
  * Браузер компьютера дела: закладка «Архив номеров» (17) — поле «Дата выпуска» (движок, LK-A),
- * открытый выпуск — страницей; адресная строка — сайты в новой вкладке (A-272, BR-A).
+ * открытый выпуск — страницей; адресная строка, назад и вперёд — сайты дела здесь же, в окне
+ * (A-288 п. 9: настоящая вкладка не открывается). Ссылка на сайт в листе, записке или выписке
+ * открывает его тут (`pcSite`).
  */
 export function PcBrowser() {
   const archive = useGame((g) => g.materials.find((m) => m.id === '17'));
-  const [page, setPage] = useState<
-    { kind: 'archive' } | { kind: 'doc'; id: string } | { kind: 'text'; text: string }
-  >({ kind: 'archive' });
-  const [typed, setTyped] = useState('blackwood-chronicle.com/arhiv');
+  const [page, setPage] = useState<PcPage>({ kind: 'archive' });
+  const [url, setUrl] = useState(ARCHIVE);
+  const [typed, setTyped] = useState(ARCHIVE);
+  const [hist, setHist] = useState<{ back: string[]; fwd: string[] }>({ back: [], fwd: [] });
   const [date, setDate] = useState('');
   const [msg, setMsg] = useState('');
   const field = 'архив номеров газеты';
@@ -74,15 +84,33 @@ export function PcBrowser() {
       setMsg('');
     } else setMsg(!r ? `${OFFLINE}.` : (r.reply ?? 'Выпуск за эту дату не оцифрован.'));
   };
-  const go = (address: string) => {
-    if (/blackwood-chronicle\.com/.test(address)) {
+  /** Открыть адрес; `letter` — письмо веб-почты (выписка). */
+  const go = async (address: string, letter?: number) => {
+    setUrl(address);
+    setTyped(address);
+    if (domainOf(address) === 'blackwood-chronicle.com') {
       setPage({ kind: 'archive' });
       return;
     }
-    // Сайты — настоящие, в новой вкладке (A-272, BR-A); здесь только архив газеты.
-    openSite(address);
-    setPage({ kind: 'text', text: SITE_ELSEWHERE });
+    setPage({ kind: 'text', text: 'Загрузка…' });
+    const r = await goToSite(address);
+    if ('address' in r) {
+      setUrl(r.address);
+      setTyped(r.address);
+      setPage({ kind: 'site', address: r.address, ...(letter ? { letter } : {}) });
+    } else setPage({ kind: 'text', text: r.reply });
   };
+  /** Переход игрока (адрес, закладка, ссылка): в историю. */
+  const visit = (address: string, letter?: number) => {
+    setHist((h) => ({ back: [...h.back, url], fwd: [] }));
+    void go(address, letter);
+  };
+  // Ссылка на сайт из листа, записки, выписки — сюда (pcSite.at — каждый новый переход).
+  const want = useGame((g) => g.pcSite);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: только на новый переход
+  useEffect(() => {
+    if (want) visit(want.address, want.letter);
+  }, [want?.at]);
 
   return (
     <div className="lap-browser" data-testid="pc-browser">
@@ -90,9 +118,39 @@ export function PcBrowser() {
         className="lap-toolbar lap-navbar"
         onSubmit={(e) => {
           e.preventDefault();
-          if (typed.trim()) go(typed.trim());
+          if (typed.trim()) visit(typed.trim());
         }}
       >
+        <button
+          type="button"
+          className="lap-round"
+          aria-label="Назад"
+          data-testid="pc-back"
+          disabled={!hist.back.length}
+          onClick={() => {
+            const prev = hist.back[hist.back.length - 1];
+            if (prev === undefined) return;
+            setHist((h) => ({ back: h.back.slice(0, -1), fwd: [url, ...h.fwd] }));
+            void go(prev);
+          }}
+        >
+          ←
+        </button>
+        <button
+          type="button"
+          className="lap-round"
+          aria-label="Вперёд"
+          data-testid="pc-forward"
+          disabled={!hist.fwd.length}
+          onClick={() => {
+            const next = hist.fwd[0];
+            if (next === undefined) return;
+            setHist((h) => ({ back: [...h.back, url], fwd: h.fwd.slice(1) }));
+            void go(next);
+          }}
+        >
+          →
+        </button>
         <span className="lap-label">Адрес</span>
         <input
           className="lap-url"
@@ -107,14 +165,7 @@ export function PcBrowser() {
       <div className="lap-favbar">
         <span className="lap-label">Закладки</span>
         {archive && (
-          <button
-            type="button"
-            data-testid="pc-fav-17"
-            onClick={() => {
-              setTyped('blackwood-chronicle.com/arhiv');
-              setPage({ kind: 'archive' });
-            }}
-          >
+          <button type="button" data-testid="pc-fav-17" onClick={() => visit(ARCHIVE)}>
             {archive.title}
           </button>
         )}
@@ -122,7 +173,7 @@ export function PcBrowser() {
       <div
         className="lap-web"
         data-testid="pc-web"
-        data-material={page.kind === 'doc' ? page.id : '17'}
+        data-material={page.kind === 'doc' ? page.id : page.kind === 'archive' ? '17' : undefined}
       >
         {page.kind === 'archive' && archive ? (
           <div className="pc-news">
@@ -153,7 +204,9 @@ export function PcBrowser() {
         ) : page.kind === 'doc' ? (
           <DocBody id={page.id} />
         ) : page.kind === 'text' ? (
-          <p>{page.text}</p>
+          <p data-testid="pc-web-text">{page.text}</p>
+        ) : page.kind === 'site' ? (
+          <CaseSite address={page.address} letter={page.letter} onGo={visit} />
         ) : null}
       </div>
     </div>

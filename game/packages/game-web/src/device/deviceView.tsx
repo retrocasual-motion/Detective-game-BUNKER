@@ -49,6 +49,8 @@ export function useSelectionCard(testId: string, kind: ScreenKind) {
     source: string;
     /** Раздел программы, экран телефона — откуда выписано (7.5): туда и откроется. */
     screen?: string;
+    /** Страница сайта дела в браузере (A-288 п. 9): адрес и письмо веб-почты. */
+    site?: { address: string; letter?: number };
     x: number;
     y: number;
   } | null>(null);
@@ -78,6 +80,7 @@ export function useSelectionCard(testId: string, kind: ScreenKind) {
       material,
       source: at?.closest('[data-source]')?.getAttribute('data-source') ?? title,
       screen: at?.closest('[data-screen]')?.getAttribute('data-screen') ?? undefined,
+      site: siteAt(at),
       x: Math.min(Math.max(r.right, 120), window.innerWidth - 120),
       y: Math.min(Math.max(r.bottom, 0), window.innerHeight - 48),
     });
@@ -99,7 +102,12 @@ export function useSelectionCard(testId: string, kind: ScreenKind) {
             text: sel.text.slice(0, 600),
             material: sel.material,
             source: sel.source.slice(0, 160),
-            place: sel.screen ? { kind, screen: sel.screen.slice(0, 80) } : { kind },
+            // С сайта — выписка сайта: щелчок откроет страницу в браузере компьютера.
+            place: sel.site
+              ? { kind: 'site', ...sel.site }
+              : sel.screen
+                ? { kind, screen: sel.screen.slice(0, 80) }
+                : { kind },
           });
           done();
         }}
@@ -123,6 +131,14 @@ export function useSelectionCard(testId: string, kind: ScreenKind) {
     </div>
   );
   return { onUp, button };
+}
+
+/** Выделили на странице сайта в браузере устройства: её адрес и письмо веб-почты. */
+function siteAt(at: Element | null | undefined): { address: string; letter?: number } | undefined {
+  const address = at?.closest('[data-site-address]')?.getAttribute('data-site-address');
+  if (!address) return undefined;
+  const letter = Number(at?.closest('[data-letter]')?.getAttribute('data-letter')) || 0;
+  return { address: address.slice(0, 300), ...(letter ? { letter } : {}) };
 }
 
 /**

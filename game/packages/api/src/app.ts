@@ -33,13 +33,12 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { and, eq, inArray, lt, sql } from 'drizzle-orm';
 import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
-import { getCookie, setCookie } from 'hono/cookie';
+import { getCookie } from 'hono/cookie';
 import { secureHeaders } from 'hono/secure-headers';
 import { z } from 'zod';
 import {
   type Db,
   loginTokens,
-  pendingExcerpts,
   playerProgress,
   playerState,
   playerStateBackups,
@@ -49,7 +48,7 @@ import {
 import { authRoutes, LOCAL_PLAYER, renewSession, SESSION_COOKIE, sessionPlayer } from './login.ts';
 import type { Mailer } from './mail/mailer.ts';
 import { phoneLine } from './phone.ts';
-import { formAction, pageOf, readPass, signPass, siteByHost, siteOf, siteUrl } from './sites.ts';
+import { formAction, pageOf, siteOf } from './sites.ts';
 
 /** Переменные запроса: игрок из сессии (6a-1). */
 type Env = { Variables: { player: string } };
@@ -80,8 +79,6 @@ export interface AppDeps {
   mailer?: Mailer;
   /** Адрес игры для ссылок в письмах (в разработке — Vite). */
   publicUrl?: string;
-  /** Ключ подписи пропусков на сайты дела (A-272); в production — из окружения. */
-  siteSecret?: string;
 }
 
 /**
@@ -176,7 +173,6 @@ export function createApp({
   auth = 'off',
   mailer,
   publicUrl = 'http://localhost:5173',
-  siteSecret = 'bunker-dev-site-secret',
 }: AppDeps): Hono<Env> & { purge: () => Promise<void> } {
   const app = new Hono<Env>();
 
@@ -202,10 +198,9 @@ export function createApp({
   // Вход по ссылке — без сессии (6a-1).
   authRoutes(app, { db, auth, mailer, publicUrl, production, materials, now });
 
-  // Остальное — дело игрока из сессии; без входа — 401 (клиент покажет экран входа). Сайты дела
-  // (/api/site/…) узнают игрока сами: у сайта свой домен и своя cookie (A-272).
+  // Остальное — дело игрока из сессии; без входа — 401 (клиент покажет экран входа). Сайты дела —
+  // тоже: они открываются в браузерах устройств внутри игры (A-288 п. 9).
   app.use('/api/*', async (c, next) => {
-    if (c.req.path.startsWith('/api/site/')) return next();
     if (auth === 'off') {
       c.set('player', LOCAL_PLAYER);
       return next();
@@ -263,29 +258,6 @@ export function createApp({
   // Только чтение: «видено» отмечает сам движок на следующем действии (ответ уже доставил
   // открытое) — запись отсюда шла бы мимо очереди действий и могла затереть открытое.
   app.get('/api/materials', async (c) => c.json(await mine(c.get('player'))));
-
-  /** Выписки с сайтов, что ждут стены (A-272): вкладка игры забирает их, когда к ней вернулись. */
-  app.get('/api/excerpts', async (c) => {
-    const rows = await db
-      .select()
-      .from(pendingExcerpts)
-      .where(eq(pendingExcerpts.playerId, c.get('player')));
-    return c.json(rows.map((r) => r.data));
-  });
-  /** Выписки повешены и сохранены — убрать из очереди. */
-  app.post('/api/excerpts/ack', bodyLimit({ maxSize: 16 * 1024 }), async (c) => {
-    const body = (await c.req.json().catch(() => null)) as { ids?: unknown } | null;
-    const ids = Array.isArray(body?.ids)
-      ? body.ids.filter((x): x is string => typeof x === 'string').slice(0, 300)
-      : [];
-    if (ids.length)
-      await db
-        .delete(pendingExcerpts)
-        .where(
-          and(eq(pendingExcerpts.playerId, c.get('player')), inArray(pendingExcerpts.id, ids)),
-        );
-    return c.body(null, 204);
-  });
 
   app.get('/api/state', async (c) => {
     const pid = c.get('player');
@@ -529,7 +501,6 @@ export function createApp({
       await tx.delete(playerState).where(eq(playerState.playerId, pid));
       await tx.delete(playerProgress).where(eq(playerProgress.playerId, pid));
       await tx.delete(playerVerdicts).where(eq(playerVerdicts.playerId, pid));
-      await tx.delete(pendingExcerpts).where(eq(pendingExcerpts.playerId, pid));
     });
 
   app.delete('/api/state', async (c) => {
@@ -556,28 +527,16 @@ export function createApp({
     await db.delete(loginTokens).where(lt(loginTokens.expiresAt, t));
   }
 
-  // ── Сайты дела (A-272, AC-3; T-1, ST-A) ──────────────────────────────────────────
-  const SITE_COOKIE = 'bunker_site';
-  const SITE_PASS_MS = 30 * 86_400_000;
-  const gameHost = new URL(publicUrl).hostname;
-  const siteSecure = publicUrl.startsWith('https://');
-  const hostSite = (c: Context) => siteByHost(c.req.header('host'), gameHost);
-  /** Игрок на сайте: по cookie сайта (без входа — один игрок). */
-  const sitePlayer = (c: Context) =>
-    auth === 'off' ? LOCAL_PLAYER : readPass(siteSecret, getCookie(c, SITE_COOKIE), now());
-  /** Игрок из игры (сессия) или с другого сайта дела (cookie сайта). */
-  const anyPlayer = async (c: Context) =>
-    auth === 'off'
-      ? LOCAL_PLAYER
-      : ((await sessionPlayer(db, getCookie(c, SESSION_COOKIE), now())) ?? sitePlayer(c));
+  // ── Сайты дела (A-272, AC-3; A-288 п. 9) ────────────────────────────────────────────
+  // Сайт открывается в окне браузера устройства внутри игры (компьютер следователя, ноутбук Адама),
+  // а не во вкладке: игрок — из сессии игры, пропусков и cookie сайтов нет (RV-66).
 
   /**
-   * Перейти по адресу (ссылка в материале, адресная строка компьютера, ссылка на сайте): движок
-   * АДРЕС; открылось — адрес сайта с пропуском, иначе — ответ (404 и т. п.).
+   * Перейти по адресу (ссылка в материале, адресная строка, закладка, ссылка на сайте): движок
+   * АДРЕС — только здесь, явным переходом (RV-65); открылось — адрес страницы, иначе — ответ (404).
    */
   app.post('/api/site/open', bodyLimit({ maxSize: 4096 }), async (c) => {
-    const pid = await anyPlayer(c);
-    if (!pid) return c.json({ error: 'нужен вход' }, 401);
+    const pid = c.get('player');
     const body = (await c.req.json().catch(() => null)) as { address?: unknown } | null;
     const address = typeof body?.address === 'string' ? body.address.trim().slice(0, 300) : '';
     if (!address) return c.json({ error: 'нет адреса' }, 400);
@@ -591,44 +550,22 @@ export function createApp({
       if (r.quiet || !at) return c.json({ reply: r.reply });
     }
     if (!at) return c.notFound();
-    const pass = signPass(siteSecret, pid, now() + 10 * 60_000);
-    return c.json({ url: `${siteUrl(publicUrl, at.site, at.path)}?enter=${pass}` });
+    return c.json({ address: `${at.site.domain}${at.path === '/' ? '' : at.path}` });
   });
 
-  /** Пропуск из ссылки → своя cookie сайта (хост — сайт дела). */
-  app.post('/api/site/enter', bodyLimit({ maxSize: 4096 }), async (c) => {
-    if (!hostSite(c)) return c.notFound();
-    const body = (await c.req.json().catch(() => null)) as { pass?: unknown } | null;
-    const pid = readPass(siteSecret, typeof body?.pass === 'string' ? body.pass : '', now());
-    if (!pid) return c.json({ error: 'пропуск недействителен' }, 403);
-    setCookie(c, SITE_COOKIE, signPass(siteSecret, pid, now() + SITE_PASS_MS), {
-      httpOnly: true,
-      sameSite: 'Lax',
-      secure: siteSecure,
-      path: '/',
-      maxAge: SITE_PASS_MS / 1000,
-    });
-    return c.body(null, 204);
-  });
-
-  /** Страница сайта: только открытое игроком (P-10). Вне игры — без форм и текста. */
+  /**
+   * Страница сайта: только открытое игроком (P-10). Чтение без побочных действий (RV-65): сайт, на
+   * который ещё не переходили, — «не найдена»; переход — /api/site/open.
+   */
   app.get('/api/site/page', async (c) => {
-    const site = hostSite(c);
-    if (!site || !engine) return c.notFound();
-    const pid = sitePlayer(c);
-    if (!pid) return c.json({ anon: true, domain: site.domain });
-    const path = (c.req.query('path') ?? '/').slice(0, 200);
-    // Сайт уже открыт — страница без движка (F2): перечитать открытое можно и с открытой формой
-    // заключения (P-9); первое открытие — через движок (АДРЕС).
-    if (!(await loadProgress(pid)).released.includes(site.page)) {
-      const r = await runAction(pid, {
-        action: 'АДРЕС',
-        target: 'браузер',
-        value: `${site.domain}${path === '/' ? '' : path}`,
-      });
-      if (!r || r.quiet) return c.json({ notFound: r?.reply ?? 'Страница не найдена (404).' });
-    }
+    if (!engine) return c.notFound();
+    const pid = c.get('player');
+    const at = siteOf((c.req.query('address') ?? '').slice(0, 300));
+    if (!at) return c.json({ notFound: 'Страница не найдена (404).' });
+    const { site, path } = at;
     const progress = await loadProgress(pid);
+    if (!progress.released.includes(site.page))
+      return c.json({ notFound: 'Страница не найдена (404).' });
     const has = (id: string) => progress.released.includes(id);
     const mat = (id: string) => lockedById.get(id);
     const docsOf = (ids: string[]) =>
@@ -668,37 +605,19 @@ export function createApp({
     return c.json(page);
   });
 
-  /**
-   * Выписка с сайта на стену (A-272, DB-B): ждёт, пока вкладка игры её не заберёт. Только из
-   * открытого игроком (P-10) и только с сайта дела.
-   */
-  app.post('/api/site/excerpt', bodyLimit({ maxSize: 8192 }), async (c) => {
-    const site = hostSite(c);
-    if (!site) return c.notFound();
-    const pid = sitePlayer(c);
-    if (!pid) return c.json({ error: 'Откройте сайт из материалов дела.' }, 401);
-    const parsed = ExcerptSchema.safeParse(await c.req.json().catch(() => null));
-    if (!parsed.success || parsed.data.place.kind !== 'site')
-      return c.json({ error: 'неверная выписка' }, 400);
-    const own = new Set(playerMaterials(await loadProgress(pid)).map((m) => m.id));
-    if (!own.has(parsed.data.material)) return c.json({ error: 'нет материала' }, 400);
-    await db
-      .insert(pendingExcerpts)
-      .values({ id: parsed.data.id, playerId: pid, data: parsed.data })
-      .onConflictDoNothing();
-    return c.body(null, 204);
-  });
-
   /** Форма сайта → движок (ПАРОЛЬ): ответ, открытое, пауза поля. */
   app.post('/api/site/form', bodyLimit({ maxSize: 8192 }), async (c) => {
-    const site = hostSite(c);
-    if (!site || !engine) return c.notFound();
-    const pid = sitePlayer(c);
-    if (!pid) return c.json({ error: 'Откройте сайт из материалов дела.' }, 401);
+    if (!engine) return c.notFound();
+    const pid = c.get('player');
     const body = (await c.req.json().catch(() => null)) as {
+      address?: unknown;
       form?: unknown;
       values?: unknown;
     } | null;
+    const site = siteOf(typeof body?.address === 'string' ? body.address.slice(0, 300) : '')?.site;
+    // Форма — только на открытом сайте (P-10).
+    if (!site || !(await loadProgress(pid)).released.includes(site.page))
+      return c.json({ error: 'нет такой формы' }, 400);
     const form = body?.form as SiteFormId;
     if (!site.forms.includes(form)) return c.json({ error: 'нет такой формы' }, 400);
     const raw = (body?.values ?? {}) as Record<string, unknown>;
@@ -724,16 +643,9 @@ export function createApp({
     const isApi = (path: string) => path === '/api' || path.startsWith('/api/');
     const files = serveStatic({ root: webDist });
     const index = serveStatic({ root: webDist, path: 'index.html' });
-    // Сайт дела (хост — `vaultline-program.…`): своя страница сборки (A-272).
-    const sitePage = serveStatic({ root: webDist, path: 'sites.html' });
-    // Страница сайта (путь без расширения файла) — не `index.html` игры, который раздача файлов
-    // отдала бы на «/»; файлы сборки (скрипты, стили) — те же.
-    const sitePath = (c: Context) => !!hostSite(c) && !/\.[a-z0-9]+$/i.test(c.req.path);
-    app.use('/*', (c, next) => (isApi(c.req.path) || sitePath(c) ? next() : files(c, next)));
-    // Любой другой путь страницы — та же игра (одна страница) или страница сайта.
-    app.use('*', (c, next) =>
-      isApi(c.req.path) ? next() : hostSite(c) ? sitePage(c, next) : index(c, next),
-    );
+    app.use('/*', (c, next) => (isApi(c.req.path) ? next() : files(c, next)));
+    // Любой другой путь страницы — та же игра (одна страница).
+    app.use('*', (c, next) => (isApi(c.req.path) ? next() : index(c, next)));
   }
 
   return Object.assign(app, { purge });

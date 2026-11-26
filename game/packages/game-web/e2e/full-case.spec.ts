@@ -1,15 +1,17 @@
 import { readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import {
   expect,
   fillVerdict,
+  leavePc,
   lookAtSticker,
   readFolder,
   readStack,
   STRIP,
   sheet,
+  siteInPc,
   takeDevice,
   test,
 } from './fixtures.ts';
@@ -20,7 +22,7 @@ import {
  * Порядок и значения — по золотому пути пакета (gm/walkthrough.txt). Только интерфейс:
  * щелчки, перетаскивания, колесо, клавиатура; без служебной строки движка (/api/dev/action-line)
  * и прямых POST /api/action. Сайты — щелчком по ссылке в материале или адресной строкой
- * браузера компьютера следователя (обе дороги открывают новую вкладку, как у игрока).
+ * браузера компьютера следователя (обе дороги — окно браузера компьютера, A-288 п. 9).
  *
  * Находки первого прогона (свойства записей, стойка 50, папка A-24, дата газеты) исправлены
  * (F3–F6): все 78 материалов открываются через интерфейс, обходов нет.
@@ -303,24 +305,15 @@ async function pcBrowser(page: Page) {
   await expect(page.getByTestId('pc-browser')).toBeVisible();
 }
 
-/** Сайт — адресной строкой браузера компьютера следователя: новая вкладка. */
-async function siteByAddressBar(page: Page, address: string): Promise<Page> {
-  await pcBrowser(page);
-  await page.getByTestId('pc-url').fill(address);
-  const [tab] = await Promise.all([
-    page.context().waitForEvent('page'),
-    page.getByTestId('pc-url').press('Enter'),
-  ]);
-  await expect(tab.getByTestId('site')).toBeVisible();
-  // Фокус в адресной строке: первый Esc снимает его, второй закрывает компьютер (2b-П1).
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Escape');
-  await expect(page.getByTestId('computer')).toHaveCount(0);
-  return tab;
+/** Сайт — адресной строкой браузера компьютера следователя: страница в его окне. */
+async function siteByAddressBar(page: Page, address: string): Promise<Locator> {
+  if (!(await page.getByTestId('pc-browser').isVisible())) await pcBrowser(page);
+  return siteInPc(page, address);
 }
 
 /** Сайт — щелчком по ссылке-адресу в листе со стены (листая страницы, если надо). */
-async function siteByLink(page: Page, sheetId: string, domain: string): Promise<Page> {
+async function siteByLink(page: Page, sheetId: string, domain: string): Promise<Locator> {
+  await leavePc(page);
   await openSheet(page, sheetId);
   const link = page.getByTestId('viewer').locator('a.site-link', { hasText: domain }).first();
   const inView = async () => {
@@ -342,22 +335,19 @@ async function siteByLink(page: Page, sheetId: string, domain: string): Promise<
     return siteByAddressBar(page, domain);
   }
   test.info().annotations.push({ type: 'сайт', description: `${domain}: ссылкой в ${sheetId}` });
-  const [tab] = await Promise.all([page.context().waitForEvent('page'), link.click()]);
-  await expect(tab.getByTestId('site')).toBeVisible();
-  await page.keyboard.press('Escape');
-  return tab;
+  await link.click();
+  const web = page.getByTestId('pc-web');
+  await expect(web.getByTestId('site')).toHaveAttribute('data-domain', domain);
+  return web;
 }
 
-const fill = async (tab: Page, form: string, values: Record<string, string>) => {
+const fill = async (tab: Locator, form: string, values: Record<string, string>) => {
   for (const [k, v] of Object.entries(values)) await tab.getByTestId(`site-${form}-${k}`).fill(v);
   await tab.getByTestId(`site-${form}-submit`).click();
 };
 
-/** Вернуться во вкладку игры (как игрок: окно снова в фокусе). */
-async function backToGame(page: Page) {
-  await page.bringToFront();
-  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
-}
+/** Отойти от компьютера к делу. */
+const backToGame = leavePc;
 
 // ───────────────────────── проход ─────────────────────────
 
@@ -640,15 +630,14 @@ test('QA-C: всё дело через интерфейс — от нового 
   });
 
   await test.step('сайты без замков: ссылками в листах и адресной строкой компьютера', async () => {
-    const tabs: Page[] = [];
     // Ссылки в стартовых листах.
-    tabs.push(await siteByLink(page, '02', 'vaultline-program.com'));
+    await siteByLink(page, '02', 'vaultline-program.com');
     await opened(page, ['L101']);
-    tabs.push(await siteByLink(page, '05', 'skycell-mobile.com'));
+    await siteByLink(page, '05', 'skycell-mobile.com');
     await opened(page, ['L178']);
-    tabs.push(await siteByLink(page, '01', 'blackwood-bi.org'));
+    await siteByLink(page, '01', 'blackwood-bi.org');
     await opened(page, ['L181']);
-    tabs.push(await siteByLink(page, '26', 'hexon-bio.com'));
+    await siteByLink(page, '26', 'hexon-bio.com');
     await opened(page, ['L163']);
     // Остальные адреса — в закрытых материалах на устройствах, в почте и на сайтах: игрок
     // набирает их в адресной строке браузера компьютера.
@@ -661,10 +650,9 @@ test('QA-C: всё дело через интерфейс — от нового 
       ['mesa-supply.com', 'L180'],
       ['the-signal-news.com', 'L296'],
     ] as const) {
-      tabs.push(await siteByAddressBar(page, address));
+      await siteByAddressBar(page, address);
       await opened(page, [got]);
     }
-    for (const t of tabs) await t.close();
     await backToGame(page);
   });
 
@@ -675,7 +663,6 @@ test('QA-C: всё дело через интерфейс — от нового 
     await fill(mb, 'mb-answer', { answer: 'Тоффи' });
     await expect(mb.getByTestId('site-mail')).toBeVisible();
     await opened(page, ['L453']);
-    await mb.close();
     await backToGame(page);
   });
 
@@ -683,7 +670,7 @@ test('QA-C: всё дело через интерфейс — от нового 
     const vl = await siteByLink(page, '02', 'vaultline-program.com');
     await fill(vl, 'vl-forgot', { login: 'k.walsh' });
     await fill(vl, 'vl-word', { answer: 'Йен' });
-    await expect(vl).toHaveURL(/\/cabinet$/);
+    await expect(page.getByTestId('pc-url')).toHaveValue('vaultline-program.com/cabinet');
     await opened(page, ['L620']);
     await fill(vl, 'vl-registry', { program: 'VL-31' });
     await opened(page, ['L618']);
@@ -693,17 +680,13 @@ test('QA-C: всё дело через интерфейс — от нового 
     await fill(vl, 'vl-docs', { title: 'архив проекта' });
     const msg = vl.getByTestId('site-vl-docs-msg');
     await expect(msg).toContainText('docs.hexon-bio.com/vl-31');
-    const [hx] = await Promise.all([
-      page.context().waitForEvent('page'),
-      msg.locator('a.site-link').first().click(),
-    ]);
+    await msg.locator('a.site-link').first().click();
+    const hx = page.getByTestId('pc-web');
     await expect(hx.getByTestId('site')).toHaveAttribute('data-domain', 'docs.hexon-bio.com');
     await opened(page, ['L735']);
     await fill(hx, 'hx-archive', { password: '0417' });
     await expect(hx.getByTestId('site-docs')).toBeVisible();
     await opened(page, ['L736', 'L737', 'L738']);
-    await hx.close();
-    await vl.close();
     await backToGame(page);
   });
 
@@ -736,7 +719,6 @@ test('QA-C: всё дело через интерфейс — от нового 
     await fill(fr, 'fr-death', { box: '845', surname: 'Коул', date: '13.10.2009' });
     await expect(fr.getByTestId('site-fr-death-msg')).toContainText('Сообщение принято');
     await opened(page, ['L460', 'L461', 'L462']);
-    await fr.close();
     await backToGame(page);
     await toDesk(page);
     const box = page.getByTestId('container-bank');

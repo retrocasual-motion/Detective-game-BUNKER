@@ -1,14 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import {
-  formAction,
-  pageOf,
-  readPass,
-  signPass,
-  siteByHost,
-  siteOf,
-  siteUrl,
-} from '../src/sites.ts';
+import { formAction, pageOf, siteOf } from '../src/sites.ts';
 
 const dir = '../../../playtest/packs/v3.4-2026-11-18/locked';
 const mat = (id: string) => {
@@ -18,31 +10,12 @@ const mat = (id: string) => {
 };
 
 describe('сайты дела (A-272, AC-3)', () => {
-  it('адрес → сайт и путь; хост → сайт; адрес для браузера — с меткой сайта', () => {
+  it('адрес → сайт и путь', () => {
     expect(siteOf('https://www.vaultline-program.com/')).toMatchObject({ path: '/' });
     expect(siteOf('docs.hexon-bio.com/vl-31')?.site.label).toBe('docs.hexon-bio');
+    expect(siteOf('docs.hexon-bio.com/vl-31')?.path).toBe('/vl-31');
     expect(siteOf('hexon-bio.com')?.site.label).toBe('hexon-bio');
     expect(siteOf('google.com')).toBeNull();
-    expect(siteByHost('vaultline-program.localhost:5173', 'localhost')?.domain).toBe(
-      'vaultline-program.com',
-    );
-    expect(siteByHost('localhost:5173', 'localhost')).toBeNull();
-    expect(siteByHost('evil.localhost', 'localhost')).toBeNull();
-    expect(siteByHost('mailbridge.game.example', 'game.example')?.domain).toBe('mailbridge.net');
-    const s = siteOf('docs.hexon-bio.com/vl-31');
-    if (!s) throw new Error('нет сайта');
-    expect(siteUrl('http://localhost:5173', s.site, s.path)).toBe(
-      'http://docs.hexon-bio.localhost:5173/vl-31',
-    );
-  });
-
-  it('пропуск подписан и живёт до срока; чужая подпись — нет', () => {
-    const p = signPass('k', 'игрок-1', 2000);
-    expect(readPass('k', p, 1000)).toBe('игрок-1');
-    expect(readPass('k', p, 3000)).toBeNull();
-    expect(readPass('другой', p, 1000)).toBeNull();
-    expect(readPass('k', `${p}x`, 1000)).toBeNull();
-    expect(readPass('k', undefined, 1000)).toBeNull();
   });
 
   it('формы → строки движка как в сквозном проходе', () => {

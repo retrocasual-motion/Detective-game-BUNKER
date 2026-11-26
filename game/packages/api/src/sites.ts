@@ -1,10 +1,9 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
 import { formToken, type Material, type SiteFormId, type SitePage } from '@bunker/shared';
 
 /**
- * Настоящие сайты дела (A-272, AC-3; T-1, ST-A): их отдаёт наш сервер по имени хоста —
- * `vaultline-program.localhost` на компьютере, поддомены автора на сервере. Реестр адресов —
- * только здесь (не в коде страницы игрока): адрес хранилища HEXON игрок узнаёт из кабинета.
+ * Сайты дела (A-272, AC-3; A-288 п. 9): открываются в браузерах устройств внутри игры, страницы
+ * отдаёт сервер игры по адресу. Реестр адресов — только здесь (не в коде страницы игрока): адрес
+ * хранилища HEXON игрок узнаёт из кабинета.
  */
 
 export interface Site {
@@ -61,45 +60,6 @@ export function siteOf(address: string): { site: Site; path: string } | null {
   if (!site) return null;
   const path = `/${rest.join('/')}`.replace(/\/+$/, '') || '/';
   return { site, path };
-}
-
-/** Хост запроса (`vaultline-program.localhost:5173`) → сайт; хост игры — null. */
-export function siteByHost(hostHeader: string | undefined, gameHost: string): Site | null {
-  const host = (hostHeader ?? '').toLowerCase().split(':')[0] ?? '';
-  const zone = gameHost === 'localhost' ? 'localhost' : gameHost;
-  if (!host.endsWith(`.${zone}`)) return null;
-  const label = host.slice(0, -(zone.length + 1));
-  return SITES.find((s) => s.label === label) ?? null;
-}
-
-/** Адрес сайта для браузера игрока: хост игры с меткой сайта впереди (порт — тот же). */
-export function siteUrl(publicUrl: string, site: Site, path: string): string {
-  const u = new URL(publicUrl);
-  u.hostname = `${site.label}.${u.hostname}`;
-  u.pathname = path;
-  u.search = '';
-  return u.toString();
-}
-
-/**
- * Пропуск на сайт: игрок вошёл в игру — ссылка из игры несёт подписанный ключ, сайт кладёт его
- * в свою cookie (у сайта свой домен — общая cookie с игрой на релизе не сработает).
- */
-export function signPass(secret: string, playerId: string, expiresAt: number): string {
-  const body = `${Buffer.from(playerId).toString('base64url')}.${expiresAt}`;
-  const sig = createHmac('sha256', secret).update(body).digest('base64url');
-  return `${body}.${sig}`;
-}
-
-export function readPass(secret: string, pass: string | undefined, now: number): string | null {
-  if (!pass) return null;
-  const [id, exp, sig] = pass.split('.');
-  if (!id || !exp || !sig) return null;
-  const want = createHmac('sha256', secret).update(`${id}.${exp}`).digest();
-  const got = Buffer.from(sig, 'base64url');
-  if (got.length !== want.length || !timingSafeEqual(got, want)) return null;
-  if (!(Number(exp) > now)) return null;
-  return Buffer.from(id, 'base64url').toString();
 }
 
 /** Ввод формы → действие движка (как в сквозном проходе пакета). */

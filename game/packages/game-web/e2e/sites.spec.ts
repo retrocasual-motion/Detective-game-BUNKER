@@ -1,29 +1,20 @@
-import type { Page } from '@playwright/test';
-import { expect, sheet, test, toWall } from './fixtures.ts';
+import type { Locator, Page } from '@playwright/test';
+import { expect, leavePc, sheet, siteInPc as site, test, toWall } from './fixtures.ts';
 
 /**
- * Настоящие сайты дела (A-272, AC-3; Q1, BR-A, S5-A — автор 19.11): адрес в материале — ссылка,
- * сайт — в новой вкладке; формы — движок игры от имени игрока; на стол, стену и в поиск сайты
- * не попадают.
+ * Сайты дела (A-272, AC-3; Q1, S5-A — автор 19.11; A-288 п. 9): адрес в материале — ссылка, сайт —
+ * в окне браузера компьютера следователя или ноутбука Адама, не во вкладке; формы — движок игры от
+ * имени игрока; на стол, стену и в поиск сайты не попадают.
  */
 
-/** Сайт по адресу — так же, как щелчок по ссылке в деле (сервер даёт адрес с пропуском). */
-async function site(page: Page, address: string): Promise<Page> {
-  const r = await page.request.post('/api/site/open', { data: { address } });
-  const { url } = (await r.json()) as { url?: string };
-  if (!url) throw new Error(`сайт не открылся: ${address}`);
-  const tab = await page.context().newPage();
-  await tab.goto(url);
-  await expect(tab.getByTestId('site')).toBeVisible();
-  return tab;
-}
+type Scope = Pick<Page | Locator, 'getByTestId'>;
 
-const fill = async (tab: Page, form: string, values: Record<string, string>) => {
+const fill = async (tab: Scope, form: string, values: Record<string, string>) => {
   for (const [k, v] of Object.entries(values)) await tab.getByTestId(`site-${form}-${k}`).fill(v);
   await tab.getByTestId(`site-${form}-submit`).click();
 };
 
-test('адрес в материале — ссылка: щелчок открывает сайт в новой вкладке, пропуск из ссылки убран', async ({
+test('адрес в материале — ссылка: щелчок открывает сайт в браузере компьютера, вкладки нет', async ({
   page,
 }) => {
   await toWall(page);
@@ -32,30 +23,32 @@ test('адрес в материале — ссылка: щелчок откры
     .getByTestId('viewer')
     .locator('a.site-link', { hasText: 'vaultline-program.com' });
   await expect(link).toBeVisible();
-  const [tab] = await Promise.all([page.context().waitForEvent('page'), link.click()]);
-  await expect(tab.getByTestId('site')).toBeVisible();
-  await expect(tab.getByTestId('site')).toHaveAttribute('data-domain', 'vaultline-program.com');
-  await expect(tab).toHaveURL(/^http:\/\/vaultline-program\.localhost:\d+\/$/);
-  await expect(tab.locator('.site-nav')).toContainText('Вход для сотрудников');
-  await expect(tab.getByTestId('site-form-vl-login')).toBeVisible();
-  // Лист в игре открыт как был; сайта на стене и во «Входящих» нет.
-  await expect(page.getByTestId('viewer')).toBeVisible();
-  await page.keyboard.press('Escape');
+  const pages = page.context().pages().length;
+  await link.click();
+  const web = page.getByTestId('pc-web');
+  await expect(web.getByTestId('site')).toHaveAttribute('data-domain', 'vaultline-program.com');
+  await expect(page.getByTestId('pc-url')).toHaveValue('vaultline-program.com');
+  await expect(web.locator('.site-nav')).toContainText('Вход для сотрудников');
+  await expect(web.getByTestId('site-form-vl-login')).toBeVisible();
+  // Новой вкладки нет; сайта на стене и во «Входящих» нет.
+  expect(page.context().pages().length).toBe(pages);
+  await leavePc(page);
   await expect(page.getByTestId('inbox-L101')).toHaveCount(0);
   await expect(sheet(page, 'L101')).toHaveCount(0);
 });
 
-test('неизвестный адрес — «Страница не найдена»; вне игры сайт пуст', async ({ page, browser }) => {
-  const r = await page.request.post('/api/site/open', { data: { address: 'google.com' } });
-  expect(await r.json()).toMatchObject({ reply: expect.stringContaining('404') });
-  const tab = await site(page, 'vaultline-program.com');
-  const url = new URL(tab.url());
-  // Другой браузер (без пропуска из игры): адрес тот же — текста и форм нет.
-  const other = await browser.newContext();
-  const stranger = await other.newPage();
-  await stranger.goto(url.origin);
-  await expect(stranger.getByTestId('site-anon')).toContainText('открывается из игры');
-  await other.close();
+test('неизвестный адрес — «Страница не найдена»; назад — прежняя страница', async ({ page }) => {
+  await site(page, 'vaultline-program.com');
+  await page.getByTestId('pc-url').fill('google.com');
+  await page.getByTestId('pc-url').press('Enter');
+  await expect(page.getByTestId('pc-web-text')).toContainText('404');
+  await page.getByTestId('pc-back').click();
+  await expect(page.getByTestId('pc-web').getByTestId('site')).toHaveAttribute(
+    'data-domain',
+    'vaultline-program.com',
+  );
+  await page.getByTestId('pc-forward').click();
+  await expect(page.getByTestId('pc-web-text')).toContainText('404');
 });
 
 test('VAULTLINE: вход по кодовому слову (PW-B), учёт анкет A-24, документы → адрес хранилища → архив 0417', async ({
@@ -83,7 +76,7 @@ test('VAULTLINE: вход по кодовому слову (PW-B), учёт ан
   await expect(vl.getByTestId('site-vl-word-msg')).toHaveText('Ответ неверный.');
   await vl.getByTestId('site-vl-word-answer').fill('');
   await fill(vl, 'vl-word', { answer: 'Йен' });
-  await expect(vl).toHaveURL(/\/cabinet$/);
+  await expect(page.getByTestId('pc-url')).toHaveValue('vaultline-program.com/cabinet');
   await expect(vl.getByTestId('site')).toContainText('Учёт анкет');
   // Учёт анкет: поля «Дата выбытия» нет (DT-A, 21.11) — анкета A-24 по коду.
   await expect(vl.getByTestId('site-vl-registry-date')).toHaveCount(0);
@@ -99,11 +92,9 @@ test('VAULTLINE: вход по кодовому слову (PW-B), учёт ан
   await fill(vl, 'vl-docs', { title: 'архив проекта' });
   const msg = vl.getByTestId('site-vl-docs-msg');
   await expect(msg).toContainText('docs.hexon-bio.com/vl-31');
-  // Адрес в ответе — ссылка: хранилище в новой вкладке.
-  const [hx] = await Promise.all([
-    page.context().waitForEvent('page'),
-    msg.locator('a.site-link').first().click(),
-  ]).catch(async () => [await site(page, 'docs.hexon-bio.com/vl-31')]);
+  // Адрес в ответе — ссылка: хранилище в том же браузере.
+  await msg.locator('a.site-link').first().click();
+  const hx = page.getByTestId('pc-web');
   await expect(hx.getByTestId('site')).toHaveAttribute('data-domain', 'docs.hexon-bio.com');
   await fill(hx, 'hx-archive', { password: '0418' });
   await expect(hx.getByTestId('site-hx-archive-msg')).toHaveText('Неверный пароль.');
@@ -115,8 +106,8 @@ test('хранилище HEXON до кабинета — 404', async ({ page }) 
   const r = await page.request.post('/api/site/open', {
     data: { address: 'docs.hexon-bio.com/vl-31' },
   });
-  const body = (await r.json()) as { url?: string; reply?: string };
-  expect(body.url).toBeUndefined();
+  const body = (await r.json()) as { address?: string; reply?: string };
+  expect(body.address).toBeUndefined();
   expect(body.reply).toContain('404');
 });
 
@@ -129,14 +120,14 @@ test('почта: «Забыли пароль?» → контрольный во
   await fill(mb, 'mb-forgot', { address: 'e.pierce.uk@mailbridge.net' });
   await expect(mb.getByTestId('site-question')).toContainText('Кличка вашей первой собаки?');
   await fill(mb, 'mb-answer', { answer: 'Тоффи' });
-  await expect(mb).toHaveURL(/\/mail$/);
+  await expect(page.getByTestId('pc-url')).toHaveValue('mailbridge.net/mail');
   await expect(mb.getByTestId('site-mail')).toBeVisible();
   await mb.getByTestId('site-letter-6').click();
   await expect(mb.getByTestId('site-letter')).toContainText('j.mercer@octon-labs.net');
   await mb.getByTestId('site-mail-out').click();
   await expect(mb.getByTestId('site-letter-8')).toContainText('Re: B');
   // Вернулся на главную позже — «Вы вошли», без формы входа (F8).
-  await mb.goto(new URL('/', mb.url()).toString());
+  await site(page, 'mailbridge.net');
   await expect(mb.getByTestId('site-in')).toContainText('Вы вошли');
   await expect(mb.getByTestId('site-mb-login-submit')).toHaveCount(0);
 });
@@ -165,8 +156,7 @@ test('три неверных пароля на сайте — поле ждёт
 
 test('поиск по делу сайты не находит (S5-A)', async ({ page }) => {
   await site(page, 'vaultline-program.com');
-  await page.bringToFront();
-  await page.reload();
+  await leavePc(page);
   await page.getByTestId('search-tab').click();
   await page.getByTestId('search-input').fill('Месяц тишины');
   await expect(page.getByTestId('search-L101')).toHaveCount(0);
@@ -182,9 +172,8 @@ test.describe('коробка из банка (A-272, AC-4)', () => {
     const fr = await site(page, 'aspen-bank.com');
     await fill(fr, 'fr-death', { box: '845', surname: 'Коул', date: '13.10.2009' });
     await expect(fr.getByTestId('site-fr-death-msg')).toContainText('Сообщение принято');
-    // Вернулся во вкладку игры — коробка на столе (лоток пуст: всё в коробке).
-    await page.bringToFront();
-    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    // Отошёл от компьютера — коробка на столе (лоток пуст: всё в коробке).
+    await leavePc(page);
     const box = page.getByTestId('container-bank');
     await expect(box).toBeVisible();
     await expect(page.getByTestId('inbox-L460')).toHaveCount(0);
@@ -228,8 +217,8 @@ test('сайты без замков (NF-B, A-273): оператор, произ
   for (const [address, text] of pages) {
     const tab = await site(page, address);
     await expect(tab.getByTestId('site'), address).toContainText(text);
-    await tab.close();
   }
+  await leavePc(page);
   // На стол, стену и в поиск сайты не попадают (S5-A).
   await expect(sheet(page, 'L179')).toHaveCount(0);
 });

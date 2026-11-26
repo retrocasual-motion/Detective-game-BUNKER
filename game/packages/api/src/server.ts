@@ -47,7 +47,6 @@ const app = createApp({
   auth: env.auth,
   mailer,
   publicUrl: env.publicUrl,
-  siteSecret: env.siteSecret,
 });
 serve({ fetch: app.fetch, port: env.apiPort }, (info) => {
   console.log(
