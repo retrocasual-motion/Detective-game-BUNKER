@@ -62,21 +62,19 @@ test('форма: пять вопросов по одному, проверка,
   await page.getByTestId('verdict-option-1').click();
   await page.getByTestId('verdict-next').click();
 
-  // 4. Пока пусто. 5. Кто за программой.
+  // 4. Без ответа дальше нельзя (VER-A): «Далее» не нажимается, сказано, что сделать.
+  await expect(page.getByTestId('verdict-next')).toBeDisabled();
+  await expect(page.getByTestId('verdict-need-answer')).toContainText('Приложите материал');
+  await answerWithNewspaper(page);
+  await expect(page.getByTestId('verdict-need-answer')).toHaveCount(0);
   await page.getByTestId('verdict-next').click();
+  // 5. Кто за программой.
   await page.getByTestId('verdict-person-p:hale').click();
   await expect(page.getByTestId('verdict-person-nobody')).toHaveCount(0);
   await page.getByTestId('verdict-next').click();
 
-  // Проверьте заключение: пустой ответ не принимается (VER-A) — подпись недоступна, вопрос назван.
+  // Проверьте заключение: все ответы на месте.
   await expect(page.getByTestId('verdict-answer-2')).toHaveText('столкнули намеренно');
-  await expect(page.getByTestId('verdict-answer-3')).toHaveText('ответа нет');
-  await expect(page.getByTestId('verdict-missing')).toContainText('вопрос 4');
-  await expect(page.getByTestId('verdict-send')).toBeDisabled();
-  await page.getByTestId('verdict-edit-3').click();
-  await answerWithNewspaper(page);
-  await page.getByTestId('verdict-next').click();
-  await page.getByTestId('verdict-next').click();
   await expect(page.getByTestId('verdict-missing')).toHaveCount(0);
   // Исправить «как» до отправки (RT-B).
   await page.getByTestId('verdict-edit-2').click();
@@ -180,4 +178,27 @@ test('конец игры: эпилог → «Завершить дело» → 
   await page.getByTestId('credits-menu').click();
   await expect(page.getByTestId('main-menu')).toBeVisible();
   await expect(page.getByTestId('menu-continue')).toHaveText('Вернуться к делу');
+});
+
+test('RV-41, RV-42: папка заключения не закрывает лоток; на вопросе о человеке «В заключение» нет', async ({
+  page,
+}) => {
+  await openForm(page);
+  // Лоток «Входящие» под мышью — лоток, не папка заключения.
+  const tray = await page.getByTestId('inbox-tray').boundingBox();
+  const hit = await page.evaluate(
+    ([x, y]) => !!document.elementFromPoint(x, y)?.closest('[data-testid="verdict-folder"]'),
+    [(tray?.x ?? 0) + (tray?.width ?? 0) / 2, (tray?.y ?? 0) + (tray?.height ?? 0) / 2] as const,
+  );
+  expect(hit).toBe(false);
+  // Вопрос 1 — о человеке: открыли лист — кнопки «В заключение целиком» нет.
+  const paper = await page.evaluate(() =>
+    (
+      window as unknown as { __desk: { grab(id: string): { x: number; y: number } | null } }
+    ).__desk.grab('15'),
+  );
+  await page.getByTestId('verdict-corner').click();
+  await page.mouse.click(paper?.x ?? 0, paper?.y ?? 0);
+  await expect(page.getByTestId('viewer')).toBeVisible();
+  await expect(page.getByTestId('viewer-whole-to-folder')).toHaveCount(0);
 });

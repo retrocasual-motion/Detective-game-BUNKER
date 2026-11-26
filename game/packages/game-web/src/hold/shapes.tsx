@@ -378,8 +378,18 @@ export function CaseFolder({
         <planeGeometry args={[1.1, 0.26]} />
         <meshStandardMaterial map={tab} roughness={0.9} side={DoubleSide} />
       </mesh>
-      {/* Зона захвата — правый край обложки (за него и открывают), неподвижна (как у клапана
-          конверта); за остальную папку её крутят. */}
+      {/* Щелчок по обложке — открыть (RV-1, UN-A: как конверт и пломба); протяжка по ней, как
+          прежде, крутит папку — щелчок отличается от протяжки сдвигом меньше 5 px. */}
+      <mesh
+        position={[0, 0, 0.026]}
+        onClick={(e) => {
+          if (e.delta < 5) pull.open();
+        }}
+      >
+        <planeGeometry args={[FOLDER_W, FOLDER_H]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      {/* Зона захвата — правый край обложки (за него тянут), неподвижна (как у клапана конверта). */}
       <mesh position={[FOLDER_W / 2 - 0.35, 0, 0.03]} {...pull.handlers}>
         <planeGeometry args={[0.7, FOLDER_H]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />

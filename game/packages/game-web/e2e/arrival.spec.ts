@@ -19,7 +19,7 @@ test('служебная строка: действие проходит чер�
 });
 
 test('пустой лоток «Входящие» на столе — без писем', async ({ page }) => {
-  await expect(page.getByTestId('inbox-tray')).toHaveText('Входящие');
+  await expect(page.getByTestId('inbox-tray')).toHaveText('Входящие · пусто');
   await expect(page.locator('[data-testid^="inbox-L"]')).toHaveCount(0);
 });
 
@@ -41,7 +41,7 @@ test('открытое ложится во «Входящие» на столе:
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('wall-L945')).toHaveAttribute('data-found', 'true');
   await expect(page.getByTestId('inbox-L945')).toHaveCount(0);
-  await expect(page.getByTestId('inbox-tray')).toHaveText('Входящие');
+  await expect(page.getByTestId('inbox-tray')).toHaveText('Входящие · пусто');
   await toWall(page);
   await expect(page.getByTestId('wall-L945')).toBeInViewport();
 });
@@ -119,4 +119,22 @@ test('служебная кнопка «Разложить» — стена по
   await page.getByTestId('dev-arrange').click();
   await expect.poll(async () => (await sheet.boundingBox())?.x).toBeCloseTo(before.x, 0);
   expect((await sheet.boundingBox())?.y).toBeCloseTo(before.y, 0);
+});
+
+test('RD-A: «Входящие» читаются подряд — «N из M» и стрелки; закрыли — письма в лотке', async ({
+  page,
+}) => {
+  await run(page, 'ОСМОТР | 45__вещи_Д_Миллер.md | увеличить');
+  await run(page, 'ОСМОТР | 46__вещи_Э_Пирс.md | увеличить');
+  await close(page);
+  await expect(page.getByTestId('inbox-tray')).toHaveText('Входящие · 2');
+  await page.getByTestId('inbox-L946').click();
+  await expect(page.getByTestId('desk-run-count')).toHaveText('Входящие · 1 из 2');
+  // У лотка нет «Оставить на столе»: письма уходят на стену только кнопкой «На стену».
+  await expect(page.getByTestId('desk-keep')).toHaveCount(0);
+  await page.getByTestId('desk-next').click();
+  await expect(page.getByTestId('desk-run-count')).toHaveText('Входящие · 2 из 2');
+  await expect(page.getByTestId('viewer')).toContainText('Aspen Bank');
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('inbox-tray')).toHaveText('Входящие · 2');
 });

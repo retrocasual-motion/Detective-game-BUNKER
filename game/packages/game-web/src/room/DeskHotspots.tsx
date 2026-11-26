@@ -166,7 +166,8 @@ export function DeskHotspots({
                   const w = screenToWorld(b, cam);
                   updateState(moveItem(id, w.x - CARD_W / 2, w.y - 20));
                 },
-                onClick: () => openViewer(id),
+                // Письмо из лотка — читать «Входящие» подряд (RD-A).
+                onClick: () => useGame.getState().readInbox(id),
               });
             }}
             onPointerEnter={o.hotspot?.kind === 'lamp' ? () => lampHover(true) : undefined}
@@ -196,7 +197,8 @@ export function DeskHotspots({
               } else if (h) {
                 // Эпилог открыт — подсветка снята.
                 if (o.key === 'epilogue') markEpilogueRead();
-                openViewer(h.id);
+                if (o.key.startsWith('inbox')) useGame.getState().readInbox(h.id);
+                else openViewer(h.id);
               }
             }}
           >

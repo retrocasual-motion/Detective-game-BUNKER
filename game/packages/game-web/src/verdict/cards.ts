@@ -1,6 +1,7 @@
 import type { Card, Material } from '@bunker/shared';
 import { create } from 'zustand';
-import { useVerdict, verdictActive } from './verdict-store.ts';
+import { useGame } from '../store.ts';
+import { formQuestions, useVerdict, verdictActive } from './verdict-store.ts';
 
 /**
  * Карточки для формы заключения (FM-A: «материал или выдержка», K-A). До A-272 те же жесты
@@ -27,6 +28,17 @@ export function toVerdict(card: Card | null): void {
 
 /** Пока форма открыта, у выделения есть кнопка «В заключение». */
 export const useVerdictOpen = (): boolean => useVerdict((v) => v.status.form && !v.status.sent);
+
+/**
+ * Форма открыта и её текущий вопрос — о материале (RV-42): только тогда «В заключение» что-то делает.
+ * На вопросе о человеке, варианте или на проверке кнопки нет — раньше она молча ничего не делала.
+ */
+export const useVerdictTakesMaterial = (): boolean => {
+  const open = useVerdictOpen();
+  const step = useGame((g) => g.state?.verdict?.step ?? 0);
+  useGame((g) => g.materials.find((m) => m.id === 'L999')?.body);
+  return open && formQuestions()[step]?.kind === 'material';
+};
 
 /** Поле вопроса открытой формы под точкой экрана (сюда бросают лист). */
 export function folderFieldAt(x: number, y: number): boolean {

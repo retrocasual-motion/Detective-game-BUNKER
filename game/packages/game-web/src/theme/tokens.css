@@ -63,6 +63,8 @@
   --color-case-folder-edge: #b89a5e;
   --color-evidence-bag: #a07b4c;
   --color-box-lid: #9a8462;
+  /* Нутро открытой коробки (BOX-B). */
+  --color-box-inside: #3a3024;
   --color-seal: #8e2b25;
   --color-newspaper: #d8d3c6;
   --color-newspaper-ink: #5c5a55;

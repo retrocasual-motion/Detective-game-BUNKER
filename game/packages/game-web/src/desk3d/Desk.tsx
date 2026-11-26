@@ -1,4 +1,4 @@
-import { DEVICES_ON_WALL, type DeskItem } from '@bunker/shared';
+import { DEVICES_ON_WALL, type DeskItem, deskGroupOf, INVENTORY_ID } from '@bunker/shared';
 import { type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -81,6 +81,14 @@ const FLY_MS = 750;
 const SPILL_AT = { x: 0.08, z: 0.52 };
 /** Куда — изъятые устройства: середина у стены, за листами (крупные спереди закрыли бы стол). */
 const DEVICES_AT = { x: 0.08, z: 0.36 };
+/** Места устройств после вскрытия короба «Изъятое» (автор 26.11, снимок раскладки), м и радианы. */
+const DEVICE_SPOTS: Record<string, { x: number; z: number; rot: number }> = {
+  '50': { x: -0.04, z: 0.18, rot: 0 },
+  '47': { x: -0.1, z: 0.37, rot: 0 },
+  '24': { x: 0.15, z: 0.36, rot: 0 },
+  '49': { x: 0.16, z: 0.45, rot: -0.05 },
+  '48': { x: 0.3, z: 0.44, rot: -0.35 },
+};
 /** DV-H (автор 24.11 — в игру): лист ложится на устройство и полого прогибается по нему. */
 const DRAPE = true;
 /**
@@ -148,6 +156,7 @@ export function Desk({
   materials,
   items,
   spillFrom,
+  stackAt,
   wallFit,
   onRead,
   onSave,
@@ -165,6 +174,11 @@ export function Desk({
   items: readonly DeskItem[];
   /** Откуда высыпается то, у чего ещё нет места (конверт на столе), м. */
   spillFrom: (id: string) => { x: number; z: number } | null;
+  /**
+   * Где ложится стопка этого листа (VZ-A, A-288): у каждой папки своё место — на ней самой;
+   * стартовые листы — своё. null — середина стола, как прежде.
+   */
+  stackAt: (id: string) => { x: number; z: number } | null;
   wallFit: RefObject<WallFit>;
   onRead: (id: string) => void;
   /** Раскладка стола изменилась (положили, высыпали): сохранить. */
@@ -216,7 +230,9 @@ export function Desk({
     };
   }, [room, p, deskCam, blocked]);
 
-  const kindOf = (id: string) => DEVICE_KIND[id] ?? materials.get(id)?.kind ?? 'sheet';
+  // Опись (04) — на планшете с зажимом (OPS-A).
+  const kindOf = (id: string) =>
+    id === INVENTORY_ID ? 'clipboard' : (DEVICE_KIND[id] ?? materials.get(id)?.kind ?? 'sheet');
   const save = (list: readonly Piece[]) =>
     onSave(list.map((q) => ({ id: q.id, x: q.x, z: q.z, rot: q.rot, layer: q.layer })));
 
@@ -291,15 +307,63 @@ export function Desk({
           .map((it) => ({ id: it.id, kind: kindOf(it.id) }))
           .sort((a, b) => (dev ? area(b.kind) - area(a.kind) : 0));
       // Устройства обходят всё, что уже лежит (стопки, газету): под листами их не было бы видно.
-      const devs = scatter(pick(true), zone, DEVICES_AT, 11, 0.1, placed, () => true);
+      // Своё место каждого устройства (автор 26.11, снимок): приёмник сзади посередине, ноутбук перед
+      // ним, камера и ручка правее, телефон справа. Занято — рядом, как прежде.
+      const devs: Piece[] = [];
+      const loose: { id: string; kind: string }[] = [];
+      for (const it of pick(true)) {
+        const at = DEVICE_SPOTS[it.id];
+        const [w, d, t] = sizeOf(it.kind);
+        const cand: Piece | null = at
+          ? {
+              id: it.id,
+              kind: it.kind,
+              w,
+              d,
+              t,
+              x: at.x,
+              z: at.z,
+              rot: at.rot,
+              layer: 0,
+              stack: it.id,
+            }
+          : null;
+        const free =
+          cand && allowed(cand, zone) && ![...placed, ...devs].some((q) => overlap(q, cand));
+        if (cand && free) devs.push(cand);
+        else loose.push(it);
+      }
+      devs.push(...scatter(loose, zone, DEVICES_AT, 11, 0.1, [...placed, ...devs], () => true));
       // Листы — ровной стопкой (DC-B, автор 25.11: стопка «к прочтению», без веера): место — одно,
       // свободное от устройств; первый по описи — сверху. Чуть неровно, как сложенные руками.
+      // Каждая группа — своей стопкой на своём месте (VZ-A, ST-B, OPS-A): стартовые листы, опись на
+      // планшете, листы папки — не одной кучей.
       const flat = pick(false);
-      const spot = flat.length
-        ? scatter(flat.slice(0, 1), zone, SPILL_AT, 7, 0.06, [...placed, ...devs], solid)[0]
-        : undefined;
-      const sheets: Piece[] = spot
-        ? flat
+      const groups = new Map<string, typeof flat>();
+      for (const it of flat) {
+        const g = deskGroupOf(it.id);
+        groups.set(g, [...(groups.get(g) ?? []), it]);
+      }
+      const sheets: Piece[] = [];
+      for (const list of groups.values()) {
+        // Своё место стопки (папка, стартовые) — ровно на нём, вдоль папки: листы лежат в открытой
+        // папке, а не криво поверх неё (автор 26.11). Нет своего места — свободное у середины.
+        const own = stackAt(list[0]?.id ?? '');
+        const spot = own
+          ? // Чуть правее середины папки: слева виден корешок и край картона.
+            { id: list[0]?.id ?? '', x: own.x + 0.018, z: own.z + 0.006, rot: 0 }
+          : scatter(
+              list.slice(0, 1),
+              zone,
+              SPILL_AT,
+              7,
+              0.06,
+              [...placed, ...devs, ...sheets],
+              solid,
+            )[0];
+        if (!spot) continue;
+        sheets.push(
+          ...list
             .map((it, k) => {
               const [w, d, t] = sizeOf(it.kind);
               const j = (n: number) => (((k * n) % 9) - 4) * 0.0012;
@@ -316,14 +380,16 @@ export function Desk({
                 stack: spot.id,
               };
             })
-            .reverse()
-        : [];
+            .reverse(),
+        );
+      }
       // Порядок укладки: что легло позже, то выше — первый лист описи сверху стопки.
       const base = Math.min(...fresh.map((it) => it.layer));
       const laid = [...devs, ...sheets].map((q, k) => ({ ...q, layer: base + k }));
-      laid.forEach((q, k) => {
-        starts.current.set(q.id, { pos: deskPoint(room, from.x, from.z, 0.012), at: now + k * 60 });
-      });
+      // Без полёта (автор 26.11: «из воздуха просто падают на стол — так не должно быть»): открытое
+      // сразу лежит на своём месте — в папке, у короба, стартовая стопка — справа от газеты.
+      void from;
+      void now;
       next = [...placed, ...laid];
       save(next);
     }
@@ -536,6 +602,19 @@ export function Desk({
     const ndc = new Vector2();
     const w = window as unknown as { __desk?: unknown };
     w.__desk = {
+      // Для проверок: где каждая вещь сейчас и куда идёт (режим, высота цели и текущая).
+      motion: () =>
+        [...targets.current.entries()].map(([id, t]) => ({
+          id,
+          mode: t.mode,
+          tx: Math.round(t.pos.x),
+          tz: Math.round(t.pos.z),
+          ty: Math.round(t.pos.y),
+          cx: Math.round(t.cur.x),
+          cz: Math.round(t.cur.z),
+          cy: Math.round(t.cur.y),
+          dist: Math.round(t.pos.distanceTo(t.cur)),
+        })),
       // Видимая точка вещи: её часть, которую ничего не накрывает (на столе внахлёст).
       grab: (id: string) => {
         const pc = ps.current.find((q) => q.id === id);
@@ -631,7 +710,9 @@ export function Desk({
         line = edge - DESK_SAFE * Math.max(0, edge - bottomY);
       }
       // Устройство на стену не уходит (DEVICES_ON_WALL): упирается в задний край стола.
-      const toWall = DEVICES_ON_WALL || !d.ids.some((id) => DEVICE_KIND[id]);
+      // Опись на планшете (OPS-A) — вещь стола, тоже не на стену.
+      const toWall =
+        (DEVICES_ON_WALL || !d.ids.some((id) => DEVICE_KIND[id])) && !d.ids.includes(INVENTORY_ID);
       if (!toWall) d.wall = null;
       else if (!d.wall && m.y < line && bp) d.wall = bp;
       else if (d.wall && m.y > line + WALL_HYST) d.wall = null;
@@ -658,7 +739,10 @@ export function Desk({
         for (const id of d.pass)
           if (!devices.some((q) => q.id === id && rects.some((r) => overlap(r, q))))
             d.pass.delete(id);
-        const obstacles = devices.filter((q) => !d.pass.has(q.id));
+        // Устройства на пути — не преграда (автор 26.11: «тяну приёмник вперёд — ноутбук мешает, хочу
+        // мимо»): вещь в руке проходит поверх них; отпустили на устройстве — встаёт рядом (drop).
+        const obstacles: Piece[] = [];
+        void devices;
         const ck = obstacles.map((q) => q.id).join(',');
         if (d.cacheKey !== ck) {
           d.cache = new Map();

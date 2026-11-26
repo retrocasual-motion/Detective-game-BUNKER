@@ -206,6 +206,35 @@ function paintFace(piece: Piece, title: string, body: string): CanvasTexture {
         text(piece.id, m, h - m * 1.5, w, '600 40px system-ui, sans-serif', 44);
         return;
       }
+      if (piece.kind === 'clipboard') {
+        // Планшет с зажимом (OPS-A): картонная доска, на ней лист описи, сверху металлический зажим.
+        ctx.fillStyle = '#7b5a3c';
+        ctx.fillRect(0, 0, w, h);
+        const ix = w * 0.05;
+        const iy = h * 0.09;
+        ctx.fillStyle = '#efe9dc';
+        ctx.fillRect(ix, iy, w - ix * 2, h - iy - h * 0.035);
+        ctx.fillStyle = '#9ea3a8';
+        ctx.fillRect(w * 0.3, h * 0.02, w * 0.4, h * 0.07);
+        ctx.fillStyle = '#6e7378';
+        ctx.fillRect(w * 0.38, h * 0.045, w * 0.24, h * 0.025);
+        ctx.fillStyle = '#1d1d1d';
+        let yy =
+          text(
+            title,
+            ix + m * 0.6,
+            iy + m * 0.5,
+            w - 2 * (ix + m * 0.6),
+            '700 44px Georgia, serif',
+            52,
+          ) + 12;
+        ctx.fillStyle = '#4a4740';
+        for (const line of plain(body).slice(1)) {
+          if (yy > h - m) break;
+          yy = text(line, ix + m * 0.6, yy, w - 2 * (ix + m * 0.6), '24px Georgia, serif', 30);
+        }
+        return;
+      }
       // Заголовок — у верхнего края (он у дальнего края листа: виден и в стопке веером).
       let y = text(piece.id, m, m * 0.7, w, '700 44px Georgia, serif', 52);
       y = text(title, m, y, w - 2 * m, '700 46px Georgia, serif', 54) + 14;
@@ -294,6 +323,14 @@ export function Paper({
     dur: number;
   } | null>(null);
   const placed = useRef(false);
+  /**
+   * Лист уже лежит (не в руке, не летит): если под ним что-то вынули или подложили, он сразу на новой
+   * высоте и с новым прогибом, без анимации — стопка не «оседает» на глазах (автор 26.11: «вытаскиваю
+   * документ снизу — все документы падают… убрать»). Плавно — только когда кладут сам лист.
+   */
+  const resting = useRef(false);
+  /** Когда появилась (без полёта): первые полсекунды видна, только если уже на своём месте. */
+  const born = useRef(0);
   const W = piece.w * p;
   const D = piece.d * p;
   const T = piece.t * p;
@@ -344,26 +381,48 @@ export function Paper({
     let drapeMoving = false;
     const pos = lp.current;
     if (!placed.current) {
+      // Место ещё не рассчитано (стол считает цели в своём кадре) — не показывать: иначе лист
+      // появлялся в нуле сцены, над лампой, и «падал» на место (автор 26.11, снимок).
+      if (!start && target.pos.lengthSq() === 0) {
+        g.visible = false;
+        state.invalidate();
+        return;
+      }
       placed.current = true;
+      born.current = performance.now();
       pos.copy(start?.pos ?? target.pos);
       g.quaternion.copy(target.quat);
       sc.current = target.scale;
       target.cur.copy(pos);
+      // Появился сразу на месте (вскрыли папку, новое дело) — лежит с первого кадра, прогиб готов:
+      // ни полёта, ни «оседания» (автор 26.11: «за меньше секунды… я всё равно вижу»).
+      if (!start) resting.current = true;
     }
     const waiting = !!start && performance.now() < start.at;
+    // Лежал уже в прошлом кадре (не только что положен).
+    const wasResting = resting.current;
     if ((target.mode === 'hand') !== onTop.current) setOnTop(g, target.mode === 'hand');
     // Пружина: a = k·(цель − x) − c·v.
     const k = target.stiff;
     const c = 2 * Math.sqrt(k) * target.damp;
     const vl = vel.current;
     const now = performance.now();
-    if (target.mode !== 'rest') tween.current = null;
+    if (target.mode !== 'rest') {
+      tween.current = null;
+      resting.current = false;
+    }
     if (waiting) {
       // Ещё в конверте — ждёт своей очереди.
     } else if (target.mode === 'rest') {
-      // Положить: новое место — новое мягкое движение из того, где вещь сейчас.
+      // Положить: новое место — новое мягкое движение из того, где вещь сейчас. Лежал и сдвинулся
+      // только по высоте (под ним вынули лист) — сразу, без движения.
       const tw = tween.current;
-      if (!tw || tw.to.distanceTo(target.pos) > 0.3) {
+      const onlyHeight =
+        resting.current &&
+        Math.abs(target.pos.x - pos.x) < 0.5 &&
+        Math.abs(target.pos.z - pos.z) < 0.5;
+      if (onlyHeight) tween.current = null;
+      else if (!tw || tw.to.distanceTo(target.pos) > 0.3) {
         const dist = pos.distanceTo(target.pos);
         tween.current =
           dist > 0.3
@@ -388,6 +447,7 @@ export function Paper({
         g.quaternion.copy(target.quat);
       }
       vl.set(0, 0, 0);
+      if (!tween.current) resting.current = true;
     } else if (target.mode === 'air') {
       v.copy(target.pos).sub(pos).multiplyScalar(k).addScaledVector(vl, -c);
       vl.addScaledVector(v, dt);
@@ -438,7 +498,8 @@ export function Paper({
         const z = zs.current;
         const dr = target.mode === 'rest' ? target.drape : null;
         const dy = target.mode === 'rest' ? pos.y - target.pos.y : 0;
-        const k = 1 - Math.exp(-dt * 14);
+        // Лежащий лист меняет прогиб сразу (под ним вынули или подложили), кладущийся — плавно.
+        const k = wasResting && !tween.current ? 1 : 1 - Math.exp(-dt * 14);
         let changed = false;
         for (let i = 0; i < pa.count; i++) {
           const want = dr ? (dr[i] ?? 0) * p : 0;
@@ -463,6 +524,13 @@ export function Paper({
       }
     }
     g.scale.setScalar(sc.current * kd);
+    // Только что появилась — не показывать, пока не на своём месте: у новой вещи цель в первом кадре
+    // ещё не та (высота стола приходит кадром позже) — был виден один кадр в воздухе (автор 26.11).
+    g.visible = !(
+      !start &&
+      performance.now() - born.current < 500 &&
+      pos.distanceToSquared(target.pos) > 1
+    );
     // Холст рисует по требованию (D3-12): пока вещь движется — следующий кадр.
     if (
       waiting ||

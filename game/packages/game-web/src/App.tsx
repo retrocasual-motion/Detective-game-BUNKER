@@ -1,6 +1,7 @@
 import {
   BANK_BOX_ID,
   BANK_LIST_ID,
+  CONTAINERS,
   type ContainerId,
   EPILOGUE_ID,
   inboxIds,
@@ -92,6 +93,12 @@ export function App() {
       const dir = KEY_DIR[e.key];
       if (!dir || isTyping(e.target)) return;
       const g = useGame.getState();
+      // Лист открыт: ↑ — закрыть и к стене (RD-A, SC-02); ←/→ — листать (полоса «N из M»).
+      if (g.viewerId && dir === 'up' && !g.held && !g.computerOpen && g.state?.view === 'desk') {
+        g.closeViewer();
+        setView('wall');
+        return;
+      }
       // Вещь в руках — стрелки её (меню фотоаппарата), не комнаты (R3-01).
       if (g.viewerId || g.computerOpen || g.held || g.deskPhone || !g.state) return;
       const to = NAV[g.state.view][dir];
@@ -110,6 +117,21 @@ export function App() {
   const opened = useMemo(
     () => (openedKey ? (openedKey.split(',') as ContainerId[]) : []),
     [openedKey],
+  );
+  // Открытые папки, где ещё лежат листы (UNP-A): прочитали всё — папка со стола уходит.
+  const foldersKey = useGame((g) => {
+    const s = g.state;
+    if (!s) return '';
+    const onDesk = new Set((s.desk ?? []).map((d) => d.id));
+    return CONTAINERS.filter(
+      (c) => openedOf(s).includes(c.id) && c.files.some((id) => onDesk.has(id)),
+    )
+      .map((c) => c.id)
+      .join(',');
+  });
+  const folders = useMemo(
+    () => (foldersKey ? (foldersKey.split(',') as ContainerId[]) : []),
+    [foldersKey],
   );
 
   if (!view) {
@@ -141,6 +163,7 @@ export function App() {
         wall={wall}
         inbox={inbox}
         opened={opened}
+        folders={folders}
         epilogue={epilogue}
         disc={disc}
         drive={drive}

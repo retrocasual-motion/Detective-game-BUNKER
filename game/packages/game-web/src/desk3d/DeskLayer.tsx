@@ -4,14 +4,16 @@ import {
   CONTAINERS,
   containerContents,
   type DeskItem,
+  INVENTORY_ID,
   NEWSPAPER_ID,
   onWall,
+  START_STACK,
 } from '@bunker/shared';
 import { Canvas, events, invalidate } from '@react-three/fiber';
 import { type RefObject, useEffect, useMemo, useRef } from 'react';
 import { screenToWorld } from '../canvas/math.ts';
 import type { Pose, Room } from '../room/camera.ts';
-import { type DeskObject, envelopeSpot } from '../room/decor.ts';
+import { type DeskObject, envelopeSpot, stackSpot } from '../room/decor.ts';
 import { shownCamera, useGame } from '../store.ts';
 import { DEVICE_KIND, Desk, type DeskMaterial, type WallFit } from './Desk.tsx';
 import { Occluders } from './Occluders.tsx';
@@ -119,6 +121,14 @@ export function DeskLayer({
     },
   };
 
+  // Где ложится стопка листа (VZ-A, ST-B): на свою открытую папку; стартовые — своё место.
+  const stackAt = (id: string) => {
+    const c = CONTAINERS.find((cc) => cc.files.includes(id));
+    const at = stackSpot(
+      id === INVENTORY_ID ? 'inventory' : START_STACK.includes(id) ? 'start' : (c?.id ?? null),
+    );
+    return at ? { x: at[0], z: at[1] } : null;
+  };
   const spillFrom = (id: string) => {
     const c = CONTAINERS.find((cc) => containerContents(cc).includes(id));
     if (!c) return null;
@@ -164,6 +174,7 @@ export function DeskLayer({
           materials={materials}
           items={items}
           spillFrom={spillFrom}
+          stackAt={stackAt}
           wallFit={wallFit}
           onRead={(id) => useGame.getState().readDesk(id)}
           onSave={(next) => useGame.getState().setDesk(next)}

@@ -54,6 +54,9 @@ const EXPECT_ERRORS = 'expect-errors';
 export const expectErrors = () =>
   base.info().annotations.push({ type: EXPECT_ERRORS, description: 'сервер ломается нарочно' });
 
+/** Стартовые листы 01–07: в новом деле — стопкой на столе (ST-B, A-288). */
+export const START = ['01', '02', '03', '04', '05', '06', '07'];
+
 /** Видимая полоска листа в лесенке колонки (шапка): сюда щёлкают, чтобы открыть. */
 export const STRIP = { position: { x: 25, y: 24 } } as const;
 
@@ -148,6 +151,38 @@ export async function takeDevice(page: Page, id: string) {
  * листы стопкой на столе; щелчок по верхнему — читать подряд «›» до последнего; закрыть —
  * прочитанное висит на стене группой папки.
  */
+/**
+ * Прочитать стопку на столе с верхнего листа до конца (DC-B) и закрыть — прочитанное на стене.
+ * Стартовая стопка (ST-B): верхний — письмо 01.
+ */
+export async function readStack(page: Page, top: string) {
+  await deskSettled(page);
+  let last: { x: number; y: number } | null = null;
+  await expect
+    .poll(
+      async () => {
+        const now = await page.evaluate(
+          (i) => (window as unknown as { __desk?: DeskHook }).__desk?.grab(i) ?? null,
+          top,
+        );
+        const still = !!now && !!last && Math.hypot(now.x - last.x, now.y - last.y) < 0.5;
+        last = now;
+        return still;
+      },
+      { intervals: [200], timeout: 10_000 },
+    )
+    .toBe(true);
+  const pt = last as { x: number; y: number } | null;
+  await page.mouse.click(pt?.x ?? 0, pt?.y ?? 0);
+  await expect(page.getByTestId('desk-run')).toBeVisible();
+  while (await page.getByTestId('desk-next').isEnabled())
+    await page.getByTestId('desk-next').click();
+  const filed = savedPut(page);
+  await page.keyboard.press('Escape');
+  await filed;
+  await expect(page.getByTestId('viewer')).toBeHidden();
+}
+
 export async function readFolder(page: Page, id: string, top: string) {
   // Как с клавиатуры: перед папкой на 3D-столе может лежать устройство и взять щелчок мышью
   // (щелчок мышью по папке проверяет archive.spec). Папка — в руки, открыть (автор 25.11).
@@ -209,13 +244,25 @@ export async function lookAtSticker(page: Page) {
  */
 export async function answerWithNewspaper(page: Page) {
   await page.getByTestId('verdict-corner').click();
-  const paper = await page.evaluate(() =>
+  // Газета — во «Входящих» (новое дело, автор 26.11) или на стене («вскрыть всё»).
+  const tray = page.getByTestId('inbox-15');
+  const onDesk = await page.evaluate(() =>
     (window as unknown as { __desk: DeskHook }).__desk.grab('15'),
   );
-  await page.mouse.click(paper?.x ?? 0, paper?.y ?? 0);
+  if (await tray.isVisible()) await tray.dispatchEvent('click');
+  else if (onDesk) await page.mouse.click(onDesk.x, onDesk.y);
+  else if (await sheet(page, '15').count()) {
+    await toWall(page);
+    await sheet(page, '15').click(STRIP);
+  } else throw new Error('газеты нет ни в лотке, ни на столе, ни на стене');
   await page.getByTestId('viewer-whole-to-folder').click();
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('verdict-card')).toContainText('15');
+  const scene = page.getByTestId('scene');
+  if ((await scene.getAttribute('data-view')) === 'wall') {
+    await page.keyboard.press('ArrowDown');
+    await expect(scene).toHaveAttribute('data-moving', 'false');
+  }
 }
 
 /**

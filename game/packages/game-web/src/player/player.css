@@ -121,17 +121,21 @@
   inset: 0;
   z-index: 39;
 }
+/* Верх закреплён (RV-35): кнопки на месте при любой длине расшифровки — раньше окно центрировалось
+   по высоте, и «⏭» уезжала на 10–30 px при смене записи. Длинная расшифровка — прокрутка. */
 .pen-frame {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 16vh;
   width: 620px;
+  max-height: 76vh;
+  overflow-y: auto;
   box-sizing: border-box;
   padding: 18px 20px;
   border-radius: 10px;
   background: linear-gradient(#3b3e42, #2a2c2f);
   box-shadow: 0 30px 80px rgb(0 0 0 / 60%);
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   animation: lap-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 :root[data-motion="reduce"] .pen-frame {

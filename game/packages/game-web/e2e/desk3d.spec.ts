@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { deskSettled, expect, savedPut, sheet, test, toWall } from './fixtures.ts';
+import { deskSettled, expect, START, savedPut, sheet, test, toWall } from './fixtures.ts';
 
 // Новое дело, как у игрока: конверты архива опечатаны (A-260).
 test.use({ sealed: true });
@@ -18,7 +18,12 @@ const pieces = (page: Page) =>
       window as unknown as { __desk: { pieces(): { id: string; x: number; z: number }[] } }
     ).__desk.pieces(),
   );
-const ids = async (page: Page) => (await pieces(page)).map((q) => q.id).sort();
+/** Что на столе, кроме стартовой стопки 01–07 (ST-B: она лежит с начала дела, тут не о ней). */
+const ids = async (page: Page) =>
+  (await pieces(page))
+    .map((q) => q.id)
+    .filter((id) => !START.includes(id) && id !== '04')
+    .sort();
 
 /**
  * Открыть со стола (FM-B, DC-B; автор 25.11 — папку тоже в руки): папку или короб вещдоков — в руки
@@ -47,10 +52,10 @@ test('3D-стол (DC-B): конверт — стопкой на стол; чи�
 }) => {
   await expect.poll(() => desk(page)).toBe(true);
   // С начала дела на столе — газета (автор 25.11).
-  await expect.poll(() => ids(page)).toEqual(['15']);
+  await expect.poll(() => ids(page)).toEqual([]);
   await spill(page, 'protocols');
   const all = ['30', '31', '32', '33', '34', '35', '36'];
-  await expect.poll(() => ids(page)).toEqual(['15', ...all]);
+  await expect.poll(() => ids(page)).toEqual(all);
   await expect(page.getByTestId('wall-n:archive-protocols')).toHaveCount(0);
   await expect(page.getByTestId('inbox-30')).toHaveCount(0);
   // Стопка: все листы в одном месте, первый по описи — сверху.
@@ -82,10 +87,10 @@ test('3D-стол (DC-B): конверт — стопкой на стол; чи�
   const filed = savedPut(page);
   await page.keyboard.press('Escape');
   await filed;
-  await expect.poll(() => ids(page)).toEqual(['15', '31', '33', '34', '35', '36']);
+  await expect.poll(() => ids(page)).toEqual(['31', '33', '34', '35', '36']);
   await page.reload();
   await expect.poll(() => desk(page)).toBe(true);
-  await expect.poll(() => ids(page)).toEqual(['15', '31', '33', '34', '35', '36']);
+  await expect.poll(() => ids(page)).toEqual(['31', '33', '34', '35', '36']);
   await toWall(page);
   await expect(page.getByTestId('wall-n:archive-protocols')).toBeVisible();
   await expect(sheet(page, '30')).toBeVisible();
@@ -106,8 +111,8 @@ test('3D-стол: лист двигается и остаётся после п
   const moved = savedPut(page);
   await page.mouse.move(a?.x ?? 0, a?.y ?? 0);
   await page.mouse.down();
-  // К игроку: слева — пакет вещдоков, справа — клавиатура.
-  await page.mouse.move((a?.x ?? 0) + 30, (a?.y ?? 0) + 90, { steps: 15 });
+  // К середине стола: папка «Протоколы» — справа у переднего края (ряд папок, автор 26.11).
+  await page.mouse.move((a?.x ?? 0) - 160, (a?.y ?? 0) - 40, { steps: 15 });
   await page.waitForTimeout(400);
   await page.mouse.up();
   await moved;
@@ -142,7 +147,7 @@ test('3D-стол: «Осмотр места» — папка стопкой; п
   page,
 }) => {
   await spill(page, 'scene');
-  const sheets = ['15', '18', '19', '20', '21', '22', '23', '25', '26', '27', '51'];
+  const sheets = ['18', '19', '20', '21', '22', '23', '25', '26', '27', '51'];
   await expect.poll(() => ids(page)).toEqual(sheets);
   await spill(page, 'seized');
   const devices = ['24', '47', '48', '49', '50'];
@@ -157,4 +162,27 @@ test('3D-стол: «Осмотр места» — папка стопкой; п
   await page.mouse.click(t?.x ?? 0, t?.y ?? 0);
   await expect(page.getByTestId('held')).toBeVisible();
   await page.keyboard.press('Escape');
+});
+
+test('устройство проходит мимо другого (автор 26.11): приёмник — вперёд через ноутбук', async ({
+  page,
+}) => {
+  await spill(page, 'seized');
+  await page.waitForTimeout(1200);
+  await deskSettled(page);
+  const at = async (id: string) => (await pieces(page)).find((q) => q.id === id);
+  const laptop = await at('47');
+  const radio0 = await at('50');
+  expect((radio0?.z ?? 0) < (laptop?.z ?? 0)).toBe(true);
+  const g = await grab(page, '50');
+  const saved = savedPut(page);
+  await page.mouse.move(g?.x ?? 0, g?.y ?? 0);
+  await page.mouse.down();
+  await page.mouse.move((g?.x ?? 0) - 40, (g?.y ?? 0) + 170, { steps: 20 });
+  await page.waitForTimeout(300);
+  await page.mouse.up();
+  await saved;
+  const radio = await at('50');
+  // Прошёл мимо ноутбука и встал перед ним, а не упёрся сзади.
+  expect(radio?.z ?? 0).toBeGreaterThan(laptop?.z ?? 0);
 });

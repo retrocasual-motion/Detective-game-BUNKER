@@ -40,6 +40,14 @@ import { Box, CaseFolder, Device, Envelope } from './shapes.tsx';
 import { BagInHands, bagLabel, inventoryRows, Unpacked, type UnpackItem } from './unpack.tsx';
 
 /** Вещь в руках со сценой three.js — отдельный кусок сборки (грузится, когда вещь взяли). */
+/**
+ * Вскрытое, что ещё в руках, пока под ним раскладывается стол (папка, короб вещдоков): держим вид
+ * «в руках», а не «вскрыто», чтобы картинка не сменилась до ухода.
+ */
+let spilling: ContainerId | null = null;
+/** Сколько вскрытое ещё в руках, пока стол раскладывает листы под ним, мс. */
+const SPILL_HIDE_MS = 400;
+
 export default function HeldThing({ held }: { held: Held }) {
   const materials = useGame((g) => g.materials);
   const openedIds = useGame((g) => (g.state ? openedOf(g.state) : NONE));
@@ -54,17 +62,30 @@ export default function HeldThing({ held }: { held: Held }) {
     const inside = containerContents(c).filter((m) => titles.has(m));
     const box = held.id === 'personal' || held.id === 'bank' || held.id === 'seized';
     const folder = FOLDER_IDS.has(held.id);
-    if (openedIds.includes(held.id))
+    if (openedIds.includes(held.id) && spilling !== held.id)
       return <Opened key={`opened-${held.id}`} id={held.id} inside={inside} box={box} />;
     const items = inside.map((m) => ({ id: m, title: short(titles.get(m) ?? '') }));
     // Вскрыли конверт архива (DC-B, автор 25.11; вместо OP-D): из рук — содержимое стопкой на стол,
     // читать — щелчком по стопке. Коробки — как прежде: вскрытая в руках (EB-A).
-    const open = () =>
-      afterLeaving(() => {
-        const g = useGame.getState();
-        g.openContainer(held.id);
-        if (SPILL_CONTAINERS.has(held.id)) g.hold(null);
-      });
+    const open = () => {
+      // Папка и короб вещдоков (автор 26.11: «мы это не должны видеть»): листы и вещи ложатся на стол,
+      // пока вскрытое ещё в руках, — и только потом оно уходит из рук: под ним уже готовый стол, без
+      // пустой папки и без листов, выскакивающих на место.
+      if (SPILL_CONTAINERS.has(held.id)) {
+        spilling = held.id;
+        useGame.getState().openContainer(held.id);
+        setTimeout(
+          () =>
+            afterLeaving(() => {
+              spilling = null;
+              useGame.getState().hold(null);
+            }),
+          SPILL_HIDE_MS,
+        );
+        return;
+      }
+      afterLeaving(() => useGame.getState().openContainer(held.id));
+    };
     return (
       <Held3D
         key={`sealed-${held.id}`}

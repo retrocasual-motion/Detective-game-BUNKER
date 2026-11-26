@@ -440,7 +440,8 @@ export function WallView() {
       } else if (useGame.getState().materials.find((m) => m.id === id)?.kind === 'bag')
         // Пакет личных вещей — в руки, как у стола (EB-A, OPEN-A).
         useGame.getState().hold({ type: 'bag', id });
-      else openViewer(id);
+      // Лист своей папки — читать её листы на стене подряд (RD-A).
+      else useGame.getState().readWall(id);
     },
     [openViewer],
   );

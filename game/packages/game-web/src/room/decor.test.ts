@@ -1,3 +1,4 @@
+import type { ContainerId } from '@bunker/shared';
 import { describe, expect, it } from 'vitest';
 import { roomFor } from './camera.ts';
 import { clipNear, deskObjects } from './decor.ts';
@@ -111,4 +112,33 @@ describe('вещи на столе не заходят друг в друга (�
         }
       expect([...new Set(hits)]).toEqual([]);
     });
+});
+
+describe('открытая папка (UNP-A, автор 26.11)', () => {
+  const r = roomFor({ width: 1366, height: 768 });
+  const col = () => '#000000';
+  const keys = (folders?: ContainerId[]) =>
+    deskObjects(
+      r,
+      col,
+      [],
+      ['protocols'],
+      'none',
+      'envelope',
+      'none',
+      undefined,
+      undefined,
+      undefined,
+      folders,
+    ).map((o) => o.key);
+  it('лежит, пока в ней есть листы; все листы ушли — папки на столе нет', () => {
+    expect(keys(['protocols'])).toContain('folder-open-protocols');
+    expect(keys([])).not.toContain('folder-open-protocols');
+    expect(keys([])).not.toContain('envelope-protocols');
+  });
+  it('плоская: стопка листов лежит на ней, не преграда', () => {
+    const o = deskObjects(r, col, [], ['protocols']).find((x) => x.key === 'folder-open-protocols');
+    expect(o?.flat).toBe(true);
+    expect(o?.hotspot).toBeUndefined();
+  });
 });
