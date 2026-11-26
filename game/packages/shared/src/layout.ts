@@ -1,9 +1,11 @@
 import {
+  BOX_KEEPS,
   CONTAINERS,
   type ContainerId,
   containerContents,
   DESK_DEVICES,
   DEVICES_ON_WALL,
+  INVENTORY_ID,
   NEVER_ON_WALL,
   NEWSPAPER_AT,
   NEWSPAPER_ID,
@@ -164,11 +166,11 @@ export function defaultState(materials: Material[]): PlayerState {
       wall: { camera: { ...DEFAULT_WALL_CAMERA }, items: [], threads: [], notes: [] },
       // Новое дело (A-260): конверты на столе ещё опечатаны.
       opened: [],
-      // Стартовые листы — стопкой на столе, письмо бюро сверху (ST-B): место решит стол.
-      desk: START_STACK.filter((id) => materials.some((m) => m.id === id)).map((id, k) => ({
-        id,
-        layer: k + 1,
-      })),
+      // Стартовые листы — стопкой на столе, письмо бюро сверху (ST-B); опись — отдельно, на
+      // планшете (OPS-A). Место решит стол.
+      desk: [...START_STACK, INVENTORY_ID]
+        .filter((id) => materials.some((m) => m.id === id))
+        .map((id, k) => ({ id, layer: k + 1 })),
     },
     materials,
   );
@@ -407,6 +409,8 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
       onDesk.has(id) ||
       deskOnly(id) ||
       (!legacy && OFF_WALL_IDS.has(id)) ||
+      // Пакеты вскрытой коробки — в коробке (BOX-B): на стену их вешает игрок, не игра.
+      (!legacy && BOX_KEEPS.has(id) && !state.wall.items.some((i) => BOX_KEEPS.has(i.id))) ||
       NEVER_ON_WALL.has(id)
     )
       continue;
@@ -592,6 +596,8 @@ export function openContainer(
   const fresh = containerContents(c).filter(
     (m) => have.has(m) && !onWallNow.has(m) && !onDeskNow.has(m),
   );
+  // Коробка «Личные вещи» (BOX-B): вскрыта — пакеты остаются в ней, ни на стену, ни на стол.
+  if (id === 'personal') return { ...state, opened };
   const spill = SPILL_CONTAINERS.has(id);
   const toDesk = spill ? fresh.filter((m) => c.files.includes(m) || DESK_DEVICES.has(m)) : [];
   const ids = fresh.filter((m) => !toDesk.includes(m));
@@ -674,7 +680,10 @@ function hangGroup(
  */
 export function fileFromDesk(state: PlayerState, ids: readonly string[]): PlayerState {
   const onDesk = new Set((state.desk ?? []).map((d) => d.id));
-  const want = ids.filter((id) => onDesk.has(id) && !START_STACK.includes(id));
+  // Опись (OPS-A) на стену сама не уходит — остаётся на столе.
+  const want = ids.filter(
+    (id) => onDesk.has(id) && !START_STACK.includes(id) && id !== INVENTORY_ID,
+  );
   // Стартовые листы (ST-B) — на свои начальные места, рядом с карточками людей, как висели прежде.
   let next = hangStart(
     state,
@@ -712,7 +721,8 @@ function hangStart(state: PlayerState, ids: string[]): PlayerState {
   const gone = new Set(ids);
   let z = state.wall.items.reduce((m, i) => Math.max(m, i.z), 0);
   const slot = (id: string) => {
-    const k = START_STACK.indexOf(id);
+    // Место — по номеру описи (01 — первое), как висели до конвертов.
+    const k = Number(id) - 1;
     return { x: (k % GRID_COLS) * GRID_DX, y: GRID_TOP + Math.floor(k / GRID_COLS) * GRID_DY };
   };
   const placed: WallItem[] = ids.map((id) => ({ id, ...slot(id), z: ++z, rot: hangTilt(id) }));
@@ -734,6 +744,8 @@ function spillOnDesk(desk: DeskItem[], ids: string[]): DeskItem[] {
  * мир стены, верхний левый угол карточки), поверх остального.
  */
 export function hangFromDesk(state: PlayerState, id: string, x: number, y: number): PlayerState {
+  // Опись на планшете (OPS-A) — вещь стола, на стену не вешается.
+  if (id === INVENTORY_ID) return state;
   const z = state.wall.items.reduce((m, i) => Math.max(m, i.z), 0) + 1;
   const item: WallItem = { id, ...onWall(x, y), z, rot: hangTilt(id) };
   return {
@@ -745,9 +757,19 @@ export function hangFromDesk(state: PlayerState, id: string, x: number, y: numbe
 
 /** Вскрыть всё сразу (служебная кнопка «Подготовка», автотесты): стартовая сетка, как до конвертов. */
 export function openAll(state: PlayerState, materials: Material[]): PlayerState {
-  // Стартовая стопка (ST-B) — тоже на стену, на начальные места: «всё вскрыто, как до конвертов».
-  const desk = state.desk?.filter((d) => !START_STACK.includes(d.id));
-  return reconcile({ ...state, desk, opened: CONTAINERS.map((c) => c.id) }, materials);
+  // Стартовая стопка (ST-B) и опись — тоже на стену, на начальные места: «всё вскрыто, как до
+  // конвертов» (служебная кнопка и автотесты).
+  const desk = state.desk?.filter((d) => !START_STACK.includes(d.id) && d.id !== INVENTORY_ID);
+  const r = reconcile({ ...state, desk, opened: CONTAINERS.map((c) => c.id) }, materials);
+  // Пакеты личных вещей — тоже на стену, на начальные места (BOX-B у игрока держит их в коробке).
+  let z = r.wall.items.reduce((m, i) => Math.max(m, i.z), 0);
+  const bags = [...BOX_KEEPS]
+    .filter((id) => materials.some((m) => m.id === id) && !r.wall.items.some((i) => i.id === id))
+    .flatMap((id) => {
+      const slot = startSlot(id, materials);
+      return slot ? [{ id, ...slot, z: ++z, rot: hangTilt(id) }] : [];
+    });
+  return bags.length ? { ...r, wall: { ...r.wall, items: [...r.wall.items, ...bags] } } : r;
 }
 
 /**

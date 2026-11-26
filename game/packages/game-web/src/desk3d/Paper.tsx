@@ -206,6 +206,35 @@ function paintFace(piece: Piece, title: string, body: string): CanvasTexture {
         text(piece.id, m, h - m * 1.5, w, '600 40px system-ui, sans-serif', 44);
         return;
       }
+      if (piece.kind === 'clipboard') {
+        // Планшет с зажимом (OPS-A): картонная доска, на ней лист описи, сверху металлический зажим.
+        ctx.fillStyle = '#7b5a3c';
+        ctx.fillRect(0, 0, w, h);
+        const ix = w * 0.05;
+        const iy = h * 0.09;
+        ctx.fillStyle = '#efe9dc';
+        ctx.fillRect(ix, iy, w - ix * 2, h - iy - h * 0.035);
+        ctx.fillStyle = '#9ea3a8';
+        ctx.fillRect(w * 0.3, h * 0.02, w * 0.4, h * 0.07);
+        ctx.fillStyle = '#6e7378';
+        ctx.fillRect(w * 0.38, h * 0.045, w * 0.24, h * 0.025);
+        ctx.fillStyle = '#1d1d1d';
+        let yy =
+          text(
+            title,
+            ix + m * 0.6,
+            iy + m * 0.5,
+            w - 2 * (ix + m * 0.6),
+            '700 44px Georgia, serif',
+            52,
+          ) + 12;
+        ctx.fillStyle = '#4a4740';
+        for (const line of plain(body).slice(1)) {
+          if (yy > h - m) break;
+          yy = text(line, ix + m * 0.6, yy, w - 2 * (ix + m * 0.6), '24px Georgia, serif', 30);
+        }
+        return;
+      }
       // Заголовок — у верхнего края (он у дальнего края листа: виден и в стопке веером).
       let y = text(piece.id, m, m * 0.7, w, '700 44px Georgia, serif', 52);
       y = text(title, m, y, w - 2 * m, '700 46px Georgia, serif', 54) + 14;

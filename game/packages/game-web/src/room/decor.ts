@@ -269,7 +269,12 @@ const ENVELOPE_ORDER = ['bunker', 'scene', 'protocols'] as const;
  * Стартовые листы 01–07 (ST-B, A-288): стопкой справа от газеты, письмо бюро сверху — рядом с ней,
  * перед игроком.
  */
-const START_AT: [number, number] = [0.34, 0.7];
+const START_AT: [number, number] = [0.27, 0.7];
+/**
+ * Опись на планшете (OPS-A, автор 26.11: «отдельно, чтобы выделялось и не потерялось»): справа
+ * спереди, у телефона; на стену сама не уходит, по столу её можно передвинуть.
+ */
+const INVENTORY_AT: [number, number] = [0.55, 0.635];
 /** Папка-скоросшиватель: 30 × 23,5 см, закладка с названием у дальнего края. */
 const FOLDER: [number, number] = [0.3, 0.235];
 /**
@@ -289,8 +294,9 @@ export function envelopeSpot(id: ContainerId): [number, number] {
  * Где ложится стопка (VZ-A, ST-B): листы папки — на открытую папку; стартовые — своё место; прочее —
  * null (середина стола).
  */
-export function stackSpot(id: ContainerId | 'start' | null): [number, number] | null {
+export function stackSpot(id: ContainerId | 'start' | 'inventory' | null): [number, number] | null {
   if (id === 'start') return START_AT;
+  if (id === 'inventory') return INVENTORY_AT;
   return id && (ENVELOPE_ORDER as readonly string[]).includes(id)
     ? ENVELOPE_AT[id as EnvelopeId]
     : null;
@@ -309,7 +315,7 @@ const PC_Z = 0.19;
 const PAPERS_AT: [number, number] = [0.285, 0.13];
 const PAPERS_H = 0.15;
 /** Конверт с диском сервера (A-272) — у дисковода, левее телефона. */
-const DISC_AT: [number, number] = [0.58, 0.56];
+const DISC_AT: [number, number] = [0.51, 0.41];
 /**
  * Лампа банкира — у стены, сразу правее лотка «Входящие» (автор 25.11): центр основания, доли p.
  * Абажур нависает над лотком; основание ни с чем не пересекается.
@@ -492,27 +498,36 @@ export function deskObjects(
       tagInside: true,
       testId: 'device-50',
     },
-    // Коробка «Личные вещи» (A-260): опечатана — крышка; вскрыта — уходит со стола: пакеты 40–46
-    // на стене, больше коробке делать нечего (ручная проверка автора 21.11, R.4).
-    ...(opened.includes('personal')
-      ? []
-      : [
-          {
-            key: 'bags',
-            label: 'Коробка «Личные вещи», опечатана — вскрыть',
-            boxes: [
-              // Коробка 33 × 23 × 16 см (как коробка «В руках»), крышка и лента пломбы.
-              // У стены, между лампой и коробом пачек (автор 25.11, фото стола), без пересечений.
-              // Меньше (автор 25.11): 28 × 20 × 14 см.
-              box(-0.4, 0.13, 0.28, 0.2, 0.14, col('--color-box')),
-              box(-0.4, 0.13, 0.29, 0.21, 0.015, col('--color-box-lid'), 0.14),
-              box(-0.4, 0.13, 0.03, 0.21, 0.017, col('--color-seal'), 0.14),
-            ],
-            hotspot: { kind: 'container' as const, id: 'personal' as const },
-            tag: 'Личные вещи',
-            testId: 'container-personal',
-          },
-        ]),
+    // Коробка «Личные вещи» (A-260; BOX-B, автор 26.11 — на пробу): опечатана — крышка и пломба;
+    // вскрыта — остаётся на столе открытой, пакеты 40–46 лежат в ней; щелчок — коробка в руках, пакет
+    // вынимают по одному. Коробка 28 × 20 × 14 см, у стены между лампой и коробом вещдоков.
+    opened.includes('personal')
+      ? {
+          key: 'bags',
+          label: 'Коробка «Личные вещи», вскрыта — взять пакет',
+          boxes: [
+            box(-0.4, 0.13, 0.28, 0.2, 0.14, col('--color-box')),
+            // Нутро и верхушки пакетов — видно, что вещи внутри.
+            box(-0.4, 0.13, 0.26, 0.18, 0.001, col('--color-box-inside'), 0.13),
+            box(-0.45, 0.12, 0.09, 0.14, 0.002, col('--color-paper-sheet'), 0.131),
+            box(-0.35, 0.14, 0.09, 0.14, 0.002, col('--color-paper-sheet'), 0.133),
+          ],
+          hotspot: { kind: 'container' as const, id: 'personal' as const },
+          tag: 'Личные вещи',
+          testId: 'container-personal',
+        }
+      : {
+          key: 'bags',
+          label: 'Коробка «Личные вещи», опечатана — вскрыть',
+          boxes: [
+            box(-0.4, 0.13, 0.28, 0.2, 0.14, col('--color-box')),
+            box(-0.4, 0.13, 0.29, 0.21, 0.015, col('--color-box-lid'), 0.14),
+            box(-0.4, 0.13, 0.03, 0.21, 0.017, col('--color-seal'), 0.14),
+          ],
+          hotspot: { kind: 'container' as const, id: 'personal' as const },
+          tag: 'Личные вещи',
+          testId: 'container-personal',
+        },
     // Газета (E44, A-260) — на 3D-столе: свободный лист, лежит перед игроком (автор 25.11).
     // Папки дела (FM-B, автор 25.11; вместо конвертов A-260): не опечатаны, у каждой — закладка с
     // названием; открытая со стола уходит — листы стопкой на столе. Стопкой внахлёст: у дальних видна

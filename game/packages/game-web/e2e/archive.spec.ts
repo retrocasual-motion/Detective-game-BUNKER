@@ -208,10 +208,10 @@ test('«Осмотр места» — листы; короб «Изъятое» 
   for (const id of ['24', '47', '48', '49', '50'])
     await expect.poll(async () => (await pieces(page)).includes(id)).toBe(true);
   await openSealed(page, 'personal');
-  // Вскрытая коробка уходит со стола (R.4, автор 21.11).
-  await expect(page.getByTestId('container-personal')).toHaveCount(0);
+  // Вскрытая коробка остаётся на столе открытой, пакеты — в ней, не на стене (BOX-B, автор 26.11).
+  await expect(page.getByTestId('container-personal')).toHaveCount(1);
   await toWall(page);
-  await expect(sheet(page, '45')).toBeAttached();
+  await expect(sheet(page, '45')).toHaveCount(0);
   // Устройства на стене не висят (DEVICES_ON_WALL).
   await expect(sheet(page, '48')).toHaveCount(0);
 });
@@ -241,10 +241,14 @@ test('«Личные вещи» — семь пакетов (EB-A): пакет �
   await expect(held).toHaveAttribute('aria-label', 'Коробка «Личные вещи» · вскрыта');
   await page.keyboard.press('Escape');
   await expect(held).toBeHidden();
+  // BOX-B: коробка лежит на столе открытой, пакеты — в ней; на стене их нет. Щелчок — снова в руках.
   await toWall(page);
-  await expect(sheet(page, '42')).toBeVisible();
-  await sheet(page, '42').click();
-  await expect(held).toHaveAttribute('aria-label', 'Пакет · Личные вещи Н. Харта');
+  await expect(sheet(page, '42')).toHaveCount(0);
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'desk');
+  await page.getByTestId('container-personal').dispatchEvent('click');
+  await expect(held).toHaveAttribute('aria-label', 'Коробка «Личные вещи» · вскрыта');
+  await expect(page.getByTestId('unpack-42')).toHaveCount(1);
   await page.keyboard.press('Escape');
   await expect(held).toBeHidden();
   await expect(page.getByTestId('viewer')).toBeHidden();
@@ -282,4 +286,23 @@ test('газета на столе — бумажный номер; сайт г�
   await page.getByTestId('lap-icon-Браузер').dblclick();
   await page.getByTestId('pc-fav-17').click();
   await expect(page.getByTestId('pc-web')).toContainText('Выпуск открывается по дате');
+});
+
+test('OPS-A: опись — на планшете на столе отдельно; прочитали — осталась на столе, на стене её нет', async ({
+  page,
+}) => {
+  await expect.poll(async () => (await allPieces(page)).includes('04')).toBe(true);
+  await deskSettled(page);
+  await page.waitForTimeout(800);
+  const at = await grab(page, '04');
+  await page.mouse.click(at?.x ?? 0, at?.y ?? 0);
+  await expect(page.getByTestId('viewer-paper')).toContainText('Опись материалов дела');
+  // Читается одна, не вместе со стартовой стопкой.
+  await expect(page.getByTestId('desk-next')).toBeDisabled();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('viewer')).toBeHidden();
+  await page.waitForTimeout(600);
+  expect(await allPieces(page)).toContain('04');
+  await toWall(page);
+  await expect(sheet(page, '04')).toHaveCount(0);
 });

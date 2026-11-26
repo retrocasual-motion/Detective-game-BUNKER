@@ -293,24 +293,23 @@ describe('конверт с диском сервера (A-272)', () => {
 describe('конверты архива (A-260)', () => {
   const s = defaultState(starting);
 
-  it('коробка «Личные вещи»: содержимое — на стену группой под ярлыком, ничего не накрыто', () => {
+  it('BOX-B: коробка «Личные вещи» вскрыта — пакеты в ней: не на стене и не на столе', () => {
     const o = openContainer(s, starting, 'personal');
     expect(o.opened).toEqual(['personal']);
     const ids = ['40', '41', '42', '43', '44', '45', '46'];
-    const label = o.wall.items.find((i) => i.id === containerLabelId('personal'));
-    expect(o.wall.notes.find((n) => n.id === containerLabelId('personal'))?.text).toBe(
-      'Личные вещи',
-    );
-    const placed = o.wall.items.filter((i) => ids.includes(i.id));
-    expect(placed).toHaveLength(7);
-    for (const i of placed) expect(i.y).toBeGreaterThan(label?.y ?? 0);
-    const others = o.wall.items.filter((i) => !ids.includes(i.id) && i.id !== label?.id);
-    for (const a of placed)
-      for (const b of others)
-        expect(Math.abs(a.x - b.x) >= 160 || Math.abs(a.y - b.y) >= 220).toBe(true);
-    // Повторно — без изменений; reconcile не трогает разложенное.
+    expect(o.wall.items.some((i) => ids.includes(i.id))).toBe(false);
+    expect(o.desk?.some((d) => ids.includes(d.id))).toBe(false);
+    // reconcile их на стену не вешает; повторно — без изменений.
+    expect(reconcile(o, starting).wall.items.some((i) => ids.includes(i.id))).toBe(false);
     expect(openContainer(o, starting, 'personal')).toBe(o);
-    expect(reconcile(o, starting).wall.items).toEqual(o.wall.items);
+  });
+
+  it('OPS-A: опись — отдельно на столе; прочитали — на стену не уходит, на стену не вешается', () => {
+    expect(s.desk?.some((d) => d.id === '04')).toBe(true);
+    const r = fileFromDesk(s, ['04', '01']);
+    expect(r.desk?.some((d) => d.id === '04')).toBe(true);
+    expect(r.wall.items.some((i) => i.id === '04')).toBe(false);
+    expect(hangFromDesk(s, '04', 0, 0)).toBe(s);
   });
 
   it('3D-стол: конверт высыпается на стол — не на стену и не во «Входящие»', () => {
@@ -380,7 +379,11 @@ describe('конверты архива (A-260)', () => {
     expect(r.wall.items.some((i) => i.id === '47')).toBe(false);
     expect(r.desk?.some((d) => d.id === '47' && d.x === undefined)).toBe(true);
     // Конверт места не вскрыт — устройств на столе нет, только газета и стартовая стопка.
-    expect(reconcile(s, starting).desk?.map((d) => d.id)).toEqual([NEWSPAPER_ID, ...START_STACK]);
+    expect(reconcile(s, starting).desk?.map((d) => d.id)).toEqual([
+      NEWSPAPER_ID,
+      ...START_STACK,
+      '04',
+    ]);
   });
 
   it('DC-B: прочитанное со стола — на стену группой под ярлыком конверта; вторая порция — без второго ярлыка', () => {

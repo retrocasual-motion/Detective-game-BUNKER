@@ -4,6 +4,7 @@ import {
   CONTAINERS,
   containerContents,
   type DeskItem,
+  INVENTORY_ID,
   NEWSPAPER_ID,
   onWall,
   START_STACK,
@@ -123,7 +124,9 @@ export function DeskLayer({
   // Где ложится стопка листа (VZ-A, ST-B): на свою открытую папку; стартовые — своё место.
   const stackAt = (id: string) => {
     const c = CONTAINERS.find((cc) => cc.files.includes(id));
-    const at = stackSpot(START_STACK.includes(id) ? 'start' : (c?.id ?? null));
+    const at = stackSpot(
+      id === INVENTORY_ID ? 'inventory' : START_STACK.includes(id) ? 'start' : (c?.id ?? null),
+    );
     return at ? { x: at[0], z: at[1] } : null;
   };
   const spillFrom = (id: string) => {

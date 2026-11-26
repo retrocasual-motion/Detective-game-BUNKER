@@ -26,8 +26,8 @@ async function devicesOnScreen(page: Page) {
 test('на столе — изъятые устройства, все на экране', async ({ page }) => {
   await devicesOnScreen(page);
   await expect(page.getByTestId('computer-monitor')).toBeInViewport();
-  // Вскрытой коробки «Личные вещи» на столе нет (R.4); «Входящие» — в левом углу (автор 25.11).
-  await expect(page.getByTestId('container-personal')).toHaveCount(0);
+  // Вскрытая коробка «Личные вещи» лежит на столе открытой (BOX-B); «Входящие» — в левом углу.
+  await expect(page.getByTestId('container-personal')).toHaveCount(1);
   const tray = await page.getByTestId('inbox-tray').boundingBox();
   expect((tray?.x ?? 0) + (tray?.width ?? 0) / 2).toBeLessThan(683);
 });

@@ -1,4 +1,4 @@
-import { DEVICES_ON_WALL, type DeskItem } from '@bunker/shared';
+import { DEVICES_ON_WALL, type DeskItem, deskGroupOf, INVENTORY_ID } from '@bunker/shared';
 import { type ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -222,7 +222,9 @@ export function Desk({
     };
   }, [room, p, deskCam, blocked]);
 
-  const kindOf = (id: string) => DEVICE_KIND[id] ?? materials.get(id)?.kind ?? 'sheet';
+  // Опись (04) — на планшете с зажимом (OPS-A).
+  const kindOf = (id: string) =>
+    id === INVENTORY_ID ? 'clipboard' : (DEVICE_KIND[id] ?? materials.get(id)?.kind ?? 'sheet');
   const save = (list: readonly Piece[]) =>
     onSave(list.map((q) => ({ id: q.id, x: q.x, z: q.z, rot: q.rot, layer: q.layer })));
 
@@ -300,18 +302,34 @@ export function Desk({
       const devs = scatter(pick(true), zone, DEVICES_AT, 11, 0.1, placed, () => true);
       // Листы — ровной стопкой (DC-B, автор 25.11: стопка «к прочтению», без веера): место — одно,
       // свободное от устройств; первый по описи — сверху. Чуть неровно, как сложенные руками.
+      // Каждая группа — своей стопкой на своём месте (VZ-A, ST-B, OPS-A): стартовые листы, опись на
+      // планшете, листы папки — не одной кучей.
       const flat = pick(false);
-      // Своё место стопки (папка, стартовые — VZ-A, ST-B) — ровно на нём, вдоль папки: листы лежат в
-      // открытой папке, а не криво поверх неё (автор 26.11). Нет своего места — свободное у середины.
-      const own = flat.length ? stackAt(flat[0]?.id ?? '') : null;
-      const spot = !flat.length
-        ? undefined
-        : own
+      const groups = new Map<string, typeof flat>();
+      for (const it of flat) {
+        const g = deskGroupOf(it.id);
+        groups.set(g, [...(groups.get(g) ?? []), it]);
+      }
+      const sheets: Piece[] = [];
+      for (const list of groups.values()) {
+        // Своё место стопки (папка, стартовые) — ровно на нём, вдоль папки: листы лежат в открытой
+        // папке, а не криво поверх неё (автор 26.11). Нет своего места — свободное у середины.
+        const own = stackAt(list[0]?.id ?? '');
+        const spot = own
           ? // Чуть правее середины папки: слева виден корешок и край картона.
-            { id: flat[0]?.id ?? '', x: own.x + 0.018, z: own.z + 0.006, rot: 0 }
-          : scatter(flat.slice(0, 1), zone, SPILL_AT, 7, 0.06, [...placed, ...devs], solid)[0];
-      const sheets: Piece[] = spot
-        ? flat
+            { id: list[0]?.id ?? '', x: own.x + 0.018, z: own.z + 0.006, rot: 0 }
+          : scatter(
+              list.slice(0, 1),
+              zone,
+              SPILL_AT,
+              7,
+              0.06,
+              [...placed, ...devs, ...sheets],
+              solid,
+            )[0];
+        if (!spot) continue;
+        sheets.push(
+          ...list
             .map((it, k) => {
               const [w, d, t] = sizeOf(it.kind);
               const j = (n: number) => (((k * n) % 9) - 4) * 0.0012;
@@ -328,8 +346,9 @@ export function Desk({
                 stack: spot.id,
               };
             })
-            .reverse()
-        : [];
+            .reverse(),
+        );
+      }
       // Порядок укладки: что легло позже, то выше — первый лист описи сверху стопки.
       const base = Math.min(...fresh.map((it) => it.layer));
       const laid = [...devs, ...sheets].map((q, k) => ({ ...q, layer: base + k }));
@@ -644,7 +663,9 @@ export function Desk({
         line = edge - DESK_SAFE * Math.max(0, edge - bottomY);
       }
       // Устройство на стену не уходит (DEVICES_ON_WALL): упирается в задний край стола.
-      const toWall = DEVICES_ON_WALL || !d.ids.some((id) => DEVICE_KIND[id]);
+      // Опись на планшете (OPS-A) — вещь стола, тоже не на стену.
+      const toWall =
+        (DEVICES_ON_WALL || !d.ids.some((id) => DEVICE_KIND[id])) && !d.ids.includes(INVENTORY_ID);
       if (!toWall) d.wall = null;
       else if (!d.wall && m.y < line && bp) d.wall = bp;
       else if (d.wall && m.y > line + WALL_HYST) d.wall = null;
