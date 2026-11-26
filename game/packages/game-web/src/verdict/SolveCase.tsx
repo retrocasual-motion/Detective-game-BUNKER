@@ -67,12 +67,12 @@ export function SolveCase() {
               </p>
             )}
             <div className="solve-actions">
-              <button type="button" data-testid="solve-back" onClick={back}>
+              {/* Главная кнопка — обратимая (RV-44): «Продолжить» закрывает расследование. */}
+              <button type="button" className="solve-go" data-testid="solve-back" onClick={back}>
                 Вернуться к делу
               </button>
               <button
                 type="button"
-                className="solve-go"
                 data-testid="solve-continue"
                 disabled={busy}
                 onClick={run(proceed)}

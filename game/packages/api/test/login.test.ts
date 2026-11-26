@@ -182,14 +182,32 @@ describe('вход по ссылке (6a-1)', () => {
     expect(mailer.outbox[0]?.to).toBe('det@example.com');
   });
 
+  it('RV-57: играющему вход продлевается — через 89 дней ещё на 90, а не 401 на 91-й', async () => {
+    const a = app();
+    const start = clock;
+    const one = await login(a);
+    clock = start + 89 * 86_400_000;
+    const mid = await get(a, '/api/materials', one);
+    expect(mid.status).toBe(200);
+    expect(mid.headers.get('set-cookie')).toContain('bunker_sid=');
+    clock = start + 150 * 86_400_000;
+    expect((await get(a, '/api/materials', one)).status).toBe(200);
+    // Без игры 90 дней — вход истекает, как прежде.
+    clock = start + 241 * 86_400_000;
+    expect((await get(a, '/api/materials', one)).status).toBe(401);
+    clock = start;
+  });
+
   it('у каждого игрока своё дело', async () => {
     const a = app();
     const one = await login(a, 'one@example.com');
     const two = await login(a, 'two@example.com');
+    const w = { 'x-state-writer': 'page-one-1' };
+    const opened = await a.request('/api/state', { headers: { cookie: one, ...w } });
     const put = await a.request('/api/state', {
       method: 'PUT',
-      headers: { 'content-type': 'application/json', cookie: one },
-      body: JSON.stringify(await (await get(a, '/api/state', one)).json()),
+      headers: { 'content-type': 'application/json', cookie: one, ...w, 'x-state-seq': '1' },
+      body: JSON.stringify(await opened.json()),
     });
     expect(put.status).toBe(204);
     expect(await db.select().from(playerState)).toHaveLength(1);

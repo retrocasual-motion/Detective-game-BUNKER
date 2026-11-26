@@ -96,6 +96,7 @@ export function PcBrowser() {
         <span className="lap-label">Адрес</span>
         <input
           className="lap-url"
+          maxLength={300}
           value={typed}
           aria-label="Адрес"
           data-testid="pc-url"

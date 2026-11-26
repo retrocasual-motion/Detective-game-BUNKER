@@ -2,7 +2,16 @@ import { readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Page } from '@playwright/test';
-import { expect, lookAtSticker, readFolder, STRIP, sheet, takeDevice, test } from './fixtures.ts';
+import {
+  expect,
+  fillVerdict,
+  lookAtSticker,
+  readFolder,
+  STRIP,
+  sheet,
+  takeDevice,
+  test,
+} from './fixtures.ts';
 
 /**
  * QA-C (общая проверка 20.11): робот проходит всё дело через интерфейс, как игрок — от нового
@@ -747,8 +756,8 @@ test('QA-C: всё дело через интерфейс — от нового 
     await page.getByTestId('solve-continue').click();
     await expect(page.getByTestId('verdict-folder')).toBeVisible();
     await opened(page, ['L999']);
-    await page.getByTestId('verdict-person-p:moreau').click();
-    for (let k = 0; k < 5; k++) await page.getByTestId('verdict-next').click();
+    // Пустые ответы не принимаются (VER-A): форма — целиком.
+    await fillVerdict(page);
     await page.getByTestId('verdict-send').click();
     await expect(page.getByTestId('verdict-result')).toBeVisible();
   });

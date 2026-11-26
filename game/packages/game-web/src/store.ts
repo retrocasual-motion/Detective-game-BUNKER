@@ -32,7 +32,15 @@ import {
 } from '@bunker/shared';
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import { ackExcerpts, getExcerpts, getMaterials, getState, postAction, putState } from './api.ts';
+import {
+  ackExcerpts,
+  getExcerpts,
+  getMaterials,
+  getState,
+  PAGE_ID,
+  postAction,
+  putState,
+} from './api.ts';
 import { clampToBounds } from './canvas/math.ts';
 import { todayKey } from './clock.ts';
 import { createSaver } from './save.ts';
@@ -69,8 +77,44 @@ export type Held =
   | { type: 'bag'; id: string; inBox?: boolean }
   | { type: 'device'; id: string };
 
-/** 'error' — сбой связи, повторяем; 'rejected' — сервер отказал по существу, нужна перезагрузка. */
-export type SaveStatus = 'saved' | 'saving' | 'error' | 'rejected';
+/**
+ * 'error' — сбой связи, повторяем; 'rejected' — сервер отказал по существу (следующее изменение
+ * сохранится снова); 'conflict' — дело открыто на другой странице или устройстве (DEV-A);
+ * 'signedout' — вход истёк, недосланное ждёт входа (RV-57).
+ */
+export type SaveStatus = 'saved' | 'saving' | 'error' | 'rejected' | 'conflict' | 'signedout';
+
+/**
+ * Недосланное, когда истёк вход (RV-57): дело этой страницы, пока сервер его не принял. После входа
+ * дошлётся, если с тех пор дело никто не писал (номер прежней страницы совпал).
+ */
+const UNSENT_KEY = 'bunker-unsent';
+const stashUnsent = (state: PlayerState) => {
+  try {
+    localStorage.setItem(UNSENT_KEY, JSON.stringify({ writer: PAGE_ID, state }));
+  } catch {
+    // Хранилище недоступно (приватный режим) — останется только сказать игроку.
+  }
+};
+const takeUnsent = (): { writer: string; state: PlayerState } | null => {
+  try {
+    const raw = localStorage.getItem(UNSENT_KEY);
+    localStorage.removeItem(UNSENT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Одна вкладка с делом (R2-02): новая говорит «я здесь» и ждёт, пока прежняя дошлёт своё и
+ * перестанет сохранять, — иначе прежняя дослала бы последнее уже после того, как новая заняла дело,
+ * и оно пропало бы (RV-56). Прежняя сразу отвечает «есть» и потом «дослала»; «есть» не пришло за
+ * 150 мс — прежней вкладки нет; «дослала» ждём не дольше 2 с.
+ */
+const TAB_CHANNEL = 'bunker-case';
+const HELLO_MS = 150;
+const HANDOVER_MS = 2000;
 
 interface GameStore {
   materials: Material[];
@@ -247,11 +291,41 @@ export type Excerpt = { title: string; from: number; to: number; section?: strin
 
 const onWallNow = (s: PlayerState | null) => new Set((s?.wall.items ?? []).map((i) => i.id));
 
+/** Пары половин, что сводятся сейчас (RV-18). */
+const joining = new Set<string>();
+
+/** Новая вкладка ждёт, пока прежняя дошлёт своё (см. TAB_CHANNEL). */
+function handover(): Promise<void> {
+  if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return Promise.resolve();
+  return new Promise((resolve) => {
+    const tab = new BroadcastChannel(TAB_CHANNEL);
+    const done = () => {
+      clearTimeout(timer);
+      tab.close();
+      resolve();
+    };
+    let timer = setTimeout(done, HELLO_MS);
+    tab.onmessage = (e: MessageEvent<{ busy?: string; flushed?: string }>) => {
+      if (e.data?.flushed === PAGE_ID) done();
+      else if (e.data?.busy === PAGE_ID) {
+        clearTimeout(timer);
+        timer = setTimeout(done, HANDOVER_MS);
+      }
+    };
+    tab.postMessage({ here: PAGE_ID });
+  });
+}
+
 export const useGame = create<GameStore>((set, get) => {
-  const saver = createSaver(putState, 500, (saveStatus) => set({ saveStatus }));
+  const saver = createSaver(putState, 500, (saveStatus) => {
+    if (saveStatus === 'conflict') set({ saveStatus, elsewhere: true });
+    else set({ saveStatus });
+    const s = get().state;
+    if (saveStatus === 'signedout' && s) stashUnsent(s);
+  });
   if (typeof window !== 'undefined') {
     // Закрыли вкладку или перезагрузили раньше, чем истекла задержка, — дошлём сразу.
-    window.addEventListener('pagehide', () => void saver.flush());
+    window.addEventListener('pagehide', () => void saver.flush(true));
     // Не сохранилось — браузер переспросит, закрывать ли (R2-03).
     window.addEventListener('beforeunload', (e) => {
       const s = get().saveStatus;
@@ -298,14 +372,17 @@ export const useGame = create<GameStore>((set, get) => {
     // Одна вкладка с делом (R2-02): новая говорит «я здесь» — прежняя досылает своё и перестаёт
     // сохранять, иначе её старое состояние (таймер письма и т. п.) затёрло бы работу в новой.
     if ('BroadcastChannel' in window) {
-      const tab = new BroadcastChannel('bunker-case');
-      const me = `${Date.now()}-${Math.random()}`;
+      const tab = new BroadcastChannel(TAB_CHANNEL);
       tab.onmessage = (e: MessageEvent<{ here?: string }>) => {
-        if (!e.data?.here || e.data.here === me) return;
-        void saver.flush().then(() => saver.stop());
+        if (!e.data?.here || e.data.here === PAGE_ID) return;
+        // Прежняя вкладка: «есть»; дослать своё, перестать сохранять и сказать новой «дослала».
+        tab.postMessage({ busy: e.data.here });
+        void saver.flush().then(() => {
+          saver.stop();
+          tab.postMessage({ flushed: e.data.here });
+        });
         set({ elsewhere: true });
       };
-      tab.postMessage({ here: me });
     }
   }
   // Что повесили только что: прячется, пока лист или вещь открыты, и светится (правка автора 10.11).
@@ -644,13 +721,20 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     async joinOnWall(j) {
-      const r = await postAction('ОСМОТР', j.target, j.value).catch(() => null);
+      // Один запуск на пару (RV-18): поправили половину, пока сервер отвечал, — второй запуск снимал
+      // готовый лист со стены.
+      if (joining.has(j.result) || get().state?.joined?.includes(j.result)) return false;
+      joining.add(j.result);
+      const r = await postAction('ОСМОТР', j.target, j.value)
+        .catch(() => null)
+        .finally(() => joining.delete(j.result));
       if (!r) return false;
       get().addFound(r.released, j.top, []);
       if (!get().materials.some((m) => m.id === j.result)) return false;
       const parts = new Set([j.top, j.bottom]);
       const was = get().state?.wall.items.find((i) => i.id === j.top);
       get().updateState((st) => {
+        if (st.joined?.includes(j.result)) return st;
         const top = st.wall.items.find((i) => i.id === j.top) ?? was;
         const items = st.wall.items.filter((i) => !parts.has(i.id) && i.id !== j.result);
         // Нити половин — к совмещённому листу (без петель и повторов).
@@ -747,11 +831,18 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     async load() {
+      await handover();
       // Сервер мог ещё не подняться (503, пока база не готова) — повторяем раз в секунду.
       for (;;) {
         try {
-          const [materials, state] = await Promise.all([getMaterials(), getState()]);
+          const [materials, { state, lastWriter }] = await Promise.all([
+            getMaterials(),
+            getState(),
+          ]);
           set({ materials, state, loadFailed: false });
+          // Недосланное при истёкшем входе (RV-57) — дослать, если дело с тех пор никто не писал.
+          const unsent = takeUnsent();
+          if (unsent && unsent.writer === lastWriter) get().updateState(() => unsent.state);
           // Первый день дела — для часов устройств (CL-D).
           if (state && !state.started) get().updateState((s) => ({ ...s, started: todayKey() }));
           // Только в разработке: «?opened=all» — все конверты вскрыты (автотесты и проверки).

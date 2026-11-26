@@ -183,7 +183,11 @@ export const PcDeskSchema = z.object({
   windows: z.array(PcWindowSchema).max(30).optional(),
 });
 
-export const STATE_VERSION = 5;
+/**
+ * 6 (волна 1, RV-54): перевод 5 → 6 один раз применяет догадку про пакет «Изъятое» (seizedFromScene);
+ * в версии 6 догадок по отсутствию поля нет.
+ */
+export const STATE_VERSION = 6;
 
 export const PlayerStateSchema = z.object({
   version: z.literal(STATE_VERSION),

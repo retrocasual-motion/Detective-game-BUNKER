@@ -5,9 +5,26 @@ import { bigint, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 export const playerState = pgTable('player_state', {
   playerId: text('player_id').primaryKey(),
   state: jsonb('state').$type<PlayerState>().notNull(),
-  /** Номер версии сохранения от клиента: старый запрос, пришедший позже, не затирает новый. */
+  /**
+   * Кто пишет дело (волна 1, RV-48, DEV-A): номер страницы игры, что открыла дело последней. Пишет
+   * только она; прежняя получает 409 — «дело открыто в другом месте».
+   */
+  writer: text('writer').notNull().default(''),
+  /** Номер сохранения внутри писателя (счётчик страницы, не часы): опоздавший запрос не затирает новый. */
   seq: bigint('seq', { mode: 'number' }).notNull().default(0),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Копия сохранения, которое не прочиталось целиком (RV-49): что-то выпало при разборе по частям.
+ * Игра её не читает — для ручного восстановления.
+ */
+export const playerStateBackups = pgTable('player_state_backups', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  playerId: text('player_id').notNull(),
+  state: jsonb('state').notNull(),
+  dropped: jsonb('dropped').$type<string[]>().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
 /**

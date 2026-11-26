@@ -14,14 +14,17 @@ import {
 } from './archive.ts';
 import { PERSONS } from './persons.ts';
 import { joinedParts, pieceItemId } from './pieces.ts';
+import { salvage } from './salvage.ts';
 import {
   type Camera,
+  CameraSchema,
   type DeskItem,
   type Material,
   type Note,
   type PlayerState,
   PlayerStateSchema,
   STATE_VERSION,
+  ViewSchema,
   type WallExcerpt,
   type WallItem,
   ZOOM_MIN,
@@ -157,7 +160,7 @@ export function defaultState(materials: Material[]): PlayerState {
     {
       version: STATE_VERSION,
       view: 'desk',
-      wall: { camera: DEFAULT_WALL_CAMERA, items: [], threads: [], notes: [] },
+      wall: { camera: { ...DEFAULT_WALL_CAMERA }, items: [], threads: [], notes: [] },
       // Новое дело (A-260): конверты на столе ещё опечатаны.
       opened: [],
     },
@@ -227,9 +230,50 @@ const isV4 = (raw: unknown): raw is StateV4 => {
  * остаются, остальное вешается сеткой. Версии 1–3 не переводятся.
  */
 export function upgradeState(raw: unknown, materials: Material[]): PlayerState | null {
-  const current = PlayerStateSchema.safeParse(raw);
-  if (current.success) return current.data;
-  if (!isV4(raw)) return null;
+  return readSaved(raw, materials).state;
+}
+
+const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/**
+ * Прочитать сохранение (RV-49, RV-54, волна 1). Версия 5 и новее читается по частям: неверное значение
+ * выпадает одно (`dropped` — что выпало), а не всё дело. 5 → 6: прежняя догадка «вскрыт „Осмотр места“
+ * — вскрыт и пакет „Изъятое“» применяется один раз, при переводе; в версии 6 её больше нет. Версия
+ * новее текущей (откат сборки) читается так же — понятое остаётся.
+ */
+export function readSaved(
+  raw: unknown,
+  materials: Material[],
+): { state: PlayerState | null; dropped: string[] } {
+  const dropped: string[] = [];
+  if (isV4(raw)) return { state: fromV4(raw, materials), dropped };
+  if (!isPlainObject(raw) || typeof raw.version !== 'number' || raw.version < 5)
+    return { state: null, dropped: ['*'] };
+  const from = raw.version;
+  // Обязательное, без чего дело не собрать, — по умолчанию; остальное — как есть.
+  const wall = isPlainObject(raw.wall) ? raw.wall : {};
+  const body = {
+    ...raw,
+    version: STATE_VERSION,
+    view: ViewSchema.safeParse(raw.view).success ? raw.view : 'desk',
+    wall: {
+      ...wall,
+      camera: CameraSchema.safeParse(wall.camera).success
+        ? wall.camera
+        : { ...DEFAULT_WALL_CAMERA },
+      items: Array.isArray(wall.items) ? wall.items : [],
+      threads: Array.isArray(wall.threads) ? wall.threads : [],
+      notes: Array.isArray(wall.notes) ? wall.notes : [],
+    },
+  };
+  const r = salvage(PlayerStateSchema, body, '', dropped);
+  if (!r.ok) return { state: null, dropped: ['*'] };
+  const state = r.value as PlayerState;
+  return { state: from === 5 ? seizedFromScene(state) : state, dropped };
+}
+
+function fromV4(raw: StateV4, materials: Material[]): PlayerState | null {
   const next = PlayerStateSchema.safeParse({
     version: STATE_VERSION,
     view: raw.view,
@@ -270,7 +314,6 @@ function seizedFromScene(state: PlayerState): PlayerState {
  * на стену само не вешается — оно во «Входящих».
  */
 export function reconcile(state: PlayerState, materials: Material[]): PlayerState {
-  state = seizedFromScene(state);
   const seenNotes = new Set<string>();
   const notes: Note[] = state.wall.notes.filter((n) => {
     if (seenNotes.has(n.id)) return false;
@@ -289,7 +332,10 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
     ...excerptsOf(state, materials).map((x) => x.id),
   ]);
   // Половины, сложенные в один лист (MG-A), на стене не висят — висит совмещённый.
-  const parts = joinedParts(state.joined);
+  // Совмещённые листы — только те, что у игрока есть (RV-55): иначе чужой номер прятал бы половины.
+  const owned = new Set(materials.map((m) => m.id));
+  const joined = state.joined?.filter((id) => owned.has(id));
+  const parts = joinedParts(joined);
   // Устройства стола на стене не висят (DEVICES_ON_WALL) — они на столе.
   const deskOnly = (id: string) => !DEVICES_ON_WALL && DESK_DEVICES.has(id);
 
@@ -374,6 +420,7 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
     wall: { ...state.wall, items, threads, notes: kept },
     ...(state.excerpts ? { excerpts } : {}),
     ...(state.desk || desk.length ? { desk } : {}),
+    ...(joined ? { joined } : {}),
   };
 }
 

@@ -89,6 +89,21 @@ describe('act', () => {
     expect(later.outcome.result).toBe('успех');
   });
 
+  it('RV-31: верный ввод сбрасывает счёт — пауза только после трёх неверных подряд', () => {
+    let p = emptyProgress();
+    const t = (value: string, at: number) => {
+      const r = act(content, p, { action: 'ПАРОЛЬ', target: 'сейф', value }, at);
+      p = r.progress;
+      return r.outcome.result;
+    };
+    t('нет', 0);
+    t('нет', 1);
+    expect(t('верно', 2)).toBe('успех');
+    t('нет', 3);
+    t('нет', 4);
+    expect(t('верно', 5)).not.toBe('лимит');
+  });
+
   it('поле поиска (DS-B) не считает промахи: после трёх — не пауза, а снова ответ', () => {
     const cfg = { pauseMs: 2 * MIN, unlimited: ['сейф'] };
     let p = emptyProgress();

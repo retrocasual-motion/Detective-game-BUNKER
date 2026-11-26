@@ -141,6 +141,89 @@ describe('createSaver', () => {
     expect(statuses.at(-1)).toBe('rejected');
   });
 
+  it('RV-48: номер — счётчик страницы с 1, часы устройства не участвуют', async () => {
+    vi.setSystemTime(new Date('2099-01-01'));
+    const seqs: number[] = [];
+    const saver = createSaver(async (_s, seq) => {
+      seqs.push(seq);
+    });
+    saver.schedule(state('wall'));
+    await saver.flush();
+    vi.setSystemTime(new Date('2001-01-01'));
+    saver.schedule(state('desk'));
+    await saver.flush();
+    expect(seqs).toEqual([1, 2]);
+  });
+
+  it('RV-50: отказ 4xx — не тупик: следующее изменение уходит снова', async () => {
+    let n = 0;
+    const saver = createSaver(
+      async () => {
+        n++;
+        if (n === 1) throw Object.assign(new Error('400'), { status: 400 });
+      },
+      500,
+      (s) => statuses.push(s),
+    );
+    saver.schedule(state('wall'));
+    await vi.advanceTimersByTimeAsync(500);
+    expect(statuses.at(-1)).toBe('rejected');
+    saver.schedule(state('desk'));
+    await vi.advanceTimersByTimeAsync(500);
+    expect(n).toBe(2);
+    expect(statuses.at(-1)).toBe('saved');
+  });
+
+  it('DEV-A: 409 — «conflict», сохранение останавливается', async () => {
+    let n = 0;
+    const saver = createSaver(
+      async () => {
+        n++;
+        throw Object.assign(new Error('409'), { status: 409 });
+      },
+      500,
+      (s) => statuses.push(s),
+    );
+    saver.schedule(state('wall'));
+    await vi.advanceTimersByTimeAsync(500);
+    saver.schedule(state('desk'));
+    await saver.flush(true);
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(n).toBe(1);
+    expect(statuses.at(-1)).toBe('conflict');
+  });
+
+  it('RV-57: 401 — «signedout», состояние не теряется и уходит при следующей отправке', async () => {
+    const sent: PlayerState['view'][] = [];
+    let signedIn = false;
+    const saver = createSaver(
+      async (s) => {
+        if (!signedIn) throw Object.assign(new Error('401'), { status: 401 });
+        sent.push(s.view);
+      },
+      500,
+      (s) => statuses.push(s),
+    );
+    saver.schedule(state('wall'));
+    await vi.advanceTimersByTimeAsync(500);
+    expect(statuses.at(-1)).toBe('signedout');
+    signedIn = true;
+    await saver.flush();
+    expect(sent).toEqual(['wall']);
+  });
+
+  it('RV-56: keepalive — только при закрытии страницы', async () => {
+    const closing: boolean[] = [];
+    const saver = createSaver(async (_s, _seq, c) => {
+      closing.push(c ?? false);
+    });
+    saver.schedule(state('wall'));
+    await saver.flush();
+    saver.schedule(state('desk'));
+    await saver.flush(true);
+    expect(closing).toEqual([false, true]);
+  });
+
   it('stop — отложенное выброшено, новое не уходит, и при уходе со страницы тоже (R2-04)', async () => {
     const { put, calls } = manualPut();
     const saver = createSaver(put, 500, (s) => statuses.push(s));

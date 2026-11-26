@@ -18,17 +18,13 @@ import {
   defaultState,
   EPILOGUE_ID,
   ExcerptSchema,
-  folderItemId,
   type Material,
   MEDIA,
   PERSONS,
-  type PlayerState,
-  PlayerStateSchema,
-  pieceItemId,
+  readSaved,
   reconcile,
   type SiteFormId,
   type SitePage,
-  upgradeState,
   type VerdictAnswer,
   type VerdictResult,
   VerdictSchema,
@@ -46,10 +42,11 @@ import {
   pendingExcerpts,
   playerProgress,
   playerState,
+  playerStateBackups,
   playerVerdicts,
   sessions,
 } from './db/client.ts';
-import { authRoutes, LOCAL_PLAYER, SESSION_COOKIE, sessionPlayer } from './login.ts';
+import { authRoutes, LOCAL_PLAYER, renewSession, SESSION_COOKIE, sessionPlayer } from './login.ts';
 import type { Mailer } from './mail/mailer.ts';
 import { phoneLine } from './phone.ts';
 import { formAction, pageOf, readPass, signPass, siteByHost, siteOf, siteUrl } from './sites.ts';
@@ -133,25 +130,21 @@ const PhoneSchema = z.object({
     .optional(),
 });
 
-/** Состояние ссылается только на материалы, которые у игрока есть (P-10). */
-function invalidReference(s: PlayerState, materials: Material[]): string | null {
-  const own = new Set(materials.map((m) => m.id));
-  const excerpt = (s.excerpts ?? []).find((x) => !own.has(x.material));
-  if (excerpt) return `нет материала ${excerpt.material}`;
-  const allIds = new Set([
-    ...materials.map((m) => m.id),
-    ...(s.excerpts ?? []).map((x) => x.id),
-    ...PERSONS.map((p) => p.id),
-    ...s.wall.notes.map((n) => n.id),
-    // Папка, вынутая из пачки (RD-A): на стене — «F:П-02/18», если её и правда вынули.
-    ...(s.taken ?? []).map(folderItemId),
-    // Обрывок, вынутый из материала (SRC-A): «S:42/1», если его и правда вынули.
-    ...(s.pieces ?? []).map(pieceItemId),
-  ]);
-  const refs = [...s.wall.items.map((i) => i.id), ...s.wall.threads.flatMap((t) => [t.from, t.to])];
-  const bad = refs.find((id) => !allIds.has(id));
-  return bad ? `нет материала ${bad}` : null;
-}
+/**
+ * Номер страницы игры, что пишет дело (волна 1, RV-48, DEV-A). Без него — сборка до волны 1: её
+ * сохранения не принимаются (409), иначе старая вкладка затёрла бы дело.
+ */
+const WRITER_RE = /^[\w-]{8,64}$/;
+const writerOf = (c: Context) => {
+  const w = c.req.header('x-state-writer');
+  return w && WRITER_RE.test(w) ? w : null;
+};
+
+/**
+ * Предел тела сохранения — с запасом над пределами схемы (RV-53): блокнот 300 страниц по 4000 знаков
+ * кириллицей — уже 2,4 МБ; при 1 МБ полный блокнот получал 413.
+ */
+const STATE_BODY_LIMIT = 4 * 1024 * 1024;
 
 /**
  * Лимиты попыток — из пакета (A-272, AC-5): ПАРОЛЬ — три неверных подряд, дата газеты — десять
@@ -191,8 +184,12 @@ export function createApp({
   // «Новое дело»), браузер не угадывает тип файла и т. п. Политика содержимого (CSP) — при
   // переезде на сервер, вместе с проверкой собранной игры.
   app.use('*', secureHeaders());
-  // Предел тела запроса для всех маршрутов (R1-12); у отдельных — свой, меньше.
-  app.use('/api/*', bodyLimit({ maxSize: 1024 * 1024 }));
+  // Предел тела запроса для всех маршрутов (R1-12); у отдельных — свой, меньше. У сохранения — свой,
+  // больше (RV-53): общий 1 МБ меньше, чем разрешает схема.
+  const commonLimit = bodyLimit({ maxSize: 1024 * 1024 });
+  app.use('/api/*', (c, next) =>
+    c.req.method === 'PUT' && c.req.path === '/api/state' ? next() : commonLimit(c, next),
+  );
 
   app.get('/api/health', (c) => (isReady() ? c.json({ ok: true }) : c.json({ ok: false }, 503)));
 
@@ -213,8 +210,10 @@ export function createApp({
       c.set('player', LOCAL_PLAYER);
       return next();
     }
-    const pid = await sessionPlayer(db, getCookie(c, SESSION_COOKIE), now());
-    if (!pid) return c.json({ error: 'нужен вход' }, 401);
+    const key = getCookie(c, SESSION_COOKIE);
+    const pid = await sessionPlayer(db, key, now());
+    if (!pid || !key) return c.json({ error: 'нужен вход' }, 401);
+    await renewSession(c, db, key, now(), publicUrl.startsWith('https://'));
     c.set('player', pid);
     return next();
   });
@@ -290,11 +289,38 @@ export function createApp({
 
   app.get('/api/state', async (c) => {
     const pid = c.get('player');
+    const writer = writerOf(c);
     const [row] = await db.select().from(playerState).where(eq(playerState.playerId, pid));
     const mine_ = await mine(pid);
-    // Старое сохранение поднимается до текущей версии, нечитаемое — заменяется начальным.
-    const saved = row ? upgradeState(row.state, mine_) : null;
-    const state = reconcile(saved ?? defaultState(mine_), mine_);
+    // Старое сохранение поднимается до текущей версии; нечитаемое читается по частям (RV-49).
+    const read = row ? readSaved(row.state, mine_) : { state: null, dropped: [] };
+    const state = reconcile(read.state ?? defaultState(mine_), mine_);
+    // Что-то выпало — копия прежнего сохранения остаётся, а прочитанное записывается сразу: копия
+    // делается один раз, и прежнее не затирается молча.
+    if (row && read.dropped.length) {
+      await db
+        .insert(playerStateBackups)
+        .values({ playerId: pid, state: row.state, dropped: read.dropped.slice(0, 200) });
+      await db
+        .update(playerState)
+        .set({ state, updatedAt: new Date() })
+        .where(eq(playerState.playerId, pid));
+    }
+    // Кто писал до этой страницы: недосланное при выходе из входа дошлётся, только если с тех пор
+    // дело никто не писал (RV-57).
+    c.header('x-state-last-writer', row?.writer ?? '');
+    // Дело занимает эта страница (DEV-A): пишет она, прежняя получит 409.
+    if (writer)
+      await db
+        .insert(playerState)
+        .values({ playerId: pid, state, writer, seq: 0 })
+        .onConflictDoUpdate({
+          target: playerState.playerId,
+          set: {
+            writer,
+            seq: sql`case when ${playerState.writer} = ${writer} then ${playerState.seq} else 0 end`,
+          },
+        });
     return c.json(state);
   });
 
@@ -417,6 +443,9 @@ export function createApp({
     const parsed = VerdictSchema.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'Заключение не оформлено.' }, 400);
     const answers = parsed.data.answers;
+    // Пустые ответы не принимаются (VER-A, A-288): форма называет незаполненные вопросы.
+    const empty = answers.flatMap((a, k) => (a === null ? [k + 1] : []));
+    if (empty.length) return c.json({ error: `Не заполнены вопросы: ${empty.join(', ')}.` }, 422);
     const pid = c.get('player');
     const run = serial(pid, async () => {
       const before = await loadProgress(pid);
@@ -459,24 +488,39 @@ export function createApp({
     return c.json(r);
   });
 
-  app.put('/api/state', bodyLimit({ maxSize: 1024 * 1024 }), async (c) => {
-    const body = await c.req.json().catch(() => null);
-    const parsed = PlayerStateSchema.safeParse(body);
-    if (!parsed.success) return c.json({ error: 'неверное состояние' }, 400);
+  app.put('/api/state', bodyLimit({ maxSize: STATE_BODY_LIMIT }), async (c) => {
     const pid = c.get('player');
-    const bad = invalidReference(parsed.data, await mine(pid));
-    if (bad) return c.json({ error: bad }, 400);
-    const seqHeader = Number(c.req.header('x-state-seq'));
-    const seq = Number.isSafeInteger(seqHeader) && seqHeader > 0 ? seqHeader : Date.now() * 1000;
-    await db
-      .insert(playerState)
-      .values({ playerId: pid, state: parsed.data, seq })
-      .onConflictDoUpdate({
-        target: playerState.playerId,
-        set: { state: parsed.data, seq, updatedAt: new Date() },
-        setWhere: sql`${playerState.seq} < ${seq}`,
-      });
-    return c.body(null, 204);
+    const writer = writerOf(c);
+    const seq = Number(c.req.header('x-state-seq'));
+    if (!writer || !Number.isSafeInteger(seq) || seq <= 0)
+      return c.json({ error: 'elsewhere' }, 409);
+    const body = await c.req.json().catch(() => null);
+    const mine_ = await mine(pid);
+    // Сервер приводит сохранение к допустимому сам (RV-50, RV-55): неверное выпадает, ссылки на
+    // чужое и снятое — тоже (P-10). Отказ — только если это вовсе не сохранение.
+    const { state } = readSaved(body, mine_);
+    if (!state) return c.json({ error: 'неверное состояние' }, 400);
+    const clean = reconcile(state, mine_);
+    const done = await db
+      .update(playerState)
+      .set({ state: clean, seq, updatedAt: new Date() })
+      .where(
+        and(
+          eq(playerState.playerId, pid),
+          eq(playerState.writer, writer),
+          lt(playerState.seq, seq),
+        ),
+      )
+      .returning({ seq: playerState.seq });
+    if (done.length) return c.body(null, 204);
+    // Не записалось: опоздавший запрос той же страницы (новее уже записан) — не ошибка; дело занято
+    // другой страницей или сброшено «Новым делом» — 409 (RV-48, RV-51).
+    const [row] = await db
+      .select({ writer: playerState.writer })
+      .from(playerState)
+      .where(eq(playerState.playerId, pid));
+    if (row?.writer === writer) return c.body(null, 204);
+    return c.json({ error: 'elsewhere' }, 409);
   });
 
   // Одной транзакцией: сбой посередине не оставит дело наполовину сброшенным (R1-07).

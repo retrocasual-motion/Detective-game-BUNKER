@@ -259,7 +259,7 @@ describe('сайты дела на сервере (A-272)', () => {
     expect(await (await a.request('/api/excerpts')).json()).toEqual([]);
   });
 
-  it('сохранение с выпиской из неоткрытого материала — 400; из открытого — да', async () => {
+  it('выписка из неоткрытого материала не сохраняется; из открытого — да (P-10)', async () => {
     const a = app();
     await page(a);
     const s = defaultState([...materials, locked[0] as Material]);
@@ -270,12 +270,18 @@ describe('сайты дела на сервере (A-272)', () => {
       source: 'кабинет',
       place: { kind: 'site' as const, address: 'vaultline-program.com/cabinet' },
     };
+    const w = { 'x-state-writer': 'page-site-1' };
+    await a.request('/api/state', { headers: w });
+    let seq = 0;
     const put = (st: unknown) =>
       a.request('/api/state', {
         method: 'PUT',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', ...w, 'x-state-seq': String(++seq) },
         body: JSON.stringify(st),
       });
+    const excerptsNow = async () =>
+      ((await (await a.request('/api/state')).json()) as { excerpts?: { id: string }[] })
+        .excerpts ?? [];
     expect(
       (
         await put({
@@ -284,7 +290,8 @@ describe('сайты дела на сервере (A-272)', () => {
           wall: { ...s.wall, items: [...s.wall.items, { id: 'x:b', x: 0, y: 0, z: 1, rot: 0 }] },
         })
       ).status,
-    ).toBe(400);
+    ).toBe(204);
+    expect(await excerptsNow()).toEqual([]);
     const ok = { ...ex, material: 'L101' };
     expect(
       (
@@ -295,5 +302,6 @@ describe('сайты дела на сервере (A-272)', () => {
         })
       ).status,
     ).toBe(204);
+    expect((await excerptsNow()).map((x) => x.id)).toEqual(['x:b']);
   });
 });

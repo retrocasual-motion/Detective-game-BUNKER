@@ -1,4 +1,4 @@
-import { expect, test, toWall } from './fixtures.ts';
+import { expect, expectErrors, test, toWall } from './fixtures.ts';
 
 const scene = (page: import('@playwright/test').Page) => page.getByTestId('scene');
 
@@ -70,6 +70,7 @@ test('стрелки вплотную к краю, подписи видны в�
 });
 
 test('сервер ответил 503 при загрузке — игра повторяет запрос и открывается', async ({ page }) => {
+  expectErrors();
   let failures = 2;
   await page.route('**/api/state', (route) => {
     if (route.request().method() === 'GET' && failures > 0) {

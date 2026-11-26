@@ -1,0 +1,337 @@
+<title>Большая проверка БУНКЕРА</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@600;800&display=swap">
+<style>
+/* Лэйаут: одна колонка «дело на проверке» — шапка с итогом, затем разделы по важности для автора; ID и метки — моноширинным, как номера в описи. */
+:root {
+  --bg: #eef1f4;
+  --paper: #ffffff;
+  --ink: #1b2430;
+  --muted: #5a6676;
+  --line: #d3dae2;
+  --accent: #2b5b8a;
+  --s1: #b3261e;
+  --s2: #b26a00;
+  --s3: #3d6b94;
+  --s4: #7b8794;
+  --ok: #2e7d4f;
+  --chip: #e3e9f0;
+  --display: "Unbounded", "Segoe UI", system-ui, sans-serif;
+  --body: "Onest", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12171d; --paper: #1a2129; --ink: #e4e9ef; --muted: #9aa6b4; --line: #2c3743;
+  --accent: #7fb0de; --s1: #f2827a; --s2: #e6a64a; --s3: #84abd0; --s4: #8f9aa6; --ok: #6cc293; --chip: #243040;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #12171d; --paper: #1a2129; --ink: #e4e9ef; --muted: #9aa6b4; --line: #2c3743;
+  --accent: #7fb0de; --s1: #f2827a; --s2: #e6a64a; --s3: #84abd0; --s4: #8f9aa6; --ok: #6cc293; --chip: #243040;
+  color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 32px 64px; }
+main { max-width: 980px; margin: 0 auto; display: grid; gap: 28px; }
+h1, h2 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(24px, 4vw, 34px); font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-size: 19px; font-weight: 600; }
+h3 { font-size: 16px; margin: 0; }
+p { margin: 0; max-width: 72ch; }
+.eyebrow { font: 600 12px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 22px; display: grid; gap: 14px; min-width: 0; }
+.lead { font-size: 17px; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.tile { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 2px; border-top: 4px solid var(--c); }
+.tile b { font: 800 26px var(--display); font-variant-numeric: tabular-nums; color: var(--c); }
+.tile span { font-size: 13px; color: var(--muted); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+.id { font: 600 12.5px var(--mono); white-space: nowrap; }
+.sev { display: inline-block; font: 600 11.5px var(--mono); padding: 1px 7px; border-radius: 4px; color: #fff; background: var(--c); }
+.s1 { --c: var(--s1); } .s2 { --c: var(--s2); } .s3 { --c: var(--s3); } .s4 { --c: var(--s4); }
+.tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--chip); color: var(--ink); white-space: nowrap; }
+.tag.canon { background: transparent; border: 1px solid var(--s2); color: var(--s2); }
+.tag.rec { background: var(--ok); color: #fff; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { font: 600 12px var(--mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.decision { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; display: grid; gap: 8px; }
+.decision .ctx { color: var(--muted); font-size: 14px; }
+.opts { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.opts li { display: grid; grid-template-columns: 64px 1fr; gap: 10px; align-items: baseline; }
+.opts li.is-rec .id { color: var(--ok); }
+.theme { display: grid; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+.theme:first-of-type { border-top: 0; padding-top: 0; }
+ol.check { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+details { border-top: 1px solid var(--line); padding-top: 10px; }
+summary { cursor: pointer; font-weight: 500; color: var(--accent); }
+summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code { font: 12.5px var(--mono); background: var(--chip); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.wave { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.wave:last-child { border-bottom: 0; }
+.wave .n { font: 800 22px var(--display); color: var(--accent); }
+.wave .est { font: 600 13px var(--mono); color: var(--muted); white-space: nowrap; }
+@media (max-width: 640px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wave { grid-template-columns: 32px 1fr; }
+  .wave .est { grid-column: 2; }
+  .opts li { grid-template-columns: 1fr; gap: 2px; }
+}
+</style>
+
+<main>
+  <header class="card">
+    <div class="eyebrow">RV-BC · 26.11.2026 · аудит, предложения, не канон</div>
+    <h1>Большая проверка БУНКЕРА</h1>
+    <p class="lead">Игра проходится и не падает: 294 модульных теста зелёные, ошибок консоли нет ни на одном виде, 17 из 18 сценариев выполнены. Но сохранение может молча потерять работу игрока тремя путями, одна таблица не дочитывается, а первые 30 минут — это 12 тысяч слов текста без входа в дело и без способа сравнить два текста.</p>
+    <div class="tiles">
+      <div class="tile s1"><b>5</b><span>S1 — теряет работу или документ</span></div>
+      <div class="tile s2"><b>21</b><span>S2 — регулярно мешает</span></div>
+      <div class="tile s3"><b>51</b><span>S3 — края и неудобства</span></div>
+      <div class="tile s4"><b>16</b><span>S4 — мелочи</span></div>
+    </div>
+    <div class="meta">
+      <span>Объект: <code>main</code> @ bee66fd (3D-стол, Блэквуд)</span>
+      <span>129 находок → 93 после слияния дублей</span>
+      <span>Сюжет и честность дела не проверялись</span>
+    </div>
+    <p style="font-size:14px;color:var(--muted)">Кто проверял: четыре ревьюера кода, эксперт по интерфейсу, новичок, советник по подаче и синтез — Fable 5.2; карта интерфейса, замеры и техника — Sonnet и Haiku; воспроизведение всех S1 и части S2 — основная сессия. Ночью ничего не чинилось и не сливалось.</p>
+  </header>
+
+  <section class="card" id="decide">
+    <div class="eyebrow">Нужен ваш выбор</div>
+    <h2>Решить автору</h2>
+    <p>Восемь вопросов, без которых нельзя начать волны 2 и 3. Рекомендация — мнение проверки, не решение. Варианты, помеченные «канон», меняют принятые решения A-284 или A-285.</p>
+
+    <div class="decision">
+      <h3><span class="id">ST</span> · Где лежат стартовые листы 01–07 в новом деле <span class="tag canon">канон, A-284</span></h3>
+      <p class="ctx">Сейчас семь листов, включая письмо бюро с задачей, уже висят на стене карточками 28×39 px среди одинаковых. Новичок нашёл письмо на ~20-м действии, уже после сервера.</p>
+      <ul class="opts">
+        <li><span class="id">ST-A</span><span>Оставить на стене. Ничего не меняется, вход в дело остаётся случайным.</span></li>
+        <li class="is-rec"><span class="id">ST-B</span><span><span class="tag rec">рекомендую</span> Стопкой на столе, письмо 01 сверху; после чтения уходят на стену, как листы папок. Стена на старте — только девять карточек людей. Часы работы.</span></li>
+        <li><span class="id">ST-C</span><span>В лоток «Входящие» (сейчас пуст и на щелчок молчит). Близко к не выбранному в A-284 варианту DC-C (не отвергнут).</span></li>
+      </ul>
+    </div>
+
+    <div class="decision">
+      <h3><span class="id">UNP</span> · Что происходит при вскрытии папки и короба <span class="tag canon">канон, A-285</span></h3>
+      <p class="ctx">Сейчас папка открывается только протяжкой за невидимую зону у правого края и после этого исчезает. Три стопки ложатся почти в одну точку поверх газеты. Коробка «Личные вещи» уходит на стену, короб вещдоков — на стол.</p>
+      <ul class="opts">
+        <li class="is-rec"><span class="id">UNP-A</span><span><span class="tag rec">рекомендую</span> Щелчок по любой точке обложки; открытая папка и короб остаются лежать, содержимое встаёт рядом со своим вместилищем; оба короба ведут себя одинаково. Принцип «открыли — содержимое на стол» сохраняется. День.</span></li>
+        <li><span class="id">UNP-B</span><span>Вскрытие ничего не высыпает, игрок вынимает вещи по одной. Меняет A-285; лишний щелчок на вещь. Вернуться после живого плейтеста.</span></li>
+        <li><span class="id">UNP-C</span><span>Оставить как есть.</span></li>
+      </ul>
+    </div>
+
+    <div class="decision">
+      <h3><span class="id">CMP</span> · Как сравнивать два текста</h3>
+      <p class="ctx">По замыслу WL-A сравнивают «рядом на стене», но карточка на стене даже при 6× показывает только номер и заголовок. TWO-A отложен как «закрытый WL-A» — для текстов он не закрыт. Сценарий «сравнить два листа» сейчас не работает.</p>
+      <ul class="opts">
+        <li><span class="id">CMP-A</span><span>Текст проступает на карточке при увеличении от ~3×. 2–4 дня; риск — 67 листов с текстом на слабой машине.</span></li>
+        <li><span class="id">CMP-B</span><span>Это TWO-A: второй лист встаёт рядом в просмотрщике. 2–3 дня; на 1366 два листа не помещаются без уменьшения.</span></li>
+        <li class="is-rec"><span class="id">CMP-C</span><span><span class="tag rec">рекомендую</span> Выписка: строка отрывается бумажной полоской, её вешают на стену и кладут в заключение. 2–4 дня; тем же жестом решается «как приложить довод». Затем CMP-A вместе с дизайном бумаг.</span></li>
+        <li><span class="id">CMP-D</span><span>Оставить: сравнение через память и блокнот.</span></li>
+      </ul>
+    </div>
+
+    <div class="decision">
+      <h3><span class="id">WALL</span> · Прочитанное на стене: карточки или связки</h3>
+      <p class="ctx">Каждый прочитанный лист — отдельная карточка: 16 на старте, ~45 в середине, 67 к концу, поздние группы ложатся внахлёст.</p>
+      <ul class="opts">
+        <li class="is-rec"><span class="id">WALL-A</span><span><span class="tag rec">сейчас</span> Как есть, плюс авторазмещение без наложений.</span></li>
+        <li><span class="id">WALL-B</span><span>Прочитанное висит одной связкой под ярлыком папки, нужное игрок вынимает; есть «развесить всё». Форма группы A-284 меняется. Только после CMP-C и с проверкой людьми — риск «с глаз долой».</span></li>
+      </ul>
+    </div>
+
+    <div class="decision">
+      <h3><span class="id">ORD</span> · Порядок выдачи и объём старта <span class="tag canon">канон</span></h3>
+      <p class="ctx">51 материал и 11 947 слов доступны с первой секунды. Основание пока слабое: один новичок-модель и описания вместо картинок — усталость может быть от заглушек.</p>
+      <ul class="opts">
+        <li class="is-rec"><span class="id">ORD-A</span><span><span class="tag rec">рекомендую</span> Ничего не запирать и не двигать; помочь выбору описью, на которой игрок сам ставит карандашные галочки (IN-B).</span></li>
+        <li><span class="id">ORD-B</span><span>Короба стоят дальше от рабочей поверхности, на приставной тумбе: порядок подсказывает комната (IN-C). Меняет места материалов.</span></li>
+        <li><span class="id">ORD-C</span><span>Менять форму материалов: план-чертёж вместо 578 слов, вещи из пакетов — в руки (IN-D, UN-D). Канон и недели работы.</span></li>
+      </ul>
+    </div>
+
+    <div class="decision">
+      <h3><span class="id">VER</span> · Отправка заключения с пустыми ответами</h3>
+      <p class="ctx">«Далее», «Проверить заключение» и «Отправить в бюро» стоят в одной точке экрана. Лист проверки есть, но шесть щелчков подряд отправляют заключение с тремя «ответа нет», и изменить уже нельзя.</p>
+      <ul class="opts">
+        <li><span class="id">VER-A</span><span>Пустые не принимаются: «не заполнено: вопросы 3–5». Меняет правило — «не знаю» перестаёт быть ответом.</span></li>
+        <li class="is-rec"><span class="id">VER-B</span><span><span class="tag rec">рекомендую</span> Пустые разрешены; кнопка «Отправить» в другом месте и другого вида (подпись, штамп); одно подтверждение словами бюро с перечнем незаполненного. Часы.</span></li>
+        <li><span class="id">VER-C</span><span>Только перенести кнопку.</span></li>
+      </ul>
+    </div>
+
+    <div class="decision">
+      <h3><span class="id">DEV</span> · Игра с двух устройств</h3>
+      <p class="ctx">Вход по ссылке позволяет открыть дело на втором устройстве; последний записавший молча затирает всё.</p>
+      <ul class="opts">
+        <li class="is-rec"><span class="id">DEV-A</span><span><span class="tag rec">рекомендую</span> Одно устройство за раз: «дело открыто в другом месте» и перечитать. Входит в волну 1 без добавочной работы.</span></li>
+        <li><span class="id">DEV-B</span><span>Одновременная игра со слиянием изменений. Недели.</span></li>
+      </ul>
+    </div>
+
+    <div class="decision">
+      <h3><span class="id">SITE</span> · Сайты дела: вкладка или окно игры</h3>
+      <p class="ctx">Сайт открывается настоящей вкладкой; в окне игры — одна строка без ссылки (новичок ~10 с смотрел в пустое окно), на сайте нет возврата.</p>
+      <ul class="opts">
+        <li class="is-rec"><span class="id">SITE-A</span><span><span class="tag rec">рекомендую</span> Оставить вкладку; добавить «открыть ещё раз», ссылку-возврат на сайте и забор выписок при загрузке. День.</span></li>
+        <li><span class="id">SITE-B</span><span>Сайт внутри окна игрового браузера. Неделя и больше; меняет устройство сайтов и пропусков.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card" id="flow">
+    <div class="eyebrow">Ваша отдельная просьба · советник Fable 5.2</div>
+    <h2>Подача материалов, стол и стена</h2>
+    <p><b>Диагноз.</b> Беда не столько в количестве, сколько в том, что всё приходит одним слоем и одним действием «читай». До первого действия, которое не чтение (звонок), новичок прочёл 35 материалов, около 7 700 слов, и устал на третьей папке (28 листов за ~70 щелчков). Входа нет: письмо бюро — карточка среди семи одинаковых. Стол не захламлён, а наоборот пустеет и слипается: три стопки ложатся в пределах 13 см поверх газеты, 28 листов выглядят как три, папки исчезают, левая половина стола пуста. Стена работает как полка прочитанного, сравнивать на ней нельзя. Правил чтения три (стопка, лоток, пакеты), а два короба ведут себя по-разному.</p>
+
+    <div class="theme">
+      <h3>IN · Начало дела</h3>
+      <div class="scroll"><table>
+        <thead><tr><th>Метка</th><th>Что</th><th>Приоритет</th><th>Работа</th><th></th></tr></thead>
+        <tbody>
+          <tr><td class="id">IN-A</td><td>Листы 01–07 стопкой на столе, письмо бюро сверху; на стене на старте — только люди</td><td>мешает сейчас</td><td class="num">часы</td><td><span class="tag canon">канон</span></td></tr>
+          <tr><td class="id">IN-B</td><td>Опись дела — рабочий лист: карандашная галочка у того, что игрок открывал</td><td>заметно улучшит</td><td class="num">1–2 дня</td><td><span class="tag">интерфейс</span></td></tr>
+          <tr><td class="id">IN-C</td><td>Короба на приставной тумбе: ничего не заперто, но короб надо принести</td><td>когда-нибудь</td><td class="num">1–2 дня</td><td><span class="tag canon">канон</span></td></tr>
+          <tr><td class="id">IN-D</td><td>План объекта — чертёж на стене, игрок втыкает в него кнопки людей</td><td>когда-нибудь</td><td class="num">неделя</td><td><span class="tag canon">канон</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="theme">
+      <h3>VZ · Стол и стена</h3>
+      <div class="scroll"><table>
+        <thead><tr><th>Метка</th><th>Что</th><th>Приоритет</th><th>Работа</th><th></th></tr></thead>
+        <tbody>
+          <tr><td class="id">VZ-A</td><td>У каждой стопки своё место, раскрытая обложка под ней, видимая толщина и язычок со счётом «Осмотр места · 7»</td><td>мешает сейчас</td><td class="num">часы — день</td><td><span class="tag">интерфейс</span></td></tr>
+          <tr><td class="id">VZ-B</td><td>Карточка на стене — уменьшенный вид своего листа; с ~3× — живой текст</td><td>заметно улучшит</td><td class="num">2–4 дня</td><td><span class="tag">интерфейс</span></td></tr>
+          <tr><td class="id">VZ-C</td><td>Прочитанное висит связкой под ярлыком, нужное игрок вынимает</td><td>заметно улучшит</td><td class="num">2–3 дня</td><td><span class="tag">уточняет A-284</span></td></tr>
+          <tr><td class="id">VZ-D</td><td>Лента времени вдоль доски: выписки прикалываются к часам утра</td><td>когда-нибудь</td><td class="num">3–5 дней</td><td><span class="tag">интерфейс</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="theme">
+      <h3>RD · Чтение и переключение</h3>
+      <div class="scroll"><table>
+        <thead><tr><th>Метка</th><th>Что</th><th>Приоритет</th><th>Работа</th><th></th></tr></thead>
+        <tbody>
+          <tr><td class="id">RD-A</td><td>Одно правило чтения: «N из M» и стрелки у лотка, пакетов и групп стены (сейчас лоток — 36 действий на 12 листов против ~14)</td><td>мешает сейчас</td><td class="num">часы — день</td><td><span class="tag">интерфейс</span></td></tr>
+          <tr><td class="id">RD-B</td><td>Второй лист рядом в просмотрщике (это TWO-A)</td><td>когда-нибудь</td><td class="num">2–3 дня</td><td><span class="tag">интерфейс</span></td></tr>
+          <tr><td class="id">RD-C</td><td>Строка отрывается бумажной полоской-выпиской — на стену и в заключение</td><td>заметно улучшит</td><td class="num">2–4 дня</td><td><span class="tag">интерфейс</span></td></tr>
+          <tr><td class="id">RD-D</td><td>След чтения самого игрока: замятый уголок, закладка</td><td>когда-нибудь</td><td class="num">1–2 дня</td><td><span class="tag">интерфейс</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="theme">
+      <h3>UN · Вскрытие и раскладка после</h3>
+      <div class="scroll"><table>
+        <thead><tr><th>Метка</th><th>Что</th><th>Приоритет</th><th>Работа</th><th></th></tr></thead>
+        <tbody>
+          <tr><td class="id">UN-A</td><td>Вместилище остаётся вещью и открывается щелчком; устройства встают у своего короба; оба короба одинаковы</td><td>мешает сейчас</td><td class="num">день</td><td><span class="tag">интерфейс</span></td></tr>
+          <tr><td class="id">UN-B</td><td>Перечень внутри обложки папки — оглавление</td><td>когда-нибудь</td><td class="num">1–2 дня</td><td><span class="tag canon">канон</span></td></tr>
+          <tr><td class="id">UN-C</td><td>Из короба вещи вынимает игрок, вскрытие ничего не высыпает</td><td>после плейтеста</td><td class="num">2–3 дня</td><td><span class="tag canon">канон</span></td></tr>
+          <tr><td class="id">UN-D</td><td>Пакет высыпают на лоток, вещи берут в руки</td><td>когда-нибудь</td><td class="num">неделя+</td><td><span class="tag canon">канон</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <p><b>Порядок советника.</b> Первым — IN-A, UN-A, VZ-A, RD-A (3–4 дня вместе). Затем RD-C, VZ-C, IN-B (1–1,5 недели). Остальное — после плейтеста с настоящими медиа. Подробно, с примером «видит → делает → получает» у каждого варианта, — в <code>35_advice_flow.md</code>.</p>
+    <p style="font-size:14px;color:var(--muted)">Где идеи могут не сработать: связки могут спрятать листы, галочки — превратить дело в обход списка, полоски-выписки — зарасти; лента времени и чертёж сами подсказывают, что важно. Это проверяется только людьми.</p>
+  </section>
+
+  <section class="card" id="s1">
+    <div class="eyebrow">Все подтверждены воспроизведением</div>
+    <h2>Пять S1</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>ID</th><th>Что</th><th>Как проверено</th></tr></thead>
+      <tbody>
+        <tr><td><span class="id">RV-48</span> <span class="sev s1">S1</span></td><td>Номер сохранения берётся из часов устройства; «старое» сервер молча выбрасывает, но отвечает 204 — игрок видит «сохранено». Спешащие часы на одном устройстве — потерянная работа на другом.</td><td>Два запроса: второе сохранение принято с ответом «успех» и не записано</td></tr>
+        <tr><td><span class="id">RV-49</span> <span class="sev s1">S1</span></td><td>Одно неизвестное значение в сохранении (откат версии, переименованный конверт) — и сервер отдаёт пустое дело, а игра через 0,5 с затирает им прежнее.</td><td>Неизвестный конверт в базе → сервер отдал начальное состояние</td></tr>
+        <tr><td><span class="id">RV-50</span> <span class="sev s1">S1</span></td><td>Отказ сервера в сохранении — тупик: дальше ничего не сохраняется, плашка неверно пишет «дело изменилось в другом месте».</td><td>Ответ 400, по коду клиента статус не снимается</td></tr>
+        <tr><td><span class="id">RV-16</span> <span class="sev s1">S1</span></td><td>Удалить нить к выписке → снять выписку → «Вернуть» нить: нить без конца запускает RV-50.</td><td>Тест на настоящем сторе + сервер ответил «нет материала»</td></tr>
+        <tr><td><span class="id">RV-23</span> <span class="sev s1">S1</span></td><td>Лист 37 «Таблица выдачи»: столбцы 11.10–13.10, включая день гибели, обрезаны и недостижимы ни колесом, ни приближением.</td><td>Кадр эксперта; новичок: «13.10 как раз самое нужное»</td></tr>
+      </tbody>
+    </table></div>
+    <details>
+      <summary>21 находка S2 — коротко</summary>
+      <div class="scroll"><table>
+        <tbody>
+          <tr><td class="id">RV-1</td><td>Папка открывается только протяжкой за невидимую зону 56×56 у правого края; первый раз — 64 с и 2 пустых действия</td></tr>
+          <tr><td class="id">RV-2</td><td>Жёлтая рамка значит и «иди сюда», и «под курсором»</td></tr>
+          <tr><td class="id">RV-17</td><td>На стене нельзя сравнить два текста (вопрос CMP)</td></tr>
+          <tr><td class="id">RV-18</td><td>Повторное сведение половин снимает готовый лист со стены, нити теряются</td></tr>
+          <tr><td class="id">RV-24</td><td>Два правила чтения: стопка со стрелками и лоток без них</td></tr>
+          <tr><td class="id">RV-29</td><td>Сайт — вкладка без ссылки туда и обратно; выписка забирается только при переключении вкладки</td></tr>
+          <tr><td class="id">RV-39</td><td>Кнопки формы заключения в одной точке, отправка без подтверждения (вопрос VER)</td></tr>
+          <tr><td class="id">RV-40</td><td>Как приложить довод, игрок узнаёт только на форме, после «назад пути нет»</td></tr>
+          <tr><td class="id">RV-41</td><td>Папка заключения закрывает 40 % стены и на 60 % пуста</td></tr>
+          <tr><td class="id">RV-45</td><td>Задача игрока не перед глазами — письмо бюро теряется (вопрос ST)</td></tr>
+          <tr><td class="id">RV-51</td><td>«Новое дело» не отменяет запоздавшее сохранение старого</td></tr>
+          <tr><td class="id">RV-62</td><td>Production стартует с небезопасными умолчаниями и не проверяет их</td></tr>
+          <tr><td class="id">RV-63</td><td>За прокси предел писем входа — 10 в час на всех игроков</td></tr>
+          <tr><td class="id">RV-73…79</td><td>Тесты: всё в «уменьшить движение»; четыре жеста не мышью; ошибки страницы не ловятся; 3D не проверяется на «нарисовано»; только dev-сервер; нет образцов старых сохранений; безопасность — по ощущению</td></tr>
+          <tr><td class="id">RV-87</td><td>Одна Esc закрывает несколько слоёв: ноутбук в руках → лист из поиска → Esc закрыл оба (подтверждено)</td></tr>
+        </tbody>
+      </table></div>
+    </details>
+  </section>
+
+  <section class="card" id="waves">
+    <div class="eyebrow">Сначала отчёт, потом исправления — по вашему решению</div>
+    <h2>Волны исправлений</h2>
+    <div>
+      <div class="wave"><span class="n">1</span><div><b>Не терять работу игрока.</b> Переделка сохранения одной работой (RV-48…51 и смежные), нить «Вернуть», половины листа, таблица 37 с автопроверкой «ни одна таблица не шире листа», кнопка «Отправить», «Сильвер-Ридж» на компьютере следователя (две строки, мой пропуск в PR #115), забор выписок при загрузке. Сразу — образцы старых сохранений и ловля ошибок страницы в e2e.</div><span class="est">1,5–2 нед</span></div>
+      <div class="wave"><span class="n">2</span><div><b>Первые 30 минут.</b> IN-A, UN-A, VZ-A, RD-A и форма заключения. Нужны ответы ST и UNP.</div><span class="est">1–1,5 нед</span></div>
+      <div class="wave"><span class="n">3</span><div><b>Стена как место сравнения и слои.</b> Выбранный путь CMP, связки, опись с галочками; один обработчик Esc. Нужны ответы CMP и WALL.</div><span class="est">1,5–2 нед</span></div>
+      <div class="wave"><span class="n">4</span><div><b>3D-стол: надёжность и плавность.</b> Один источник кадра, раскладка после смены окна, «уменьшить движение» для стола, заслонки. После вашей ручной проверки.</div><span class="est">1–1,5 нед</span></div>
+      <div class="wave"><span class="n">5</span><div><b>Перед выкладкой на людей.</b> Безопасность и запуск production, тесты, экраны 1366 и 2000.</div><span class="est">1,5–2 нед</span></div>
+    </div>
+  </section>
+
+  <section class="card" id="manual">
+    <div class="eyebrow">Модель этого оценить не может</div>
+    <h2>Проверить руками</h2>
+    <ol class="check">
+      <li>Открыть папку, пролистать <b>всю</b> стопку стрелками, закрыть Esc → остался ли курсор «рукой» над пустым столом.</li>
+      <li>Разложить листы и нажать ↑/↓ раз двадцать → плывут ли листы в середине перелёта; не раздражает ли 0,64 с.</li>
+      <li>В полноэкранном режиме положить ручку у ближнего края, выйти из F11 → видна ли ручка и берётся ли.</li>
+      <li>Сделать выписку на сайте, закрыть вкладку игры и открыть заново, не переключая окон → висит ли выписка.</li>
+      <li>Свести половины листа и сразу поправить одну ещё раз → остался ли совмещённый лист на стене.</li>
+      <li>Положить стопку из 10–20 листов на ноутбук → есть ли заминка; покрутить ноутбук в руках → вес и инерция.</li>
+      <li>Самый слабый ноутбук: стол в покое минуту, потом потаскать лист → плавность и шум вентилятора.</li>
+      <li>Попасть в булавку и протянуть нить на общем виде стены; открыть папку щелчком → сколько промахов.</li>
+      <li>Полноэкранный режим, адрес сайта в браузере ноутбука → заметна ли новая вкладка, не съел ли её блокировщик.</li>
+      <li>Режим «тачпад»: вскрыть папку, короб и конверт диска без мыши → всё ли открывается.</li>
+    </ol>
+  </section>
+
+  <section class="card" id="gaps">
+    <div class="eyebrow">Границы проверки</div>
+    <h2>Что не проверено</h2>
+    <ul class="plain">
+      <li>Фото, видео и звук — пока описания-заглушки; рассматривание кадра и узнавание голоса не проверялись. Усталость новичка может быть отчасти от них.</li>
+      <li>Экраны 1366×768 и 2000×1000 — пять сценариев из 18.</li>
+      <li>FPS и загрузка — на RTX 5090 и сервере разработки, не на собранной игре и не на слабой машине. Один раз стол рисовал без остановки 5,6 с — не повторилось.</li>
+      <li>Ревьюеры кода интерфейса и 3D браузер не запускали: их выводы о порядке событий — по коду. Курсор «рука» (2c-1) не воспроизвёлся на одном листе.</li>
+      <li>Новичок встал на контрольном вопросе k.walsh и коде смартфона; эпилог никто не открыл.</li>
+      <li>Сюжет, честность дела и достаточность улик — вне задачи.</li>
+    </ul>
+  </section>
+
+  <section class="card" id="files">
+    <div class="eyebrow">Ветка <code>claude/big-review</code>, без PR</div>
+    <h2>Где всё лежит</h2>
+    <ul class="plain">
+      <li>Полный свод (93 находки, источники, направления) — <code>.review/2026-11-26/50_synthesis.md</code>; этот отчёт в репозитории — <code>claude/REVIEW_2026-11-26_big.md</code>.</li>
+      <li>Сверка основной сессией — <code>51_verify.md</code>; советы по подаче — <code>35_advice_flow.md</code>; журнал новичка — <code>40_newbie_log.md</code>.</li>
+      <li>Код: <code>20_code_core.md</code>, <code>21_code_ui.md</code>, <code>22_code_3d.md</code>, <code>23_code_tests.md</code>; интерфейс — <code>30_ux.md</code>; сырьё — <code>10–13</code>.</li>
+      <li>Кадры и видео (≈4 ГБ, вне git; можно удалить) — <code>E:/Projects/BUNKER-review-raw/2026-11-26/</code>.</li>
+    </ul>
+  </section>
+</main>

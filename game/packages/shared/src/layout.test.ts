@@ -16,6 +16,7 @@ import {
   onWall,
   openAll,
   openContainer,
+  readSaved,
   reconcile,
   removeExcerpt,
   upgradeState,
@@ -188,6 +189,40 @@ describe('upgradeState', () => {
     expect(upgradeState({ version: 3, view: 'desk' }, starting)).toBeNull();
     expect(upgradeState('мусор', starting)).toBeNull();
   });
+
+  it('RV-49: одно неизвестное значение выпадает одно, остальное дело остаётся', () => {
+    const s = defaultState(starting);
+    const raw = {
+      ...s,
+      opened: ['scene', 'нет-такого-конверта'],
+      notebookPages: ['первая', 7, 'третья'],
+      radio: { pos: 10, marks: Array.from({ length: 60 }, (_, i) => ({ t: i, label: `м${i}` })) },
+      notebook: 'х'.repeat(25_000),
+      wall: {
+        ...s.wall,
+        items: [...s.wall.items, { id: '03', x: 'вдоль', y: 0, z: 1, rot: 0 }],
+        camera: { x: 0, y: 0, zoom: 99 },
+      },
+      somethingNew: true,
+    };
+    const { state, dropped } = readSaved(raw, starting);
+    expect(state).not.toBeNull();
+    // Неизвестный конверт выпадает один.
+    expect(state?.opened).toEqual(['scene']);
+    expect(state?.notebookPages).toEqual(['первая', 'третья']);
+    expect(state?.radio?.marks).toHaveLength(50);
+    expect(state?.notebook).toHaveLength(20_000);
+    expect(state?.wall.items).toHaveLength(s.wall.items.length);
+    expect(state?.wall.camera.zoom).toBeLessThanOrEqual(3);
+    expect(dropped.length).toBeGreaterThan(0);
+  });
+
+  it('RV-49: версия новее текущей (откат сборки) — понятое читается', () => {
+    const s = defaultState(starting);
+    const got = readSaved({ ...s, version: 99, view: 'wall', future: { a: 1 } }, starting);
+    expect(got.state?.view).toBe('wall');
+    expect(got.state?.version).toBe(s.version);
+  });
 });
 
 describe('край доски', () => {
@@ -305,11 +340,20 @@ describe('конверты архива (A-260)', () => {
     expect(sealedIds(b).has('30')).toBe(true);
   });
 
+  // Сохранение версии 5 (до FM-B): догадка про пакет — один раз, при переводе в 6 (RV-54).
+  const v5 = (x: PlayerState) =>
+    reconcile(readSaved({ ...x, version: 5 }, starting).state as PlayerState, starting);
+
   it('FM-B: сохранение до пакета — «Осмотр места» вскрыт с устройствами: пакет тоже вскрыт', () => {
     const { desk: _, ...before3d } = { ...s, opened: ['scene' as const] };
-    expect(reconcile(before3d, starting).opened).toEqual(['scene', 'seized']);
+    expect(v5(before3d).opened).toEqual(['scene', 'seized']);
     const onDesk = { ...s, opened: ['scene' as const], desk: [{ id: '47', layer: 1 }] };
-    expect(reconcile(onDesk, starting).opened).toEqual(['scene', 'seized']);
+    expect(v5(onDesk).opened).toEqual(['scene', 'seized']);
+  });
+
+  it('RV-54: версия 6 — без догадки: «Осмотр места» вскрыт, а пакет нет — пакет закрыт', () => {
+    const { desk: _, ...noDesk } = { ...s, opened: ['scene' as const] };
+    expect(reconcile(noDesk, starting).opened).toEqual(['scene']);
   });
 
   it('3D-стол: устройство на стене (старое сохранение) — уходит на стол; невскрытое — нет', () => {
@@ -319,7 +363,7 @@ describe('конверты архива (A-260)', () => {
       desk: o.desk?.filter((d) => d.id !== '47'),
       wall: { ...o.wall, items: [...o.wall.items, { id: '47', x: 10, y: 10, z: 99, rot: 0 }] },
     };
-    const r = reconcile(hung, starting);
+    const r = v5(hung);
     expect(r.wall.items.some((i) => i.id === '47')).toBe(false);
     expect(r.desk?.some((d) => d.id === '47' && d.x === undefined)).toBe(true);
     // Конверт места не вскрыт — устройств на столе нет, только газета.

@@ -10,6 +10,7 @@ export {
   pendingExcerpts,
   playerProgress,
   playerState,
+  playerStateBackups,
   players,
   playerVerdicts,
   sessions,

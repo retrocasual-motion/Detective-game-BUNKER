@@ -168,6 +168,14 @@ export const useVerdict = create<VerdictStore>((set, get) => {
     },
 
     async send() {
+      /** Заключение принято: штамп, эпилог на стол (конвертом), ответ бюро — после штампа. */
+      const sent = (status: CaseStatus) => {
+        set({ status, stamped: true });
+        getMaterials()
+          .then((all) => take(all.filter((m) => m.id === EPILOGUE_ID)))
+          .catch(() => undefined);
+        setTimeout(() => set({ stamped: false, showResult: true }), reducedMotion() ? 0 : STAMP_MS);
+      };
       if (get().sending) return;
       set({ sending: true, error: null });
       try {
@@ -180,14 +188,13 @@ export const useVerdict = create<VerdictStore>((set, get) => {
           set({ error: r.error });
           return;
         }
-        set({ status: { form: false, sent: true, result: r.result }, stamped: true });
-        // Эпилог уже на столе (конвертом); ответ бюро — после штампа.
-        getMaterials()
-          .then((all) => take(all.filter((m) => m.id === EPILOGUE_ID)))
-          .catch(() => undefined);
-        setTimeout(() => set({ stamped: false, showResult: true }), reducedMotion() ? 0 : STAMP_MS);
+        sent({ form: false, sent: true, result: r.result });
       } catch {
-        set({ error: 'Не отправлено: сервер не ответил. Попробуйте ещё раз.' });
+        // Ответ не дошёл, но сервер мог заключение принять (RV-43): спросить, где дело, — и показать
+        // итог, а не «Не отправлено» и потом «уже отправлено».
+        const now = await getCase().catch(() => null);
+        if (now?.sent) sent(now);
+        else set({ error: 'Не отправлено: сервер не ответил. Попробуйте ещё раз.' });
       } finally {
         set({ sending: false });
       }
