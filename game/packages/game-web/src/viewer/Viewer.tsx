@@ -12,6 +12,7 @@ import Markdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { trackReading } from '../dev/readingLog.ts';
+import { useEscLayer } from '../esc.ts';
 import { wheelIntent } from '../input.ts';
 import { useMenu } from '../menu/menu-store.ts';
 import { NO_LINKS, remarkSites } from '../paperLinks.tsx';
@@ -326,16 +327,15 @@ export function Viewer({ materialId }: ViewerProps) {
   // Эпилог (автор 17.11): закрыть нельзя — только «Завершить дело»; вернуться к делу — из меню.
   const final = materialId === EPILOGUE_ID;
   const dismiss = useMemo(() => (final ? () => undefined : close), [final, close]);
+  useEscLayer(true, () => dismiss());
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // Печатают в поле поиска рядом с листом — стрелки двигают курсор, а не страницы.
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        if (e.key === 'Escape') dismiss();
-        return;
-      }
-      if (e.key === 'Escape') dismiss();
-      // Последняя страница — дальше следующий лист стола (DC-B); первая — назад, предыдущий.
-      else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+      // Печатают в поле поиска рядом с листом — стрелки двигают курсор, а не страницы; Esc в поле
+      // сначала снимает с него фокус (esc.ts).
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      // Esc — верхний слой (useEscLayer выше, 2b-П1); последняя страница — дальше следующий лист
+      // стола (DC-B); первая — назад, предыдущий.
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
         if (page < sheet.pages - 1 || runAt < 0) goTo(page + 1);
         else useGame.getState().deskStep(1);
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {

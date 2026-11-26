@@ -17,6 +17,7 @@ import { DeskPhone } from './deskphone/DeskPhone.tsx';
 import { DevActionLine } from './dev/DevActionLine.tsx';
 import { HeldView } from './hold/HeldView.tsx';
 import { Credits, MainMenu, MenuTab } from './menu/MainMenu.tsx';
+import { useMenu } from './menu/menu-store.ts';
 import { PcView } from './pc/PcView.tsx';
 import { PenView } from './player/PenView.tsx';
 import type { Bank, DiscOnDesk } from './room/decor.ts';
@@ -92,6 +93,8 @@ export function App() {
     const onKey = (e: KeyboardEvent) => {
       const dir = KEY_DIR[e.key];
       if (!dir || isTyping(e.target)) return;
+      // Под меню и титрами стрелки не ходят по комнате (RV-90).
+      if (useMenu.getState().screen !== 'game') return;
       const g = useGame.getState();
       // Лист открыт: ↑ — закрыть и к стене (RD-A, SC-02); ←/→ — листать (полоса «N из M»).
       if (g.viewerId && dir === 'up' && !g.held && !g.computerOpen && g.state?.view === 'desk') {

@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { type Group, type Object3D, PerspectiveCamera, Quaternion, Vector3 } from 'three';
 import { useFreeArea } from '../device/deviceView.tsx';
+import { useEscLayer } from '../esc.ts';
 import { wheelIntent, zoomFactor } from '../input.ts';
 import { reducedMotion } from '../motion.ts';
 import { MAX_DT, SETTLED } from './animate.ts';
@@ -509,16 +510,9 @@ export default function Held3D({
   const closeNow = useRef(onClose);
   closeNow.current = onClose;
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      // В поле ввода (подпись метки) Esc — его, не вещи.
-      if ((e.target as HTMLElement | null)?.closest?.('input, textarea')) return;
-      closeNow.current();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  // Esc — верхний слой (2b-П1): лист, вынутый из вещи, закрывается первым, вещь — вторым. В поле
+  // ввода (подпись метки) Esc — его.
+  useEscLayer(true, () => closeNow.current());
 
   // Протяжку ведём по окну: кнопка может уйти за край вещи и даже экрана.
   const onPointerDown = (e: ReactPointerEvent) => {

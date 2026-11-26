@@ -44,3 +44,38 @@ test('«Новое дело» — после подтверждения всё �
   await expect(page.getByTestId('main-menu')).toHaveCount(0);
   await expect(page.getByTestId('container-protocols')).toBeVisible();
 });
+
+test('под меню стрелки и Esc не трогают комнату (RV-90); лист над поиском — Esc закрывает только верхнее (2b-П1)', async ({
+  page,
+}) => {
+  const room = page.locator('[data-view]').first();
+  await expect(room).toHaveAttribute('data-view', 'desk');
+  await page.getByTestId('menu-tab').click();
+  await expect(page.getByTestId('menu-continue')).toBeVisible();
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('menu-continue')).toBeVisible();
+  await page.getByTestId('menu-continue').click();
+  await expect(room).toHaveAttribute('data-view', 'desk');
+  // Лист над поиском: первый Esc — лист, второй — поиск.
+  await page.getByTestId('search-tab').click();
+  await page.getByTestId('search-input').fill('845');
+  await page.getByTestId('search-25').locator('.search-hit').first().click();
+  await expect(page.getByTestId('viewer')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('viewer')).toBeHidden();
+  await expect(page.getByTestId('search-panel')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('search-panel')).toBeHidden();
+});
+
+test('Esc в поле поиска сначала снимает фокус, второй — закрывает поиск', async ({ page }) => {
+  await page.getByTestId('search-tab').click();
+  const input = page.getByTestId('search-input');
+  await input.fill('845');
+  await page.keyboard.press('Escape');
+  await expect(input).not.toBeFocused();
+  await expect(page.getByTestId('search-panel')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('search-panel')).toBeHidden();
+});

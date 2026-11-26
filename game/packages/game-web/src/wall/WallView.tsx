@@ -796,7 +796,10 @@ export function WallView() {
                 updateState(labelThread(editingThread.id, e.currentTarget.value.trim()));
                 setEditing(null);
               }
-              if (e.key === 'Escape') setEditing(null);
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                setEditing(null);
+              }
             }}
             onBlur={(e) => {
               updateState(labelThread(editingThread.id, e.currentTarget.value.trim()));

@@ -2,6 +2,7 @@ import { type PcWindow, SERVER_LOG_ID } from '@bunker/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ddmmyyyy, gameNow, hhmm } from '../clock.ts';
 import { useFindOnScreen, useFreeArea, useSelectionCard } from '../device/deviceView.tsx';
+import { useEscLayer } from '../esc.ts';
 import { FileIcon } from '../laptop/apps.tsx';
 import { DesktopIcon, gridAt, settle, snapToGrid, Window } from '../laptop/Desktop.tsx';
 import '../laptop/laptop.css';
@@ -72,14 +73,8 @@ export function PcView() {
   const { onUp, button } = useSelectionCard('pc-to-folder', 'pc');
   useFindOnScreen('.pc-screen', open);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') useGame.getState().setComputerOpen(false);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open]);
+  // Esc — верхний слой (2b-П1): лист из поиска поверх компьютера закрывается первым.
+  useEscLayer(open, () => useGame.getState().setComputerOpen(false));
 
   if (!open) return null;
   return (

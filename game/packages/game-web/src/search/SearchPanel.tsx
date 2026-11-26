@@ -1,4 +1,7 @@
+import { EPILOGUE_ID } from '@bunker/shared';
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useEscLayer } from '../esc.ts';
+import { useMenu } from '../menu/menu-store.ts';
 import { useGame, useVisibleMaterials } from '../store.ts';
 import { MIN_QUERY, searchCase } from './searchCase.ts';
 
@@ -12,6 +15,7 @@ const PER_MATERIAL = 5;
  */
 export function SearchPanel() {
   const open = useGame((g) => g.searchOpen);
+  useEscLayer(open, () => setOpen(false));
   const setOpen = useGame((g) => g.setSearchOpen);
   const materials = useVisibleMaterials();
   const [query, setQuery] = useState('');
@@ -31,16 +35,13 @@ export function SearchPanel() {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f' && !e.altKey) {
         e.preventDefault();
+        // Под меню поиска нет; эпилог Ctrl+F не закрывает — только «Завершить дело» (RV-90).
+        if (useMenu.getState().screen !== 'game') return;
+        if (useGame.getState().viewerId === EPILOGUE_ID) return;
         // Из открытого листа — к поиску по всему делу.
         useGame.getState().closeViewer();
         setOpen(true);
         requestAnimationFrame(() => input.current?.select());
-      } else if (
-        e.key === 'Escape' &&
-        useGame.getState().searchOpen &&
-        !useGame.getState().viewerId
-      ) {
-        setOpen(false);
       }
     };
     window.addEventListener('keydown', onKey);

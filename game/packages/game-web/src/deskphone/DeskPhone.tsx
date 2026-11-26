@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useEscLayer } from '../esc.ts';
 import { useGame } from '../store.ts';
 import { useCall } from './call.ts';
 import './deskphone.css';
@@ -12,6 +13,7 @@ import './deskphone.css';
  */
 export function DeskPhone() {
   const open = useGame((g) => g.deskPhone);
+  useEscLayer(open, () => closePhone());
   const heard = useCall((c) => c.heard);
   const offHook = useCall((c) => c.offHook);
   const used = useCall((c) => c.used);
@@ -38,8 +40,8 @@ export function DeskPhone() {
       if (e.key === 'Tab') tabbed = true;
       if (e.key === 'Enter' && tabbed && e.target instanceof HTMLButtonElement) return;
       const c = useCall.getState();
-      // Esc и ↓ — отойти к столу, как стрелка «Стол» внизу (UX-1, KEY-A).
-      if (e.key === 'Escape' || e.key === 'ArrowDown') closePhone();
+      // ↓ — отойти к столу, как стрелка «Стол» внизу (UX-1, KEY-A); Esc — слой (2b-П1).
+      if (e.key === 'ArrowDown') closePhone();
       // «+» — с клавиатуры тоже (T.4, автор 21.11).
       else if (/^[0-9*#+]$/.test(e.key)) c.press(e.key);
       else if (e.key === 'Backspace') c.erase();

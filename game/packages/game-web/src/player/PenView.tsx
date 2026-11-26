@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useFreeArea } from '../device/deviceView.tsx';
+import { useEscLayer } from '../esc.ts';
 import { useGame } from '../store.ts';
 import { MediaPlayer } from './MediaPlayer.tsx';
 import './player.css';
@@ -13,14 +14,7 @@ export function PenView() {
   const open = useGame((g) => g.pen);
   const body = useGame((g) => g.materials.find((m) => m.id === '49')?.body ?? '');
   const area = useFreeArea();
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') useGame.getState().closePen();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open]);
+  useEscLayer(open, () => useGame.getState().closePen());
   if (!open) return null;
   return (
     <div className="pen-view" data-testid="pen-view">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { newCase } from '../api.ts';
+import { useEscLayer } from '../esc.ts';
 import { type InputMode, setInputMode, useInputMode } from '../input.ts';
 import { reducedMotion, setReducedMotion } from '../motion.ts';
 import { useGame } from '../store.ts';
@@ -26,15 +27,9 @@ export function MainMenu() {
   const [error, setError] = useState('');
   const email = useEmail();
   const input = useInputMode();
-  // Esc в «Настройках» и в подтверждении — назад, как «Назад» / «Отмена» (R5-12).
-  useEffect(() => {
-    if (screen !== 'menu' || panel === 'none') return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setPanel('none');
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [screen, panel]);
+  // Меню — верхний слой (RV-90, 2b-П1): Esc под ним не закрывает лист или компьютер. В «Настройках»
+  // и в подтверждении Esc — назад, как «Назад» / «Отмена» (R5-12); в самом меню — ничего.
+  useEscLayer(screen === 'menu', () => setPanel('none'));
   if (screen !== 'menu') return null;
 
   const startOver = async () => {
@@ -194,15 +189,8 @@ export function Credits() {
   const screen = useMenu((m) => m.screen);
   const go = useMenu((m) => m.go);
   const sent = useVerdict((v) => v.status.sent);
-  // Esc — в главное меню, как кнопка (RV-47).
-  useEffect(() => {
-    if (screen !== 'credits') return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') go('menu');
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [screen, go]);
+  // Esc — в главное меню, как кнопка (RV-47); титры — верхний слой.
+  useEscLayer(screen === 'credits', () => go('menu'));
   if (screen !== 'credits') return null;
   return (
     <div className="main-menu credits" data-testid="credits">
