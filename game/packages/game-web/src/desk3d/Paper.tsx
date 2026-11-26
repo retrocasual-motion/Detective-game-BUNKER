@@ -294,6 +294,12 @@ export function Paper({
     dur: number;
   } | null>(null);
   const placed = useRef(false);
+  /**
+   * Лист уже лежит (не в руке, не летит): если под ним что-то вынули или подложили, он сразу на новой
+   * высоте и с новым прогибом, без анимации — стопка не «оседает» на глазах (автор 26.11: «вытаскиваю
+   * документ снизу — все документы падают… убрать»). Плавно — только когда кладут сам лист.
+   */
+  const resting = useRef(false);
   const W = piece.w * p;
   const D = piece.d * p;
   const T = piece.t * p;
@@ -351,19 +357,30 @@ export function Paper({
       target.cur.copy(pos);
     }
     const waiting = !!start && performance.now() < start.at;
+    // Лежал уже в прошлом кадре (не только что положен).
+    const wasResting = resting.current;
     if ((target.mode === 'hand') !== onTop.current) setOnTop(g, target.mode === 'hand');
     // Пружина: a = k·(цель − x) − c·v.
     const k = target.stiff;
     const c = 2 * Math.sqrt(k) * target.damp;
     const vl = vel.current;
     const now = performance.now();
-    if (target.mode !== 'rest') tween.current = null;
+    if (target.mode !== 'rest') {
+      tween.current = null;
+      resting.current = false;
+    }
     if (waiting) {
       // Ещё в конверте — ждёт своей очереди.
     } else if (target.mode === 'rest') {
-      // Положить: новое место — новое мягкое движение из того, где вещь сейчас.
+      // Положить: новое место — новое мягкое движение из того, где вещь сейчас. Лежал и сдвинулся
+      // только по высоте (под ним вынули лист) — сразу, без движения.
       const tw = tween.current;
-      if (!tw || tw.to.distanceTo(target.pos) > 0.3) {
+      const onlyHeight =
+        resting.current &&
+        Math.abs(target.pos.x - pos.x) < 0.5 &&
+        Math.abs(target.pos.z - pos.z) < 0.5;
+      if (onlyHeight) tween.current = null;
+      else if (!tw || tw.to.distanceTo(target.pos) > 0.3) {
         const dist = pos.distanceTo(target.pos);
         tween.current =
           dist > 0.3
@@ -388,6 +405,7 @@ export function Paper({
         g.quaternion.copy(target.quat);
       }
       vl.set(0, 0, 0);
+      if (!tween.current) resting.current = true;
     } else if (target.mode === 'air') {
       v.copy(target.pos).sub(pos).multiplyScalar(k).addScaledVector(vl, -c);
       vl.addScaledVector(v, dt);
@@ -438,7 +456,8 @@ export function Paper({
         const z = zs.current;
         const dr = target.mode === 'rest' ? target.drape : null;
         const dy = target.mode === 'rest' ? pos.y - target.pos.y : 0;
-        const k = 1 - Math.exp(-dt * 14);
+        // Лежащий лист меняет прогиб сразу (под ним вынули или подложили), кладущийся — плавно.
+        const k = wasResting && !tween.current ? 1 : 1 - Math.exp(-dt * 14);
         let changed = false;
         for (let i = 0; i < pa.count; i++) {
           const want = dr ? (dr[i] ?? 0) * p : 0;
