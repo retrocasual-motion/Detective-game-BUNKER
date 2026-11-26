@@ -65,7 +65,7 @@ scene.add(new THREE.HemisphereLight(0x39424f, 0x0a0806, 0.35));
 }
 let dirty = true; const invalidate = () => { dirty = true; };
 const phone = buildPhone48(THREE, { anisotropy: Math.min(16, renderer.capabilities.getMaxAnisotropy()), onChange: invalidate,
-  pbr: params.get('pbr') !== '0', lowPower: params.get('low') ? params.get('low') === '1' : (coarse || small), mapSet: params.get('set') || 'full' });   // на странице пробы и телефон смотрит полный набор; в игре телефон берёт low
+  pbr: params.get('pbr') !== '0', lowPower: params.get('low') ? params.get('low') === '1' : (coarse || small), mapSet: params.get('set') || 'full', label: params.get('label') !== '0' });   // на странице пробы и телефон смотрит полный набор; в игре телефон берёт low
 const holder = new THREE.Group(), inner = new THREE.Group(); inner.add(phone); holder.add(inner); scene.add(holder);
 const D = phone.userData.dims;
 if (params.get('screen') === 'test') { // проверка раскладки uv1 экрана — не интерфейс
@@ -90,6 +90,9 @@ const VIEWS = {
   rim: { q: qOf(0.30, -0.9, 0), zoom: 0.30, focus: v3(0.02, D.T / 2, 0.04) },
   glance: { q: qOf(0.36, -0.55, 0), zoom: 0.8 },
   screen: { q: qOf(0.93, -0.12, 0), zoom: 0.62 },
+  label: { q: qOf(0.80, -0.22, 0).multiply(FLIP), zoom: 0.5, focus: v3(0, 0, 0.017) },
+  frameside: { q: qOf(0.10, 1.15, 0), zoom: 0.34, focus: v3(-0.0265, 0.007, 0.0) },
+  corner: { q: qOf(0.28, 0.75, 0), zoom: 0.3, focus: v3(-0.022, 0.007, 0.048) },
 };
 const CENTER = v3(0, D.T / 2, 0);
 const st = { q: new THREE.Quaternion(), zoom: 1, focus: new THREE.Vector3(), pan: new THREE.Vector2() }, tg = { q: new THREE.Quaternion(), zoom: 1, focus: new THREE.Vector3(), pan: new THREE.Vector2() };

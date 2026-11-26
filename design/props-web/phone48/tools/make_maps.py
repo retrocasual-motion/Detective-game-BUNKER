@@ -179,6 +179,51 @@ h = 0.5 + soft(band) * np.clip(hp * 0.5, -0.05, 0.05) - 0.14 * blur(gap, 0.08) -
 nrm = normal_from(blur(h, 0.04), 1.5)
 ao = np.clip(1 - 1.6 * blur(gap, 0.12), 0.45, 1)
 save_set('front', alb, nrm, np.dstack([met, rough, ao]))     # BGR: B — металл, G — шероховатость, R — AO
+
+# ---- атлас кнопок: полоса 53 × 10 мм (91,5…101,5 мм от верха) — цвет 788 пикс/см, значки с резким краем ----
+# Значки на общей карте переда (197 пикс/см) вблизи мылятся. Здесь фото увеличено вдвое, а край значка
+# собран заново: маска значка (цвет трубок, яркость стрелки) с крутым переходом, цвет — средний цвет краски.
+KY0, KY1 = 91.5, 101.5
+r0, r1 = int(round(KY0 * PXMM)), int(round(KY1 * PXMM))
+up2 = lambda a_: cv2.resize(a_, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+ka = up2(np.clip(alb[r0:r1], 0, 1)); kf = up2(f[r0:r1])                           # итоговый цвет и исходное фото
+kX, kYm = up2(X[r0:r1]), up2(Y[r0:r1])
+kb = np.dstack([cv2.medianBlur((np.clip(ka[..., c], 0, 1) * 255).astype(np.uint8), int(2.6 * PXMM * 2) | 1).astype(np.float32) / 255 for c in range(3)])
+def icon(region, measure, t0=0.30, t1=0.52):
+    d = measure(kf); d = d - np.median(d[region])
+    t = d / max(float(np.percentile(d[region], 99.6)), 1e-4)
+    m = np.clip((cv2.GaussianBlur(t, (0, 0), 0.8) - t0) / (t1 - t0), 0, 1); m = m * m * (3 - 2 * m)
+    m *= cv2.erode(region.astype(np.uint8), np.ones((int(0.5 * PXMM * 2) | 1,) * 2, np.uint8)).astype(np.float32)   # не у самого края кнопки
+    core = (t > 0.7) & region
+    col = ka[core].mean(0) if core.sum() > 50 else np.array([0.8, 0.8, 0.8], np.float32)
+    g_ = col.mean(); col = np.clip(g_ + (col - g_) * 1.6, 0, 1)                  # в общем цвете краска была обесцвечена — вернуть
+    return m, col
+kyc = 44.4 + 52                                                                    # центр ряда кнопок, мм от верха
+reg_call = (np.abs(kX - 12.5) < 5.3) & (np.abs(kYm - kyc) < 2.15)
+reg_end = (np.abs(kX - 40.5) < 5.3) & (np.abs(kYm - kyc) < 2.15)
+reg_back = (np.abs(kX - 26.5) < 3.45) & (np.abs(kYm - kyc) < 3.45)
+for region, measure in ((reg_call, lambda q: q[..., 1] - np.maximum(q[..., 0], q[..., 2])),
+                        (reg_end, lambda q: q[..., 2] - np.maximum(q[..., 0], q[..., 1])),
+                        (reg_back, lambda q: q.mean(2))):
+    m, col = icon(region, measure)
+    if region is reg_end:      # значок «питание» под красной трубкой дорисовал генератор, вблизи это клякса — убрать, остаётся трубка
+        m = m * (1 - np.clip(1.6 - np.hypot(kX - 40.5, kYm - (kyc + 0.95)) / 1.0, 0, 1))
+    if region is reg_back: col = np.clip(col * 1.3, 0, 0.9)   # стрелка — белая краска
+    near_ = cv2.GaussianBlur(cv2.dilate((m > 0.02).astype(np.uint8), np.ones((int(0.5 * PXMM * 2) | 1,) * 2, np.uint8)).astype(np.float32), (0, 0), 2)[..., None]
+    if region is reg_end:      # и сам след значка «питание» на фото закрыть чистым пластиком кнопки
+        zone = np.clip(1.9 - np.hypot(kX - 40.5, kYm - (kyc + 0.95)) / 1.0, 0, 1)[..., None]
+        near_ = np.maximum(near_, zone)
+    ka = ka * (1 - near_) + (kb * (1 - m[..., None]) + col * m[..., None]) * near_
+kn = nrm[r0:r1]; ko = np.dstack([met, rough, ao])[r0:r1]
+u8_ = lambda a_: (np.clip(a_, 0, 1) * 255).round().astype(np.uint8)
+n_img_ = lambda n_: cv2.cvtColor(((n_ * 0.5 + 0.5) * 255).round().astype(np.uint8), cv2.COLOR_RGB2BGR)
+cv2.imwrite(os.path.join(OUT, 'src', 'keys_albedo.png'), u8_(ka))
+for d, k in (('pack', 1.0), ('pack_low', 0.5)):
+    sa = (int(round(ka.shape[1] * k)), int(round(ka.shape[0] * k))); sn = (int(round(kn.shape[1] * k)), int(round(kn.shape[0] * k)))
+    cv2.imwrite(os.path.join(OUT, d, 'keys_a.jpg'), cv2.resize(u8_(ka), sa, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 95])
+    nn = cv2.resize(kn, sn, interpolation=cv2.INTER_AREA); nn /= np.linalg.norm(nn, axis=2, keepdims=True)
+    cv2.imwrite(os.path.join(OUT, d, 'keys_n.png'), n_img_(nn)); cv2.imwrite(os.path.join(OUT, d, 'keys_orm.jpg'), cv2.resize(u8_(ko), sn, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 95])
+report['keys'] = {'strip_mm': [53, KY1 - KY0], 'albedo_px': list(ka.shape[1::-1]), 'px_per_cm': round(ka.shape[0] / (KY1 - KY0) * 10)}
 report['front'].update({'scr_cover_%': round(float((scr > 0.3).mean() * 100), 2), 'haze_max': round(float(haze.max()), 3),
                         'rough_screen_p50_p95': [round(float(np.percentile(rough[screen], q)), 3) for q in (50, 95)]})
 
@@ -194,6 +239,58 @@ for d, s in (('pack', 1024), ('pack_low', 512)):
     nn = cv2.resize(t_n, (s, s), interpolation=cv2.INTER_AREA); nn /= np.linalg.norm(nn, axis=2, keepdims=True)
     cv2.imwrite(os.path.join(OUT, d, 'tile_orm.jpg'), (o * 255).round().astype(np.uint8), [cv2.IMWRITE_JPEG_QUALITY, 95])
     cv2.imwrite(os.path.join(OUT, d, 'tile_n.png'), cv2.cvtColor(((nn * 0.5 + 0.5) * 255).round().astype(np.uint8), cv2.COLOR_RGB2BGR))
+
+# ------------------------------------------------------------------ бока: рамка и обод
+# Одна полоса на весь периметр корпуса (299,4 мм) × высоту рамки (6 мм): u — вдоль периметра от начала
+# дуги правого нижнего угла (как идёт контур в phone48.js), v — снизу (шов крышки) вверх (шов обода).
+# Фото боков не генерировались (бок 12 мм, полоса 9:1 генератору не даётся): износ собран здесь —
+# матовость литого пластика, продольные потёртости от кармана и стола, затёртые углы, пыль в швах,
+# плюс волосяные потёртости с фото переда. Общий износ, без сколов и особых примет.
+rs = np.random.RandomState(4812)
+SW, SH = 4096, 128; PERIM = 2 * (53 - 17) + 2 * (104 - 17) + 2 * np.pi * 8.5; SMM = 6.0
+su = (np.arange(SW, dtype=np.float32) + 0.5) / SW * PERIM; sv = (np.arange(SH, dtype=np.float32) + 0.5) / SH * SMM
+arc = np.pi * 8.5 / 2; corners = [arc / 2, arc + 36 + arc / 2, 2 * arc + 36 + 87 + arc / 2, 3 * arc + 72 + 87 + arc / 2]
+def wrapd(a_, b_): d_ = np.abs(a_ - b_); return np.minimum(d_, PERIM - d_)
+corner = np.zeros(SW, np.float32)
+for c_ in corners: corner = np.maximum(corner, np.exp(-(wrapd(su, c_) / 7.0) ** 2))
+corner = corner[None, :] * np.ones((SH, 1), np.float32)
+streak = np.zeros((SH, SW * 3), np.float32)                                        # три периода: линии переходят через шов полосы
+for i in range(300):
+    x0 = rs.uniform(0, SW); keep = rs.uniform() < 0.35 + 0.65 * corner[0, int(x0) % SW]
+    if not keep: continue
+    ln = rs.uniform(3, 28) / PERIM * SW; y0 = rs.uniform(0, SH); dy = rs.normal(0, 3.0)
+    for k in (0, 1, 2): cv2.line(streak, (int(x0 + k * SW), int(y0)), (int(x0 + ln + k * SW), int(y0 + dy)), float(rs.uniform(0.25, 1.0)), 1, cv2.LINE_AA)
+streak = streak[:, SW:2 * SW]
+mx_, my_ = np.meshgrid(su * (1024 / 30.0) % 1024, sv * (1024 / 30.0) % 1024)
+hair = cv2.remap(ts.astype(np.float32), mx_.astype(np.float32), my_.astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+grain = cv2.GaussianBlur(rs.normal(0, 1, (SH, SW)).astype(np.float32), (0, 0), 0.8)
+cloud = cv2.resize(cv2.GaussianBlur(rs.normal(0, 1, (8, 256)).astype(np.float32), (0, 0), 1.5), (SW, SH), interpolation=cv2.INTER_CUBIC); cloud /= np.abs(cloud).max()
+dv = np.minimum(sv, SMM - sv)[:, None]                                             # мм до ближайшего шва
+dust_line = cv2.resize(np.clip(rs.normal(0.55, 0.5, (1, 700)), 0, 1).astype(np.float32), (SW, 1), interpolation=cv2.INTER_CUBIC)
+dust = np.clip(1 - dv / 0.32, 0, 1) ** 1.5 * np.clip(dust_line + 0.25 * corner[:1], 0, 1) * np.clip(0.6 + 0.6 * grain, 0, 1)
+s_rough = 0.21 + 0.035 * grain + 0.05 * cloud + 0.10 * corner + 0.16 * streak + 0.22 * hair
+s_rough = np.clip(s_rough * (1 - dust) + 0.95 * dust, 0.08, 1)
+s_alb = 0.050 + 0.004 * grain + 0.014 * streak + 0.012 * corner + 0.02 * hair
+s_alb = np.clip(s_alb * (1 - dust) + 0.17 * dust, 0, 1)
+s_ao = np.clip(1 - 0.35 * np.clip(1 - dv / 0.18, 0, 1), 0, 1) * np.ones((1, SW), np.float32)
+s_n = normal_from(0.5 - 0.014 * streak - 0.012 * hair + 0.006 * grain, 1.6)
+for d, k in (('pack', 1), ('pack_low', 2)):
+    size = (SW // k, SH // k)
+    al3 = np.dstack([s_alb * 1.06, s_alb, s_alb])                                  # чуть холодный чёрный, как спинка
+    cv2.imwrite(os.path.join(OUT, d, 'side_a.jpg'), cv2.resize((np.clip(al3, 0, 1) * 255).round().astype(np.uint8), size, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 95])
+    cv2.imwrite(os.path.join(OUT, d, 'side_orm.jpg'), cv2.resize((np.dstack([np.zeros_like(s_rough), s_rough, s_ao]) * 255).round().astype(np.uint8), size, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 95])
+    nn = cv2.resize(s_n, size, interpolation=cv2.INTER_AREA); nn /= np.linalg.norm(nn, axis=2, keepdims=True)
+    cv2.imwrite(os.path.join(OUT, d, 'side_n.png'), cv2.cvtColor(((nn * 0.5 + 0.5) * 255).round().astype(np.uint8), cv2.COLOR_RGB2BGR))
+report['side'] = {'perimeter_mm': round(float(PERIM), 2), 'px': [SW, SH], 'px_per_cm_along': round(SW / PERIM * 10), 'px_per_cm_across': round(SH / SMM * 10)}
+
+# ------------------------------------------------------------------ ярлык бюро (вёрстка tools/label_make.html)
+if os.path.exists(os.path.join(OUT, 'src', 'label_albedo.png')):
+    for d, ka_, kn_ in (('pack', 1.0, 0.5), ('pack_low', 0.5, 0.25)):
+        for nm, k_, ext, q in (('albedo', ka_, 'a.jpg', 94), ('normal', kn_, 'n.png', 0), ('rough', kn_, 'r.jpg', 92)):
+            im = cv2.imread(os.path.join(OUT, 'src', f'label_{nm}.png'))
+            im = cv2.resize(im, None, fx=k_, fy=k_, interpolation=cv2.INTER_AREA) if k_ != 1 else im
+            cv2.imwrite(os.path.join(OUT, d, 'label_' + ext), im, [cv2.IMWRITE_JPEG_QUALITY, q] if q else [])
+    report['label'] = {'mm': [40, 22.86], 'px_per_cm_full': 385}
 
 # ------------------------------------------------------------------ спинка
 photo = cv2.imread(os.path.join(GEN, 'T2_back.png')); layout = cv2.imread(os.path.join(GEN, 'layout', 'L_back.png'))

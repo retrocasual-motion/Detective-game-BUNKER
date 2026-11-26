@@ -16,6 +16,7 @@
 //   lowPower    — телефон: меньше сегментов у скруглений, набор карт low
 //   textureSize — длинная сторона холстов процедурного режима (по умолчанию 2048)
 //   anisotropy  — анизотропная фильтрация (по умолчанию 8)
+//   label       — false: без ярлыка бюро на спинке (по умолчанию ярлык есть: 40 × 22,9 мм, форма как у ноутбука 47)
 //   onChange    — вызывается, когда что-то догрузилось и нужен новый кадр
 //
 // group.userData: ready (Promise), setScreenTexture(tex | null), loadMapSet(set), mapSet, stats, dims, layout, dispose()
@@ -86,7 +87,7 @@ function outline(hw, hd, r, seg, cx, cz) {
 }
 // боковая «лента»: профиль [[inset, y], ...] снизу вверх вдоль контура; нормали аналитические
 function sideGeo(THREE, p) {
-  const { hw, hd, r, cx = 0, cz = 0, seg = 10, inward = false, uvf = null } = p;
+  const { hw, hd, r, cx = 0, cz = 0, seg = 10, inward = false, uvf = null, perim = null } = p;   // perim: [y0, y1] — u по периметру 0…1, v по высоте
   const prof = [];
   for (let i = 0; i < p.profile.length; i++) {
     const a = p.profile[i]; prof.push([a[0], a[1]]);
@@ -119,7 +120,9 @@ function sideGeo(THREE, p) {
       const q = ring[j], s = inward ? -1 : 1;
       pos.push(q.x, prof[i][1], q.z);
       nor.push(q.nx * pn[i][0] * s, pn[i][1], q.nz * pn[i][0] * s);
-      if (uvf) { const t = uvf(q.x, q.z, prof[i][1]); uv.push(t[0], t[1]); } else uv.push(ulen[j] / TILE, v / TILE);
+      if (uvf) { const t = uvf(q.x, q.z, prof[i][1]); uv.push(t[0], t[1]); }
+      else if (perim) uv.push(ulen[j] / ulen[nc - 1], (prof[i][1] - perim[0]) / (perim[1] - perim[0]));
+      else uv.push(ulen[j] / TILE, v / TILE);
     }
   }
   for (let i = 0; i < nr - 1; i++) for (let j = 0; j < nc - 1; j++) {
@@ -311,7 +314,10 @@ export function buildPhone48(THREE, opts = {}) {
   if (o.pbr) {
     M = { front: { a: loadTex('front_a.jpg', true), n: loadTex('front_n.png', false), o: loadTex('front_orm.jpg', false) },
       back: { a: loadTex('back_a.jpg', true), n: loadTex('back_n.png', false), o: loadTex('back_orm.jpg', false) },
-      tile: { n: loadTex('tile_n.png', false, true), o: loadTex('tile_orm.jpg', false, true) } };
+      tile: { n: loadTex('tile_n.png', false, true), o: loadTex('tile_orm.jpg', false, true) },
+      keys: { a: loadTex('keys_a.jpg', true), n: loadTex('keys_n.png', false), o: loadTex('keys_orm.jpg', false) },
+      side: { a: loadTex('side_a.jpg', true, true), n: loadTex('side_n.png', false, true), o: loadTex('side_orm.jpg', false, true) },
+      label: o.label !== false ? { a: loadTex('label_a.jpg', true), n: loadTex('label_n.png', false), r: loadTex('label_r.jpg', false) } : null };
   } else {
     const F = drawFront(o.textureSize), B = drawBack(o.textureSize);
     group.userData.canvases = { front: F, back: B };   // для tools/export_masks: маски областей берутся с этих же холстов
@@ -324,6 +330,12 @@ export function buildPhone48(THREE, opts = {}) {
     roughness: 1, metalness: 1, normalScale: new THREE.Vector2(1, 1) }, extra));
   const mFront = faceMat(M.front), mBack = faceMat(M.back);
   const mScreen = faceMat(M.front, { emissive: new THREE.Color(0x000000) });
+  // бока в режиме фото-карт: полоса по периметру (матовость литья, продольные потёртости, затёртые углы, пыль в швах)
+  const mSide = M.side ? phys({ map: M.side.a, roughnessMap: M.side.o, aoMap: M.side.o, normalMap: M.side.n, normalScale: new THREE.Vector2(0.8, 0.8), roughness: 1, metalness: 0 }) : null;
+  const mRimSide = M.side ? phys({ color: new THREE.Color(0.40, 0.42, 0.47), roughnessMap: M.side.o, normalMap: M.side.n, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.85, metalness: 1 }) : null;
+  const mKeys = M.keys ? faceMat(M.keys) : null;
+  // боковые кнопки и заглушка: тот же пластик, чуть матовее зеркального (их трогают пальцами)
+  const mSideKey = phys({ color: new THREE.Color(0.024, 0.024, 0.028), roughness: 2.3, metalness: 0, roughnessMap: M.tile.o, normalMap: M.tile.n, normalScale: new THREE.Vector2(0.5, 0.5) });
   const mFrame = phys({ color: new THREE.Color(0.022, 0.022, 0.026), roughness: 1, metalness: 0, roughnessMap: M.tile.o, normalMap: M.tile.n, normalScale: new THREE.Vector2(0.5, 0.5) });
   const mChrome = phys({ color: new THREE.Color(0.40, 0.42, 0.47), roughness: 1, metalness: 1, roughnessMap: M.tile.o, normalMap: M.tile.n, normalScale: new THREE.Vector2(0.35, 0.35) });
   mChrome.userData.roughBias = 0.06;
@@ -349,12 +361,12 @@ export function buildPhone48(THREE, opts = {}) {
     sideGeo(THREE, { hw, hd, r: R, profile: backProf, seg: SEG, uvf: (x, z) => bUV(x, z) }),
   ]), mBack, 'back_cover');
   // рамка: глянцевый чёрный пластик между швами
-  mesh(sideGeo(THREE, { hw, hd, r: R, seg: SEG, profile: [[0.00012, D.seamLo], [0, D.seamLo + 0.00015], [0, D.seamHi - 0.0001], [0.0001, D.seamHi]] }), mFrame, 'frame');
+  mesh(sideGeo(THREE, { hw, hd, r: R, seg: SEG, perim: mSide ? [D.seamLo, D.seamHi] : null, profile: [[0.00012, D.seamLo], [0, D.seamLo + 0.00015], [0, D.seamHi - 0.0001], [0.0001, D.seamHi]] }), mSide || mFrame, 'frame');
   // обод: хром, скруглён к лицевой панели, панель утоплена на 0,25 мм
   const rimProf = [[0.0001, D.seamHi], [0, D.seamHi + 0.00012], [0, 10.9 * MM]];
   for (let k = 1; k <= 8; k++) { const th = (k / 8) * Math.PI / 2; rimProf.push([1.0 * MM * (1 - Math.cos(th)), 10.9 * MM + 1.0 * MM * Math.sin(th)]); }
   rimProf.push([1.35 * MM, T], [1.48 * MM, T - 0.0001], [D.rimInset, D.yFront]);
-  mesh(sideGeo(THREE, { hw, hd, r: R, seg: SEG, profile: rimProf }), mChrome, 'rim');
+  mesh(sideGeo(THREE, { hw, hd, r: R, seg: SEG, profile: rimProf, perim: mRimSide ? [D.seamHi, D.seamHi + 0.006] : null }), mRimSide || mChrome, 'rim');
   // лицевая панель: окно экрана и окно динамика
   const S = D.screen, E = D.ear, yF = D.yFront;
   mesh(capGeo(THREE, { hw: hw - D.rimInset, hd: hd - D.rimInset, r: R - D.rimInset, y: yF, up: true, seg: SEG, uv: fUV,
@@ -376,14 +388,15 @@ export function buildPhone48(THREE, opts = {}) {
     sideGeo(THREE, { hw: E.hw, hd: E.hd, r: E.hd, cz: E.z, seg: 8, inward: true, profile: [[0, yF - 0.0003], [0, yF]], uvf: (x, z) => fUV(x, z) }),
     capGeo(THREE, { hw: E.hw, hd: E.hd, r: E.hd, cz: E.z, y: yF - 0.0003, up: true, seg: 8, uv: fUV }),
   ]), mFront, 'earpiece', false);
-  // кнопки под экраном
-  const K = D.keys;
-  mesh(chipGeo(THREE, { hw: K.pill[0], hd: K.pill[1], r: K.pill[1], cx: -K.side, cz: K.z, y0: yF, h: 0.00032, bevel: 0.00012, uv: fUV }), mFront, 'key_call');
-  mesh(chipGeo(THREE, { hw: K.pill[0], hd: K.pill[1], r: K.pill[1], cx: K.side, cz: K.z, y0: yF, h: 0.00032, bevel: 0.00012, uv: fUV }), mFront, 'key_end');
+  // кнопки под экраном: в режиме фото-карт — свой атлас (полоса 53 × 10 мм, значки 788 пикс/см)
+  const K = D.keys, KZ0 = 39.5 * MM, KZ1 = 49.5 * MM;
+  const kUV = mKeys ? (x, z) => [(x + W / 2) / W, 1 - (z - KZ0) / (KZ1 - KZ0)] : fUV, mK = mKeys || mFront;
+  mesh(chipGeo(THREE, { hw: K.pill[0], hd: K.pill[1], r: K.pill[1], cx: -K.side, cz: K.z, y0: yF, h: 0.00032, bevel: 0.00012, uv: kUV }), mK, 'key_call');
+  mesh(chipGeo(THREE, { hw: K.pill[0], hd: K.pill[1], r: K.pill[1], cx: K.side, cz: K.z, y0: yF, h: 0.00032, bevel: 0.00012, uv: kUV }), mK, 'key_end');
   mesh(mergeGeos(THREE, [
-    chipGeo(THREE, { hw: K.mid, hd: K.mid, r: 1.6 * MM, cz: K.z, y0: yF, h: 0.00042, bevel: 0.00016, uv: fUV }),
-    chipGeo(THREE, { hw: K.mid - 0.9 * MM, hd: K.mid - 0.9 * MM, r: 1.0 * MM, cz: K.z, y0: yF + 0.00042, h: 0.00014, bevel: 0.0001, uv: fUV }),
-  ]), mFront, 'key_back');
+    chipGeo(THREE, { hw: K.mid, hd: K.mid, r: 1.6 * MM, cz: K.z, y0: yF, h: 0.00042, bevel: 0.00016, uv: kUV }),
+    chipGeo(THREE, { hw: K.mid - 0.9 * MM, hd: K.mid - 0.9 * MM, r: 1.0 * MM, cz: K.z, y0: yF + 0.00042, h: 0.00014, bevel: 0.0001, uv: kUV }),
+  ]), mK, 'key_back');
   // накладка камеры на спинке, объектив и зеркальце для автопортрета
   const P = D.plate;
   mesh(chipGeo(THREE, { hw: P.hw, hd: (P.z1 - P.z0) / 2, r: 2.4 * MM, cx: P.x, cz: (P.z0 + P.z1) / 2, y0: 0, h: 0.00035, bevel: 0.00014, up: false, uv: bUV }), mBack, 'camera_plate');
@@ -398,7 +411,7 @@ export function buildPhone48(THREE, opts = {}) {
   // боковые кнопки: «плитка» строится в плоскости XZ и кладётся на бок
   const sideKey = (name, side, z, len, hgt, out, y) => {
     const g = chipGeo(THREE, { hw: hgt / 2, hd: len / 2, r: hgt / 2 * 0.8, h: out, bevel: out * 0.45, seg: 5 });
-    g.rotateZ(side < 0 ? Math.PI / 2 : -Math.PI / 2); g.translate(side * hw, y, z); return mesh(g, mFrame, name);
+    g.rotateZ(side < 0 ? Math.PI / 2 : -Math.PI / 2); g.translate(side * hw, y, z); return mesh(g, mSideKey, name);
   };
   sideKey('key_volume', -1, D.volume.z, D.volume.len, 2.6 * MM, 0.00055, 6.9 * MM);
   sideKey('key_lock', 1, D.lock.z, D.lock.len, 2.4 * MM, 0.0005, 6.9 * MM);
@@ -408,12 +421,24 @@ export function buildPhone48(THREE, opts = {}) {
   }
   { // заглушка разъёма на верхнем торце (чуть выступает), с выемкой под ноготь
     const g = chipGeo(THREE, { hw: D.flap.len / 2, hd: 1.6 * MM, r: 0.9 * MM, h: 0.00014, bevel: 0.00007, seg: 5 });
-    g.rotateX(-Math.PI / 2); g.translate(D.flap.x, 6.9 * MM, -hd); mesh(g, mFrame, 'port_flap');
+    g.rotateX(-Math.PI / 2); g.translate(D.flap.x, 6.9 * MM, -hd); mesh(g, mSideKey, 'port_flap');
     const n = new THREE.PlaneGeometry(3.2 * MM, 0.45 * MM); n.rotateY(Math.PI); n.translate(D.flap.x, 6.9 * MM - 1.6 * MM - 0.0003, -hd - 0.00002); mesh(n, mDark, 'flap_notch', false);
   }
   { // нижний торец: отверстие микрофона и выемка для снятия крышки
     const mic = new THREE.CircleGeometry(0.45 * MM, 16); mic.translate(-9 * MM, 6.9 * MM, hd + 0.00002); mesh(mic, mDark, 'mic_hole', false);
     const nt = new THREE.PlaneGeometry(7 * MM, 0.7 * MM); nt.translate(0, D.seamLo, hd + 0.00002); mesh(nt, mDark, 'cover_notch', false);
+  }
+
+  // ---------- ярлык бюро на спинке (LB-B: уменьшенный, 40 × 22,9 мм; текст читается, когда спинка к зрителю, верх телефона вверху) ----------
+  const LAB = { w: 40 * MM, h: 40 * MM * 880 / 1540, x: 0, z: 17 * MM };
+  if (M.label) {
+    const g = new THREE.BufferGeometry(), x0 = LAB.x + LAB.w / 2, x1 = LAB.x - LAB.w / 2, z0 = LAB.z - LAB.h / 2, z1 = LAB.z + LAB.h / 2, y = -0.00007;
+    g.setAttribute('position', new THREE.Float32BufferAttribute([x0, y, z0, x1, y, z0, x0, y, z1, x1, y, z1], 3));
+    g.setAttribute('normal', new THREE.Float32BufferAttribute([0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0], 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 1, 1, 1, 0, 0, 1, 0], 2));
+    g.setIndex([0, 2, 1, 1, 2, 3]);
+    const mLabel = phys({ map: M.label.a, normalMap: M.label.n, normalScale: new THREE.Vector2(0.6, 0.6), roughnessMap: M.label.r, roughness: 1, metalness: 0 });
+    mesh(g, mLabel, 'label_bureau_48', false);
   }
 
   // ---------- экран: картинка интерфейса (светится сама) ----------
@@ -438,7 +463,7 @@ export function buildPhone48(THREE, opts = {}) {
     mapSet = set; stats.mapSet = set; group.userData.mapSet = set;
     return Promise.all(texReg.map((e) => loadInto(e.t, packUrl(e.file, set)))).then(finish);
   };
-  Object.assign(group.userData, { ready, setScreenTexture, loadMapSet, mapSet, stats, dims: D,
+  Object.assign(group.userData, { ready, setScreenTexture, loadMapSet, mapSet, stats, dims: D, label: M.label ? LAB : null,
     layout: { fUV, bUV }, dispose() { for (const d of disposables) d.dispose(); } });
   return group;
 }
