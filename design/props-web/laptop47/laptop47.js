@@ -1160,7 +1160,8 @@ export function buildLaptop47(THREE, opts = {}) {
     // крышка: мелкая шлифовка плиткой нормалей (линии вдоль ширины), отпечатки — у свободного края, где её берут
     mLid = pbrMat('lid', { size: [W, LD], detN: P.brushN, detTile: TILE_BRUSH, detail: 0.45, dust: 0.25, smudge: 0.08, smudgeZone: [0.2, 0.02] });
     mBezel = pbrMat('bezel', { size: [W, LD], dust: 0.9, detail: 0.35, smudge: 0.08, smudgeZone: [0.9, 0.97] });
-    mLidRim = mBody; mBar = mBody;                      // кромка крышки и валик петли — те же фото (сняты с закрытого ноутбука)
+    mLidRim = mBody;                                    // кромка крышки — те же фото (сняты с закрытого ноутбука)
+    mBar = genMat(0.58, { color: GEN_TINT.clone().multiplyScalar(0.92) });   // валик петли — плитка зерна (см. ниже)
     mBtn = genMat(0.5, { vertexColors: true });
     mRubber = genMat(0.9, { color: GEN_TINT.clone().multiplyScalar(0.55), vertexColors: true });
     mPad = mDeck; mBtnTop = mDeck; mFootTop = mBottom;
@@ -1442,8 +1443,9 @@ export function buildLaptop47(THREE, opts = {}) {
     const screen = mesh(new THREE.PlaneGeometry(SCREEN.w, SCREEN.h), mScreen, 'screen', lid, 2);
     screen.rotation.x = Math.PI / 2; screen.position.set(0, -t + 0.0008, SCREEN.zc);
     // валик петли вдоль нижней кромки крышки (пластик) — закрывает просвет между бочонками
+    // В режиме фото валик — на плитке зерна, а не на фото зада: фото зада сшито из двух половин разного масштаба,
+    // и на гладком валике в 75 мм от угла читалась ступенька шва. Гладкая деталь без примет — плитка ей в самый раз.
     const bar = mesh(barrelGeo(0.0047, 0.236, 0.0006), mBar, 'lid_hinge_bar', lid);
-    if (PBR) wrapGeo(bar.geometry, lidClosed);
     { // UV валика — в долях плитки зерна (у LatheGeometry они 0…1 на всю деталь, фактура растягивалась)
       const uv = bar.geometry.attributes.uv;
       for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * (2 * Math.PI * 0.0047) / GRAIN_TILE, uv.getY(i) * 0.236 / GRAIN_TILE);
@@ -1455,22 +1457,47 @@ export function buildLaptop47(THREE, opts = {}) {
     if (PBR && P.label) {
       const NX = 35, NY = 20, g = new THREE.PlaneGeometry(LABEL.w, LABEL.h, NX, NY);
       const lp = g.attributes.position, luv = g.attributes.uv;
-      for (let i = 0; i < lp.count; i++) {
-        const xm = luv.getX(i) * 70, ym = (1 - luv.getY(i)) * 40;                 // мм от левого верхнего угла ярлыка
+      const PAPER = 0.00007;                                                       // толщина бумаги с клеем
+      const liftAt = (xm, ym) => {                                                 // подъём бумаги над крышкой, м; xm, ym — мм от левого верхнего угла
         const s1 = (xm - 54.5) * 0.596 - ym * 0.803;                               // за линией залома правого верхнего угла
         const s2 = -xm * 0.640 + (ym - 32.5) * 0.768;                              // за заломом левого нижнего
-        let h = 0.00007;                                                           // толщина бумаги с клеем
-        h += Math.max(0, s1) * 0.00016 + Math.max(0, s2) * 0.00005;                // углы отогнуты вверх
+        let h = Math.max(0, s1) * 0.00016 + Math.max(0, s2) * 0.00005;             // углы отогнуты вверх
         const er = Math.max(0, (xm - 66.5) / 3.5), eb = Math.max(0, (ym - 37.5) / 2.5) * Math.max(0, 1 - Math.abs(xm - 44) / 14);
-        h += er * er * 0.00016 * (0.5 + 0.5 * Math.sin(ym * 0.21 + 1.0)) + eb * eb * 0.00012;   // край местами отошёл
-        lp.setZ(i, h);
-      }
+        return h + er * er * 0.00016 * (0.5 + 0.5 * Math.sin(ym * 0.21 + 1.0)) + eb * eb * 0.00012;   // край местами отошёл
+      };
+      for (let i = 0; i < lp.count; i++) lp.setZ(i, PAPER + liftAt(luv.getX(i) * 70, (1 - luv.getY(i)) * 40));
       g.computeVertexNormals();
       g.rotateX(-Math.PI / 2);
       const mLabel = std({ map: P.label.a, normalMap: P.label.n, normalScale: new THREE.Vector2(0.9, 0.9), roughnessMap: P.label.r, roughness: 1, metalness: 0,
         side: THREE.DoubleSide, shadowSide: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
       const lab = mesh(g, mLabel, 'label_bureau_47', lid, 3);
       lab.position.set(-W / 2 + LABEL.margin + LABEL.w / 2, t, LZ1 - LABEL.margin - LABEL.h / 2);
+      // Контактная тень под ярлыком: тонкая плоскость между крышкой и бумагой. Темнота — по той же функции подъёма:
+      // под отогнутым углом и отошедшими краями тень густая и шире, по остальному контуру — тонкая линия прилегания.
+      // Под плотно приклеенной бумагой тени нет (её и не видно), так что плоскость не спорит с ярлыком по глубине.
+      {
+        const PM = 4, K = 5, cw = (70 + 2 * PM) * K, ch = (40 + 2 * PM) * K;       // поле 4 мм вокруг, 5 пикс/мм
+        const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+        const cx = cv.getContext('2d'), id = cx.createImageData(cw, ch), d = id.data;
+        for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) {
+          const xm = (x + 0.5) / K - PM, ym = (y + 0.5) / K - PM;
+          const qx = Math.min(70, Math.max(0, xm)), qy = Math.min(40, Math.max(0, ym));
+          const dist = Math.hypot(xm - qx, ym - qy), lift = liftAt(qx, qy) * 1000;  // мм
+          const pen = 0.8 + lift * 2.0, f = Math.max(0, 1 - dist / pen);
+          let a = 0.78 * Math.pow(Math.min(1, lift / 0.5), 0.7) * f * f;
+          if (dist === 0) a *= Math.min(1, Math.max(0, (lift - 0.15) / 0.15));       // под прилегающей бумагой — пусто
+          else a = Math.max(a, 0.30 * Math.pow(Math.max(0, 1 - dist / 0.55), 1.5));  // линия прилегания по контуру
+          d[(y * cw + x) * 4 + 3] = Math.round(a * 255);
+        }
+        cx.putImageData(id, 0, 0);
+        const st = new THREE.CanvasTexture(cv); st.generateMipmaps = true; st.anisotropy = 4;
+        const mSh = new THREE.MeshBasicMaterial({ map: st, color: 0x000000, transparent: true, depthWrite: false, toneMapped: false,
+          polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+        disposables.push(st, mSh);
+        const gs = new THREE.PlaneGeometry(LABEL.w + 2 * PM / 1000, LABEL.h + 2 * PM / 1000); gs.rotateX(-Math.PI / 2);
+        const sh = mesh(gs, mSh, 'label_shadow', lid, 0);
+        sh.position.copy(lab.position); sh.position.y = t + 0.00003; sh.renderOrder = 1;
+      }
     }
   }
   const setLidAngle = (a) => {

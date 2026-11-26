@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <title>Ярлык бюро для ноутбука 47 — вёрстка кодом</title>
 <style>body{margin:12px;background:#333;color:#ddd;font:13px system-ui}canvas{display:block;margin:8px 0;max-width:100%;background:#000}</style>
-<p>Ярлык вещественного доказательства 70 × 40 мм, 220 пикс/см (1540 × 880). Текст — вёрстка canvas, почерк — Segoe Script с разбросом.
+<p>Ярлык вещественного доказательства 70 × 40 мм, 220 пикс/см (1540 × 880). Текст — вёрстка canvas, почерк — Segoe Script (изредка Segoe Print) с разбросом на каждую букву.
 Снять карты: <code>python tools/label_make.py</code> (страница должна быть открыта с сервера).</p>
 <canvas id="color"></canvas><canvas id="normal"></canvas><canvas id="rough"></canvas>
 <script>
@@ -24,7 +24,7 @@ const blob = (ctx, x, y, rx, ry, rgb, a) => {
 };
 
 async function build() {
-  await Promise.all([document.fonts.load('80px "Segoe Script"'), document.fonts.load('600 44px Bahnschrift')]);
+  await Promise.all([document.fonts.load('80px "Segoe Script"'), document.fonts.load('80px "Segoe Print"'), document.fonts.load('600 44px Bahnschrift')]);
   const mark = new Image(); mark.src = '../bureau_blackwood_mark.png'; await mark.decode();
 
   const cc = mk('color'), c = cc.getContext('2d');
@@ -75,18 +75,39 @@ async function build() {
 
   // ---- ручка: синяя шариковая, неровно, с разным нажимом ----
   k.textBaseline = 'alphabetic'; k.lineJoin = 'round'; k.lineCap = 'round';
+  // Каждая буква рисуется отдельно и своей рукой: свой размер, растяжение, наклон, сдвиг по строке, нажим и толщина,
+  // а сам контур слегка «ведёт» (волна по строкам и столбцам пикселей) — две одинаковые буквы не совпадают.
+  // Изредка буква берётся из второй рукописной гарнитуры (Segoe Print) — как у человека, пишущего одну букву двумя способами.
+  const gl = document.createElement('canvas'), gw = document.createElement('canvas');
+  const seen = {};
   const hand = (text, x, y, size) => {
     let drift = rr(-0.6, 0.2) * MM * 0.2, slope = rr(-0.022, -0.006);          // строка чуть ползёт вверх
+    let lean = rr(-0.03, 0.03), leanV = 0;                                      // наклон плавает вдоль строки
     for (const ch of text) {
-      const s = size * rr(0.93, 1.07);
-      k.font = `${s}px "Segoe Script", "Segoe Print", cursive`;
+      if (ch === ' ') { x += size * rr(0.26, 0.40); continue; }
+      const n = seen[ch] = (seen[ch] || 0) + 1;                                 // какое по счёту появление этой буквы
+      const alt = /[а-яё]/i.test(ch) && !/[тдгик]/i.test(ch) && (n % 3 === 2 ? rnd() < 0.55 : rnd() < 0.07);
+      const s = size * rr(0.90, 1.10) * (alt ? 0.93 : 1);
+      const font = `${s}px ${alt ? '"Segoe Print", "Segoe Script"' : '"Segoe Script", "Segoe Print"'}, cursive`;
+      k.font = font;
       const w = k.measureText(ch).width;
-      const press = rr(0.62, 0.98);
-      k.save(); k.translate(x, y + drift + rr(-1.6, 1.6)); k.rotate(rr(-0.055, 0.045)); k.transform(1, 0, rr(-0.12, -0.02), 1, 0, 0);
-      k.fillStyle = `rgba(27,48,138,${press})`; k.strokeStyle = `rgba(27,48,138,${press * 0.8})`; k.lineWidth = rr(0.6, 2.2);
-      k.fillText(ch, 0, 0); k.strokeText(ch, 0, 0);
+      const press = rr(0.55, 1.0), pad = Math.ceil(s * 0.7), cw = Math.ceil(w + 2 * pad), chh = Math.ceil(s * 2.4), by = Math.round(s * 1.5);
+      gl.width = gw.width = cw; gl.height = gw.height = chh;
+      const a = gl.getContext('2d'), b = gw.getContext('2d');
+      a.font = font; a.textBaseline = 'alphabetic'; a.lineJoin = 'round'; a.lineCap = 'round';
+      a.fillStyle = `rgba(27,48,138,${press})`; a.strokeStyle = `rgba(27,48,138,${press * 0.8})`; a.lineWidth = rr(0.5, 2.9);
+      a.fillText(ch, pad, by); a.strokeText(ch, pad, by);
+      // контур «ведёт»: строки пикселей сдвигаются по горизонтали, затем столбцы — по вертикали
+      const ax = s * rr(0.012, 0.040), fx = rr(1.2, 3.2) * Math.PI / s, px = rr(0, 6.28), bx = rr(-0.035, 0.035);
+      for (let r0 = 0; r0 < chh; r0++) b.drawImage(gl, 0, r0, cw, 1, ax * Math.sin(r0 * fx + px) + bx * (r0 - by), r0, cw, 1);
+      a.clearRect(0, 0, cw, chh);
+      const ay = s * rr(0.010, 0.032), fy = rr(1.0, 3.0) * Math.PI / s, py = rr(0, 6.28);
+      for (let c0 = 0; c0 < cw; c0++) a.drawImage(gw, c0, 0, 1, chh, c0, ay * Math.sin(c0 * fy + py), 1, chh);
+      leanV = leanV * 0.6 + rr(-0.035, 0.035); lean = Math.max(-0.09, Math.min(0.07, lean + leanV * 0.5));
+      k.save(); k.translate(x, y + drift + rr(-2.6, 2.4)); k.rotate(lean + rr(-0.045, 0.045)); k.transform(rr(0.90, 1.10), 0, rr(-0.20, 0.03), rr(0.93, 1.07), 0, 0);
+      k.drawImage(gl, -pad, -by);
       k.restore();
-      x += w * rr(0.86, 1.0) + (ch === ' ' ? rr(2, 10) : 0); drift += slope * w;
+      x += w * rr(0.89, 1.04) + (ch === '-' ? size * 0.06 : 0); drift += slope * w;
     }
     return x;
   };
