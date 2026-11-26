@@ -140,7 +140,10 @@ export function PhoneLive() {
     zoomed.current = true;
     void postAction('ОСМОТР', '48 экран блокировки', 'увеличить')
       .then((r) => r.released.length && useGame.getState().addFound(r.released, '48', []))
-      .catch(() => undefined);
+      // Сбой сети (RV-25): можно приблизить ещё раз.
+      .catch(() => {
+        zoomed.current = false;
+      });
   };
 
   let inner: React.ReactNode;

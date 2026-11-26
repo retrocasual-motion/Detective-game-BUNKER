@@ -97,7 +97,8 @@ export type Note = z.infer<typeof NoteSchema>;
  * Материал — откуда выписано (для формы заключения и P-10: только открытое игроком).
  */
 export const ExcerptPlaceSchema = z.object({
-  kind: z.enum(['site', 'pc', 'laptop', 'phone', 'camera']),
+  /** `paper` — строка бумажного листа (CMP-C, A-288): полоска на стене, щелчок — лист на строке. */
+  kind: z.enum(['site', 'pc', 'laptop', 'phone', 'camera', 'paper']),
   /** Сайт: адрес с путём (`vaultline-program.com/cabinet`). */
   address: z.string().max(300).optional(),
   /** Веб-почта: номер письма. */

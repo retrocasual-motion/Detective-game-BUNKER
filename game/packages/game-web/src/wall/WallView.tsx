@@ -621,7 +621,8 @@ export function WallView() {
     } else if (excerpt) {
       // Выписка (A-272, DB-B): каталожка — слова рукой следователя, внизу мелко источник;
       // щелчок по карточке — источник на этом месте (ссылки «открыть» нет: мелкая и лишняя, UX-13).
-      kind = 'excerpt';
+      // С бумаги (CMP-C) — полоска, вырезанная из листа: машинопись листа, а не рука следователя.
+      kind = excerpt.place.kind === 'paper' ? 'strip' : 'excerpt';
       label = `Выписка: ${excerpt.text}`;
       content = (
         <>
@@ -698,7 +699,8 @@ export function WallView() {
             note={note}
             size={size}
             onDone={(text) => {
-              updateState(editNote(note.id, text));
+              // Пустая записка не висит (RV-22): стёрли текст — записки нет.
+              updateState(text ? editNote(note.id, text) : removeNote(note.id));
               setEditingNote(null);
             }}
           />
@@ -796,7 +798,10 @@ export function WallView() {
                 updateState(labelThread(editingThread.id, e.currentTarget.value.trim()));
                 setEditing(null);
               }
-              if (e.key === 'Escape') setEditing(null);
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                setEditing(null);
+              }
             }}
             onBlur={(e) => {
               updateState(labelThread(editingThread.id, e.currentTarget.value.trim()));

@@ -380,6 +380,7 @@ export function CaseFolder({
       </mesh>
       {/* Щелчок по обложке — открыть (RV-1, UN-A: как конверт и пломба); протяжка по ней, как
           прежде, крутит папку — щелчок отличается от протяжки сдвигом меньше 5 px. */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: mesh three.js, не элемент DOM */}
       <mesh
         position={[0, 0, 0.026]}
         onClick={(e) => {

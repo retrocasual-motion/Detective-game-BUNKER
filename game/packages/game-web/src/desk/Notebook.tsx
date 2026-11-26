@@ -1,4 +1,5 @@
 import { type MouseEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEscLayer } from '../esc.ts';
 import { useGame } from '../store.ts';
 import { canNext, LINE_PX, PAGE_LINES, pagesOf, withPage } from './notebookPages.ts';
 
@@ -12,6 +13,7 @@ import { canNext, LINE_PX, PAGE_LINES, pagesOf, withPage } from './notebookPages
  */
 export function Notebook() {
   const open = useGame((g) => g.notebookOpen);
+  useEscLayer(open, () => setOpen(false));
   // Только записи блокнота: подписка на всё состояние перерисовывала блокнот на каждый сдвиг
   // стены и каждое сохранение (R2-09, R3-07).
   const notebook = useGame((g) => g.state?.notebook);

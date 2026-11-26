@@ -72,7 +72,10 @@ export function WallThreads({
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => onThreadClick(t.id, e)}
             onDoubleClick={(e) => onThreadDoubleClick(t.id, e)}
-          />
+          >
+            {/* Подсказка жестов (RV-22): раньше их было не угадать. */}
+            <title>Щелчок — подписать нить; двойной щелчок — снять</title>
+          </line>
           {t.label && (
             // biome-ignore lint/a11y/noStaticElementInteractions: подпись нити — цель для мыши; доступ с клавиатуры — этап дизайна
             <text

@@ -12,6 +12,7 @@ import Markdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { trackReading } from '../dev/readingLog.ts';
+import { useEscLayer } from '../esc.ts';
 import { wheelIntent } from '../input.ts';
 import { useMenu } from '../menu/menu-store.ts';
 import { NO_LINKS, remarkSites } from '../paperLinks.tsx';
@@ -230,6 +231,20 @@ export function Viewer({ materialId }: ViewerProps) {
     window.getSelection()?.removeAllRanges();
     setSel(null);
   };
+  // Полоска с бумаги (CMP-C): только с листа дела (не эпилог, не обрывок).
+  const canStrip = materialId !== EPILOGUE_ID && /^(\d{2}|L\d{3})$/.test(materialId);
+  const toWall = () => {
+    if (!sel || !material) return;
+    useGame.getState().pinExcerpt({
+      id: `x:${crypto.randomUUID()}`,
+      text: sel.text.replace(/\s+/g, ' ').trim().slice(0, 600),
+      material: materialId,
+      source: `${material.id} · ${material.title}`.slice(0, 160),
+      place: { kind: 'paper' },
+    });
+    window.getSelection()?.removeAllRanges();
+    setSel(null);
+  };
   // Разбор Markdown — один раз на материал, а не на каждое движение мыши (инструменты двигаются).
   const doc = useMemo(() => {
     const lookedSet = new Set(lookedKey ? lookedKey.split(',') : []);
@@ -326,16 +341,15 @@ export function Viewer({ materialId }: ViewerProps) {
   // Эпилог (автор 17.11): закрыть нельзя — только «Завершить дело»; вернуться к делу — из меню.
   const final = materialId === EPILOGUE_ID;
   const dismiss = useMemo(() => (final ? () => undefined : close), [final, close]);
+  useEscLayer(true, () => dismiss());
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // Печатают в поле поиска рядом с листом — стрелки двигают курсор, а не страницы.
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        if (e.key === 'Escape') dismiss();
-        return;
-      }
-      if (e.key === 'Escape') dismiss();
-      // Последняя страница — дальше следующий лист стола (DC-B); первая — назад, предыдущий.
-      else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+      // Печатают в поле поиска рядом с листом — стрелки двигают курсор, а не страницы; Esc в поле
+      // сначала снимает с него фокус (esc.ts).
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      // Esc — верхний слой (useEscLayer выше, 2b-П1); последняя страница — дальше следующий лист
+      // стола (DC-B); первая — назад, предыдущий.
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
         if (page < sheet.pages - 1 || runAt < 0) goTo(page + 1);
         else useGame.getState().deskStep(1);
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
@@ -345,7 +359,7 @@ export function Viewer({ materialId }: ViewerProps) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [dismiss, goTo, page, sheet.pages, runAt]);
+  }, [goTo, page, sheet.pages, runAt]);
 
   if (!material && !person) return null;
 
@@ -627,18 +641,33 @@ export function Viewer({ materialId }: ViewerProps) {
           {sheet.closeup}
         </aside>
       )}
-      {sel && material && verdictOpen && (
-        <button
-          type="button"
-          className="to-petition"
-          data-testid="to-folder"
-          style={{ left: sel.x, top: sel.y + 6 }}
-          // Кнопка не снимает выделение, пока на неё нажимают.
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={toFolder}
-        >
-          В заключение
-        </button>
+      {sel && material && (canStrip || verdictOpen) && (
+        <div className="sel-actions" style={{ left: sel.x, top: sel.y + 6 }}>
+          {/* «На стену» с бумаги (CMP-C, A-288): полоска-выписка, щелчок по ней — лист на строке. */}
+          {canStrip && (
+            <button
+              type="button"
+              className="to-petition"
+              data-testid="to-wall"
+              // Кнопка не снимает выделение, пока на неё нажимают.
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={toWall}
+            >
+              На стену
+            </button>
+          )}
+          {verdictOpen && (
+            <button
+              type="button"
+              className="to-petition"
+              data-testid="to-folder"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={toFolder}
+            >
+              В заключение
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

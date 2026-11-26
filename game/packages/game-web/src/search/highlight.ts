@@ -9,7 +9,7 @@ const NAME = 'case-find';
  * Пробелы не в счёт, и совпадение может идти через несколько узлов текста: выписка со строки
  * журнала сервера (ячейки таблицы) или через перенос строки — тоже находится (7.4, автор 21.11).
  */
-export function highlightFind(paper: Element, query: string, k: number): Range | null {
+export function highlightFind(paper: Element, query: string, k: number, name = NAME): Range | null {
   const q = norm(query).replace(/\s+/g, '');
   const ranges: Range[] = [];
   if (q) {
@@ -38,12 +38,15 @@ export function highlightFind(paper: Element, query: string, k: number): Range |
   }
   const target = ranges[k] ?? ranges[0] ?? null;
   if ('highlights' in CSS && typeof Highlight !== 'undefined') {
-    if (ranges.length) CSS.highlights.set(NAME, new Highlight(...ranges));
-    else CSS.highlights.delete(NAME);
+    if (ranges.length) CSS.highlights.set(name, new Highlight(...ranges));
+    else CSS.highlights.delete(name);
   }
   return target;
 }
 
-export function clearFind() {
-  if ('highlights' in CSS) CSS.highlights.delete(NAME);
+export function clearFind(name = NAME) {
+  if ('highlights' in CSS) CSS.highlights.delete(name);
 }
+
+/** Подсветка на экране устройства (RV-26): своя — закрытый лист её не гасит. */
+export const SCREEN_FIND = 'screen-find';

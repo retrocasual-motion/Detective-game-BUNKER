@@ -1,5 +1,5 @@
 import { type MouseEvent, useEffect, useState } from 'react';
-import { clearFind, highlightFind } from '../search/highlight.ts';
+import { clearFind, highlightFind, SCREEN_FIND } from '../search/highlight.ts';
 import { useGame } from '../store.ts';
 import { quoteCard, toVerdict, useVerdictOpen } from '../verdict/cards.ts';
 
@@ -138,7 +138,14 @@ export function useFindOnScreen(selector: string, on: boolean) {
     let t: ReturnType<typeof setTimeout>;
     const attempt = () => {
       const root = document.querySelector(selector);
-      const r = root ? highlightFind(root, find.q, find.k) : null;
+      // Найденное — своему адресату (RV-26): пока файла нет на экране, ждём его (до 3 с), а не
+      // подсвечиваем чужое совпадение.
+      if (root && find.for && !root.querySelector(`[data-material="${find.for}"]`) && tries < 11) {
+        tries++;
+        t = setTimeout(attempt, 250);
+        return;
+      }
+      const r = root ? highlightFind(root, find.q, find.k, SCREEN_FIND) : null;
       if (!r && ++tries < 12) {
         t = setTimeout(attempt, 250);
         return;
@@ -149,5 +156,5 @@ export function useFindOnScreen(selector: string, on: boolean) {
     t = setTimeout(attempt, 500);
     return () => clearTimeout(t);
   }, [find, on, selector]);
-  useEffect(() => (on ? undefined : clearFind()), [on]);
+  useEffect(() => (on ? undefined : clearFind(SCREEN_FIND)), [on]);
 }

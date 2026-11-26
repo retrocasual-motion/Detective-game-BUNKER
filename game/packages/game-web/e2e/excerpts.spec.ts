@@ -118,8 +118,11 @@ async function selectAcross(el: Locator, from: string, to: string) {
 const lit = (page: Page) =>
   page.evaluate(
     () =>
-      (CSS as unknown as { highlights: Map<string, Set<Range>> }).highlights.get('case-find')
-        ?.size ?? 0,
+      // Экран устройства подсвечивает своей подсветкой (RV-26), лист — своей.
+      ((CSS as unknown as { highlights: Map<string, Set<Range>> }).highlights.get('screen-find')
+        ?.size ?? 0) +
+      ((CSS as unknown as { highlights: Map<string, Set<Range>> }).highlights.get('case-find')
+        ?.size ?? 0),
   );
 
 test('строка журнала через ячейки → «На стену»; по ссылке — слова подсвечены (7.4, 21.11)', async ({
@@ -165,4 +168,39 @@ test('выписка из «Узла связи» открывается в эт
   await page.locator('.paper-excerpt .excerpt-text').click();
   await expect(page.getByTestId('srv-menu-node')).toHaveAttribute('aria-pressed', 'true');
   await expect.poll(() => lit(page)).toBeGreaterThan(0);
+});
+
+test('с бумаги (CMP-C): выделить строку листа → «На стену» → полоска; щелчок — лист на этой строке', async ({
+  page,
+}) => {
+  await page.getByTestId('search-tab').click();
+  await page.getByTestId('search-input').fill('845');
+  await page.getByTestId('search-25').locator('.search-hit').first().click();
+  const paper = page.getByTestId('viewer-paper');
+  await expect(paper).toBeVisible();
+  await paper.evaluate((root) => {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const i = (n.textContent ?? '').indexOf('845');
+      if (i < 0) continue;
+      const r = document.createRange();
+      r.setStart(n, i);
+      r.setEnd(n, i + 3);
+      window.getSelection()?.removeAllRanges();
+      window.getSelection()?.addRange(r);
+      n.parentElement?.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+      return;
+    }
+    throw new Error('нет 845');
+  });
+  await page.getByTestId('to-wall').click();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await toWall(page);
+  const strip = page.locator('.paper-strip');
+  await expect(strip).toContainText('845');
+  await expect(strip.locator('.excerpt-source')).toContainText('25 · ');
+  await strip.locator('.excerpt-text').click();
+  await expect(page.getByTestId('viewer')).toBeVisible();
+  expect(await page.evaluate(() => CSS.highlights.get('case-find')?.size ?? 0)).toBeGreaterThan(0);
 });

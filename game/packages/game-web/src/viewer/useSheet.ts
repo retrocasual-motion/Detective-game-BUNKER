@@ -1,6 +1,7 @@
 import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { postAction } from '../api.ts';
 import { zoomFactor } from '../input.ts';
+import { OFFLINE } from '../lock.ts';
 import { reducedMotion } from '../motion.ts';
 import { useGame } from '../store.ts';
 
@@ -161,7 +162,12 @@ export function useSheet(
           if (r.released.length) useGame.getState().addReleased(r.released);
           return r.quiet ? '' : r.reply;
         })
-        .catch(() => '');
+        // Сбой сети — не «тут ничего нет» (RV-25): ответ не запоминается, следующее приближение
+        // спросит снова; игроку — та же строка, что у замков.
+        .catch(() => {
+          answers.current.delete(key);
+          return OFFLINE;
+        });
       answers.current.set(key, got);
     }
     return got;

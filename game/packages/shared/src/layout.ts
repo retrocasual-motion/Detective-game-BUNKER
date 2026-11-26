@@ -449,7 +449,15 @@ export function excerptsOf(state: PlayerState, materials: Material[]): WallExcer
 export function addExcerpt(state: PlayerState, x: WallExcerpt): PlayerState {
   const list = state.excerpts ?? [];
   if (list.some((e) => e.id === x.id)) return state;
-  const at = freeBlock(state.wall.items, () => CARD_W, CARD_W, CARD_H) ?? onWall(0, GRID_TOP);
+  // Рядом со своим листом, если он на стене (WALL-A); иначе — свободное место доски.
+  const noteW = new Map(state.wall.notes.map((n) => [n.id, n.width ?? NOTE_STYLE[n.kind].width]));
+  const widthOf = (id: string) => noteW.get(id) ?? CARD_W;
+  const src = state.wall.items.find((i) => i.id === x.material);
+  const at =
+    (src && freeNear(state.wall.items, widthOf, src)) ??
+    freeBlock(state.wall.items, widthOf, CARD_W, CARD_H) ??
+    freeNear(state.wall.items, widthOf, src ?? { x: PLACE_RIGHT, y: GRID_TOP }, true) ??
+    onWall(0, GRID_TOP);
   const z = state.wall.items.reduce((m, i) => Math.max(m, i.z), 0) + 1;
   return {
     ...state,
@@ -552,18 +560,76 @@ function freeBlock(
   w: number,
   h: number,
 ): { x: number; y: number } | null {
-  const gap = GROUP_GAP;
-  const busy = (x: number, y: number) =>
-    items.some(
-      (i) =>
-        i.x < x + w + gap &&
-        i.x + widthOf(i.id) + gap > x &&
-        i.y < y + h + gap &&
-        i.y + CARD_H + gap > y,
-    );
+  // Места стартовых листов, пока они на столе, заняты (WALL-A): прочитанные, они повиснут туда.
+  const all = [...items, ...reservedStart(items)];
   for (let y = GRID_TOP; y + h <= BOARD_INNER.bottom; y += 30)
-    for (let x = 0; x + w <= PLACE_RIGHT; x += 50) if (!busy(x, y)) return { x, y };
+    for (let x = 0; x + w <= PLACE_RIGHT; x += 50)
+      if (!overlaps(all, widthOf, x, y, w, h, GROUP_GAP)) return { x, y };
   return null;
+}
+
+/** Занят ли прямоугольник x, y, w × h (с зазором gap) чем-то на стене. */
+function overlaps(
+  items: readonly WallItem[],
+  widthOf: (id: string) => number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  gap: number,
+): boolean {
+  return items.some(
+    (i) =>
+      i.x < x + w + gap &&
+      i.x + widthOf(i.id) + gap > x &&
+      i.y < y + h + gap &&
+      i.y + CARD_H + gap > y,
+  );
+}
+
+/** Начальное место стартового листа (ST-B): по номеру описи (01 — первое), как до конвертов. */
+function startSlotOf(id: string): { x: number; y: number } {
+  const k = Number(id) - 1;
+  return { x: (k % GRID_COLS) * GRID_DX, y: GRID_TOP + Math.floor(k / GRID_COLS) * GRID_DY };
+}
+
+/**
+ * Ближайшее к точке свободное место под карточку (WALL-A): выписка — рядом со своим листом,
+ * стартовый лист — рядом со своим местом, если его заняли. В пределах ~4 карточек (`wide` — по
+ * всей доске), иначе null.
+ */
+function freeNear(
+  items: readonly WallItem[],
+  widthOf: (id: string) => number,
+  near: { x: number; y: number },
+  wide = false,
+): { x: number; y: number } | null {
+  const all = [...items, ...reservedStart(items)];
+  const spots: { x: number; y: number; d: number }[] = [];
+  const rx = wide ? WALL_BOUNDS.right - WALL_BOUNDS.left : 880;
+  const ry = wide ? WALL_BOUNDS.bottom - WALL_BOUNDS.top : 660;
+  for (let dy = -ry; dy <= ry; dy += 30)
+    for (let dx = -rx; dx <= rx; dx += 40) {
+      const x = near.x + dx;
+      const y = near.y + dy;
+      if (x < WALL_BOUNDS.left + 20 || y < GRID_TOP) continue;
+      if (x + CARD_W > WALL_BOUNDS.right - 20 || y + CARD_H > BOARD_INNER.bottom) continue;
+      spots.push({ x, y, d: Math.hypot(dx, dy * 1.3) });
+    }
+  spots.sort((a, b) => a.d - b.d);
+  const hit = spots.find((p) => !overlaps(all, widthOf, p.x, p.y, CARD_W, CARD_H, 20));
+  return hit ? { x: hit.x, y: hit.y } : null;
+}
+
+/** Места стартовых листов, ещё не повешенных: держатся свободными (WALL-A). */
+function reservedStart(items: readonly WallItem[]): WallItem[] {
+  const on = new Set(items.map((i) => i.id));
+  return START_STACK.filter((id) => !on.has(id)).map((id) => ({
+    id: `r:${id}`,
+    ...startSlotOf(id),
+    z: 0,
+    rot: 0,
+  }));
 }
 
 /** Где на доске можно вешать группы: с отступом от рамы. */
@@ -717,12 +783,18 @@ function hangStart(state: PlayerState, ids: string[]): PlayerState {
   if (!ids.length) return state;
   const gone = new Set(ids);
   let z = state.wall.items.reduce((m, i) => Math.max(m, i.z), 0);
-  const slot = (id: string) => {
-    // Место — по номеру описи (01 — первое), как висели до конвертов.
-    const k = Number(id) - 1;
-    return { x: (k % GRID_COLS) * GRID_DX, y: GRID_TOP + Math.floor(k / GRID_COLS) * GRID_DY };
-  };
-  const placed: WallItem[] = ids.map((id) => ({ id, ...slot(id), z: ++z, rot: hangTilt(id) }));
+  const noteW = new Map(state.wall.notes.map((n) => [n.id, n.width ?? NOTE_STYLE[n.kind].width]));
+  const widthOf = (x: string) => noteW.get(x) ?? CARD_W;
+  const placed: WallItem[] = [];
+  for (const id of ids) {
+    // Место — по номеру описи; занято (игрок перевесил туда своё) — ближайшее свободное (WALL-A).
+    const others = [...state.wall.items.filter((i) => !gone.has(i.id)), ...placed];
+    const want = startSlotOf(id);
+    const at = overlaps(others, widthOf, want.x, want.y, CARD_W, CARD_H, 10)
+      ? (freeNear(others, widthOf, want) ?? want)
+      : want;
+    placed.push({ id, ...at, z: ++z, rot: hangTilt(id) });
+  }
   return {
     ...state,
     desk: state.desk?.filter((d) => !gone.has(d.id)),
@@ -734,6 +806,27 @@ function hangStart(state: PlayerState, ids: string[]): PlayerState {
 function spillOnDesk(desk: DeskItem[], ids: string[]): DeskItem[] {
   let top = desk.reduce((m, d) => Math.max(m, d.layer), 0);
   return [...desk, ...ids.map((id) => ({ id, layer: ++top }))];
+}
+
+/**
+ * Повесить на свободное место рядом с точкой (WALL-A): «На стену» из «Входящих» — у середины
+ * видимой стены, найденное руками — у вещи-источника. Рядом занято — свободное место доски; доска
+ * завешана — в точку (поверх, игрок перевесит сам). Уже висит — без изменений.
+ */
+export function hangNear(
+  state: PlayerState,
+  id: string,
+  near: { x: number; y: number },
+): PlayerState {
+  if (state.wall.items.some((i) => i.id === id)) return state;
+  const noteW = new Map(state.wall.notes.map((n) => [n.id, n.width ?? NOTE_STYLE[n.kind].width]));
+  const widthOf = (x: string) => noteW.get(x) ?? CARD_W;
+  const at =
+    freeNear(state.wall.items, widthOf, near) ??
+    freeBlock(state.wall.items, widthOf, CARD_W, CARD_H) ??
+    freeNear(state.wall.items, widthOf, near, true) ??
+    near;
+  return hangFromDesk(state, id, at.x, at.y);
 }
 
 /**
