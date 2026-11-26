@@ -96,6 +96,13 @@ function ChoiceAnswer({ i, q, a }: { i: number; q: FormQuestion; a: VerdictAnswe
   );
 }
 
+/** Что сделать, чтобы ответить (без ответа «Далее» не нажимается). */
+const NEED_ANSWER: Record<FormQuestion['kind'], string> = {
+  person: 'Выберите человека, чтобы перейти дальше.',
+  material: 'Приложите материал дела, чтобы перейти дальше.',
+  choice: 'Выберите вариант, чтобы перейти дальше.',
+};
+
 function Question({ i, q, a }: { i: number; q: FormQuestion; a: VerdictAnswer }) {
   const go = useVerdict((v) => v.go);
   return (
@@ -120,15 +127,22 @@ function Question({ i, q, a }: { i: number; q: FormQuestion; a: VerdictAnswer })
             Назад
           </button>
         )}
+        {/* Без ответа дальше нельзя (VER-A, правка автора 26.11): сразу на вопросе, а не в конце. */}
         <button
           type="button"
           className="petition-send"
           data-testid="verdict-next"
+          disabled={!a}
           onClick={() => go(i + 1)}
         >
           {i === VERDICT_QUESTIONS - 1 ? 'Проверить заключение' : 'Далее'}
         </button>
       </div>
+      {!a && (
+        <p className="verdict-missing" data-testid="verdict-need-answer" role="status">
+          {NEED_ANSWER[q.kind]}
+        </p>
+      )}
     </>
   );
 }

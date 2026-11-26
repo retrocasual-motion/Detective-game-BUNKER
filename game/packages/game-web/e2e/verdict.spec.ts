@@ -62,21 +62,19 @@ test('форма: пять вопросов по одному, проверка,
   await page.getByTestId('verdict-option-1').click();
   await page.getByTestId('verdict-next').click();
 
-  // 4. Пока пусто. 5. Кто за программой.
+  // 4. Без ответа дальше нельзя (VER-A): «Далее» не нажимается, сказано, что сделать.
+  await expect(page.getByTestId('verdict-next')).toBeDisabled();
+  await expect(page.getByTestId('verdict-need-answer')).toContainText('Приложите материал');
+  await answerWithNewspaper(page);
+  await expect(page.getByTestId('verdict-need-answer')).toHaveCount(0);
   await page.getByTestId('verdict-next').click();
+  // 5. Кто за программой.
   await page.getByTestId('verdict-person-p:hale').click();
   await expect(page.getByTestId('verdict-person-nobody')).toHaveCount(0);
   await page.getByTestId('verdict-next').click();
 
-  // Проверьте заключение: пустой ответ не принимается (VER-A) — подпись недоступна, вопрос назван.
+  // Проверьте заключение: все ответы на месте.
   await expect(page.getByTestId('verdict-answer-2')).toHaveText('столкнули намеренно');
-  await expect(page.getByTestId('verdict-answer-3')).toHaveText('ответа нет');
-  await expect(page.getByTestId('verdict-missing')).toContainText('вопрос 4');
-  await expect(page.getByTestId('verdict-send')).toBeDisabled();
-  await page.getByTestId('verdict-edit-3').click();
-  await answerWithNewspaper(page);
-  await page.getByTestId('verdict-next').click();
-  await page.getByTestId('verdict-next').click();
   await expect(page.getByTestId('verdict-missing')).toHaveCount(0);
   // Исправить «как» до отправки (RT-B).
   await page.getByTestId('verdict-edit-2').click();
