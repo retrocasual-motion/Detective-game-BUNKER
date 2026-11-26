@@ -443,7 +443,7 @@ export function createApp({
     const parsed = VerdictSchema.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'Заключение не оформлено.' }, 400);
     const answers = parsed.data.answers;
-    // Пустые ответы не принимаются (VER-A, A-287): форма называет незаполненные вопросы.
+    // Пустые ответы не принимаются (VER-A, A-288): форма называет незаполненные вопросы.
     const empty = answers.flatMap((a, k) => (a === null ? [k + 1] : []));
     if (empty.length) return c.json({ error: `Не заполнены вопросы: ${empty.join(', ')}.` }, 422);
     const pid = c.get('player');

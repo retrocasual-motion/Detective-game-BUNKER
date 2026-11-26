@@ -44,7 +44,7 @@ Phase 5
 
 ### Phase 5: Сдача
 - **Status:** in_progress
-- [x] RV_MANUAL_CHECK §1, A-287 п. 8 уточнить (последний открывший играет)
+- [x] RV_MANUAL_CHECK §1, A-288 п. 8 уточнить (последний открывший играет)
 - [ ] PR, gh pr checks, «мержим?»
 - **Status:** pending
 
