@@ -1,4 +1,10 @@
-import { CONTAINER_IDS, CONTAINERS, type ContainerId, EPILOGUE_ID } from '@bunker/shared';
+import {
+  CONTAINER_IDS,
+  CONTAINERS,
+  type ContainerId,
+  EPILOGUE_ID,
+  NEWSPAPER_ID,
+} from '@bunker/shared';
 import { type PartColor, PHONE_IDLE, type PhoneLook, phoneParts } from '../deskphone/model.ts';
 import { type Pose, type Room, toCamera, toScreen, type Vec3 } from './camera.ts';
 import { DRIVE_IDLE, type DriveLook } from './drive.ts';
@@ -152,7 +158,12 @@ function inboxObjects(r: Room, col: Col, inbox: string[]): DeskObject[] {
   const near = Z + D / 2;
   const clear = col('--color-tray-clear');
   const rim = col('--color-tray-edge');
-  const shown = inbox.slice(0, INBOX_SHOWN);
+  // Газета (автор 26.11) — всегда видна в лотке, снизу: свежие письма не прячут её.
+  const paper = inbox.includes(NEWSPAPER_ID);
+  const rest = inbox.filter((id) => id !== NEWSPAPER_ID);
+  const shown = paper
+    ? [...rest.slice(0, INBOX_SHOWN - 1), NEWSPAPER_ID]
+    : rest.slice(0, INBOX_SHOWN);
   const n = shown.length;
   // Старые — первыми (снизу и дальше), свежее — сверху, ближе к игроку.
   const letters: DeskObject[] = shown

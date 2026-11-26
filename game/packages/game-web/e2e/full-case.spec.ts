@@ -7,6 +7,7 @@ import {
   fillVerdict,
   lookAtSticker,
   readFolder,
+  readStack,
   STRIP,
   sheet,
   takeDevice,
@@ -168,9 +169,19 @@ async function showOnWall(page: Page, id: string) {
 const BAG = /^4[0-6]$/;
 
 async function openSheet(page: Page, id: string) {
+  if (BAG.test(id)) {
+    // Пакет — из открытой коробки на столе (BOX-B, автор 26.11): коробку в руки, пакет, лист.
+    await toDesk(page);
+    await page.getByTestId('container-personal').dispatchEvent('click');
+    await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /вскрыта/);
+    await page.getByTestId(`unpack-${id}`).dispatchEvent('click');
+    await page.getByTestId('bag-open').click();
+    await expect(page.getByTestId('viewer')).toBeVisible();
+    await page.waitForTimeout(450);
+    return;
+  }
   const pt = await showOnWall(page, id);
   await page.mouse.click(pt.x, pt.y);
-  if (BAG.test(id)) await page.getByTestId('bag-open').click();
   await expect(page.getByTestId('viewer')).toBeVisible();
   await page.waitForTimeout(450); // защита от второго щелчка двойного
 }
@@ -195,10 +206,14 @@ async function zoomSheet(page: Page, id: string) {
   await zoomOpenSheet(page);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('viewer')).toBeHidden();
-  // Закрыли лист — снова пакет в руках: положить.
+  // Закрыли лист — снова пакет в руках, под ним коробка: положить обоих.
   if (BAG.test(id)) {
-    await page.keyboard.press('Escape');
-    await expect(page.getByTestId('held')).toBeHidden();
+    const held = page.getByTestId('held');
+    for (let k = 0; k < 4 && (await held.isVisible()); k++) {
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(300);
+    }
+    await expect(held).toBeHidden();
   }
 }
 
@@ -354,6 +369,10 @@ test('QA-C: всё дело через интерфейс — от нового 
     const have = await mine(page);
     expect(ALL_LOCKED.filter((id) => have.has(id))).toEqual([]);
     await expect(page.getByTestId('container-scene')).toBeVisible();
+  });
+
+  await test.step('стартовая стопка (ST-B): письмо бюро сверху — прочитать, листы на стене', async () => {
+    await readStack(page, '01');
   });
 
   await test.step('вскрыть конверты архива и коробку «Личные вещи»', async () => {
@@ -558,8 +577,12 @@ test('QA-C: всё дело через интерфейс — от нового 
     await openSheet(page, '42');
     await page.getByTestId('sheet-piece').click();
     await expect(page.getByTestId('sheet-piece-gone')).toBeVisible();
+    // Лист → пакет → коробка (BOX-B): положить всё.
     await page.keyboard.press('Escape');
-    await page.keyboard.press('Escape');
+    for (let k = 0; k < 4 && (await page.getByTestId('held').isVisible()); k++) {
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(300);
+    }
     await expect(page.getByTestId('held')).toBeHidden();
     await expect(sheet(page, 'S:42/1')).toBeAttached();
     await joinPieceTo51(page);
