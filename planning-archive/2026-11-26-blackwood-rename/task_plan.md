@@ -36,7 +36,7 @@ Phase 5
 
 ### Phase 5: Delivery
 - [x] Коммит, PR, вопрос «мержим?»
-- **Status:** pending
+- **Status:** complete
 
 ## Decisions Made
 | Decision | Rationale |
