@@ -48,6 +48,57 @@ const textOf = (n: TextNode): string =>
  * правка автора 09.11: движущийся крестик отвлекал от чтения) или Esc. Лист из «Входящих» —
  * кнопка «На стену» под крестиком. App монтирует его заново для каждого материала (key).
  */
+
+/**
+ * Широкая таблица (RV-23): лист 37 — 11 столбцов в колонке 612 px, последние три дня обрезались.
+ * Признак — прикидка: самые длинные слова столбцов кеглем листа не помещаются в ширину строки листа.
+ */
+/** Строка листа на экране 1366 (замер e2e): 535 px. */
+const PAPER_LINE_PX = 535;
+const CHAR_EM = 0.58;
+const PAPER_FONT_PX = 17;
+const CELL_PAD_PX = 17;
+
+type MdEl = { type: 'element'; tagName: string; children: MdNode[] };
+type MdNode = { type: string; value?: string; tagName?: string; children?: MdNode[] };
+const textOf_ = (n: MdNode): string =>
+  n.type === 'text' ? (n.value ?? '') : (n.children ?? []).map(textOf_).join(' ');
+const elements = (n: MdNode | undefined): MdEl[] =>
+  (n?.children ?? []).filter((c): c is MdEl => c.type === 'element');
+
+export function tableTooWide(table: MdNode): boolean {
+  const rows = elements(table).flatMap((part) => elements(part));
+  const longest: number[] = [];
+  for (const row of rows)
+    elements(row).forEach((cell, k) => {
+      const word = Math.max(
+        0,
+        ...textOf_(cell)
+          .split(/\s+/)
+          .map((w) => w.length),
+      );
+      longest[k] = Math.max(longest[k] ?? 0, word);
+    });
+  const px = longest.reduce((sum, n) => sum + n * CHAR_EM * PAPER_FONT_PX + CELL_PAD_PX, 0);
+  return px > PAPER_LINE_PX;
+}
+
+/**
+ * Разметка листа: ссылки — как в деле (NO_LINKS); широкая таблица — мельче и с узкими полями, а если
+ * и так не входит — прокручивается внутри листа, а не обрезается (RV-23).
+ */
+const PAPER: Components = {
+  ...NO_LINKS,
+  table: ({ node, ...props }) => (
+    <div className="paper-table-scroll">
+      <table
+        {...props}
+        className={node && tableTooWide(node as unknown as MdNode) ? 'paper-table-wide' : undefined}
+      />
+    </div>
+  ),
+};
+
 export function Viewer({ materialId }: ViewerProps) {
   const material = useGame((g) => g.materials.find((m) => m.id === materialId));
   // Папка, вытащенная из пачки, — только её листы из описи (до отдельного документа, DS-A).
@@ -177,7 +228,7 @@ export function Viewer({ materialId }: ViewerProps) {
     const components: Components =
       material && isBundleListing(material.id)
         ? {
-            ...NO_LINKS,
+            ...PAPER,
             tr: ({ node, ...props }) => {
               const first = node?.children.find(
                 (c): c is Extract<typeof c, { type: 'element' }> => c.type === 'element',
@@ -186,7 +237,7 @@ export function Viewer({ materialId }: ViewerProps) {
               return <tr {...props} data-osmotr-target={rowTarget(material.id, textOf(first))} />;
             },
           }
-        : NO_LINKS;
+        : PAPER;
     const md = (text: string) => (
       <Markdown remarkPlugins={[remarkGfm, remarkBreaks, remarkSites]} components={components}>
         {unwrapLines(text)}

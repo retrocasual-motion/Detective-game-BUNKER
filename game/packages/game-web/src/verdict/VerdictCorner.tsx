@@ -133,6 +133,15 @@ function Question({ i, q, a }: { i: number; q: FormQuestion; a: VerdictAnswer })
   );
 }
 
+/** «Не заполнены вопросы 3 и 5» (VER-A). */
+export function missingText(missing: number[]): string {
+  const list =
+    missing.length === 1
+      ? `вопрос ${missing[0]}`
+      : `вопросы ${missing.slice(0, -1).join(', ')} и ${missing[missing.length - 1]}`;
+  return `Не заполнен${missing.length === 1 ? '' : 'ы'} ${list}: заключение без ответа не принимается.`;
+}
+
 /** Ответы списком: «Проверьте заключение» (можно исправить) и отправленное (только читать). */
 function Answers({
   questions,
@@ -185,6 +194,8 @@ export function VerdictCorner() {
   const questions = useMemo(formQuestions, [l999]);
   const d = useGame((g) => g.state?.verdict) ?? { answers: [], step: 0 };
   const answers = Array.from({ length: VERDICT_QUESTIONS }, (_, k) => d.answers[k] ?? null);
+  // Пустые ответы не принимаются (VER-A): какие вопросы не заполнены — номерами.
+  const missing = answers.flatMap((a, k) => (a ? [] : [k + 1]));
   if (!status.form && !status.sent) return null;
   const step = Math.min(d.step, REVIEW);
   const q = questions[step];
@@ -244,7 +255,13 @@ export function VerdictCorner() {
               <>
                 <h3 className="verdict-question">Проверьте заключение</h3>
                 <Answers questions={questions} answers={answers} edit={go} />
-                <p className="verdict-note">После отправки изменить ответы нельзя.</p>
+                {missing.length > 0 ? (
+                  <p className="verdict-missing" data-testid="verdict-missing" role="status">
+                    {missingText(missing)}
+                  </p>
+                ) : (
+                  <p className="verdict-note">После отправки изменить ответы нельзя.</p>
+                )}
                 {error && (
                   <p className="petition-error" data-testid="verdict-error" role="alert">
                     {error}
@@ -254,16 +271,17 @@ export function VerdictCorner() {
                   <button type="button" className="petition-discard" onClick={() => go(REVIEW - 1)}>
                     Назад
                   </button>
-                  <button
-                    type="button"
-                    className="petition-send"
-                    data-testid="verdict-send"
-                    disabled={sending}
-                    onClick={() => void send()}
-                  >
-                    Отправить в бюро
-                  </button>
                 </div>
+                {/* Отправка — не на месте «Далее» и другим видом: подпись и штамп (VER-A, RV-39). */}
+                <button
+                  type="button"
+                  className="verdict-sign"
+                  data-testid="verdict-send"
+                  disabled={sending || missing.length > 0}
+                  onClick={() => void send()}
+                >
+                  Подписать и отправить в бюро
+                </button>
               </>
             ) : (
               <Question i={step} q={q} a={answers[step] ?? null} />

@@ -291,6 +291,9 @@ export type Excerpt = { title: string; from: number; to: number; section?: strin
 
 const onWallNow = (s: PlayerState | null) => new Set((s?.wall.items ?? []).map((i) => i.id));
 
+/** Пары половин, что сводятся сейчас (RV-18). */
+const joining = new Set<string>();
+
 /** Новая вкладка ждёт, пока прежняя дошлёт своё (см. TAB_CHANNEL). */
 function handover(): Promise<void> {
   if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return Promise.resolve();
@@ -718,13 +721,20 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     async joinOnWall(j) {
-      const r = await postAction('ОСМОТР', j.target, j.value).catch(() => null);
+      // Один запуск на пару (RV-18): поправили половину, пока сервер отвечал, — второй запуск снимал
+      // готовый лист со стены.
+      if (joining.has(j.result) || get().state?.joined?.includes(j.result)) return false;
+      joining.add(j.result);
+      const r = await postAction('ОСМОТР', j.target, j.value)
+        .catch(() => null)
+        .finally(() => joining.delete(j.result));
       if (!r) return false;
       get().addFound(r.released, j.top, []);
       if (!get().materials.some((m) => m.id === j.result)) return false;
       const parts = new Set([j.top, j.bottom]);
       const was = get().state?.wall.items.find((i) => i.id === j.top);
       get().updateState((st) => {
+        if (st.joined?.includes(j.result)) return st;
         const top = st.wall.items.find((i) => i.id === j.top) ?? was;
         const items = st.wall.items.filter((i) => !parts.has(i.id) && i.id !== j.result);
         // Нити половин — к совмещённому листу (без петель и повторов).

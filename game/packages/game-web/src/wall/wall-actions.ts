@@ -149,10 +149,17 @@ export const removeThread =
   (s) =>
     withWall(s, { threads: s.wall.threads.filter((t) => t.id !== id) });
 
-/** «Вернуть» удалённую нить (UN-1). */
+/**
+ * «Вернуть» удалённую нить (UN-1). Только если оба конца ещё на стене (RV-16): после снятия выписки
+ * или записки нить с пропавшим концом раньше уходила в сохранение, и сервер отказывал насовсем.
+ */
 export const restoreThread =
   (thread: Thread): Update =>
-  (s) =>
-    s.wall.threads.some((t) => t.id === thread.id)
+  (s) => {
+    const hung = new Set(s.wall.items.map((i) => i.id));
+    return s.wall.threads.some((t) => t.id === thread.id) ||
+      !hung.has(thread.from) ||
+      !hung.has(thread.to)
       ? s
       : withWall(s, { threads: [...s.wall.threads, thread] });
+  };

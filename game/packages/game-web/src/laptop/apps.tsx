@@ -511,7 +511,8 @@ export function Browser({
   /** `user` — переход щелчком игрока: тогда и только тогда открывается вкладка сайта. */
   const go = async (address: string, user = false) => {
     setUrl(address);
-    onUrl?.(address);
+    // В сохранении у окна — до 400 знаков (RV-36): длиннее — сохранение окна отказывало.
+    onUrl?.(address.slice(0, 400));
     setTyped(address);
     const bare = (address.replace(/^https?:\/\//, '').split('/')[0] ?? address).replace(
       /^www\./,
@@ -584,6 +585,8 @@ export function Browser({
         <input
           className="lap-url"
           data-testid="lap-url"
+          // Не длиннее, чем примет сохранение окна (RV-36).
+          maxLength={300}
           value={typed}
           onChange={(e) => setTyped(e.target.value)}
           aria-label="Адрес"

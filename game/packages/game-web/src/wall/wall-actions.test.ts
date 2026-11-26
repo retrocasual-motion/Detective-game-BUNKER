@@ -100,9 +100,16 @@ describe('нити', () => {
   });
 
   it('удалить → вернуть — нить как была', () => {
-    const s = addThread('01', '02')(base());
+    const s = addThread('01', '02')(moveItem('02', 300, 0)(moveItem('01', 0, 0)(base())));
     const t = s.wall.threads[0];
     if (!t) throw new Error('нет нити');
     expect(restoreThread(t)(removeThread(t.id)(s)).wall.threads).toEqual(s.wall.threads);
+    // RV-16: конец нити сняли со стены — «Вернуть» нить не возвращает.
+    const gone = removeThread(t.id)(s);
+    const without = {
+      ...gone,
+      wall: { ...gone.wall, items: gone.wall.items.filter((i) => i.id !== t.to) },
+    };
+    expect(restoreThread(t)(without).wall.threads.some((x) => x.id === t.id)).toBe(false);
   });
 });

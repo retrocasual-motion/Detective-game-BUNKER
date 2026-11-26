@@ -2512,6 +2512,29 @@ button {
   background: var(--color-card-text);
   color: var(--color-paper-sheet);
 }
+/* Отправка заключения (VER-A, RV-39): не кнопка «Далее», а подпись со штампом — отдельно, ниже. */
+.verdict-sign {
+  display: block;
+  margin: var(--space-4) auto 0;
+  padding: var(--space-2) var(--space-4);
+  rotate: -2deg;
+  background: transparent;
+  border: 3px double var(--color-stamp);
+  border-radius: var(--radius);
+  color: var(--color-stamp);
+  font: bold 15px var(--font-paper);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.verdict-sign:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.verdict-missing {
+  margin: var(--space-2) 0 0;
+  color: var(--color-stamp);
+  font-size: 14px;
+}
 
 /* Форма заключения (A-270): та же папка, что у запроса; вопрос по одному, в конце — проверка. */
 .verdict-count {
@@ -2973,4 +2996,20 @@ button {
   font-size: 0.75rem;
   color: var(--color-text-muted);
   white-space: nowrap;
+}
+
+/* Таблица листа не обрезается краем (RV-23): не вошла — прокрутка внутри листа. */
+.viewer-paper .paper-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+/* Широкая таблица (RV-23): во всю ширину листа, мельче и с узкими полями — читается целиком. */
+.viewer-paper .paper-table-wide {
+  width: 100%;
+  font-size: 0.82em;
+}
+.viewer-paper .paper-table-wide th,
+.viewer-paper .paper-table-wide td {
+  padding: 2px 1px;
+  overflow-wrap: break-word;
 }

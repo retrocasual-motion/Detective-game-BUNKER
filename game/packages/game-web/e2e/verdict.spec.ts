@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, test } from './fixtures.ts';
+import { answerWithNewspaper, expect, fillVerdict, test } from './fixtures.ts';
 
 const folder = (page: Page) => page.getByTestId('verdict-folder');
 const question = (page: Page) => page.getByTestId('verdict-question');
@@ -62,15 +62,23 @@ test('форма: пять вопросов по одному, проверка,
   await page.getByTestId('verdict-option-1').click();
   await page.getByTestId('verdict-next').click();
 
-  // 4. Пусто — можно. 5. Кто за программой.
+  // 4. Пока пусто. 5. Кто за программой.
   await page.getByTestId('verdict-next').click();
   await page.getByTestId('verdict-person-p:hale').click();
   await expect(page.getByTestId('verdict-person-nobody')).toHaveCount(0);
   await page.getByTestId('verdict-next').click();
 
-  // Проверьте заключение: исправить «как» до отправки (RT-B).
+  // Проверьте заключение: пустой ответ не принимается (VER-A) — подпись недоступна, вопрос назван.
   await expect(page.getByTestId('verdict-answer-2')).toHaveText('столкнули намеренно');
   await expect(page.getByTestId('verdict-answer-3')).toHaveText('ответа нет');
+  await expect(page.getByTestId('verdict-missing')).toContainText('вопрос 4');
+  await expect(page.getByTestId('verdict-send')).toBeDisabled();
+  await page.getByTestId('verdict-edit-3').click();
+  await answerWithNewspaper(page);
+  await page.getByTestId('verdict-next').click();
+  await page.getByTestId('verdict-next').click();
+  await expect(page.getByTestId('verdict-missing')).toHaveCount(0);
+  // Исправить «как» до отправки (RT-B).
   await page.getByTestId('verdict-edit-2').click();
   await page.getByTestId('verdict-option-2').click();
   for (let k = 0; k < 3; k++) await page.getByTestId('verdict-next').click();
@@ -151,7 +159,7 @@ test('карточку человека можно перетащить со с�
 
 test('конец игры: эпилог → «Завершить дело» → титры → главное меню', async ({ page }) => {
   await openForm(page);
-  for (let k = 0; k < 5; k++) await page.getByTestId('verdict-next').click();
+  await fillVerdict(page);
   await page.getByTestId('verdict-send').click();
   await page.getByTestId('verdict-result-next').click();
   await page.getByTestId('epilogue-envelope').click();

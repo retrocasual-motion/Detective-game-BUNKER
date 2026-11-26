@@ -231,6 +231,9 @@ export function act(
   if (!r.hit) recordFail();
 
   if (!r.hit) return done(r.result, r.rule, r.reply);
+  // Попадание сбрасывает счёт промахов поля (RV-31): пауза — после N неверных подряд (LM-A), а не
+  // после N неверных вперемешку с верными.
+  if (!r.hit.refusal) delete p.fails[key];
   const opened = r.hit.release.filter((id) => c.locked.has(id) && !isReleased(p, id));
   p.released.push(...opened);
   const { reply, result } = hitReply(r.hit, opened);

@@ -342,7 +342,7 @@ describe('конверты архива (A-260)', () => {
 
   // Сохранение версии 5 (до FM-B): догадка про пакет — один раз, при переводе в 6 (RV-54).
   const v5 = (x: PlayerState) =>
-    reconcile(readSaved({ ...x, version: 5 }, starting).state!, starting);
+    reconcile(readSaved({ ...x, version: 5 }, starting).state as PlayerState, starting);
 
   it('FM-B: сохранение до пакета — «Осмотр места» вскрыт с устройствами: пакет тоже вскрыт', () => {
     const { desk: _, ...before3d } = { ...s, opened: ['scene' as const] };

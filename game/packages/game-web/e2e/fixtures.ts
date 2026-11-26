@@ -12,7 +12,19 @@ export const test = base.extend<{ sealed: boolean; input: 'mouse' | 'trackpad' }
   sealed: [false, { option: true }],
   // Управление (TP-C): по умолчанию — мышь (колесо приближает), на любой системе.
   input: ['mouse', { option: true }],
-  page: async ({ page, sealed, reducedMotion, input }, use) => {
+  page: async ({ page, sealed, reducedMotion, input }, use, testInfo) => {
+    // Ошибки страницы, console.error и ответы 5xx роняют тест (RV-75): раньше игра могла сыпать
+    // ошибками, а тесты оставались зелёными. Тест, что ломает сервер нарочно, помечает себя
+    // `expectErrors(test)`. «Failed to load resource» — эхо ответа сервера, его ловит проверка ответов.
+    const problems: string[] = [];
+    page.on('pageerror', (e) => problems.push(`ошибка страницы: ${e.message}`));
+    page.on('console', (m) => {
+      if (m.type() === 'error' && !m.text().startsWith('Failed to load resource'))
+        problems.push(`console.error: ${m.text()}`);
+    });
+    page.on('response', (r) => {
+      if (r.status() >= 500) problems.push(`${r.status()} ${r.request().method()} ${r.url()}`);
+    });
     await page.addInitScript((m) => localStorage.setItem('bunker.input', m), input);
     // Игра не слушает системное «уменьшить движение» (RM-A) — включаем её собственную
     // настройку, когда тест просит без анимаций (по умолчанию в конфиге).
@@ -31,9 +43,16 @@ export const test = base.extend<{ sealed: boolean; input: 'mouse' | 'trackpad' }
     await page.goto(sealed ? '/?play' : '/?opened=all&play');
     await expect(page.getByTestId('room')).toBeVisible();
     await use(page);
+    if (!testInfo.annotations.some((a) => a.type === EXPECT_ERRORS))
+      expect(problems, 'ошибки страницы, console.error, ответы 5xx (RV-75)').toEqual([]);
   },
 });
 export { expect };
+
+const EXPECT_ERRORS = 'expect-errors';
+/** Тест ломает сервер нарочно (503, 500) — ошибки страницы его не роняют. */
+export const expectErrors = () =>
+  base.info().annotations.push({ type: EXPECT_ERRORS, description: 'сервер ломается нарочно' });
 
 /** Видимая полоска листа в лесенке колонки (шапка): сюда щёлкают, чтобы открыть. */
 export const STRIP = { position: { x: 25, y: 24 } } as const;
@@ -182,4 +201,44 @@ export async function lookAtSticker(page: Page) {
     await page.mouse.wheel(0, -120);
     await page.waitForTimeout(120);
   }
+}
+
+/**
+ * Ответ «материал» в форме заключения: газета со стола целиком (по форме подходит любой материал).
+ * Папка заключения открыта; после ответа — снова открыта.
+ */
+export async function answerWithNewspaper(page: Page) {
+  await page.getByTestId('verdict-corner').click();
+  const paper = await page.evaluate(() =>
+    (window as unknown as { __desk: DeskHook }).__desk.grab('15'),
+  );
+  await page.mouse.click(paper?.x ?? 0, paper?.y ?? 0);
+  await page.getByTestId('viewer-whole-to-folder').click();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('verdict-card')).toContainText('15');
+}
+
+/**
+ * Заполнить форму заключения целиком и дойти до проверки (VER-A, A-287: пустые ответы не
+ * принимаются). 2 и 4 — газета (материал), 3 — вариант.
+ */
+export async function fillVerdict(
+  page: Page,
+  {
+    who = 'p:moreau',
+    how = 1,
+    behind = 'p:hale',
+  }: { who?: string; how?: number; behind?: string } = {},
+) {
+  const next = () => page.getByTestId('verdict-next').click();
+  await page.getByTestId(`verdict-person-${who}`).click();
+  await next();
+  await answerWithNewspaper(page);
+  await next();
+  await page.getByTestId(`verdict-option-${how}`).click();
+  await next();
+  await answerWithNewspaper(page);
+  await next();
+  await page.getByTestId(`verdict-person-${behind}`).click();
+  await next();
 }

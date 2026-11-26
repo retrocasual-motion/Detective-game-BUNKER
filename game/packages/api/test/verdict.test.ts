@@ -149,13 +149,21 @@ describe('заключение (A-270): форма, оценка, ответ б�
     expect(got.find((m) => m.id === 'L997')?.title).toBe('Эпилог');
   });
 
-  it('неверное и пустое — пометки; второй раз не отправить', async () => {
+  it('VER-A: пустые ответы не принимаются — бюро называет вопросы, дело открыто', async () => {
     await solve();
     const answers = [{ person: 'p:pierce' }, null, { choice: 1 }, null, { person: 'p:hale' }];
     const res = await post('/api/verdict', { answers });
-    const { result } = (await res.json()) as { result: { marks: string[]; groups: object[] } };
-    expect(result.marks).toEqual(['неверно', 'пусто', 'неверно', 'пусто', 'верно']);
-    expect(result.groups).toMatchObject([{ solved: false }, { solved: false }]);
+    expect(res.status).toBe(422);
+    expect(((await res.json()) as { error: string }).error).toBe('Не заполнены вопросы: 2, 4.');
+    expect(await caseNow()).toMatchObject({ form: true, sent: false });
+  });
+
+  it('неверное — пометки; второй раз не отправить', async () => {
+    await solve();
+    const answers = RIGHT.map((a, k) => (k === 0 ? { person: 'p:pierce' } : a));
+    const res = await post('/api/verdict', { answers });
+    const { result } = (await res.json()) as { result: { marks: string[] } };
+    expect(result.marks[0]).toBe('неверно');
     expect((await post('/api/verdict', { answers: RIGHT })).status).toBe(422);
   });
 

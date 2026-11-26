@@ -1,5 +1,14 @@
 import type { Page } from '@playwright/test';
-import { expect, STRIP, savedPut, sheet, stripPoint, test, toWall } from './fixtures.ts';
+import {
+  expect,
+  expectErrors,
+  STRIP,
+  savedPut,
+  sheet,
+  stripPoint,
+  test,
+  toWall,
+} from './fixtures.ts';
 
 test.beforeEach(async ({ page }) => {
   await toWall(page);
@@ -216,6 +225,7 @@ test('колесо меняет масштаб; доску не увести з�
 test('сервер не сохраняет → «Не сохранено»; следующее изменение сохраняет всё', async ({
   page,
 }) => {
+  expectErrors();
   await page.route('**/api/state', (route) =>
     route.request().method() === 'PUT' ? route.fulfill({ status: 500 }) : route.continue(),
   );

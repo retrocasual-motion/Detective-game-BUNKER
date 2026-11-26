@@ -283,7 +283,7 @@ function PcDesktop({ material }: { material: string | null }) {
         <BureauSeal />
       </div>
       <div className="pc-banner" aria-hidden>
-        <span>ОКРУЖНОЕ БЮРО РАССЛЕДОВАНИЙ · ОКРУГ СИЛЬВЕР-РИДЖ</span>
+        <span>ОКРУЖНОЕ БЮРО РАССЛЕДОВАНИЙ · ОКРУГ БЛЭКВУД</span>
         <span>Рабочее место специалиста · дело № 09-1128</span>
         <span className="pc-banner-dsp">ДЛЯ СЛУЖЕБНОГО ПОЛЬЗОВАНИЯ</span>
       </div>
@@ -401,7 +401,7 @@ function BureauSeal() {
       <circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" strokeWidth="2" />
       <text fontSize="13" fontWeight="700" letterSpacing="2" fill="currentColor">
         <textPath href="#pc-ring" startOffset="0">
-          ОКРУЖНОЕ БЮРО РАССЛЕДОВАНИЙ · СИЛЬВЕР-РИДЖ ·
+          BLACKWOOD BUREAU OF INVESTIGATION ·
         </textPath>
       </text>
       <path
