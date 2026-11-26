@@ -11,7 +11,8 @@
 #   6) ao      — из height (впадины темнее).
 # Макро-фактуры (M1–M4) делаются бесшовными (смешение со сдвинутой на полпериода копией).
 #
-# Запуск:  python make_maps.py <gen18_dir> <out_dir>
+# Запуск:  python make_maps.py <gen_dir> <out_dir> [грань ...]
+#   пример GEN19:  python tools/make_maps.py <gen19> textures/pbr back front   (normal пишется .png — prep_pbr.py берёт и .png, и .jpg)
 #   gen18_dir — папка с T*.png, M*.png и layout/; out_dir — куда писать карты (jpg/png).
 import sys, os, json
 import numpy as np
@@ -30,7 +31,11 @@ FACES = {
     'bezel':  ('T4_bezel.png',  'L_bezel_tex.jpg',  2048),
     'left':   ('T5_left.png',   'L_left_tex.jpg',   4096),
     'right':  ('T6_right.png',  'L_right_tex.jpg',  4096),
+    # GEN19 (финализация 26.11): зад и перед закрытого ноутбука, 2K — карта 3072 px (≈ 92 пикс/см)
+    'back':   ('T7L_back.png',  'L_back_tex.jpg',   3072),   # сшивается из T7L_back + T7R_back, см. stitch_back()
+    'front':  ('T8_front.png',  'L_front_tex.jpg',  3072),
 }
+ONLY = sys.argv[3:]          # необязательно: имена граней — тогда только они, макро-плитки не трогаются
 WEB_W = 2048   # копии для страницы
 MACROS = {'grain': 'M1_grain.png', 'brushed': 'M2_brushed.png', 'dust': 'M3_dust.png', 'smudge': 'M4_smudge.png'}
 
@@ -51,12 +56,23 @@ def object_bbox(img, bg_tol=18):
     x, y, bw, bh = st[i, :4]
     return x, y, bw, bh
 
-def align(photo, layout, size):
+def object_bbox_dark(img, k=0.5):
+    """Рамка тёмной вещи на светлом фоне (GEN19: фон с градиентом и отражением — по отличию от фона не выделить)."""
+    L = cv2.GaussianBlur(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), (0, 0), 2)
+    bg = float(np.median(np.concatenate([L[:8].ravel(), L[:, :8].ravel(), L[:, -8:].ravel()])))
+    m = (L < bg * k).astype(np.uint8) * 255
+    m = cv2.morphologyEx(m, cv2.MORPH_OPEN, np.ones((9, 9), np.uint8))
+    m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, np.ones((61, 61), np.uint8))   # светлые петли и гнёзда — внутрь
+    n, lab, st, _ = cv2.connectedComponentsWithStats(m)
+    i = 1 + int(np.argmax(st[1:, cv2.CC_STAT_AREA]))
+    return st[i, :4]
+
+def align(photo, layout, size, dark=False):
     """bbox фото и bbox ортовида → тот же кадр, затем ECC-аффинное уточнение по краям."""
     W, H = size
     lay = cv2.resize(layout, (W, H), interpolation=cv2.INTER_AREA)
     lx, ly, lw, lh = object_bbox(lay)
-    px, py, pw, ph = object_bbox(photo)
+    px, py, pw, ph = object_bbox_dark(photo) if dark else object_bbox(photo)
     # фото → кадр ортовида: рамка вещи на рамку вещи
     sx, sy = lw / pw, lh / ph
     M = np.float32([[sx, 0, lx - px * sx], [0, sy, ly - py * sy]])
@@ -170,18 +186,60 @@ def save(name, arr, q=92):
     else: cv2.imwrite(p, arr)
     return p
 
+def stitch_back(size):
+    """Зад из двух фото-половин GEN19. Генератор не удержал масштаб (левая половина снята крупнее, у правой
+    тоньше крышка), поэтому каждая половина ставится по своим меткам, снятым с фото вручную:
+    по X — равномерный масштаб от угла (пикс/мм по ширине гнезда и бочонка петли), по Y — четыре опоры:
+    верх бочонка петли (31,37 мм), щель крышка/база (21,5 мм), верхний шов батареи (16,7 мм), низ базы (0). Середину (крышка батареи без
+    деталей) закрывает сдвинутые на 80 и 105 мм участки правого фото; стыки — плавные."""
+    W, H = size
+    Y_TOP, Y_BOT = 31.37, -1.04                       # кадр карты по высоте, мм (как у боков: рамка вещи в ортовиде)
+    HALVES = {'L': dict(fn='T7L_back.png', x0=62.0, sx=29.0, rows=(130.0, 443.0, 611.0, 1163.0)),      # угол слева
+              'R': dict(fn='T7R_back.png', x0=3099.0, sx=-19.4, rows=(379.0, 484.0, 593.0, 980.0))}    # угол справа
+    xs = (np.arange(W, dtype=np.float32) + 0.5) / W * 335.0                  # мм от левого (для зрителя) края
+    ys = Y_TOP - (np.arange(H, dtype=np.float32) + 0.5) / H * (Y_TOP - Y_BOT)
+    def take(key, x_mm):
+        h = HALVES[key]; img = cv2.imread(os.path.join(GEN, h['fn']), cv2.IMREAD_COLOR)
+        k = abs(h['sx']) / (W / 335.0)                                         # во сколько раз фото крупнее карты
+        if k > 1.3: img = cv2.GaussianBlur(img, (0, 0), 0.45 * k)
+        yy = np.interp(-ys, [-31.37, -21.5, -16.7, 0.0], h['rows'])            # опоры: верх, щель, верхний шов батареи, низ
+        yy = np.where(ys < 0, h['rows'][3] - ys * (h['rows'][3] - h['rows'][2]) / 16.7, yy)
+        xm = x_mm if key == 'L' else 335.0 - x_mm
+        px = h['x0'] + xm * h['sx']
+        mx = np.repeat(px[None, :], H, 0).astype(np.float32); my = np.repeat(yy[:, None], W, 1).astype(np.float32)
+        return cv2.remap(img, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE).astype(np.float32)
+    L, R, F, F2 = take('L', xs), take('R', xs), take('R', xs + 80.0), take('R', xs + 105.0)
+    base = (ys > 3) & (ys < 13)                                                 # пластик базы под гнёздами — для выравнивания яркости
+    cL = L[base][:, (xs > 70) & (xs < 100)].reshape(-1, 3).mean(0)
+    cR = R[base][:, (xs > 190) & (xs < 260)].reshape(-1, 3).mean(0)
+    cM = (cL + cR) / 2
+    L *= cM / cL; R *= cM / cR; F *= cM / cR; F2 *= cM / cR
+    ramp = lambda a, b: np.clip((xs - a) / (b - a), 0, 1)[None, :, None]
+    out = L * (1 - ramp(72, 76)) + F2 * ramp(72, 76)        # сразу за левым краем крышки батареи: ступенька шва прячется у угла
+    out = out * (1 - ramp(98, 112)) + F * ramp(98, 112)     # два участка одного фото — гладкий пластик, стык не виден
+    out = out * (1 - ramp(176, 186)) + R * ramp(176, 186)
+    return np.clip(out, 0, 255).astype(np.uint8)
+
 report = {}
 for face, (fn, lay_fn, outW) in FACES.items():
+    if ONLY and face not in ONLY: continue
     src = os.path.join(GEN, fn)
     if not os.path.exists(src): report[face] = 'нет фото'; continue
-    photo = cv2.imread(src); layout = cv2.imread(os.path.join(GEN, 'layout', lay_fn))
+    photo = cv2.imread(src, cv2.IMREAD_COLOR); layout = cv2.imread(os.path.join(GEN, 'layout', lay_fn))
     k = outW / 1923.0                      # ортовид → масштаб итоговой карты
     size = (int(round(layout.shape[1] * k)), int(round(layout.shape[0] * k)))
-    al, lay, info = align(photo, layout, size)
-    x, y, bw, bh = info['bbox_layout']
-    al, lay = al[y:y + bh, x:x + bw], lay[y:y + bh, x:x + bw]
-    W, H = outW, int(round(outW * bh / bw))
-    al = cv2.resize(al, (W, H), interpolation=cv2.INTER_AREA); lay = cv2.resize(lay, (W, H), interpolation=cv2.INTER_AREA)
+    if face == 'back':
+        lay = cv2.resize(layout, size, interpolation=cv2.INTER_AREA)
+        x, y, bw, bh = object_bbox(lay)
+        W, H = outW, int(round(outW * bh / bw))
+        al = stitch_back((W, H)); lay = cv2.resize(lay[y:y + bh, x:x + bw], (W, H), interpolation=cv2.INTER_AREA)
+        info = {'bbox_layout': [int(x), int(y), int(bw), int(bh)], 'stitched': 'T7L_back + T7R_back'}
+    else:
+        al, lay, info = align(photo, layout, size, dark=face == 'front')
+        x, y, bw, bh = info['bbox_layout']
+        al, lay = al[y:y + bh, x:x + bw], lay[y:y + bh, x:x + bw]
+        W, H = outW, int(round(outW * bh / bw))
+        al = cv2.resize(al, (W, H), interpolation=cv2.INTER_AREA); lay = cv2.resize(lay, (W, H), interpolation=cv2.INTER_AREA)
     obj_mm = 238.0 if face in ('left', 'right') else 335.0
     px_mm = W / obj_mm
     info['map_size'] = [W, H]
@@ -198,6 +256,7 @@ for face, (fn, lay_fn, outW) in FACES.items():
     info['px_per_mm'] = round(px_mm, 2); report[face] = info
 
 for k, fn in MACROS.items():
+    if ONLY: break
     src = os.path.join(GEN, fn)
     if not os.path.exists(src): report['macro_' + k] = 'нет фото'; continue
     im = cv2.imread(src)
@@ -221,6 +280,6 @@ for k, fn in MACROS.items():
         save(f'macro_{k}_albedo.jpg', seamless(delight(im, sigma_frac=0.3)))
     report['macro_' + k] = 'ok'
 
-with open(os.path.join(OUT, '_maps_report.json'), 'w', encoding='utf-8') as f:
+with open(os.path.join(OUT, '_maps_report' + ('_' + '_'.join(ONLY) if ONLY else '') + '.json'), 'w', encoding='utf-8') as f:
     json.dump(report, f, ensure_ascii=False, indent=1)
 print(json.dumps(report, ensure_ascii=False))

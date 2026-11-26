@@ -2,7 +2,7 @@
 // Свет мировой: лампа стоит на столе, вещь в руках поворачивается под той же лампой.
 // Кадр рисуется только по требованию (ввод, анимация, догрузка) — как решение D3-12 в игре.
 //
-// Адрес: #view=desk|inspect|inspect_bottom|inspect_side|lampoff|close   служебные ракурсы (без анимации)
+// Адрес: #view=desk|inspect|inspect_bottom|inspect_side|inspect_lid|inspect_back|lampoff|close   служебные ракурсы (без анимации)
 //        #bake=0   всё вживую, ни одной запечённой текстуры света
 //        (нет)     гибрид (рекомендация): свет вживую + запечённые пятна касания под вещами
 //        #bake=1   свет стола запечён в текстуру (с подменой при подъёме вещи) + пятна касания
@@ -344,7 +344,13 @@ export function startDesk47(ui) {
   }
 
   // ---------- ноутбук ----------
-  const laptop = buildLaptop47(THREE, { lidAngle: LID_OPEN, textureSize: LOW ? 1536 : 2048, anisotropy: Math.min(8, maxAniso), onChange: () => invalidate(true), lowPower: LOW });
+  // Набор карт (ART-63): на столе вещь мелкая — хватает облегчённого набора (≈ 30 пикс/см при нужных ≈ 15);
+  // полный (≈ 61 пикс/см) догружается, когда вещь берут в руки. Телефон остаётся на облегчённом. #set=low|full — задать жёстко.
+  const SET_PARAM = params.get('set') === 'low' || params.get('set') === 'full' ? params.get('set') : null;
+  const startInHands = /^inspect/.test(viewName || '');
+  const laptop = buildLaptop47(THREE, { lidAngle: LID_OPEN, textureSize: LOW ? 1536 : 2048, anisotropy: Math.min(8, maxAniso), onChange: () => invalidate(true), lowPower: LOW,
+    mapSet: SET_PARAM || (!LOW && startInHands ? 'full' : 'low') });
+  const wantFullMaps = () => { if (!LOW && !SET_PARAM) laptop.userData.loadMapSet('full'); };
   const holder = new THREE.Group(), inner = new THREE.Group();
   holder.scale.setScalar(ITEM_SCALE);
   inner.add(laptop); holder.add(inner); scene.add(holder);
@@ -448,6 +454,8 @@ export function startDesk47(ui) {
     home:   { q: HOME_Q, zoom: 1, lid: LID_OPEN },
     bottom: { q: qOf(0, -0.58, 0).multiply(qOf(1.0, 0.3, 0)).multiply(qOf(0, 0, Math.PI)), zoom: 0.92, lid: 0 },   // дно — вполоборота к лампе: рельеф читается по теням
     side:   { q: qOf(0.12, 1.15, 0), zoom: 0.8, lid: 0 },
+    lid:    { q: qOf(0.62, 0.25, 0), zoom: 0.85, lid: 0 },                 // закрытая крышка с ярлыком бюро
+    back:   { q: qOf(0.22, Math.PI - 0.3, 0), zoom: 0.8, lid: 0 },
   };
   const restQ = qOf(0, LAPTOP_REST.yaw, 0);
   const restPos = new THREE.Vector3(LAPTOP_REST.x, LAPTOP_REST.y, LAPTOP_REST.z);
@@ -533,7 +541,7 @@ export function startDesk47(ui) {
   const setMode = (m) => {
     if (mode === m) return;
     mode = m; tg.k = m === 'inspect' ? 1 : 0;
-    if (m === 'inspect') { flipped = false; lidOpen = true; tg.q.copy(HOME_Q); st.q.copy(HOME_Q); tg.zoom = st.zoom = 1; tg.panX = tg.panY = st.panX = st.panY = 0; tg.lid = LID_OPEN; tg.hover = 0; }
+    if (m === 'inspect') { wantFullMaps(); flipped = false; lidOpen = true; tg.q.copy(HOME_Q); st.q.copy(HOME_Q); tg.zoom = st.zoom = 1; tg.panX = tg.panY = st.panX = st.panY = 0; tg.lid = LID_OPEN; tg.hover = 0; }
     else { tg.lid = LID_OPEN; tg.zoom = 1; tg.panX = tg.panY = 0; flipped = false; lidOpen = true; }
     if (reduceMotion.matches) snapAll();
     ui.onMode && ui.onMode(mode, { flipped, lidOpen, lampOn });
@@ -774,9 +782,9 @@ export function startDesk47(ui) {
 
   // ---------- запуск ----------
   resize();
-  if (viewName === 'inspect' || viewName === 'inspect_bottom' || viewName === 'inspect_side') {
+  if (startInHands) {
     mode = 'inspect'; tg.k = 1;
-    const v = viewName === 'inspect_bottom' ? VIEWS.bottom : viewName === 'inspect_side' ? VIEWS.side : VIEWS.home;
+    const v = VIEWS[viewName.replace(/^inspect_?/, '') || 'home'] || VIEWS.home;
     flipped = viewName === 'inspect_bottom'; lidOpen = v.lid > 0;
     tg.q.copy(v.q); tg.zoom = v.zoom; tg.lid = v.lid;
   }
