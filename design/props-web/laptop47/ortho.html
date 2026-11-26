@@ -1,0 +1,51 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:#888}canvas{display:block}</style>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }</script>
+</head><body>
+<script type="module">
+import * as THREE from 'three';
+import { buildLaptop47 } from './laptop47.js';
+// #v=deck|lid|bottom|bezel|left|right|back|front &clay=1  — ортовиды для образца раскладки
+const P = new URLSearchParams(location.hash.slice(1));
+const v = P.get('v') || 'deck', clay = P.get('clay') === '1';
+const W = 0.335, D = 0.238, HZ = -D / 2 + 0.010;
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+r.toneMapping = THREE.NoToneMapping; r.outputColorSpace = THREE.SRGBColorSpace;
+r.setPixelRatio(1); r.setSize(innerWidth, innerHeight); document.body.appendChild(r.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x8a8a8a);
+scene.add(new THREE.AmbientLight(0xffffff, clay ? 0.6 : 2.2));
+const dl = new THREE.DirectionalLight(0xffffff, clay ? 2.2 : 0.6);
+scene.add(dl, dl.target);
+const lidA = { deck: 1.92, lid: 0, bottom: 0, bezel: Math.PI / 2, left: 0, right: 0, back: 0, front: 0 }[v];
+const lap = buildLaptop47(THREE, { lidAngle: lidA, textureSize: 2048, onChange: () => draw() });
+scene.add(lap);
+if (v === 'deck') lap.getObjectByName('lid_hinge').visible = false;
+if (clay) {
+  const m = new THREE.MeshStandardMaterial({ color: 0x9a9a9a, roughness: 0.9 });
+  lap.traverse(o => { if (o.isMesh && o.name !== 'screen') o.material = m; });
+}
+const lidY = 0.06;
+let cam, pos, up, L, R2, T, B;
+const ar = innerWidth / innerHeight;
+function frame(w, h) { // вписать w×h в кадр с тем же отношением
+  let hw = w / 2, hh = h / 2; if (hw / hh > ar) hh = hw / ar; else hw = hh * ar; return [-hw, hw, hh, -hh];
+}
+if (v === 'deck')   { pos = [0, 1, 0]; up = [0, 0, -1]; [L, R2, T, B] = frame(W, D); }
+if (v === 'bottom') { pos = [0, -1, 0]; up = [0, 0, -1]; [L, R2, T, B] = frame(W, D); }
+if (v === 'lid')    { pos = [0, 1, 0.006]; up = [0, 0, -1]; [L, R2, T, B] = frame(W, 0.226); }
+if (v === 'bezel')  { pos = [0, 0.032 + 0.113, 1]; up = [0, 1, 0]; [L, R2, T, B] = frame(W, 0.226); }
+if (v === 'left')   { pos = [-1, 0.016, 0]; up = [0, 1, 0]; [L, R2, T, B] = frame(D, 0.034); }
+if (v === 'right')  { pos = [1, 0.016, 0]; up = [0, 1, 0]; [L, R2, T, B] = frame(D, 0.034); }
+// зад можно снять половинами: &cx=0.075&w=0.185 — центр кадра по X (м) и ширина кадра (генератор не держит полосу 10:1)
+const CX = parseFloat(P.get('cx') || '0'), FW = parseFloat(P.get('w') || String(W));
+if (v === 'back')   { pos = [CX, 0.016, -1]; up = [0, 1, 0]; [L, R2, T, B] = frame(FW, 0.034); }
+if (v === 'front')  { pos = [0, 0.016, 1]; up = [0, 1, 0]; [L, R2, T, B] = frame(W, 0.034); }
+cam = new THREE.OrthographicCamera(L, R2, T, B, 0.01, 5);
+cam.position.set(...pos); cam.up.set(...up);
+const tgt = new THREE.Vector3(pos[0] === 0 ? 0 : 0, pos[1] === 1 || pos[1] === -1 ? 0 : pos[1], v === 'lid' ? 0.006 : 0);
+if (v === 'bezel' || v === 'back' || v === 'front') tgt.set(pos[0], pos[1], 0);
+cam.lookAt(tgt);
+dl.position.copy(cam.position).add(new THREE.Vector3(0.3, 0.3, 0.3)); dl.target.position.copy(tgt);
+function draw() { r.render(scene, cam); }
+draw(); setTimeout(draw, 1500); setTimeout(draw, 4000);
+</script></body></html>
