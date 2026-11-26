@@ -12,6 +12,7 @@ import {
 import { Canvas, events, invalidate } from '@react-three/fiber';
 import { type RefObject, useEffect, useMemo, useRef } from 'react';
 import { screenToWorld } from '../canvas/math.ts';
+import { watchGl } from '../glLost.tsx';
 import type { Pose, Room } from '../room/camera.ts';
 import { type DeskObject, envelopeSpot, stackSpot } from '../room/decor.ts';
 import { shownCamera, useGame } from '../store.ts';
@@ -146,6 +147,7 @@ export function DeskLayer({
         frameloop="demand"
         dpr={[1, 2]}
         gl={{ alpha: true, antialias: true }}
+        onCreated={watchGl}
         style={{ pointerEvents: 'none' }}
         eventSource={scene as RefObject<HTMLElement>}
         eventPrefix="client"

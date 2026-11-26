@@ -15,6 +15,7 @@ import { Notebook } from './desk/Notebook.tsx';
 import { PlacedNote } from './desk/PlacedNote.tsx';
 import { DeskPhone } from './deskphone/DeskPhone.tsx';
 import { DevActionLine } from './dev/DevActionLine.tsx';
+import { GlLost } from './glLost.tsx';
 import { HeldView } from './hold/HeldView.tsx';
 import { Credits, MainMenu, MenuTab } from './menu/MainMenu.tsx';
 import { useMenu } from './menu/menu-store.ts';
@@ -181,6 +182,7 @@ export function App() {
         drive={drive}
         bank={bank}
       />
+      <GlLost />
       {saveProblem === 'error' && (
         <div className="save-error" data-testid="save-error" role="status">
           Не сохранено — пробуем ещё раз

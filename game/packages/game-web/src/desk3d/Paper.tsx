@@ -12,6 +12,7 @@ import {
   Vector3,
 } from 'three';
 import { paintTexture } from '../hold/texture.ts';
+import { reducedMotion } from '../motion.ts';
 import { DRAPE_NX, DRAPE_NY, type Piece } from './world.ts';
 
 /**
@@ -399,6 +400,10 @@ export function Paper({
       if (!start) resting.current = true;
     }
     const waiting = !!start && performance.now() < start.at;
+    // «Уменьшить движение» (RV-6): вещь сразу на месте — без полёта, пружин и плавных прогибов.
+    const still = reducedMotion();
+    /** Доля пути за кадр: при «уменьшить движение» — весь путь. */
+    const ease = (rate: number) => (still ? 1 : 1 - Math.exp(-dt * rate));
     // Лежал уже в прошлом кадре (не только что положен).
     const wasResting = resting.current;
     if ((target.mode === 'hand') !== onTop.current) setOnTop(g, target.mode === 'hand');
@@ -425,7 +430,7 @@ export function Paper({
       else if (!tw || tw.to.distanceTo(target.pos) > 0.3) {
         const dist = pos.distanceTo(target.pos);
         tween.current =
-          dist > 0.3
+          dist > 0.3 && !still
             ? {
                 from: pos.clone(),
                 to: target.pos.clone(),
@@ -449,17 +454,22 @@ export function Paper({
       vl.set(0, 0, 0);
       if (!tween.current) resting.current = true;
     } else if (target.mode === 'air') {
-      v.copy(target.pos).sub(pos).multiplyScalar(k).addScaledVector(vl, -c);
-      vl.addScaledVector(v, dt);
-      pos.addScaledVector(vl, dt);
+      if (still) {
+        pos.copy(target.pos);
+        vl.set(0, 0, 0);
+      } else {
+        v.copy(target.pos).sub(pos).multiplyScalar(k).addScaledVector(vl, -c);
+        vl.addScaledVector(v, dt);
+        pos.addScaledVector(vl, dt);
+      }
     } else {
       // За мышью — плавным сглаживанием: устойчиво при любой частоте кадров (пружина при длинном
       // кадре «выстреливала» — вещь улетала).
-      const follow = 1 - Math.exp(-dt * 28);
+      const follow = ease(28);
       pos.x += (target.pos.x - pos.x) * follow;
       pos.z += (target.pos.z - pos.z) * follow;
       const ty = target.pos.y;
-      if (target.carry > 0.001) {
+      if (target.carry > 0.001 || still) {
         // К доске и обратно — высота за мышью так же, как остальное (переход уже плавный).
         pos.y += (ty - pos.y) * follow;
         vl.y = 0;
@@ -477,15 +487,14 @@ export function Paper({
     }
     target.cur.copy(pos);
     if (target.mode !== 'rest' && !waiting)
-      g.quaternion.slerp(target.quat, 1 - Math.exp(-dt * (k > 600 ? 22 : 12)));
+      g.quaternion.slerp(target.quat, ease(k > 600 ? 22 : 12));
     // В руке размер — так же быстро, как движение (к доске — без отставания, «не тянется»).
-    sc.current +=
-      (target.scale - sc.current) * (1 - Math.exp(-dt * (target.mode === 'hand' ? 28 : 10)));
+    sc.current += (target.scale - sc.current) * ease(target.mode === 'hand' ? 28 : 10);
     // В руке вещь рисуется поверх соседних бумаг и устройств: её показ придвинут к камере вдоль
     // луча взгляда (на экране она там же и того же размера) — поднимаясь из-под стопки, она не
     // проходит сквозь неё на глазах (автор 23.11: «взял — всегда сверху»). Положили — плавно назад.
     const want = target.mode === 'hand' ? 1 : 0;
-    hold.current += (want - hold.current) * (1 - Math.exp(-dt * (want ? 30 : 7)));
+    hold.current += (want - hold.current) * ease(want ? 30 : 7);
     const kd = 1 - PULL * hold.current;
     g.position.copy(camera.position).addScaledVector(v.copy(pos).sub(camera.position), kd);
     // Прогиб: плавно появляется, пока лист кладут, и уходит, когда его берут. Каждая точка листа
@@ -499,7 +508,7 @@ export function Paper({
         const dr = target.mode === 'rest' ? target.drape : null;
         const dy = target.mode === 'rest' ? pos.y - target.pos.y : 0;
         // Лежащий лист меняет прогиб сразу (под ним вынули или подложили), кладущийся — плавно.
-        const k = wasResting && !tween.current ? 1 : 1 - Math.exp(-dt * 14);
+        const k = wasResting && !tween.current ? 1 : ease(14);
         let changed = false;
         for (let i = 0; i < pa.count; i++) {
           const want = dr ? (dr[i] ?? 0) * p : 0;
