@@ -190,7 +190,6 @@ function PcDesktop({ material }: { material: string | null }) {
   const [selIcon, setSelIcon] = useState<string | null>(null);
   const [startOpen, setStartOpen] = useState(false);
   const z = useRef(wins.reduce((m, p) => Math.max(m, p.z), 1));
-  const _has = (id: string) => materials.some((m) => m.id === id);
   const title = (id: string) => materials.find((m) => m.id === id)?.title ?? id;
   const started = useGame((g) => g.state?.started);
   const [now, setNow] = useState(() => gameNow(started));

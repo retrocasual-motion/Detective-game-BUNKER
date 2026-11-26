@@ -204,3 +204,20 @@ describe('служебная строка', () => {
     });
   });
 });
+
+describe('лимит попыток не обходится словом в цели (RV-64)', () => {
+  const pw = (target: string, value: string, p = emptyProgress(), t = 0) =>
+    act(content, p, { action: 'ПАРОЛЬ', target, value }, t);
+
+  it('«сейф», «сейф газета», «сейф 2» — один счётчик: на четвёртой попытке — пауза', () => {
+    let p = emptyProgress();
+    for (const t of ['сейф', 'сейф газета', 'сейф 2']) p = pw(t, 'нет', p).progress;
+    expect(pw('сейф 3', 'верно', p).outcome.result).toBe('лимит');
+  });
+
+  it('цель, что не подходит ни к одному полю, — общий счётчик действия, а не новый на каждое слово', () => {
+    let p = emptyProgress();
+    for (const t of ['абв', 'где', 'жзи']) p = pw(t, 'нет', p).progress;
+    expect(pw('клм', 'нет', p).outcome.result).toBe('лимит');
+  });
+});

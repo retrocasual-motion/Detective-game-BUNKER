@@ -29,8 +29,15 @@ const RESEND_MS = 60_000;
 const PER_IP_HOUR = 10;
 const ALL_HOUR = 300;
 
-/** Адрес подключения; за обратным прокси (6b) — брать из его заголовка, когда прокси появится. */
-function clientIp(c: Context): string {
+/**
+ * Адрес игрока: подключение; за обратным прокси (`trustProxy`, RV-63) — последний адрес в
+ * `X-Forwarded-For` (его дописывает наш прокси; то, что раньше, мог подставить сам игрок).
+ */
+function clientIp(c: Context, trustProxy = false): string {
+  if (trustProxy) {
+    const last = c.req.header('x-forwarded-for')?.split(',').pop()?.trim();
+    if (last) return last;
+  }
   try {
     return getConnInfo(c).remote.address ?? 'unknown';
   } catch {
@@ -98,11 +105,13 @@ interface AuthDeps {
   production: boolean;
   materials: Material[];
   now: () => number;
+  /** За обратным прокси: адрес игрока — из его заголовка (RV-63). */
+  trustProxy?: boolean;
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: маршруты входа не зависят от переменных запроса
 export function authRoutes(app: Hono<any>, deps: AuthDeps) {
-  const { db, auth, mailer, publicUrl, production, materials, now } = deps;
+  const { db, auth, mailer, publicUrl, production, materials, now, trustProxy } = deps;
   const secure = publicUrl.startsWith('https://');
   const perIp = windowLimit(PER_IP_HOUR, 3_600_000, now);
   const all = windowLimit(ALL_HOUR, 3_600_000, now);
@@ -173,7 +182,7 @@ export function authRoutes(app: Hono<any>, deps: AuthDeps) {
       .limit(1);
     if (last && t - last.at.getTime() < RESEND_MS) return c.json({ sent: true, again: true });
     if (sending.has(email)) return c.json({ sent: true, again: true });
-    if (!perIp.take(clientIp(c)) || !all.take('all'))
+    if (!perIp.take(clientIp(c, trustProxy)) || !all.take('all'))
       return c.json({ error: 'Слишком много писем. Попробуйте через час.' }, 429);
     sending.add(email);
     try {

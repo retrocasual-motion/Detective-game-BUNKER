@@ -548,6 +548,11 @@ export function DesktopIcon({
         if (drag.current?.moved) onDrop();
         drag.current = null;
       }}
+      // Протяжку оборвали (Alt+Tab, система забрала касание) — значок встаёт, не прилипает (RV-91).
+      onPointerCancel={() => {
+        if (drag.current?.moved) onDrop();
+        drag.current = null;
+      }}
       onDoubleClick={onOpen}
       onKeyDown={(e) => {
         if (e.key === 'Enter') onOpen();
@@ -625,6 +630,9 @@ export function Window({
       onPointerUp={() => {
         size.current = null;
       }}
+      onPointerCancel={() => {
+        size.current = null;
+      }}
     />
   );
   const down = (e: PointerEvent<HTMLDivElement>) => {
@@ -658,6 +666,9 @@ export function Window({
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={() => {
+          drag.current = null;
+        }}
+        onPointerCancel={() => {
           drag.current = null;
         }}
         onDoubleClick={onMax}

@@ -117,8 +117,17 @@ function formGate(
 const fieldRule = (c: Content, action: string, target: string) =>
   rulesFor(c, action).find((r) => targetMatches(r, target));
 
-const fieldKey = (c: Content, action: string, target: string) =>
-  `${action}|${fieldRule(c, action, target)?.id ?? norm(target)}`;
+/**
+ * Счётчик неверных попыток поля (RV-64): по правилам, чья цель подходит, а не по тексту цели — иначе
+ * лишнее слово в цели («телефон газета», «телефон 1», «телефон 2»…) давало каждый раз новый счётчик и
+ * перебор без паузы. Цель не подходит ни к одному полю — общий счётчик действия.
+ */
+const fieldKey = (c: Content, action: string, target: string) => {
+  const ids = rulesFor(c, action)
+    .filter((r) => targetMatches(r, target))
+    .map((r) => r.id);
+  return `${action}|${ids.length ? [...new Set(ids)].sort().join('+') : '*'}`;
+};
 
 function limitFor(
   c: Content,

@@ -1,5 +1,7 @@
-import { readFile } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
+import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
+import { Readable } from 'node:stream';
 import {
   type ActionInput,
   act,
@@ -37,6 +39,7 @@ import { and, eq, inArray, lt, sql } from 'drizzle-orm';
 import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { getCookie } from 'hono/cookie';
+import { HTTPException } from 'hono/http-exception';
 import { secureHeaders } from 'hono/secure-headers';
 import { z } from 'zod';
 import {
@@ -82,6 +85,8 @@ export interface AppDeps {
   mailer?: Mailer;
   /** Адрес игры для ссылок в письмах (в разработке — Vite). */
   publicUrl?: string;
+  /** За обратным прокси: адрес игрока — из его заголовка (RV-63). */
+  trustProxy?: boolean;
 }
 
 /**
@@ -176,8 +181,16 @@ export function createApp({
   auth = 'off',
   mailer,
   publicUrl = 'http://localhost:5173',
+  trustProxy = false,
 }: AppDeps): Hono<Env> & { purge: () => Promise<void> } {
   const app = new Hono<Env>();
+  // Непойманная ошибка маршрута (RV-60): игроку — короткий ответ, подробности — в журнал сервера.
+  app.onError((err, c) => {
+    // Ответ по существу (413 большого тела и т. п.) — как есть.
+    if (err instanceof HTTPException) return err.getResponse();
+    console.error(`api: ${c.req.method} ${c.req.path} — ${err.stack ?? err.message}`);
+    return c.json({ error: 'ошибка сервера' }, 500);
+  });
 
   // Заголовки безопасности (R1-11): страницу нельзя встроить в чужой сайт (clickjacking на
   // «Новое дело»), браузер не угадывает тип файла и т. п. Политика содержимого (CSP) — при
@@ -199,7 +212,7 @@ export function createApp({
   });
 
   // Вход по ссылке — без сессии (6a-1).
-  authRoutes(app, { db, auth, mailer, publicUrl, production, materials, now });
+  authRoutes(app, { db, auth, mailer, publicUrl, production, materials, now, trustProxy });
 
   // Остальное — дело игрока из сессии; без входа — 401 (клиент покажет экран входа). Сайты дела —
   // тоже: они открываются в браузерах устройств внутри игры (A-288 п. 9).
@@ -217,23 +230,53 @@ export function createApp({
   });
 
   // Медиа (T-…): только файлы из списка MEDIA; нет папки или файла — 404 (игра рисует заглушку).
+  /**
+   * Медиа (RV-67): только по открытому игроком (P-10) и потоком, с `Range` — запись и видео
+   * перематываются, файл не читается в память целиком.
+   */
   app.get('/api/media/:name', async (c) => {
     const m = Object.hasOwn(MEDIA, c.req.param('name')) ? MEDIA[c.req.param('name')] : undefined;
     if (!m || !mediaDir) return c.notFound();
-    const body = await readFile(join(mediaDir, m.path)).catch(() => null);
-    if (!body) return c.notFound();
-    return c.body(new Uint8Array(body), 200, {
+    if (!(await mine(c.get('player'))).some((x) => x.id === m.material)) return c.notFound();
+    const file = join(mediaDir, m.path);
+    const size = (await stat(file).catch(() => null))?.size;
+    if (size === undefined) return c.notFound();
+    const head = {
       'content-type': m.type,
       'cache-control': 'private, max-age=3600',
-    });
+      'accept-ranges': 'bytes',
+    };
+    const range = /^bytes=(\d*)-(\d*)$/.exec(c.req.header('range') ?? '');
+    if (range && (range[1] || range[2])) {
+      const start = range[1] ? Number(range[1]) : Math.max(0, size - Number(range[2]));
+      const end = range[1] && range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
+      if (start >= size || start > end)
+        return c.body(null, 416, { 'content-range': `bytes */${size}` });
+      const part = Readable.toWeb(createReadStream(file, { start, end })) as ReadableStream;
+      return c.body(part, 206, {
+        ...head,
+        'content-range': `bytes ${start}-${end}/${size}`,
+        'content-length': String(end - start + 1),
+      });
+    }
+    const all = Readable.toWeb(createReadStream(file)) as ReadableStream;
+    return c.body(all, 200, { ...head, 'content-length': String(size) });
   });
 
   type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
   const lockedById = new Map((engine?.locked ?? []).map((m) => [m.id, m]));
 
+  /**
+   * Прогресс из базы — с недостающими полями по умолчанию (RV-60): строка старого вида без `fails`
+   * не роняет каждое действие.
+   */
+  const fullProgress = (p: Partial<Progress> | undefined): Progress => ({
+    ...emptyProgress(),
+    ...p,
+  });
   async function loadProgress(pid: string): Promise<Progress> {
     const [row] = await db.select().from(playerProgress).where(eq(playerProgress.playerId, pid));
-    return row?.progress ?? emptyProgress();
+    return fullProgress(row?.progress);
   }
 
   async function saveProgress(pid: string, progress: Progress, q: Db | Tx = db) {
@@ -355,10 +398,23 @@ export function createApp({
     if (!engine) return null;
     // Действия игрока идут по очереди: иначе два запроса подряд затёрли бы прогресс.
     const run = serial(pid, async () => {
-      const before = await loadProgress(pid);
-      const t = now();
-      const { progress, outcome } = act(engine.content, before, input, t, GAME_CONFIG);
-      await saveProgress(pid, progress);
+      // Одной транзакцией с блокировкой строки (RV-58): при двух процессах сервера второе действие
+      // ждёт первое, а не затирает открытое им.
+      const { progress, outcome, t } = await db.transaction(async (tx) => {
+        await tx
+          .insert(playerProgress)
+          .values({ playerId: pid, progress: emptyProgress() })
+          .onConflictDoNothing();
+        const [row] = await tx
+          .select()
+          .from(playerProgress)
+          .where(eq(playerProgress.playerId, pid))
+          .for('update');
+        const t = now();
+        const r = act(engine.content, fullProgress(row?.progress), input, t, GAME_CONFIG);
+        await saveProgress(pid, r.progress, tx);
+        return { ...r, t };
+      });
       // Повтор осмотра (этап 4b): игрок снова переворачивает тот же лист — на обороте то же,
       // а не служебное «уже выдано ранее».
       const again =

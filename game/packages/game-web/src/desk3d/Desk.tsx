@@ -597,8 +597,9 @@ export function Desk({
     d: new Map(),
   });
 
-  // Для автотестов: где на экране вещи стола (вид «Стол»).
+  // Для автотестов: где на экране вещи стола (вид «Стол»). Только в разработке (RV-68).
   useEffect(() => {
+    if (!import.meta.env.DEV) return;
     const at = (x: number, z: number, h = 0) => {
       const v = deskPoint(room, x, z, h).project(deskCam);
       return { x: ((v.x + 1) / 2) * room.vp.width, y: ((1 - v.y) / 2) * room.vp.height };

@@ -282,7 +282,7 @@ export function PhoneLive() {
         <span className="ph-battery" />
       </div>
       <div className="ph-stage">{inner}</div>
-      {/* Кнопка «В запрос» — поверх страницы: внутри экрана её бы масштабировало. */}
+      {/* Кнопки у выделения («На стену», «В заключение») — поверх страницы: внутри экрана их бы масштабировало. */}
       {button && createPortal(button, document.body)}
     </div>
   );

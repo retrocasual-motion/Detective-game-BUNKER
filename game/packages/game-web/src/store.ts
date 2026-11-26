@@ -338,6 +338,19 @@ function handover(): Promise<void> {
   });
 }
 
+/**
+ * То же ли состояние (RV-61): сравниваются только поля, у которых сменилась ссылка, — дёшево и при
+ * большом деле.
+ */
+export function sameState(a: PlayerState, b: PlayerState): boolean {
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof PlayerState>;
+  for (const k of keys) {
+    if (a[k] === b[k]) continue;
+    if (JSON.stringify(a[k]) !== JSON.stringify(b[k])) return false;
+  }
+  return true;
+}
+
 export const useGame = create<GameStore>((set, get) => {
   const saver = createSaver(putState, 500, (saveStatus) => {
     if (saveStatus === 'conflict') set({ saveStatus, elsewhere: true });
@@ -944,8 +957,9 @@ export const useGame = create<GameStore>((set, get) => {
       const current = get().state;
       if (!current) return;
       const next = fn(current);
-      // Ничего не изменилось — не перерисовывать и не сохранять (R2-09).
-      if (next === current) return;
+      // Ничего не изменилось — не перерисовывать и не сохранять (R2-09); и когда новый объект с тем
+      // же содержимым (открыли ноутбук, телефон на том же экране — RV-61).
+      if (next === current || sameState(current, next)) return;
       set({ state: next });
       saver.schedule(next);
     },

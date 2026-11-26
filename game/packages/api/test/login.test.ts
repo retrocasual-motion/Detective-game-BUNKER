@@ -1,5 +1,5 @@
 import type { AccessRules } from '@bunker/engine';
-import type { Material } from '@bunker/shared';
+import type { Material, PlayerState } from '@bunker/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
 import { createApp } from '../src/app.ts';
 import {
@@ -258,5 +258,96 @@ describe('письма входа и служебные маршруты (R1-02,
     });
     expect(devLogin.status).toBe(404);
     expect((await a.request('/api/dev/outbox')).status).toBe(404);
+  });
+});
+
+describe('безопасность входа и дела (RV-79)', () => {
+  const W = { 'x-state-writer': 'page-sec-1' };
+  const putState = (a: ReturnType<typeof app>, cookie: string, body: string, seq: number) =>
+    a.request('/api/state', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json', cookie, ...W, 'x-state-seq': String(seq) },
+      body,
+    });
+
+  it('дело одного игрока другому не видно и не меняется им', async () => {
+    const a = app();
+    const one = await login(a, 'one@example.com');
+    const two = await login(a, 'two@example.com');
+    const s1 = (await (
+      await a.request('/api/state', { headers: { cookie: one, ...W } })
+    ).json()) as PlayerState;
+    const mine = {
+      ...s1,
+      wall: {
+        ...s1.wall,
+        notes: [{ id: 'n:s1', kind: 'note', text: 'только мой' }],
+        items: [...s1.wall.items, { id: 'n:s1', x: 10, y: 10, z: 1, rot: 0 }],
+      },
+    };
+    expect((await putState(a, one, JSON.stringify(mine), 1)).status).toBe(204);
+    // Второй игрок видит своё дело, без чужой записки.
+    const s2 = await (
+      await a.request('/api/state', { headers: { cookie: two, 'x-state-writer': 'page-two-1' } })
+    ).text();
+    expect(s2).not.toContain('только мой');
+    // Сохранение второго не трогает дело первого.
+    await a.request('/api/state', {
+      method: 'PUT',
+      headers: {
+        'content-type': 'application/json',
+        cookie: two,
+        'x-state-writer': 'page-two-1',
+        'x-state-seq': '1',
+      },
+      body: s2,
+    });
+    expect(await (await get(a, '/api/state', one)).text()).toContain('только мой');
+  });
+
+  it('cookie сессии: HttpOnly, SameSite=Lax, весь сайт; на https — Secure', async () => {
+    const a = app();
+    const res = await a.request('/api/dev/login', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: 'c@example.com' }),
+    });
+    const set = res.headers.get('set-cookie') ?? '';
+    expect(set).toMatch(/HttpOnly/i);
+    expect(set).toMatch(/SameSite=Lax/i);
+    expect(set).toMatch(/Path=\//i);
+    expect(set).not.toMatch(/Secure/i);
+    const https = createApp({
+      db,
+      materials,
+      production: false,
+      engine,
+      now: () => clock,
+      auth: 'link',
+      mailer,
+      publicUrl: 'https://game.test',
+    });
+    const r2 = await https.request('/api/dev/login', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: 'c2@example.com' }),
+    });
+    expect(r2.headers.get('set-cookie') ?? '').toMatch(/Secure/i);
+  });
+
+  it('сессия без игры истекает (90 дней) — 401', async () => {
+    const a = app();
+    const one = await login(a, 'old@example.com');
+    expect((await get(a, '/api/materials', one)).status).toBe(200);
+    clock += 91 * 86_400_000;
+    expect((await get(a, '/api/materials', one)).status).toBe(401);
+  });
+
+  it('сохранение больше 4 МБ — 413, дело не тронуто', async () => {
+    const a = app();
+    const one = await login(a, 'big@example.com');
+    await a.request('/api/state', { headers: { cookie: one, ...W } });
+    const huge = JSON.stringify({ pad: 'x'.repeat(4 * 1024 * 1024 + 10) });
+    expect((await putState(a, one, huge, 1)).status).toBe(413);
   });
 });
