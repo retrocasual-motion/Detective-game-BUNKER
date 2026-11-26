@@ -179,3 +179,26 @@ test('конец игры: эпилог → «Завершить дело» → 
   await expect(page.getByTestId('main-menu')).toBeVisible();
   await expect(page.getByTestId('menu-continue')).toHaveText('Вернуться к делу');
 });
+
+test('RV-41, RV-42: папка заключения не закрывает лоток; на вопросе о человеке «В заключение» нет', async ({
+  page,
+}) => {
+  await openForm(page);
+  // Лоток «Входящие» под мышью — лоток, не папка заключения.
+  const tray = await page.getByTestId('inbox-tray').boundingBox();
+  const hit = await page.evaluate(
+    ([x, y]) => !!document.elementFromPoint(x, y)?.closest('[data-testid="verdict-folder"]'),
+    [(tray?.x ?? 0) + (tray?.width ?? 0) / 2, (tray?.y ?? 0) + (tray?.height ?? 0) / 2] as const,
+  );
+  expect(hit).toBe(false);
+  // Вопрос 1 — о человеке: открыли лист — кнопки «В заключение целиком» нет.
+  const paper = await page.evaluate(() =>
+    (
+      window as unknown as { __desk: { grab(id: string): { x: number; y: number } | null } }
+    ).__desk.grab('15'),
+  );
+  await page.getByTestId('verdict-corner').click();
+  await page.mouse.click(paper?.x ?? 0, paper?.y ?? 0);
+  await expect(page.getByTestId('viewer')).toBeVisible();
+  await expect(page.getByTestId('viewer-whole-to-folder')).toHaveCount(0);
+});

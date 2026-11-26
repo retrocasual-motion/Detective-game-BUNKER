@@ -19,7 +19,7 @@ import { MediaPlayer } from '../player/MediaPlayer.tsx';
 import { EMBEDDED_MEDIA, MEDIA_IDS, splitEmbedded } from '../player/media.ts';
 import { clearFind, highlightFind } from '../search/highlight.ts';
 import { useGame } from '../store.ts';
-import { quoteCard, toVerdict, useVerdictOpen, wholeCard } from '../verdict/cards.ts';
+import { quoteCard, toVerdict, useVerdictTakesMaterial, wholeCard } from '../verdict/cards.ts';
 import { excerptBody, isBundleListing, rowTarget } from './bundles.ts';
 import { splitSection } from './pieces.ts';
 import { sameRange, snapToWords, unitRangeAt } from './selectUnit.ts';
@@ -118,7 +118,7 @@ export function Viewer({ materialId }: ViewerProps) {
   const person = PERSONS.find((p) => p.id === materialId);
   const close = useGame((g) => g.closeViewer);
   const folderOpen = useGame((g) => g.folderOpen);
-  const verdictOpen = useVerdictOpen();
+  const verdictOpen = useVerdictTakesMaterial();
   const notebookOpen = useGame((g) => g.notebookOpen);
   // Поиск открыт — панель справа поверх затемнения, лист левее (SR-D).
   const searchOpen = useGame((g) => g.searchOpen);
