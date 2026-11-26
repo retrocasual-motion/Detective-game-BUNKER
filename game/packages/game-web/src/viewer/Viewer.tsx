@@ -11,6 +11,7 @@ import {
 import Markdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
+import { newId } from '../canvas/geometry.ts';
 import { inStorage } from '../delivery.ts';
 import { trackReading } from '../dev/readingLog.ts';
 import { useEscLayer } from '../esc.ts';
@@ -239,7 +240,7 @@ export function Viewer({ materialId }: ViewerProps) {
   const toWall = () => {
     if (!sel || !material) return;
     useGame.getState().pinExcerpt({
-      id: `x:${crypto.randomUUID()}`,
+      id: `x:${newId()}`,
       text: sel.text.replace(/\s+/g, ' ').trim().slice(0, 600),
       material: materialId,
       source: `${material.id} · ${material.title}`.slice(0, 160),

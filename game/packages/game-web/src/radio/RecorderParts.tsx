@@ -133,6 +133,9 @@ export function RecorderLcd() {
           const r = e.currentTarget.getBoundingClientRect();
           rec().seek(view.from + ((e.clientX - r.left) / r.width) * span);
         }}
+        onPointerCancel={() => {
+          drag.current = null;
+        }}
         onDoubleClick={() => rec().setView(win)}
       >
         {ticks.at.map((t) => (

@@ -1,4 +1,5 @@
 import { type MouseEvent, useEffect, useState } from 'react';
+import { newId } from '../canvas/geometry.ts';
 import { clearFind, highlightFind, SCREEN_FIND } from '../search/highlight.ts';
 import { useGame } from '../store.ts';
 import { quoteCard, toVerdict, useVerdictOpen } from '../verdict/cards.ts';
@@ -98,7 +99,7 @@ export function useSelectionCard(testId: string, kind: ScreenKind) {
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
           useGame.getState().pinExcerpt({
-            id: `x:${crypto.randomUUID()}`,
+            id: `x:${newId()}`,
             text: sel.text.slice(0, 600),
             material: sel.material,
             source: sel.source.slice(0, 160),

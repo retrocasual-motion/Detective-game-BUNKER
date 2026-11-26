@@ -117,21 +117,40 @@ function formGate(
 const fieldRule = (c: Content, action: string, target: string) =>
   rulesFor(c, action).find((r) => targetMatches(r, target));
 
-const fieldKey = (c: Content, action: string, target: string) =>
-  `${action}|${fieldRule(c, action, target)?.id ?? norm(target)}`;
-
-function limitFor(
+/**
+ * Счётчики неверных попыток (RV-64): у каждого поля, к которому подходит цель, свой; пауза — если
+ * исчерпан любой. Лишнее слово в цели («сейф газета», «сейф телефон») не даёт нового счётчика: промах
+ * засчитывается каждому подошедшему полю. Поле «без паузы» (поиск, архив газеты — `unlimited`) —
+ * по самому полю, а не по словам цели. Цель не подходит ни к одному полю — общий счётчик действия.
+ */
+function fieldLimits(
   c: Content,
   action: string,
   target: string,
   cfg: EngineConfig = DEFAULT_CONFIG,
-): number | null {
-  if ((cfg.unlimited ?? []).some((pat) => search(pat, norm(target)) !== null)) return null;
+): { key: string; limit: number }[] {
+  // Слова «поля без паузы» в цели («газеты», «документы программы»): поле без паузы — то правило,
+  // которое подходит именно к этим словам; остальные подошедшие (лишнее слово дописали к «сейфу») —
+  // с паузой.
+  const freeWords = (cfg.unlimited ?? []).flatMap((pat) => search(pat, norm(target))?.[0] ?? []);
   const own = cfg.limits?.[action];
-  if (own !== undefined) return own || null;
-  const r = fieldRule(c, action, target);
-  if (r && r.attempt_limit !== undefined) return r.attempt_limit || null;
-  return c.rules.attempt_limit?.[action] ?? null;
+  const base = own !== undefined ? own : c.rules.attempt_limit?.[action];
+  const matched = rulesFor(c, action).filter((r) => targetMatches(r, target));
+  if (!matched.length) {
+    if (freeWords.length) return [];
+    return base ? [{ key: `${action}|*`, limit: base }] : [];
+  }
+  // Поле — правила с одним шаблоном цели: счётчик и лимит — у первого (как прежде у `fieldRule`).
+  const out = new Map<string, number>();
+  const fields = new Set<string>();
+  for (const r of matched) {
+    if (fields.has(r.target)) continue;
+    fields.add(r.target);
+    if (freeWords.some((w) => targetMatches(r, w))) continue;
+    const limit = own !== undefined ? own : (r.attempt_limit ?? base);
+    if (limit) out.set(`${action}|${r.id}`, limit);
+  }
+  return [...out].map(([key, limit]) => ({ key, limit }));
 }
 
 /** Попытки, давние больше паузы, уже не считаются (раунд прототипа = пауза T-11-A). */
@@ -152,12 +171,13 @@ export function fieldWait(
   now: number,
   cfg: EngineConfig = DEFAULT_CONFIG,
 ): number {
-  const limit = limitFor(c, action, target, cfg);
-  if (!limit) return 0;
-  const key = fieldKey(c, action, target);
-  const f = progress.fails[key];
-  if (!f || freshFails(progress, key, now, cfg) < limit) return 0;
-  return Math.max(0, f.last + cfg.pauseMs - now);
+  let wait = 0;
+  for (const { key, limit } of fieldLimits(c, action, target, cfg)) {
+    const f = progress.fails[key];
+    if (f && freshFails(progress, key, now, cfg) >= limit)
+      wait = Math.max(wait, f.last + cfg.pauseMs - now);
+  }
+  return Math.max(0, wait);
 }
 
 function limitReply(c: Content, action: string, target: string): string {
@@ -208,14 +228,11 @@ export function act(
   const gate = formGate(c, p, action);
   if (gate) return done(gate.result, 'final_form', gate.reply);
 
-  const limit = limitFor(c, action, target, cfg);
-  const key = fieldKey(c, action, target);
-  if (limit && freshFails(p, key, now, cfg) >= limit) {
-    return done('лимит', key, limitReply(c, action, target));
-  }
+  const limits = fieldLimits(c, action, target, cfg);
+  const full = limits.find(({ key, limit }) => freshFails(p, key, now, cfg) >= limit);
+  if (full) return done('лимит', full.key, limitReply(c, action, target));
   const recordFail = () => {
-    if (!limit) return;
-    p.fails[key] = { n: freshFails(p, key, now, cfg) + 1, last: now };
+    for (const { key } of limits) p.fails[key] = { n: freshFails(p, key, now, cfg) + 1, last: now };
   };
 
   if (action === 'ФИНАЛ' || action === 'СТОП') {
@@ -233,7 +250,7 @@ export function act(
   if (!r.hit) return done(r.result, r.rule, r.reply);
   // Попадание сбрасывает счёт промахов поля (RV-31): пауза — после N неверных подряд (LM-A), а не
   // после N неверных вперемешку с верными.
-  if (!r.hit.refusal) delete p.fails[key];
+  if (!r.hit.refusal) for (const { key } of limits) delete p.fails[key];
   const opened = r.hit.release.filter((id) => c.locked.has(id) && !isReleased(p, id));
   p.released.push(...opened);
   const { reply, result } = hitReply(r.hit, opened);

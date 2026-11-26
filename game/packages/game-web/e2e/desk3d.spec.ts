@@ -1,5 +1,14 @@
 import type { Page } from '@playwright/test';
-import { deskSettled, expect, START, savedPut, sheet, test, toWall } from './fixtures.ts';
+import {
+  deskSettled,
+  expect,
+  START,
+  savedPut,
+  sheet,
+  takeDevice,
+  test,
+  toWall,
+} from './fixtures.ts';
 
 // Новое дело, как у игрока: конверты архива опечатаны (A-260).
 test.use({ sealed: true });
@@ -161,6 +170,7 @@ test('3D-стол: «Осмотр места» — папка стопкой; п
   const t = await grab(page, '48');
   await page.mouse.click(t?.x ?? 0, t?.y ?? 0);
   await expect(page.getByTestId('held')).toBeVisible();
+  await page.waitForTimeout(1500);
   await page.keyboard.press('Escape');
 });
 
@@ -206,4 +216,16 @@ test('потеря изображения 3D (RV-11): плашка «обнов�
   await expect(page.getByTestId('gl-lost')).toContainText('Обновить страницу');
   await lose(true);
   await expect(page.getByTestId('gl-lost')).toBeHidden();
+});
+
+test('вещь взяли и положили — плашки «изображение пропало» нет (проверка Fable)', async ({
+  page,
+}) => {
+  await page.getByTestId('container-seized').click();
+  await expect(page.getByTestId('held')).toBeVisible();
+  await page.waitForTimeout(1500);
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('held')).toBeHidden();
+  await page.waitForTimeout(2500);
+  await expect(page.getByTestId('gl-lost')).toHaveCount(0);
 });

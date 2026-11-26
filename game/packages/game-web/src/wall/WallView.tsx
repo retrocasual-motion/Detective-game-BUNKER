@@ -24,6 +24,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { Canvas, type Marquee } from '../canvas/Canvas.tsx';
+import { newId } from '../canvas/geometry.ts';
 import { startGhostDrag } from '../canvas/ghostDrag.ts';
 import { screenToWorld } from '../canvas/math.ts';
 import { useInputMode } from '../input.ts';
@@ -538,7 +539,7 @@ export function WallView() {
 
   /** Новая записка или ярлык: кнопка вещи — под точкой (x, y) стены; сразу правится. */
   const newNoteAt = (kind: Note['kind'], x: number, y: number) => {
-    const id = `n:${crypto.randomUUID()}`;
+    const id = `n:${newId()}`;
     updateState(addNote(kind, x - NOTE_STYLE[kind].width / 2, y - 12, id));
     setEditingNote(id);
   };

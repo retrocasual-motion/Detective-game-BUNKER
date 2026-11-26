@@ -176,6 +176,10 @@ export function Slider({ onUnlock }: { onUnlock: () => void }) {
           if (d && x >= d.max - 6) onUnlock();
           else setX(0);
         }}
+        onPointerCancel={() => {
+          drag.current = null;
+          setX(0);
+        }}
       >
         ➜
       </button>

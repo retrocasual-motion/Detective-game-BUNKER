@@ -39,6 +39,12 @@ export const env = {
   mailpitUrl: e.MAILPIT_URL ?? 'http://127.0.0.1:8025',
   mailFrom: e.MAIL_FROM ?? 'zapros@blackwood-bi.org',
   mailFromName: e.MAIL_FROM_NAME ?? 'Окружное бюро расследований',
+  /**
+   * За обратным прокси (RV-63): `TRUST_PROXY=1` — адрес игрока для пределов писем входа берётся из
+   * заголовка прокси (`X-Forwarded-For`, последний адрес), а не из подключения (иначе это адрес самого
+   * прокси, и предел один на всех). Без прокси не включать: заголовок подделывается.
+   */
+  trustProxy: e.TRUST_PROXY === '1',
   /** Адрес игры для ссылок в письмах: в разработке — Vite, в Docker — сам сервер. */
   publicUrl: (e.PUBLIC_URL ?? 'http://localhost:5173').replace(/\/$/, ''),
 };

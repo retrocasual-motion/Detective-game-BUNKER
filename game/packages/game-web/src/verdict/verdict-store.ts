@@ -215,7 +215,3 @@ export const useVerdict = create<VerdictStore>((set, get) => {
 
 /** Итог отправленного заключения (null — ещё не отправлено). */
 export const useVerdictResult = (): VerdictResult | null => useVerdict((v) => v.status.result);
-
-/** Подпись кнопки у выделения: пока форма открыта, карточка идёт в заключение. */
-export const useToFolderLabel = (): string =>
-  useVerdict((v) => v.status.form && !v.status.sent) ? 'В заключение' : 'В запрос';

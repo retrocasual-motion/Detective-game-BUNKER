@@ -100,7 +100,15 @@ export function App() {
       if (useMenu.getState().screen !== 'game') return;
       const g = useGame.getState();
       // Лист открыт: ↑ — закрыть и к стене (RD-A, SC-02); ←/→ — листать (полоса «N из M»).
-      if (g.viewerId && dir === 'up' && !g.held && !g.computerOpen && g.state?.view === 'desk') {
+      // Эпилог так не закрывается — только «Завершить дело» (как Esc и Ctrl+F).
+      if (
+        g.viewerId &&
+        g.viewerId !== EPILOGUE_ID &&
+        dir === 'up' &&
+        !g.held &&
+        !g.computerOpen &&
+        g.state?.view === 'desk'
+      ) {
         g.closeViewer();
         setView('wall');
         return;

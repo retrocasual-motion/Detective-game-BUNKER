@@ -220,7 +220,8 @@ export const useCall = create<CallState>((set, get) => {
 
     redial() {
       const s = get();
-      if (!lastNumber || s.phase === 'ringing' || s.phase === 'connected') return;
+      if (!lastNumber || s.phase === 'ringing' || s.phase === 'connected' || s.phase === 'incoming')
+        return;
       clearTimer();
       set({ dialed: lastNumber });
       // Трубка снята — сразу звонок; лежит — номер на экранчике, звонок — снять трубку.

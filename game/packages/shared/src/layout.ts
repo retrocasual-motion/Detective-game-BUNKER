@@ -895,12 +895,3 @@ export function boardCamera(vp: { width: number; height: number }): Camera {
   };
 }
 
-/** Камера стены обычного масштаба, подведённая к точке стены (левый верхний угол с полями). */
-export function focusCamera(x: number, y: number): Camera {
-  const { zoom } = DEFAULT_WALL_CAMERA;
-  return {
-    x: Math.round(Math.min(DEFAULT_WALL_CAMERA.x - x * zoom, -WALL_BOUNDS.left * zoom)),
-    y: Math.round(Math.min(DEFAULT_WALL_CAMERA.y - y * zoom, -WALL_BOUNDS.top * zoom)),
-    zoom,
-  };
-}
