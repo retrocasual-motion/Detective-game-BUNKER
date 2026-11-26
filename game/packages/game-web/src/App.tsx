@@ -1,6 +1,7 @@
 import {
   BANK_BOX_ID,
   BANK_LIST_ID,
+  CONTAINERS,
   type ContainerId,
   EPILOGUE_ID,
   inboxIds,
@@ -111,6 +112,21 @@ export function App() {
     () => (openedKey ? (openedKey.split(',') as ContainerId[]) : []),
     [openedKey],
   );
+  // Открытые папки, где ещё лежат листы (UNP-A): прочитали всё — папка со стола уходит.
+  const foldersKey = useGame((g) => {
+    const s = g.state;
+    if (!s) return '';
+    const onDesk = new Set((s.desk ?? []).map((d) => d.id));
+    return CONTAINERS.filter(
+      (c) => openedOf(s).includes(c.id) && c.files.some((id) => onDesk.has(id)),
+    )
+      .map((c) => c.id)
+      .join(',');
+  });
+  const folders = useMemo(
+    () => (foldersKey ? (foldersKey.split(',') as ContainerId[]) : []),
+    [foldersKey],
+  );
 
   if (!view) {
     // По центру и прямо: что случилось и что игра делает сама (R5-11).
@@ -141,6 +157,7 @@ export function App() {
         wall={wall}
         inbox={inbox}
         opened={opened}
+        folders={folders}
         epilogue={epilogue}
         disc={disc}
         drive={drive}

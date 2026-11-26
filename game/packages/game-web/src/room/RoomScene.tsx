@@ -50,6 +50,8 @@ interface RoomSceneProps {
   inbox: string[];
   /** Вскрытые конверты архива (A-260). */
   opened: readonly ContainerId[];
+  /** Открытые папки, в которых ещё лежат листы (пустая со стола уходит). */
+  folders?: readonly ContainerId[];
   /** Эпилог после заключения — конвертом на столе. */
   epilogue?: Epilogue;
   /** Диск сервера на столе (A-272). */
@@ -74,6 +76,7 @@ export function RoomScene({
   wall,
   inbox,
   opened,
+  folders,
   epilogue = 'none',
   disc = 'none',
   bank = 'none',
@@ -118,6 +121,7 @@ export function RoomScene({
         drive,
         { offHook, pressed },
         { on: lampOn, pull: lampPull },
+        folders,
       );
   };
 
@@ -163,8 +167,21 @@ export function RoomScene({
   const atPhone = !ph.moving && ph.to === 'phone';
   // 3D-стол (MG-A): вещи следователя — преграды и заслонки для листов; цвет не нужен.
   const objects = useMemo(
-    () => deskObjects(room, () => '#000000', inbox, opened, epilogue, disc, bank),
-    [room, inbox, opened, epilogue, disc, bank],
+    () =>
+      deskObjects(
+        room,
+        () => '#000000',
+        inbox,
+        opened,
+        epilogue,
+        disc,
+        bank,
+        undefined,
+        undefined,
+        undefined,
+        folders,
+      ),
+    [room, inbox, opened, epilogue, disc, bank, folders],
   );
 
   return (

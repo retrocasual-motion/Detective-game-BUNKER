@@ -256,9 +256,9 @@ export function roomPolys(r: Room, col: Col): Poly[] {
  */
 type EnvelopeId = Exclude<ContainerId, 'personal' | 'bank'>;
 const ENVELOPE_AT: Record<EnvelopeId, [number, number]> = {
-  protocols: [-0.42, 0.64],
-  scene: [-0.56, 0.34],
-  bunker: [0.42, 0.36],
+  protocols: [-0.36, 0.64],
+  scene: [-0.62, 0.38],
+  bunker: [0.3, 0.42],
   // Короб вещдоков «Изъятое» (автор 25.11: устройства в тонком конверте — «невозможно физически»)
   // — у стены посередине; вскрыли — устройства ложатся тут же.
   seized: [-0.07, 0.19],
@@ -269,9 +269,14 @@ const ENVELOPE_ORDER = ['bunker', 'scene', 'protocols'] as const;
  * Стартовые листы 01–07 (ST-B, A-288): стопкой справа от газеты, письмо бюро сверху — рядом с ней,
  * перед игроком.
  */
-const START_AT: [number, number] = [0.32, 0.68];
+const START_AT: [number, number] = [0.34, 0.7];
 /** Папка-скоросшиватель: 30 × 23,5 см, закладка с названием у дальнего края. */
 const FOLDER: [number, number] = [0.3, 0.235];
+/**
+ * Открытая папка на столе (автор 26.11: «документы должны лежать в открытой папке»): по листу —
+ * чуть больше стопки (лист на столе 18,7 × 26,4 см), листы внутри, а не за краем.
+ */
+const OPEN_FOLDER: [number, number] = [0.25, 0.31];
 /** Короб вещдоков 42 × 32 × 20 см: в нём ноутбук, радиопост, камера, телефон, ручка. */
 const SEIZED_BOX: [number, number, number] = [0.42, 0.32, 0.2];
 
@@ -328,6 +333,11 @@ export function deskObjects(
   phone: PhoneLook = PHONE_IDLE,
   /** Лампа: горит ли, насколько потянута цепочка (0…1). */
   lamp: LampLook = LAMP_IDLE,
+  /**
+   * Открытые папки, в которых ещё лежат листы (UNP-A, автор 26.11: «все документы просмотрел —
+   * зачем папка»): пустая папка со стола уходит. Не задано — все открытые.
+   */
+  folders?: readonly ContainerId[],
 ): DeskObject[] {
   const { p, deskY } = r;
   const box = (
@@ -421,7 +431,9 @@ export function deskObjects(
     pivot: [PIVOT[0] * p, PIVOT[1] * p],
   };
   const envelopes = ENVELOPE_ORDER.filter((id) => !opened.includes(id));
-  const openFolders = ENVELOPE_ORDER.filter((id) => opened.includes(id));
+  const openFolders = ENVELOPE_ORDER.filter(
+    (id) => opened.includes(id) && (!folders || folders.includes(id)),
+  );
   const [LX, LZ] = LAMP_AT;
   const brass = col('--color-lamp-brass');
   const shadeGreen = col('--color-lamp-shade');
@@ -543,19 +555,16 @@ export function deskObjects(
     ...openFolders.map((id) => {
       const [x, z] = ENVELOPE_AT[id];
       const c = CONTAINERS.find((cc) => cc.id === id);
+      const [w, d] = OPEN_FOLDER;
       return {
         key: `folder-open-${id}`,
         label: `Папка «${c?.label ?? id}», открыта`,
         boxes: [
-          box(x, z, FOLDER[0], FOLDER[1], 0.002, col('--color-case-folder')),
-          box(
-            x - FOLDER[0] / 3,
-            z - FOLDER[1] / 2 - 0.008,
-            0.09,
-            0.018,
-            0.002,
-            col('--color-case-folder'),
-          ),
+          box(x, z, w, d, 0.002, col('--color-case-folder')),
+          // Корешок слева — темнее: видно, что это раскрытая папка.
+          box(x - w / 2 + 0.008, z, 0.016, d, 0.0025, col('--color-case-folder-edge')),
+          // Закладка с названием — у дальнего края.
+          box(x - w / 4, z - d / 2 - 0.008, 0.09, 0.018, 0.002, col('--color-case-folder')),
         ],
         // Ярлык не над листами: чья стопка — видно по закладке и месту.
         flat: true,
@@ -1096,13 +1105,15 @@ export function drawObjects(
   bank: Bank = 'none',
   drive: DriveLook = DRIVE_IDLE,
   phone: PhoneLook = PHONE_IDLE,
+  /** Лампа: горит ли, насколько потянута цепочка (0…1). */
   lamp: LampLook = LAMP_IDLE,
+  folders?: readonly ContainerId[],
 ): void {
   const ctx = prepare(canvas, r);
   if (!ctx) return;
   const col = colors(canvas);
   for (const o of sortObjects(
-    deskObjects(r, col, inbox, opened, epilogue, disc, bank, drive, phone, lamp),
+    deskObjects(r, col, inbox, opened, epilogue, disc, bank, drive, phone, lamp, folders),
     pose.eye,
   )) {
     const boxes = o.ordered

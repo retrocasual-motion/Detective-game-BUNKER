@@ -301,17 +301,15 @@ export function Desk({
       // Листы — ровной стопкой (DC-B, автор 25.11: стопка «к прочтению», без веера): место — одно,
       // свободное от устройств; первый по описи — сверху. Чуть неровно, как сложенные руками.
       const flat = pick(false);
-      const spot = flat.length
-        ? scatter(
-            flat.slice(0, 1),
-            zone,
-            stackAt(flat[0]?.id ?? '') ?? SPILL_AT,
-            7,
-            0.06,
-            [...placed, ...devs],
-            solid,
-          )[0]
-        : undefined;
+      // Своё место стопки (папка, стартовые — VZ-A, ST-B) — ровно на нём, вдоль папки: листы лежат в
+      // открытой папке, а не криво поверх неё (автор 26.11). Нет своего места — свободное у середины.
+      const own = flat.length ? stackAt(flat[0]?.id ?? '') : null;
+      const spot = !flat.length
+        ? undefined
+        : own
+          ? // Чуть правее середины папки: слева виден корешок и край картона.
+            { id: flat[0]?.id ?? '', x: own.x + 0.018, z: own.z + 0.006, rot: 0 }
+          : scatter(flat.slice(0, 1), zone, SPILL_AT, 7, 0.06, [...placed, ...devs], solid)[0];
       const sheets: Piece[] = spot
         ? flat
             .map((it, k) => {
@@ -335,9 +333,10 @@ export function Desk({
       // Порядок укладки: что легло позже, то выше — первый лист описи сверху стопки.
       const base = Math.min(...fresh.map((it) => it.layer));
       const laid = [...devs, ...sheets].map((q, k) => ({ ...q, layer: base + k }));
-      laid.forEach((q, k) => {
-        starts.current.set(q.id, { pos: deskPoint(room, from.x, from.z, 0.012), at: now + k * 60 });
-      });
+      // Без полёта (автор 26.11: «из воздуха просто падают на стол — так не должно быть»): открытое
+      // сразу лежит на своём месте — в папке, у короба, стартовая стопка — справа от газеты.
+      void from;
+      void now;
       next = [...placed, ...laid];
       save(next);
     }
