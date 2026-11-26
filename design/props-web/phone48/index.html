@@ -1,0 +1,136 @@
+<title>Телефон 48 в руках</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root { color-scheme: dark; --bg: #0c0a08; --panel: rgba(22,18,14,.82); --line: rgba(255,214,170,.16); --text: #e9dfd2; --muted: #9c8f80; --accent: #ffc58c; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); overflow: hidden; }
+  body { font: 15px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  #stage { position: fixed; inset: 0; }
+  #view { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; outline: none; }
+  #vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 42% 42%, rgba(0,0,0,0) 45%, rgba(0,0,0,.5) 100%); }
+  #top { position: absolute; left: 16px; top: 14px; pointer-events: none; }
+  #top h1 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  #top p { margin: 3px 0 0; font-size: 12px; color: #6f6458; }
+  #panel { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 16px max(14px, env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+  #hint { font-size: 12px; color: var(--muted); text-align: center; max-width: 34em; }
+  #buttons { display: flex; gap: 8px; width: 100%; max-width: 440px; pointer-events: auto; }
+  button { flex: 1 1 0; min-height: 46px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: inherit; font-weight: 550; cursor: pointer; }
+  button[aria-pressed="true"] { border-color: rgba(255,197,140,.55); color: var(--accent); }
+  body.clean #top, body.clean #panel, body.clean #vignette { display: none; }
+</style>
+<div id="stage">
+  <canvas id="view" tabindex="0" aria-label="Телефон, материал дела № 48. Ведите, чтобы повернуть."></canvas>
+  <div id="vignette"></div>
+  <div id="top"><h1>Материал № 48 · телефон</h1><p>проба WEB-C: форма — кодом, поверхности — фото-карты</p></div>
+  <div id="panel">
+    <div id="hint">Ведите пальцем или мышью — вещь поворачивается под лампой. Щипок или колесо — ближе и дальше.</div>
+    <div id="buttons"><button id="bFlip" type="button" aria-pressed="false">Перевернуть</button><button id="bHome" type="button">Как было</button></div>
+  </div>
+</div>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }</script>
+<script type="module">
+import * as THREE from 'three';
+import { buildPhone48 } from './phone48.js';
+const canvas = document.getElementById('view');
+const params = new URLSearchParams(location.hash.replace(/^#/, ''));
+if (params.get('clean') === '1') document.body.classList.add('clean');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: true });
+const coarse = matchMedia('(pointer: coarse)').matches, small = Math.min(innerWidth, innerHeight) < 700;
+renderer.setPixelRatio(parseFloat(params.get('dpr') || '') || Math.min(devicePixelRatio || 1, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.AgXToneMapping; renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0c0a08);
+const camera = new THREE.PerspectiveCamera(26, 1, 0.01, 6);
+// свет — мир стола: тёплая лампа сбоку-сверху (#ffdcae, как desk47.js), слабый холодный заполняющий
+const LAMP_POS = new THREE.Vector3(-0.50, 0.62, 0.26);
+const lampHex = /^[0-9a-f]{6}$/i.test(params.get('lamp') || '') ? params.get('lamp') : 'ffdcae';
+const lamp = new THREE.SpotLight(new THREE.Color('#' + lampHex), parseFloat(params.get('li') || '6'), 3, 0.16, 0.75, 2);
+lamp.position.copy(LAMP_POS); lamp.castShadow = true; lamp.shadow.mapSize.set(2048, 2048);
+lamp.shadow.camera.near = 0.5; lamp.shadow.camera.far = 1.2; lamp.shadow.bias = -0.00008; lamp.shadow.normalBias = 0.00015; lamp.shadow.radius = 2.5;
+scene.add(lamp, lamp.target);
+const fill = new THREE.DirectionalLight(0x8fb0e0, 0.55); fill.position.set(0.8, 0.5, 0.1); scene.add(fill);
+scene.add(new THREE.HemisphereLight(0x39424f, 0x0a0806, 0.35));
+{ // карта окружения: тёмная комната, абажур лампы, тёплый потолок, холодное окно, стол
+  const env = new THREE.Scene();
+  env.add(new THREE.Mesh(new THREE.SphereGeometry(5, 24, 16), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.018, 0.021, 0.027), side: THREE.BackSide })));
+  const panel = (pos, size, rgb) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(size[0], size[1]), new THREE.MeshBasicMaterial({ color: new THREE.Color(...rgb), side: THREE.DoubleSide })); m.position.copy(pos); m.lookAt(0, 0, 0); env.add(m); };
+  panel(LAMP_POS.clone().normalize().multiplyScalar(2.2), [1.0, 0.8], [26, 20, 15.5]);
+  panel(new THREE.Vector3(-1.2, 1.9, 0.9), [2.2, 1.2], [0.5, 0.36, 0.25]);
+  panel(new THREE.Vector3(2.4, 0.5, -1.6), [2.2, 2.6], [0.5, 0.66, 0.95]);
+  panel(new THREE.Vector3(0, -2.2, 0.4), [3, 3], [0.09, 0.06, 0.04]);
+  const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(env, 0.02).texture; scene.environmentIntensity = parseFloat(params.get('env') || '0.3'); pm.dispose();
+}
+let dirty = true; const invalidate = () => { dirty = true; };
+const phone = buildPhone48(THREE, { anisotropy: Math.min(16, renderer.capabilities.getMaxAnisotropy()), onChange: invalidate,
+  pbr: params.get('pbr') !== '0', lowPower: params.get('low') ? params.get('low') === '1' : (coarse || small), mapSet: params.get('set') || undefined });
+const holder = new THREE.Group(), inner = new THREE.Group(); inner.add(phone); holder.add(inner); scene.add(holder);
+const D = phone.userData.dims;
+if (params.get('screen') === 'test') { // проверка раскладки uv1 экрана — не интерфейс
+  const c = document.createElement('canvas'); c.width = 240; c.height = 400; const x = c.getContext('2d');
+  x.fillStyle = '#20324a'; x.fillRect(0, 0, 240, 400); x.strokeStyle = '#fff'; x.strokeRect(4.5, 4.5, 231, 391); x.fillStyle = '#fff'; x.font = '22px sans-serif'; x.fillText('ВЕРХ ↑', 76, 40); x.fillText('240 × 400', 62, 210);
+  phone.userData.setScreenTexture(new THREE.CanvasTexture(c));
+}
+const qOf = (x, y, z) => new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z, 'YXZ'));
+const FLIP = qOf(0, 0, Math.PI), v3 = (x, y, z) => new THREE.Vector3(x, y, z);
+// focus — точка вещи (в её координатах), которая встаёт в центр кадра
+const VIEWS = {
+  front: { q: qOf(0.66, 0.40, 0), zoom: 1 },
+  back: { q: qOf(0.74, -0.30, 0).multiply(FLIP), zoom: 1 },
+  flat: { q: qOf(1.01, 0, 0), zoom: 0.92 },
+  flatback: { q: qOf(1.01, 0, 0).multiply(FLIP), zoom: 0.92 },
+  keys: { q: qOf(0.66, -0.25, 0), zoom: 0.36, focus: v3(0, D.T, 0.042) },
+  ear: { q: qOf(0.70, 0.25, 0), zoom: 0.36, focus: v3(0, D.T, -0.042) },
+  camera: { q: qOf(0.72, 0.42, 0).multiply(FLIP), zoom: 0.36, focus: v3(0.012, 0, -0.036) },
+  backmid: { q: qOf(0.52, 0.2, 0).multiply(FLIP), zoom: 0.36, focus: v3(0, 0, 0.01) },
+  side: { q: qOf(0.12, 1.30, 0), zoom: 0.62 }, right: { q: qOf(0.12, -1.30, 0), zoom: 0.62 },
+  topend: { q: qOf(-0.35, 0.45, 0), zoom: 0.5, focus: v3(0, D.T / 2, -0.045) },
+  rim: { q: qOf(0.30, -0.9, 0), zoom: 0.30, focus: v3(0.02, D.T / 2, 0.04) },
+  glance: { q: qOf(0.36, -0.55, 0), zoom: 0.8 },
+  screen: { q: qOf(0.93, -0.12, 0), zoom: 0.62 },
+};
+const CENTER = v3(0, D.T / 2, 0);
+const st = { q: new THREE.Quaternion(), zoom: 1, focus: new THREE.Vector3() }, tg = { q: new THREE.Quaternion(), zoom: 1, focus: new THREE.Vector3() };
+let flipped = false;
+function applyView(v, snap) { tg.q.copy(v.q); tg.zoom = v.zoom; tg.focus.copy(v.focus || CENTER); if (snap) { st.q.copy(tg.q); st.zoom = tg.zoom; st.focus.copy(tg.focus); } invalidate(); }
+const CAM_DIR = new THREE.Vector3(0, Math.sin(0.56), Math.cos(0.56));
+let fitDist = 0.4;
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  const half = 0.068, t = Math.tan(camera.fov * Math.PI / 360); fitDist = Math.max(half / t, half * 0.62 / (t * camera.aspect)) * 1.12; invalidate();
+}
+addEventListener('resize', resize); resize();
+applyView(VIEWS[params.get('view')] || VIEWS.front, true);
+if (params.get('zoom')) { st.zoom = tg.zoom = parseFloat(params.get('zoom')); }
+// управление: ведение — поворот вокруг осей экрана, колесо/щипок — ближе-дальше, правая кнопка — как было
+const ptr = new Map(); let pinch = 0;
+canvas.addEventListener('pointerdown', (e) => { if (e.button === 2) { home(); return; } canvas.setPointerCapture(e.pointerId); ptr.set(e.pointerId, [e.clientX, e.clientY]); });
+canvas.addEventListener('pointermove', (e) => {
+  const p = ptr.get(e.pointerId); if (!p) return;
+  if (ptr.size === 1) { const dx = e.clientX - p[0], dy = e.clientY - p[1], k = 0.008;
+    tg.q.premultiply(new THREE.Quaternion().setFromAxisAngle(v3(0, 1, 0), dx * k)).premultiply(new THREE.Quaternion().setFromAxisAngle(v3(1, 0, 0), dy * k)); invalidate(); }
+  ptr.set(e.pointerId, [e.clientX, e.clientY]);
+  if (ptr.size === 2) { const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pinch) tg.zoom = Math.min(1.6, Math.max(0.22, tg.zoom * pinch / d)); pinch = d; invalidate(); }
+});
+const up = (e) => { ptr.delete(e.pointerId); pinch = 0; }; canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+canvas.addEventListener('wheel', (e) => { e.preventDefault(); tg.zoom = Math.min(1.6, Math.max(0.22, tg.zoom * Math.exp(e.deltaY * 0.0012))); invalidate(); }, { passive: false });
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+function home() { flipped = false; document.getElementById('bFlip').setAttribute('aria-pressed', 'false'); applyView(VIEWS.front); }
+document.getElementById('bHome').onclick = home;
+document.getElementById('bFlip').onclick = () => { flipped = !flipped; document.getElementById('bFlip').setAttribute('aria-pressed', String(flipped)); applyView(flipped ? VIEWS.back : VIEWS.front); };
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let frames = 0; window.__frames = () => frames;
+function tick() {
+  requestAnimationFrame(tick);
+  const k = reduce ? 1 : 0.16;
+  if (st.q.angleTo(tg.q) > 1e-4 || Math.abs(st.zoom - tg.zoom) > 1e-4 || st.focus.distanceTo(tg.focus) > 1e-5) { st.q.slerp(tg.q, k); st.zoom += (tg.zoom - st.zoom) * k; st.focus.lerp(tg.focus, k); dirty = true; }
+  if (!dirty) return; dirty = false; frames++;
+  holder.quaternion.copy(st.q);
+  inner.position.copy(st.focus).multiplyScalar(-1);
+  camera.position.copy(CAM_DIR).multiplyScalar(fitDist * st.zoom); camera.lookAt(0, 0, 0);
+  renderer.render(scene, camera);
+}
+phone.userData.ready.then(() => { window.__ready = true; window.__stats = phone.userData.stats; invalidate(); });
+window.__phone = phone; window.__renderer = renderer; window.__camera = camera; window.__st = st; window.__fit = () => fitDist;
+tick();
+</script>

@@ -1,0 +1,12 @@
+<!doctype html><html><head><meta charset="utf-8">
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }</script></head><body>
+<script type="module">
+// masks.html#size=4096 — холсты процедурного рисунка (цвет, ORM, высота) для tools/export_masks.py
+import * as THREE from 'three';
+import { buildPhone48 } from './phone48.js';
+const size = parseInt(new URLSearchParams(location.hash.slice(1)).get('size') || '4096');
+const ph = buildPhone48(THREE, { pbr: false, textureSize: size });
+const out = {};
+for (const f of ['front', 'back']) for (const k of ['A', 'O', 'H']) out[f + '_' + k] = ph.userData.canvases[f][k].toDataURL('image/png');
+window.__masks = out; window.__ready = true;
+</script></body></html>

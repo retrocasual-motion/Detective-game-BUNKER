@@ -1,0 +1,31 @@
+{
+  "_about": "GEN20 — телефон 48 (WEB-C), 27.11: фото переда и спинки строго по ортовидам модели (design/props-web/phone48/ortho.html#v=front|back, кадр 1152×2048, поля m=1.18) и плитка глянцевого пластика. Класс вещи — недорогой сенсорный моноблок 2009 года (образец материалов — Samsung S5230, фото Wikimedia Commons, источники в bunker-media/references/real/R9_phone_views/_sources.json); марок, надписей и особых примет нет. Паспорт износа общий: волосяные потёртости, отпечатки, пыль в щелях. Запуск: design/tools/kie/kie_batch.ps1 -JobFile <этот файл>. Карты: design/props-web/phone48/tools/make_maps.py.",
+  "outDir": "E:\\Projects\\bunker-media\\probes\\3d\\48_phone_web\\gen20",
+  "resolution": "4K",
+  "aspect": "9:16",
+  "refs": {
+    "L_FRONT": "E:\\Projects\\bunker-media\\probes\\3d\\48_phone_web\\gen20\\layout\\L_front_tex.jpg",
+    "L_BACK": "E:\\Projects\\bunker-media\\probes\\3d\\48_phone_web\\gen20\\layout\\L_back_tex.jpg",
+    "R9_01": "E:\\Projects\\bunker-media\\references\\real\\R9_phone_views\\R9-01_samsung_s5230_front.jpg",
+    "R9_02": "E:\\Projects\\bunker-media\\references\\real\\R9_phone_views\\R9-02_samsung_s5230_back.jpg"
+  },
+  "jobs": [
+    {
+      "label": "T1_front",
+      "refs": ["L_FRONT", "R9_01"],
+      "prompt": "T1 (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight orthographic top-down product photograph of the front of a generic inexpensive black touchscreen mobile phone from 2009 lying on a plain flat medium grey background, with exactly the same framing and proportions as the first image. Keep exactly the outline and the position, size and shape of every part from the first image: the thin metallic rim around the front, the glossy black front panel, the dark switched-off screen rectangle, the long pill-shaped chrome earpiece grille with tiny perforation holes at the top, the band of dark brushed metal at the bottom with three keys in it: a pill-shaped key with a small green telephone handset icon on the left, a square key with a chrome frame and a white return arrow in the middle, a pill-shaped key with a small red telephone handset icon on the right; the small side buttons sticking out at the left and right edges. Do not add, move or remove any part. Materials as on the phone in the second image: glossy black plastic front, dark gunmetal chrome rim, dark brushed metal key band. The screen is switched off: evenly dark, only slightly lighter than the black frame around it. A year of daily use carried in a trouser pocket: many very fine hairline micro-scratches spread evenly over the whole glossy front, faint greasy finger smears spread evenly over the screen, the chrome rim slightly dulled at the corners, a little fine grey dust along the inner edge of the rim, around the keys and in the earpiece holes. No deep scratches, no chips, no cracks, no dents, no stickers. Lit with soft completely even shadowless light: no reflections, no highlights, no gradient. Natural colours, everything sharp. No text, no letters, no brand name and no logo anywhere: the area between the earpiece and the screen is plain glossy black."
+    },
+    {
+      "label": "T2_back",
+      "refs": ["L_BACK", "R9_02"],
+      "prompt": "T2 (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight orthographic top-down product photograph of the back of a generic inexpensive black touchscreen mobile phone from 2009 lying face down on a plain flat medium grey background, with exactly the same framing and proportions as the first image. Keep exactly the outline and the position, size and shape of every part from the first image: the one-piece battery cover that covers the whole back, glossy black plastic with a fine regular grid pattern of tiny raised squares, one square per millimetre, the smooth glossy rounded border around the patterned area, the small rounded-rectangle camera plate of brushed silver metal in the upper left corner with the round camera lens in a metal ring at its top and a small round convex chrome mirror below the lens, the small side buttons sticking out at the left and right edges. Do not add, move or remove any part. Materials as on the phone in the second image. The camera plate is blank brushed metal apart from the lens and the mirror: no text, no numbers, no symbols on it. A year of daily use carried in a trouser pocket: many very fine hairline micro-scratches spread evenly over the back, the cover slightly rubbed and hazy along its edges and corners, faint greasy finger smears, a little fine grey dust around the camera plate and in the seam along the edge. No deep scratches, no chips, no cracks, no dents, no stickers, no labels. Lit with soft completely even shadowless light: no reflections, no highlights, no gradient. Natural colours, everything sharp. No text, no letters, no brand name and no logo anywhere."
+    },
+    {
+      "label": "M1_gloss",
+      "resolution": "2K",
+      "aspect": "1:1",
+      "refs": ["R9_02"],
+      "prompt": "M1 (file label, not part of the image, never draw it). Extreme close-up macro photograph, taken straight on, of a flat area of smooth glossy black plastic from a used 2009 mobile phone like the one in the reference image, filling the whole frame from edge to edge, about 30 millimetres across. Only the uniform surface: no edges, no pattern, no objects, no camera, no buttons. Many very fine hairline micro-scratches in random directions spread evenly over the frame, a few faint greasy fingerprint smears, a few tiny grey dust specks. Soft even light at a slight grazing angle, so that the scratches and smears read a little lighter than the black plastic; no bright reflection and no gradient across the frame. Everything sharp. No text."
+    }
+  ]
+}
