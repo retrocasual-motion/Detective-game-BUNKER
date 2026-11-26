@@ -96,6 +96,21 @@ test('щелчок по папке — она в руках: протянуть 
   await expect.poll(() => pieces(page)).toEqual(['15']);
 });
 
+test('RV-1: папку открывают щелчком в любом месте обложки — как конверт и пломбу', async ({
+  page,
+}) => {
+  await page.getByTestId('container-scene').click();
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /^Папка «/);
+  // Папка долетела до рук — щелчок по ней, а не мимо (мимо — положить).
+  await page.waitForTimeout(600);
+  const saved = savedPut(page);
+  // Середина обложки, левее полосы, за которую тянут.
+  await page.mouse.click(600, 384);
+  await saved;
+  await expect(page.getByTestId('held')).toBeHidden();
+  await expect.poll(async () => (await pieces(page)).includes('22')).toBe(true);
+});
+
 /** Зажать в точке и протянуть настоящей мышью. */
 async function pull(page: Page, x: number, y: number, dx: number, dy: number) {
   await page.mouse.move(x, y);

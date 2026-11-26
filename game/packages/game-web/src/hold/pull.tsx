@@ -25,6 +25,8 @@ const CLICK_PX = 5;
 export interface Pull {
   anchor: React.RefObject<Group | null>;
   hover: boolean;
+  /** Вскрыть сразу — щелчок по вещи мимо клапана (папка: щелчок по обложке, RV-1). */
+  open: () => void;
   /** Обработчики на каждую сетку, за которую тянут (клапан, половинка печати, пломба). */
   handlers: {
     onPointerDown: (e: ThreeEvent<PointerEvent>) => void;
@@ -150,6 +152,7 @@ export function usePull({
   return {
     anchor,
     hover,
+    open: finish,
     handlers: {
       onPointerDown,
       onPointerOver: (e) => {
