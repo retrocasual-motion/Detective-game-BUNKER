@@ -51,13 +51,14 @@ export function dtmf(key: string): void {
   setTimeout(() => g.disconnect(), 400);
 }
 
-export type ToneKind = 'dial' | 'ring' | 'busy';
+/** `bell` — звонок самого телефона на столе (входящий, SD5-A). */
+export type ToneKind = 'dial' | 'ring' | 'busy' | 'bell';
 
 /** Тон линии до отмены: гудок, вызов, «занято». Возвращает «выключить». */
 export function startTone(kind: ToneKind): () => void {
   const a = audio();
   if (!a) return () => undefined;
-  const level = kind === 'busy' ? 0.03 : 0.035;
+  const level = kind === 'busy' ? 0.03 : kind === 'bell' ? 0.05 : 0.035;
   const g = a.createGain();
   g.connect(a.destination);
   const [f1, f2, on, off] =
@@ -65,7 +66,10 @@ export function startTone(kind: ToneKind): () => void {
       ? [350, 440, 60_000, 0]
       : kind === 'ring'
         ? [440, 480, 2000, 4000]
-        : [480, 620, 500, 500];
+        : kind === 'bell'
+          ? // Электронный звонок офисного аппарата: две ноты, полторы секунды, пауза.
+            [700, 940, 1500, 2500]
+          : [480, 620, 500, 500];
   // Два непрерывных генератора; гудки и паузы — громкостью (F10: не сотни генераторов вперёд).
   const t0 = a.currentTime;
   const end = t0 + 60;

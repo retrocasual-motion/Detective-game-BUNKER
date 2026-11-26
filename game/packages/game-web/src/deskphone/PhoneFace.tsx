@@ -59,15 +59,17 @@ export function PhoneFace({ room, active }: { room: Room; active: boolean }) {
   const talk = c.phase === 'connected' ? Math.floor((Date.now() - c.talkFrom) / 1000) : 0;
   const mmss = `${Math.floor(talk / 60)}:${String(talk % 60).padStart(2, '0')}`;
   const [state, shown] =
-    c.phase === 'ringing'
-      ? ['Вызов…', c.number]
-      : c.phase === 'connected'
-        ? [`Соединено ${mmss}`, c.menu && c.keys ? `Ввод: ${c.keys}` : c.number]
-        : c.phase === 'dead'
-          ? ['Нет соединения', c.number]
-          : c.phase === 'dialtone'
-            ? ['Гудок', c.dialed || '—']
-            : [c.offHook ? 'Набор' : 'Наберите номер', c.dialed || '—'];
+    c.phase === 'incoming'
+      ? ['Входящий вызов', c.number]
+      : c.phase === 'ringing'
+        ? ['Вызов…', c.number]
+        : c.phase === 'connected'
+          ? [`Соединено ${mmss}`, c.menu && c.keys ? `Ввод: ${c.keys}` : c.number]
+          : c.phase === 'dead'
+            ? ['Нет соединения', c.number]
+            : c.phase === 'dialtone'
+              ? ['Гудок', c.dialed || '—']
+              : [c.offHook ? 'Набор' : 'Наберите номер', c.dialed || '—'];
   const tab = active ? 0 : -1;
   const cls = (base: string) => `dp-spot ${base}${active ? ' dp-active' : ''}`;
 

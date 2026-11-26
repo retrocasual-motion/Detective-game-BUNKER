@@ -13,7 +13,8 @@ import { dtmf, startTone, type ToneKind } from './tones.ts';
  * «Повтор» (последний номер). Положили трубку — отбой. Линии — сервер (`/api/phone`).
  */
 
-export type Phase = 'idle' | 'dialtone' | 'ringing' | 'connected' | 'dead';
+/** `incoming` — звонят на телефон следователя (камера хранения, SD5-A). */
+export type Phase = 'idle' | 'dialtone' | 'ringing' | 'connected' | 'dead' | 'incoming';
 
 interface CallState {
   offHook: boolean;
@@ -36,6 +37,11 @@ interface CallState {
   redial(): void;
   erase(): void;
   hangUp(): void;
+  /**
+   * Звонят на телефон на столе (SD5-A): звонок, на экранчике — «Входящий вызов»; сняли трубку —
+   * `text` в трубке. Не взяли — через полминуты стихает. Занят телефон — позвонят, когда положат.
+   */
+  incoming(text: string): void;
 }
 
 /** Длина набора на экранчике. */
@@ -52,6 +58,8 @@ const ms = () => {
     shortDial: fast ? 800 : 5000,
     keysSend: fast ? 500 : 2500,
     busy: fast ? 300 : 3000,
+    // Входящий звонит столько, потом стихает (трубку не взяли).
+    unanswered: fast ? 4000 : 30_000,
   };
 };
 
@@ -67,6 +75,9 @@ let callNo = 0;
 let lastNumber = '';
 /** Когда нажали «0» — второй «0» быстро следом в начале номера даёт «+» (U.4, автор 21.11). */
 let zeroAt = 0;
+/** Что скажут во входящем звонке; звонок, ждущий, пока положат трубку. */
+let incomingText = '';
+let waitingCall = '';
 /** «0» дважды за это время — «+». */
 const PLUS_MS = 450;
 
@@ -160,7 +171,7 @@ export const useCall = create<CallState>((set, get) => {
         }
         return;
       }
-      if (s.phase === 'ringing' || s.phase === 'dead') return;
+      if (s.phase === 'ringing' || s.phase === 'dead' || s.phase === 'incoming') return;
       // «0» дважды быстро в начале — «+» вместо «00», как у мобильных (U.4).
       const nd = plus ? '+' : (s.dialed + k).slice(0, MAX);
       set({ dialed: nd, phase: s.phase === 'dialtone' ? 'idle' : s.phase });
@@ -177,6 +188,20 @@ export const useCall = create<CallState>((set, get) => {
 
     handset() {
       const s = get();
+      // Звонят — сняли трубку: в трубке дежурный.
+      if (s.phase === 'incoming') {
+        clearTimer();
+        setTone(null);
+        set({
+          offHook: true,
+          used: true,
+          phase: 'connected',
+          menu: false,
+          heard: [incomingText],
+          talkFrom: Date.now(),
+        });
+        return;
+      }
       if (s.offHook) {
         get().hangUp();
         return;
@@ -217,6 +242,29 @@ export const useCall = create<CallState>((set, get) => {
       clearTimer();
       setTone(null);
       set({ phase: 'idle', offHook: false, dialed: '', keys: '', menu: false });
+      // Звонили, пока трубка была снята, — звонят снова.
+      if (waitingCall) {
+        const t = waitingCall;
+        waitingCall = '';
+        setTimeout(() => get().incoming(t), 1500);
+      }
+    },
+
+    incoming(text) {
+      const s = get();
+      if (s.offHook || s.phase !== 'idle') {
+        waitingCall = text;
+        return;
+      }
+      incomingText = text;
+      clearTimer();
+      set({ phase: 'incoming', number: 'Внутренний', heard: [], keys: '', menu: false });
+      setTone('bell');
+      timer = setTimeout(() => {
+        if (get().phase !== 'incoming') return;
+        setTone(null);
+        set({ phase: 'idle', number: '' });
+      }, ms().unanswered);
     },
   };
 });

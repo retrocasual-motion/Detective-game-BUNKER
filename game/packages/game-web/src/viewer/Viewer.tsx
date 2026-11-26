@@ -1,4 +1,4 @@
-import { EPILOGUE_ID, inboxIds, inventoryFiles, PERSONS, PIECES } from '@bunker/shared';
+import { EPILOGUE_ID, inboxIds, inventoryFiles, PERSONS, PIECES, PORTION_2 } from '@bunker/shared';
 import {
   type CSSProperties,
   type MouseEvent,
@@ -11,6 +11,7 @@ import {
 import Markdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
+import { inStorage } from '../delivery.ts';
 import { trackReading } from '../dev/readingLog.ts';
 import { useEscLayer } from '../esc.ts';
 import { wheelIntent } from '../input.ts';
@@ -112,6 +113,8 @@ export function Viewer({ materialId }: ViewerProps) {
   const lookedKey = useGame((g) =>
     materialId === INVENTORY_ID ? (g.state?.looked ?? []).join(',') : '',
   );
+  // Вещдоки ещё в камере хранения (SD5-A): у их строк описи — карандашом «в камере хранения».
+  const stored = useGame((g) => materialId === INVENTORY_ID && inStorage(g.state, g.materials));
   // Обрывок, вложенный в этот материал (SRC-A): лежит в листе отдельно, его можно вынуть.
   const piece = material ? PIECES.find((p) => p.from === material.id) : undefined;
   const pieceTaken = useGame((g) => !!piece && !!g.state?.pieces?.includes(piece.key));
@@ -263,10 +266,11 @@ export function Viewer({ materialId }: ViewerProps) {
               if (!last || last.tagName !== 'td') return <tr {...props} />;
               const files = inventoryFiles(textOf(last));
               const done = files.length > 0 && files.every((id) => lookedSet.has(id));
+              const away = stored && files.some((id) => PORTION_2.has(id));
               return (
                 <tr
                   {...props}
-                  className={done ? 'inventory-done' : undefined}
+                  className={done ? 'inventory-done' : away ? 'inventory-stored' : undefined}
                   data-inventory={files.join(',') || undefined}
                 />
               );
@@ -335,7 +339,7 @@ export function Viewer({ materialId }: ViewerProps) {
         )}
       </>
     );
-  }, [material, excerpt, piece, pieceTaken, lookedKey]);
+  }, [material, excerpt, piece, pieceTaken, lookedKey, stored]);
 
   const { goTo, page } = sheet;
   // Эпилог (автор 17.11): закрыть нельзя — только «Завершить дело»; вернуться к делу — из меню.

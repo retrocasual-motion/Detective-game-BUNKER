@@ -377,8 +377,11 @@ test('браузер ноутбука (A-288 п. 9): четыре закладк
     throw new Error('нет слов');
   });
   await page.getByTestId('laptop-to-wall').click();
-  for (let k = 0; k < 3 && (await page.getByTestId('held').isVisible()); k++)
+  for (let k = 0; k < 3 && (await page.getByTestId('held').isVisible()); k++) {
     await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+  }
+  await expect(page.getByTestId('held')).toBeHidden();
   await toWall(page);
   const card = page.locator('.paper-excerpt');
   await expect(card).toContainText('Месяц тишины');

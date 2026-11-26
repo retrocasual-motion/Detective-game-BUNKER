@@ -203,6 +203,13 @@ export const postVerdict = async (
   return (await check(res)).json();
 };
 
+/** Звонок камеры хранения (SD5-A): пора — вещдоки второй порции; рано (409) — null. */
+export const askDelivery = async (): Promise<Material[] | null> => {
+  const res = await call('/api/delivery', { method: 'POST' });
+  if (res.status === 409) return null;
+  return (await check(res)).json();
+};
+
 /**
  * Сайты дела в браузерах устройств (A-272; A-288 п. 9). Переход по адресу — движок (АДРЕС): адрес
  * страницы или ответ («Страница не найдена (404)…»).

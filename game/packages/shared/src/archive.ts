@@ -167,3 +167,54 @@ export function sealedIds(s: Pick<PlayerState, 'opened'>): Set<string> {
   const opened = openedOf(s);
   return new Set(CONTAINERS.filter((c) => !opened.includes(c.id)).flatMap(containerContents));
 }
+
+/**
+ * Поэтапная выдача (SD5-A, A-288 п. 10; автор 26.11): дело приходит двумя порциями. Первая — бумаги:
+ * опись, стартовые листы, три папки, коробка пачек 29, газета, конверт с диском 52. Вторая —
+ * вещественные доказательства из камеры хранения бюро: «Изъятое при осмотре места» и «Личные вещи».
+ * Её материалы не уходят в браузер, пока она не пришла (как закрытые, P-10).
+ */
+export const PORTION_2_CONTAINERS: readonly ContainerId[] = ['seized', 'personal'];
+export const PORTION_2: ReadonlySet<string> = new Set(
+  CONTAINERS.filter((c) => PORTION_2_CONTAINERS.includes(c.id)).flatMap(containerContents),
+);
+/** Первая порция — что считается для звонка («открывал», OP-A; все весят одинаково). */
+export const PORTION_1: readonly string[] = [
+  INVENTORY_ID,
+  ...START_STACK,
+  ...CONTAINERS.filter((c) => FOLDER_IDS.has(c.id)).flatMap(containerContents),
+  NEWSPAPER_ID,
+  SERVER_DISC_ID,
+];
+
+/**
+ * Когда звонит камера хранения (SD5-A): открыто не меньше `share` первой порции и прошло не меньше
+ * `minMs` игры с её прихода — или, в любом случае, через `maxMs`. Числа — настройка.
+ */
+export const DELIVERY = { share: 0.7, minMs: 20 * 60_000, maxMs: 40 * 60_000 } as const;
+
+/**
+ * Звонок камеры хранения (SD5-A): дежурный без имени, одна фраза. Черновик — окончательный текст и
+ * голос — на этапе дизайна.
+ */
+export const DELIVERY_CALL =
+  'Специалист по делу девять — одиннадцать двадцать восемь? Камера хранения. Вещдоки по вашему делу подняли, сейчас принесут.';
+
+/** Доля открытого из первой порции (0…1). */
+export function portionShare(looked: readonly string[] | undefined): number {
+  const seen = new Set(looked ?? []);
+  return PORTION_1.filter((id) => seen.has(id)).length / PORTION_1.length;
+}
+
+/** Пора ли звонить (SD5-A): порог и время — или запасной срок. */
+export function deliveryDue(s: Pick<PlayerState, 'looked' | 'playMs'>): boolean {
+  const t = s.playMs ?? 0;
+  return t >= DELIVERY.maxMs || (t >= DELIVERY.minMs && portionShare(s.looked) >= DELIVERY.share);
+}
+
+/**
+ * Вторая порция уже у игрока по сохранению (SD5-A): сохранение до конвертов (`opened` нет) или
+ * короба камеры хранения уже вскрыты — без звонка.
+ */
+export const deliveredBySave = (s: Pick<PlayerState, 'opened'> | null | undefined): boolean =>
+  !!s && (s.opened === undefined || PORTION_2_CONTAINERS.some((c) => s.opened?.includes(c)));

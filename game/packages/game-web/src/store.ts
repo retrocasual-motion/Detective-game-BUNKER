@@ -896,6 +896,12 @@ export const useGame = create<GameStore>((set, get) => {
     async load() {
       await handover();
       // Сервер мог ещё не подняться (503, пока база не готова) — повторяем раз в секунду.
+      // Только в разработке: «?opened=all» — и вещдоки из камеры хранения уже пришли (SD5-A).
+      if (
+        import.meta.env.DEV &&
+        new URLSearchParams(window.location.search).get('opened') === 'all'
+      )
+        await fetch('/api/dev/delivery', { method: 'POST' }).catch(() => undefined);
       for (;;) {
         try {
           const [materials, { state, lastWriter }] = await Promise.all([

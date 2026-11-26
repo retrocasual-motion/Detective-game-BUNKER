@@ -1,0 +1,1 @@
+ALTER TABLE "player_progress" ADD COLUMN "portion" integer DEFAULT 1 NOT NULL;

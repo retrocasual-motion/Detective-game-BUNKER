@@ -52,6 +52,8 @@ interface RoomSceneProps {
   opened: readonly ContainerId[];
   /** Открытые папки, в которых ещё лежат листы (пустая со стола уходит). */
   folders?: readonly ContainerId[];
+  /** Короба камеры хранения, которых на столе ещё нет (SD5-A). */
+  absent?: readonly ContainerId[];
   /** Эпилог после заключения — конвертом на столе. */
   epilogue?: Epilogue;
   /** Диск сервера на столе (A-272). */
@@ -77,6 +79,7 @@ export function RoomScene({
   inbox,
   opened,
   folders,
+  absent,
   epilogue = 'none',
   disc = 'none',
   bank = 'none',
@@ -122,6 +125,7 @@ export function RoomScene({
         { offHook, pressed },
         { on: lampOn, pull: lampPull },
         folders,
+        absent,
       );
   };
 
@@ -180,8 +184,9 @@ export function RoomScene({
         undefined,
         undefined,
         folders,
+        absent,
       ),
-    [room, inbox, opened, epilogue, disc, bank, folders],
+    [room, inbox, opened, epilogue, disc, bank, folders, absent],
   );
 
   return (
@@ -265,6 +270,7 @@ export function RoomScene({
           epilogue={epilogue}
           disc={disc}
           bank={bank}
+          absent={absent}
         />
       )}
       {/* Стрелки видны и во время перехода: щелчок сразу ведёт к новой цели (MOVE-A). */}

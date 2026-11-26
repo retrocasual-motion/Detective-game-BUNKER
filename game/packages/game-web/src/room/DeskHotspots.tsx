@@ -40,6 +40,8 @@ function grow(r: { left: number; top: number; width: number; height: number }) {
   return { left: r.left - (w - r.width) / 2, top: r.top - (h - r.height) / 2, width: w, height: h };
 }
 
+const NO_BOXES: readonly ContainerId[] = [];
+
 export function DeskHotspots({
   room,
   inbox,
@@ -47,6 +49,7 @@ export function DeskHotspots({
   epilogue = 'none',
   disc = 'none',
   bank = 'none',
+  absent = NO_BOXES,
 }: {
   room: Room;
   inbox: string[];
@@ -54,6 +57,8 @@ export function DeskHotspots({
   epilogue?: Epilogue;
   disc?: DiscOnDesk;
   bank?: Bank;
+  /** Короба камеры хранения, которых ещё нет (SD5-A). */
+  absent?: readonly ContainerId[];
 }) {
   const openViewer = useGame((g) => g.openViewer);
   const setComputerOpen = useGame((g) => g.setComputerOpen);
@@ -62,7 +67,20 @@ export function DeskHotspots({
   const lampPulled = useRef(false);
   const spots = useMemo(
     () =>
-      deskObjects(room, noColor, inbox, opened, epilogue, disc, bank)
+      deskObjects(
+        room,
+        noColor,
+        inbox,
+        opened,
+        epilogue,
+        disc,
+        bank,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        absent,
+      )
         .map((o) => ({
           o,
           r: screenRect(o, room.poses.desk, room),
@@ -70,7 +88,7 @@ export function DeskHotspots({
         // Что стоит на другом (коробка банка, проигрыватель — на коробе с пачками), — поверх:
         // щелчок достаётся ему (F9).
         .sort((a, b) => layer(a.o.key) - layer(b.o.key)),
-    [room, inbox, opened, epilogue, disc, bank],
+    [room, inbox, opened, epilogue, disc, bank, absent],
   );
   // Дисковод под монитором (A-272): сюда отпускают диск.
   const driveAt = spots.find((x) => x.o.key === 'drive')?.r;
