@@ -1,4 +1,5 @@
 <title>Телефон 48 в руках</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>
@@ -9,13 +10,14 @@
   #stage { position: fixed; inset: 0; }
   #view { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; outline: none; }
   #vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 42% 42%, rgba(0,0,0,0) 45%, rgba(0,0,0,.5) 100%); }
-  #top { position: absolute; left: 16px; top: 14px; pointer-events: none; }
+  #top { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); pointer-events: none; }
   #top h1 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   #top p { margin: 3px 0 0; font-size: 12px; color: #6f6458; }
-  #panel { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 16px max(14px, env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+  #panel { position: absolute; left: 0; right: 0; bottom: 0; padding-block: 10px max(14px, env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
   #hint { font-size: 12px; color: var(--muted); text-align: center; max-width: 34em; }
   #buttons { display: flex; gap: 8px; width: 100%; max-width: 440px; pointer-events: auto; }
-  button { flex: 1 1 0; min-height: 46px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: inherit; font-weight: 550; cursor: pointer; }
+  button { flex: 1 1 0; min-width: 0; min-height: 46px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: inherit; font-weight: 550; cursor: pointer; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   button[aria-pressed="true"] { border-color: rgba(255,197,140,.55); color: var(--accent); }
   body.clean #top, body.clean #panel, body.clean #vignette { display: none; }
 </style>
@@ -25,7 +27,7 @@
   <div id="top"><h1>Материал № 48 · телефон</h1><p>проба WEB-C: форма — кодом, поверхности — фото-карты</p></div>
   <div id="panel">
     <div id="hint">Ведите пальцем или мышью — вещь поворачивается под лампой. Щипок или колесо — ближе и дальше.</div>
-    <div id="buttons"><button id="bFlip" type="button" aria-pressed="false">Перевернуть</button><button id="bHome" type="button">Как было</button></div>
+    <div id="buttons"><button id="bFlip" type="button" aria-pressed="false">Перевернуть</button><button id="bSet" type="button">Карты 2K</button><button id="bHome" type="button">Как было</button></div>
   </div>
 </div>
 <script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }</script>
@@ -63,7 +65,7 @@ scene.add(new THREE.HemisphereLight(0x39424f, 0x0a0806, 0.35));
 }
 let dirty = true; const invalidate = () => { dirty = true; };
 const phone = buildPhone48(THREE, { anisotropy: Math.min(16, renderer.capabilities.getMaxAnisotropy()), onChange: invalidate,
-  pbr: params.get('pbr') !== '0', lowPower: params.get('low') ? params.get('low') === '1' : (coarse || small), mapSet: params.get('set') || undefined });
+  pbr: params.get('pbr') !== '0', lowPower: params.get('low') ? params.get('low') === '1' : (coarse || small), mapSet: params.get('set') || 'full' });   // на странице пробы и телефон смотрит полный набор; в игре телефон берёт low
 const holder = new THREE.Group(), inner = new THREE.Group(); inner.add(phone); holder.add(inner); scene.add(holder);
 const D = phone.userData.dims;
 if (params.get('screen') === 'test') { // проверка раскладки uv1 экрана — не интерфейс
@@ -117,6 +119,11 @@ canvas.addEventListener('wheel', (e) => { e.preventDefault(); tg.zoom = Math.min
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 function home() { flipped = false; document.getElementById('bFlip').setAttribute('aria-pressed', 'false'); applyView(VIEWS.front); }
 document.getElementById('bHome').onclick = home;
+// сравнение плотности карт на ходу: 2K (197 пикс/см) и 1K (98 пикс/см)
+const bSet = document.getElementById('bSet');
+const setLabel = () => { bSet.textContent = phone.userData.stats.mapSet === 'low' ? 'Карты 1K' : 'Карты 2K'; };
+bSet.onclick = () => { bSet.disabled = true; phone.userData.loadMapSet(phone.userData.stats.mapSet === 'low' ? 'full' : 'low').then(() => { bSet.disabled = false; setLabel(); invalidate(); }); };
+setLabel();
 document.getElementById('bFlip').onclick = () => { flipped = !flipped; document.getElementById('bFlip').setAttribute('aria-pressed', String(flipped)); applyView(flipped ? VIEWS.back : VIEWS.front); };
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let frames = 0; window.__frames = () => frames;
