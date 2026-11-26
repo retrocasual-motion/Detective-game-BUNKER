@@ -101,10 +101,9 @@ const camera = new THREE.PerspectiveCamera(26, 1, 0.05, 6);
 
 // ---- свет: тёплая настольная лампа сбоку-сверху, слабый холодный заполняющий ----
 const LAMP_POS = new THREE.Vector3(-0.50, 0.62, 0.26);
-// Цвет лампы по арт-библии — #ffc58c. На чёрном пластике без другого света он даёт «шоколадный» корпус,
-// поэтому по умолчанию взят тот же тон, наполовину приведённый к белому (как баланс белого у камеры).
-// Сравнить с точным цветом: добавить к адресу #lamp=ffc58c
-const lampHex = /^[0-9a-f]{6}$/i.test(params.get('lamp') || '') ? params.get('lamp') : 'ffdfc5';
+// По умолчанию — цвет лампы со стола (desk47.js, #ffdcae): вещь выглядит так же, как в сцене стола.
+// Самая тёплая лампа арт-библии — #lamp=ffc58c: корпус теплеет до тёпло-серого (оттенок пластика подобран в laptop47.js).
+const lampHex = /^[0-9a-f]{6}$/i.test(params.get('lamp') || '') ? params.get('lamp') : 'ffdcae';
 const lamp = new THREE.SpotLight(new THREE.Color('#' + lampHex), parseFloat(params.get('li') || '6'), 3, 0.42, 0.75, 2);
 lamp.position.copy(LAMP_POS);
 lamp.castShadow = true;
@@ -142,11 +141,13 @@ const invalidate = () => { dirty = true; };
 const texSize = coarse || small ? 1536 : 2048;
 // #pbr=0 — прежний процедурный режим (для сравнения); #low=1 — как на телефоне (редкие сетки, карты вдвое меньше)
 const laptop = buildLaptop47(THREE, { lidAngle: 1.92, textureSize: texSize, anisotropy: Math.min(8, renderer.capabilities.getMaxAnisotropy()), onChange: invalidate,
-  pbr: params.get('pbr') !== '0', lowPower: params.get('low') ? params.get('low') === '1' : (coarse || small) });
+  pbr: params.get('pbr') !== '0', lowPower: params.get('low') ? params.get('low') === '1' : (coarse || small),
+  // #set=low|full — набор карт (по умолчанию: телефон — low, компьютер — full); #sticker=0.7 — размер наклейки HEXON
+  mapSet: params.get('set') || undefined, stickerScale: parseFloat(params.get('sticker') || '') || undefined });
 const holder = new THREE.Group();   // его и крутит игрок
 const inner = new THREE.Group();    // сдвиг, чтобы центр вещи был в центре кадра
 inner.add(laptop); holder.add(inner); scene.add(holder);
-const dims = laptop.userData.dims;
+const dims = laptop.userData.dims, stk = laptop.userData.sticker, lab = laptop.userData.label;
 
 // ---- состояние вида ----
 const qOf = (x, y, z, order = 'YXZ') => new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z, order));
@@ -157,13 +158,18 @@ const VIEWS = {
   detail: { q: qOf(0.42, -0.36, 0), zoom: 0.36, lid: LID_OPEN, focus: new THREE.Vector3(0.060, 0.020, 0.058) },
   side:   { q: qOf(0.05, 1.25, 0), zoom: 0.62, lid: 0, focus: null },
   right:  { q: qOf(0.05, -1.25, 0), zoom: 0.62, lid: 0, focus: null },
-  back:   { q: qOf(0.25, Math.PI - 0.3, 0), zoom: 0.8, lid: 0, focus: null },
+  back:   { q: qOf(0.20, Math.PI - 0.28, 0), zoom: 0.66, lid: 0, focus: null },
+  backports: { q: qOf(0.10, Math.PI - 0.22, 0), zoom: 0.28, lid: 0, focus: new THREE.Vector3(0.118, 0.014, -0.119) },
+  backusb: { q: qOf(0.10, Math.PI + 0.22, 0), zoom: 0.28, lid: 0, focus: new THREE.Vector3(-0.122, 0.014, -0.119) },
+  frontedge: { q: qOf(0.12, 0.25, 0), zoom: 0.5, lid: 0, focus: new THREE.Vector3(0, 0.014, 0.119) },
+  label:  { q: qOf(0.70, 0.18, 0), zoom: 0.30, lid: 0, focus: new THREE.Vector3(lab.x, 0.030, dims.hingeZ + lab.z) },
+  screen: { q: qOf(0.0, -0.30, 0), zoom: 0.78, lid: LID_OPEN, focus: null },
   lid:    { q: qOf(0.55, -0.4, 0), zoom: 0.8, lid: 0, focus: null },
   keys:   { q: qOf(0.62, 0.0, 0), zoom: 0.42, lid: LID_OPEN, focus: new THREE.Vector3(-0.02, 0.02, -0.02) },
   ports:  { q: qOf(0.10, 1.38, 0), zoom: 0.30, lid: 0, focus: new THREE.Vector3(-0.1675, 0.012, -0.045) },
   portsr: { q: qOf(0.10, -1.38, 0), zoom: 0.30, lid: 0, focus: new THREE.Vector3(0.1675, 0.012, -0.045) },
   vents:  { q: qOf(1.22, 0.5, 0).multiply(qOf(0, 0, Math.PI)), zoom: 0.30, lid: 0, focus: new THREE.Vector3(-0.03, 0, 0.0) },
-  sticker:{ q: qOf(0.74, 0.1, 0).multiply(qOf(0, 0, Math.PI)), zoom: 0.33, lid: 0, focus: new THREE.Vector3(0.085, 0, 0.03) },
+  sticker:{ q: qOf(0.74, 0.1, 0).multiply(qOf(0, 0, Math.PI)), zoom: 0.30, lid: 0, focus: new THREE.Vector3(stk.x, 0, stk.z) },
 };
 const st = { q: new THREE.Quaternion(), zoom: 1, lid: LID_OPEN, focusK: 0, focus: new THREE.Vector3() };
 const tg = { q: new THREE.Quaternion(), zoom: 1, lid: LID_OPEN, focusK: 0 };

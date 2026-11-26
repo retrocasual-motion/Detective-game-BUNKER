@@ -1,0 +1,53 @@
+{
+  "_about": "GEN19 — ноутбук 47 (WEB-C), финализация 26.11: фото зада и переда закрытого ноутбука строго по ортовидам модели (ortho.html#v=back|front). С них берутся карты задней и передней стенок базы, кромок крышки и углов. Паспорт износа общий, без текста, логотипов и примет. Запуск: kie_batch.ps1 -JobFile <этот файл>. Карты: make_maps.py (грани back, front), затем prep_pbr.py. Итог 26.11: T7_back (зад целиком, полоса 10:1) не годится — генератор сделал корпус в 1,5 раза толще и гнёзда крупнее; зад переснят двумя половинами с перекрытием 35 мм (T7L_back, T7R_back; ortho.html#v=back&cx=±0.075&w=0.185), они сшиваются в make_maps.py. T8_front принят.",
+  "outDir": "E:\\Projects\\bunker-media\\probes\\3d\\47_laptop_web\\gen19",
+  "resolution": "2K",
+  "aspect": "21:9",
+  "refs": {
+    "L_BACK": "E:\\Projects\\bunker-media\\probes\\3d\\47_laptop_web\\gen19\\layout\\L_back_tex.jpg",
+    "L_FRONT": "E:\\Projects\\bunker-media\\probes\\3d\\47_laptop_web\\gen19\\layout\\L_front_tex.jpg",
+    "R8_01": "E:\\Projects\\bunker-media\\references\\real\\R8_laptop_views\\R8-01_dell_latitude_e6400_back.jpg",
+    "R8_02": "E:\\Projects\\bunker-media\\references\\real\\R8_laptop_views\\R8-02_dell_latitude_e6400_left_side.jpg",
+    "R8_06": "E:\\Projects\\bunker-media\\references\\real\\R8_laptop_views\\R8-06_dell_latitude_e6400_model_no_pp27l_3177.jpg",
+    "L_BACK_L": "E:\\Projects\\bunker-media\\probes\\3d\\47_laptop_web\\gen19\\layout\\L_backL_tex.jpg",
+    "L_BACK_R": "E:\\Projects\\bunker-media\\probes\\3d\\47_laptop_web\\gen19\\layout\\L_backR_tex.jpg"
+  },
+  "jobs": [
+    {
+      "label": "T7_back",
+      "refs": [
+        "L_BACK",
+        "R8_01",
+        "R8_02"
+      ],
+      "prompt": "T7 (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight orthographic rear view photograph of the back edge of a closed generic black business laptop from 2009 lying flat, the edge filling the full width of the frame as a long thin horizontal strip in the middle, with the same plain flat medium grey background above and below. Keep exactly the outline and the position, size and shape of every part from the first image: the two short hinge barrels near the left and right ends, the long round hinge bar of the lid between them, the lid edge above, the Ethernet network socket on the left, the long rectangular seam of the battery in the middle, one USB port on the right, the two rubber feet below. Do not add, move or remove any part. Everything is matte charcoal black plastic with a fine grain, like the black plastic in the reference photographs, not silver; only the two hinge barrels are dark satin gunmetal steel. Real ports with dark depth inside: the Ethernet socket with its metal shield and small contacts, the USB port with its metal shield. A year of daily use carried in a bag: edges and corners lightly rubbed and slightly smoother, a little fine grey dust in the port openings, along the battery seam and around the hinges. No scratches or other marks. Lit with soft completely even shadowless light: no highlights, no gradient. Natural colours, everything sharp. No text, no symbols or icons next to the ports, no screws, no labels, no logo, no people."
+    },
+    {
+      "label": "T8_front",
+      "refs": [
+        "L_FRONT",
+        "R8_02",
+        "R8_06"
+      ],
+      "prompt": "T8 (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight orthographic front view photograph of the front edge of a closed generic black business laptop from 2009 lying flat, the edge filling the full width of the frame as a long thin horizontal strip in the middle, with the same plain flat medium grey background above and below. Keep exactly the outline of the first image: the thinner lid on top with its rounded front edge, the dark seam between lid and base, the plain front wall of the base with rounded corners, the two rubber feet below. Do not add, move or remove any part: the front wall is completely plain, with no ports, no latch, no buttons, no lights, no speaker holes. Matte charcoal black plastic with a fine grain like the plastic in the reference photographs. A year of daily use: the front edge of the lid and of the base slightly rubbed smoother and a little lighter where hands and wrists touch, most in the middle where the lid is opened, corners lightly rubbed, a little fine grey dust in the seam between lid and base. No scratches or other marks. Lit with soft completely even shadowless light: no highlights, no gradient. Natural colours, everything sharp. No text, no symbols, no logo, no people."
+    },
+    {
+      "label": "T7L_back",
+      "refs": [
+        "L_BACK_L",
+        "R8_01",
+        "R8_02"
+      ],
+      "prompt": "T7L (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight orthographic rear view photograph of the left half of the back edge of a closed generic black business laptop from 2009 lying flat, with exactly the same framing and proportions as the first image: the edge is a horizontal strip in the middle of the frame, the plain flat medium grey background above and below. The laptop continues beyond the right edge of the frame and is simply cut off by the frame there; its rounded corner is at the left. Keep exactly the outline, the thickness and the position, size and shape of every part from the first image: the thin lid edge on top, the short hinge barrel, the long round hinge bar of the lid, the small Ethernet network socket with its metal shield and small contacts and dark depth inside, the long rectangular seam of the battery running out of the frame, the rubber foot below. Do not add, move, enlarge or remove any part. Everything is matte charcoal black plastic with a fine grain, like the black plastic in the reference photographs, not silver; only the short hinge barrel is dark satin gunmetal steel. A year of daily use carried in a bag: edges and the corner lightly rubbed and slightly smoother, a little fine grey dust in the port opening, along the battery seam and around the hinge. No scratches or other marks. Lit with soft completely even shadowless light: no highlights, no gradient. Natural colours, everything sharp. The plastic around the port is completely blank: no text, no symbols, no icons or pictograms next to the port, no screws, no labels, no logo, no people."
+    },
+    {
+      "label": "T7R_back",
+      "refs": [
+        "L_BACK_R",
+        "R8_01",
+        "R8_02"
+      ],
+      "prompt": "T7R (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight orthographic rear view photograph of the right half of the back edge of a closed generic black business laptop from 2009 lying flat, with exactly the same framing and proportions as the first image: the edge is a horizontal strip in the middle of the frame, the plain flat medium grey background above and below. The laptop continues beyond the left edge of the frame and is simply cut off by the frame there; its rounded corner is at the right. Keep exactly the outline, the thickness and the position, size and shape of every part from the first image: the thin lid edge on top, the short hinge barrel, the long round hinge bar of the lid, the single small USB port with its metal shield and dark depth inside, the long rectangular seam of the battery running out of the frame, the rubber foot below. Do not add, move, enlarge or remove any part. Everything is matte charcoal black plastic with a fine grain, like the black plastic in the reference photographs, not silver; only the short hinge barrel is dark satin gunmetal steel. A year of daily use carried in a bag: edges and the corner lightly rubbed and slightly smoother, a little fine grey dust in the port opening, along the battery seam and around the hinge. No scratches or other marks. Lit with soft completely even shadowless light: no highlights, no gradient. Natural colours, everything sharp. The plastic around the port is completely blank: no text, no symbols, no icons or pictograms next to the port, no screws, no labels, no logo, no people."
+    }
+  ]
+}
