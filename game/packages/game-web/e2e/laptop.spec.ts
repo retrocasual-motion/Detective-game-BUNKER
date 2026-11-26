@@ -340,3 +340,53 @@ test('RV-32: ключ щелчками по точкам и «Войти» — �
   await page.getByTestId('laptop-enter').click();
   await expect(page.getByTestId('laptop-desktop')).toBeVisible();
 });
+
+test('браузер ноутбука (A-288 п. 9): четыре закладки — четыре страницы здесь же, вкладки нет; выписка — сразу на стене', async ({
+  page,
+}) => {
+  await laptopUp(page);
+  await unlock(page);
+  await page.getByTestId('lap-icon-Браузер').dblclick();
+  const tabs = page.context().pages().length;
+  const web = page.getByTestId('lap-web');
+  const fav = (domain: string) => page.getByTestId(`lap-fav-${domain}`);
+  for (const domain of ['healthway-nutrition.com', 'aspen-bank.com', 'vaultline-program.com']) {
+    await fav(domain).click();
+    await expect(web.getByTestId('site')).toHaveAttribute('data-domain', domain);
+  }
+  await fav('blackwood-chronicle.com').click();
+  await expect(web.getByTestId('site')).toHaveCount(0);
+  await expect(web).not.toBeEmpty();
+  expect(page.context().pages().length).toBe(tabs);
+  // Выписка со страницы сайта на ноутбуке — сразу на стене, источник — сайт.
+  await fav('vaultline-program.com').click();
+  await web.locator('.site-main').evaluate((root) => {
+    const w = 'Месяц тишины';
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const i = (n.textContent ?? '').indexOf(w);
+      if (i < 0) continue;
+      const r = document.createRange();
+      r.setStart(n, i);
+      r.setEnd(n, i + w.length);
+      window.getSelection()?.removeAllRanges();
+      window.getSelection()?.addRange(r);
+      n.parentElement?.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      return;
+    }
+    throw new Error('нет слов');
+  });
+  await page.getByTestId('laptop-to-wall').click();
+  for (let k = 0; k < 3 && (await page.getByTestId('held').isVisible()); k++)
+    await page.keyboard.press('Escape');
+  await toWall(page);
+  const card = page.locator('.paper-excerpt');
+  await expect(card).toContainText('Месяц тишины');
+  await expect(card).toContainText('vaultline-program.com');
+  // Щелчок по выписке — сайт в браузере компьютера следователя.
+  await card.locator('.excerpt-text').click();
+  await expect(page.getByTestId('pc-web').getByTestId('site')).toHaveAttribute(
+    'data-domain',
+    'vaultline-program.com',
+  );
+});

@@ -1,11 +1,10 @@
 /* Сайты дела (A-272): функциональный вид 2009 года — светлая страница, шапка, разделы, формы.
    Финальный вид каждого сайта — отдельной задачей автора. */
 
-:root {
+/* Страница сайта в окне браузера устройства (A-288 п. 9): свой шрифт и цвета, не игры. */
+.case-site {
   color-scheme: light;
-}
-body {
-  margin: 0;
+  min-height: 100%;
   background: #e9e9e4;
   color: #1d1d1b;
   font:
@@ -14,18 +13,23 @@ body {
     "Segoe UI",
     sans-serif;
 }
-.site-loading,
-.site-plain {
-  max-width: 720px;
-  margin: 64px auto;
-  padding: 0 16px;
+.case-site.site-loading,
+.case-site.site-plain {
+  padding: 32px 24px;
 }
-.site {
-  max-width: 960px;
-  margin: 0 auto;
+.case-site.site {
   background: #fff;
-  min-height: 100vh;
   box-shadow: 0 0 0 1px #c9c9c2;
+}
+/* Ссылка-кнопка внутри страницы («Кабинет сотрудника», «Почта»). */
+.case-site .site-a {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #1f4e8c;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
 }
 .site-head {
   padding: 14px 24px 0;

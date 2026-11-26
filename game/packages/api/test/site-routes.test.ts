@@ -6,7 +6,6 @@ import {
   connectDb,
   type Db,
   migrateDb,
-  pendingExcerpts,
   playerProgress,
   playerState,
   players,
@@ -14,8 +13,9 @@ import {
 } from '../src/db/client.ts';
 
 /**
- * Сайты дела на сервере (A-272, AC-3): переход по адресу → ссылка с пропуском; пропуск → cookie
- * сайта; страница — только открытое игроком; форма — движок. Правила — маленький пакет-образец.
+ * Сайты дела на сервере (A-272, AC-3; A-288 п. 9): сайт открывается в браузере устройства внутри
+ * игры — игрок из сессии игры. Переход по адресу — движок (АДРЕС); страница — только открытое
+ * игроком, чтение без действий (RV-65); форма — движок. Правила — маленький пакет-образец.
  */
 
 const mat = (id: string, body: string): Material => ({
@@ -89,12 +89,11 @@ beforeAll(async () => {
 });
 afterAll(async () => close());
 beforeEach(async () => {
-  for (const t of [playerState, playerProgress, players, sessions, pendingExcerpts])
-    await db.delete(t);
+  for (const t of [playerState, playerProgress, players, sessions]) await db.delete(t);
   clock = 1_000_000;
 });
 
-const SITE = 'vaultline-program.localhost:5173';
+const VL = 'vaultline-program.com';
 const app = (auth: 'off' | 'link' = 'off') =>
   createApp({
     db,
@@ -112,34 +111,40 @@ const json = (a: App, path: string, body: unknown, headers: Record<string, strin
     headers: { 'content-type': 'application/json', ...headers },
     body: JSON.stringify(body),
   });
-const page = async (a: App, path = '/', headers: Record<string, string> = {}) =>
+const page = async (a: App, path = '', headers: Record<string, string> = {}) =>
   (await (
-    await a.request(`/api/site/page?path=${encodeURIComponent(path)}`, {
-      headers: { host: SITE, ...headers },
-    })
-  ).json()) as SitePage & { anon?: boolean; notFound?: string };
+    await a.request(`/api/site/page?address=${encodeURIComponent(VL + path)}`, { headers })
+  ).json()) as SitePage & { notFound?: string };
+/** Перейти на сайт (как адресная строка браузера в игре). */
+const open = async (a: App, address = VL, headers: Record<string, string> = {}) =>
+  (await (await json(a, '/api/site/open', { address }, headers)).json()) as {
+    address?: string;
+    reply?: string;
+  };
+const form = (a: App, f: string, values: Record<string, string>, address = VL) =>
+  json(a, '/api/site/form', { address, form: f, values });
 
-describe('сайты дела на сервере (A-272)', () => {
-  it('переход по адресу: сайт — ссылка на свой хост с пропуском; чужой адрес — ответ 404', async () => {
+describe('сайты дела на сервере (A-272, A-288)', () => {
+  it('переход по адресу: сайт — его адрес; чужой адрес — ответ 404', async () => {
     const a = app();
-    const ok = (await (
-      await json(a, '/api/site/open', { address: 'vaultline-program.com' })
-    ).json()) as {
-      url?: string;
-    };
-    expect(ok.url).toMatch(/^http:\/\/vaultline-program\.localhost:5173\/\?enter=/);
-    const no = (await (await json(a, '/api/site/open', { address: 'google.com' })).json()) as {
-      reply?: string;
-      url?: string;
-    };
-    expect(no.url).toBeUndefined();
+    expect(await open(a, 'https://www.vaultline-program.com/')).toEqual({ address: VL });
+    const no = await open(a, 'google.com');
+    expect(no.address).toBeUndefined();
     expect(no.reply).toBeTruthy();
+  });
+
+  it('чтение без действий (RV-65): сайт, на который не переходили, — «не найдена», движок не тронут', async () => {
+    const a = app();
+    expect((await page(a)).notFound).toBeTruthy();
+    const rows = await db.select().from(playerProgress);
+    expect(rows.every((r) => !r.progress.released.includes('L101'))).toBe(true);
+    await open(a);
+    expect((await page(a)).notFound).toBeUndefined();
   });
 
   it('открытый сайт читается и после «Решить дело»: форма открыта — новые действия закрыты, перечитать можно (F2)', async () => {
     const a = app();
-    expect((await page(a)).notFound).toBeUndefined();
-    // Форма заключения открыта (L999): движок отвечает «форма открыта» на любые действия.
+    await open(a);
     const [row] = await db.select().from(playerProgress);
     if (!row) throw new Error('нет прогресса игрока');
     await db
@@ -148,120 +153,58 @@ describe('сайты дела на сервере (A-272)', () => {
     const p = await page(a);
     expect(p.notFound).toBeUndefined();
     expect(p.body).toContain('Вход для сотрудников');
-    const open = (await (
-      await json(a, '/api/site/open', { address: 'vaultline-program.com' })
-    ).json()) as { url?: string };
-    expect(open.url).toBeTruthy();
+    expect((await open(a)).address).toBe(VL);
   });
 
-  it('страница: шапка, разделы, форма меткой; хост игры — не сайт', async () => {
+  it('страница: шапка, разделы, форма меткой; адрес не сайта — «не найдена»', async () => {
     const a = app();
+    await open(a);
     const p = await page(a);
-    expect(p.domain).toBe('vaultline-program.com');
+    expect(p.domain).toBe(VL);
     expect(p.nav).toContain('Вход для сотрудников');
     expect(p.body).toContain('::form:vl-login::');
     expect(p.cabinet).toBeNull();
-    const game = await a.request('/api/site/page?path=/', { headers: { host: 'localhost:5173' } });
-    expect(game.status).toBe(404);
+    const other = (await (await a.request('/api/site/page?address=localhost')).json()) as {
+      notFound?: string;
+    };
+    expect(other.notFound).toBeTruthy();
   });
 
   it('вход → кабинет; учёт анкет открывает документ только после верного ввода', async () => {
     const a = app();
-    await page(a);
-    const bad = await (
-      await json(
-        a,
-        '/api/site/form',
-        { form: 'vl-login', values: { login: 'k.walsh', password: 'нет' } },
-        { host: SITE },
-      )
-    ).json();
+    await open(a);
+    const bad = await (await form(a, 'vl-login', { login: 'k.walsh', password: 'нет' })).json();
     expect(bad).toMatchObject({ quiet: true, opened: [] });
-    const ok = await (
-      await json(
-        a,
-        '/api/site/form',
-        { form: 'vl-login', values: { login: 'k.walsh', password: 'Йен' } },
-        { host: SITE },
-      )
-    ).json();
+    const ok = await (await form(a, 'vl-login', { login: 'k.walsh', password: 'Йен' })).json();
     expect(ok).toMatchObject({ opened: ['L620'] });
     const cab = await page(a, '/cabinet');
     expect(cab.material).toBe('L620');
     expect(cab.docs).toEqual([]);
-    await json(
-      a,
-      '/api/site/form',
-      { form: 'vl-registry', values: { program: 'VL-31' } },
-      { host: SITE },
-    );
+    await form(a, 'vl-registry', { program: 'VL-31' });
     expect((await page(a, '/cabinet')).docs.map((d) => d.id)).toEqual(['L618']);
   });
 
-  it('форма чужого сайта и неизвестная форма — 400', async () => {
+  it('форма неоткрытого сайта, чужого сайта и неизвестная форма — 400', async () => {
     const a = app();
-    const r = await json(a, '/api/site/form', { form: 'fr-death', values: {} }, { host: SITE });
-    expect(r.status).toBe(400);
+    expect((await form(a, 'vl-login', {})).status).toBe(400);
+    await open(a);
+    expect((await form(a, 'fr-death', {})).status).toBe(400);
+    expect((await form(a, 'fr-death', {}, 'aspen-bank.com')).status).toBe(400);
   });
 
-  it('с входом: без пропуска сайт пуст; пропуск из игры → cookie сайта → страница и формы', async () => {
+  it('с входом: без сессии — 401; с сессией игры — страница и формы', async () => {
     const a = app('link');
-    expect((await page(a)).anon).toBe(true);
-    const anonForm = await json(
-      a,
-      '/api/site/form',
-      { form: 'vl-login', values: {} },
-      { host: SITE },
-    );
-    expect(anonForm.status).toBe(401);
-    // Вход в игру (служебный, как в автотестах) → переход по адресу из игры.
+    expect((await json(a, '/api/site/open', { address: VL })).status).toBe(401);
+    expect((await a.request(`/api/site/page?address=${VL}`)).status).toBe(401);
     const login = await json(a, '/api/dev/login', { email: 'det@example.com' });
     const sid = login.headers.get('set-cookie')?.split(';')[0] ?? '';
-    const open = (await (
-      await json(a, '/api/site/open', { address: 'vaultline-program.com' }, { cookie: sid })
-    ).json()) as { url: string };
-    const pass = new URL(open.url).searchParams.get('enter') ?? '';
-    expect(pass).not.toBe('');
-    // Пропуск — только на хосте сайта.
-    expect((await json(a, '/api/site/enter', { pass })).status).toBe(404);
-    const enter = await json(a, '/api/site/enter', { pass }, { host: SITE });
-    expect(enter.status).toBe(204);
-    const site = enter.headers.get('set-cookie')?.split(';')[0] ?? '';
-    expect(site).toMatch(/^bunker_site=/);
-    expect((await page(a, '/', { cookie: site })).body).toContain('::form:vl-login::');
-    // Подделанный пропуск — нет.
-    expect((await json(a, '/api/site/enter', { pass: `${pass}x` }, { host: SITE })).status).toBe(
-      403,
-    );
-    // Пропуск живёт 10 минут.
-    clock += 11 * 60_000;
-    expect((await json(a, '/api/site/enter', { pass }, { host: SITE })).status).toBe(403);
-  });
-
-  it('выписка с сайта ждёт игру: забрать → подтвердить; только из открытого (P-10)', async () => {
-    const a = app();
-    await page(a);
-    const x = (material: string, id = 'x:a1') => ({
-      id,
-      text: 'Месяц тишины',
-      material,
-      source: 'vaultline-program.com · Главная',
-      place: { kind: 'site', address: 'vaultline-program.com' },
-    });
-    expect((await json(a, '/api/site/excerpt', x('L620', 'x:no'), { host: SITE })).status).toBe(
-      400,
-    );
-    expect((await json(a, '/api/site/excerpt', x('L101'))).status).toBe(404);
-    expect((await json(a, '/api/site/excerpt', x('L101'), { host: SITE })).status).toBe(204);
-    const got = (await (await a.request('/api/excerpts')).json()) as { id: string }[];
-    expect(got.map((g) => g.id)).toEqual(['x:a1']);
-    await json(a, '/api/excerpts/ack', { ids: ['x:a1'] });
-    expect(await (await a.request('/api/excerpts')).json()).toEqual([]);
+    expect((await open(a, VL, { cookie: sid })).address).toBe(VL);
+    expect((await page(a, '', { cookie: sid })).body).toContain('::form:vl-login::');
   });
 
   it('выписка из неоткрытого материала не сохраняется; из открытого — да (P-10)', async () => {
     const a = app();
-    await page(a);
+    await open(a);
     const s = defaultState([...materials, locked[0] as Material]);
     const ex = {
       id: 'x:b',

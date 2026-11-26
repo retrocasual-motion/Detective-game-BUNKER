@@ -238,6 +238,12 @@ function PcDesktop({ material }: { material: string | null }) {
       ];
     });
   };
+  // Ссылка на сайт дела (A-288 п. 9) — окно браузера впереди; страницу откроет сам браузер.
+  const site = useGame((g) => g.pcSite?.at);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: только на новый переход
+  useEffect(() => {
+    if (site) openWin(BROWSER.win);
+  }, [site]);
   // Из поиска — сразу туда, где лежит материал.
   // biome-ignore lint/correctness/useExhaustiveDependencies: только при входе с материалом
   useEffect(() => {

@@ -1,13 +1,17 @@
-import type { MouseEvent, PointerEvent } from 'react';
+import { createContext, type MouseEvent, type PointerEvent, useContext } from 'react';
 import type { Components } from 'react-markdown';
-import { openSite } from './site.ts';
+import { useGame } from './store.ts';
 
 /**
  * Ссылки в материалах дела. Адрес почты и чужие ссылки — напечатанный текст (R5-02, 18.11): GFM
  * сам делает `<zapros@…>` и `www.…` ссылками, щелчок уводил игрока из игры. Адрес сайта
- * (`vaultline-program.com`) — ссылка (A-272, Q1 автора 19.11): щелчок открывает настоящий сайт в
- * новой вкладке через сервер игры (движок АДРЕС); неизвестный адрес — «Страница не найдена».
+ * (`vaultline-program.com`) — ссылка (A-272, Q1 автора 19.11): щелчок открывает сайт в браузере
+ * компьютера следователя (A-288 п. 9), а на странице сайта или в браузере ноутбука — в том же
+ * браузере; неизвестный адрес — «Страница не найдена».
  */
+
+/** Браузер, внутри которого ссылка (сайт, ноутбук): переход — в нём; вне браузера — null. */
+export const SiteNavContext = createContext<((address: string) => void) | null>(null);
 
 // Схема ссылки — якорь: react-markdown вычищает незнакомые схемы (urlTransform).
 const SITE = '#site:';
@@ -50,8 +54,9 @@ export function remarkSites() {
 
 const stop = (e: MouseEvent | PointerEvent) => e.stopPropagation();
 
-/** Ссылка на сайт дела: новая вкладка; лист под ней не выделяется и не тянется. */
+/** Ссылка на сайт дела: браузер в игре; лист под ней не выделяется и не тянется. */
 export function SiteLink({ address, children }: { address: string; children: React.ReactNode }) {
+  const inBrowser = useContext(SiteNavContext);
   return (
     <a
       href={`#${address}`}
@@ -64,7 +69,8 @@ export function SiteLink({ address, children }: { address: string; children: Rea
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        openSite(address);
+        if (inBrowser) inBrowser(address);
+        else useGame.getState().openSite(address);
       }}
     >
       {children}

@@ -289,3 +289,28 @@ export async function fillVerdict(
   await page.getByTestId(`verdict-person-${behind}`).click();
   await next();
 }
+
+/**
+ * Сайт дела в браузере компьютера следователя (A-288 п. 9): адресная строка → страница в окне
+ * браузера, не во вкладке. Возвращает окно страницы.
+ */
+export async function siteInPc(page: Page, address: string) {
+  if (!(await page.getByTestId('computer').isVisible())) {
+    await page.getByTestId('computer-monitor').click();
+    await expect(page.getByTestId('pc-desktop')).toBeVisible();
+  }
+  if (!(await page.getByTestId('pc-browser').isVisible()))
+    await page.getByTestId('lap-icon-Браузер').dblclick();
+  await page.getByTestId('pc-url').fill(address);
+  await page.getByTestId('pc-url').press('Enter');
+  const web = page.getByTestId('pc-web');
+  await expect(web.getByTestId('site')).toBeVisible();
+  return web;
+}
+
+/** Отойти от компьютера (Esc снимает фокус с поля, следующий — закрывает компьютер). */
+export async function leavePc(page: Page) {
+  for (let k = 0; k < 3 && (await page.getByTestId('computer').isVisible()); k++)
+    await page.keyboard.press('Escape');
+  await expect(page.getByTestId('computer')).toHaveCount(0);
+}

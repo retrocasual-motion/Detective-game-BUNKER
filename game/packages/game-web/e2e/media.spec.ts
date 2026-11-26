@@ -1,4 +1,4 @@
-import { expect, STRIP, sheet, takeDevice, test, toWall } from './fixtures.ts';
+import { expect, STRIP, sheet, siteInPc, takeDevice, test, toWall } from './fixtures.ts';
 
 /**
  * Записи там, где лежат (этап 4d; PL-A, автор 12.11): ручка-диктофон — назад · play · вперёд;
@@ -45,11 +45,8 @@ test('голосовая почта Хейла (21) — плеер со спис
 test('сайт hexon-bio.com (L163): страница читается, старый фильм — плеером на своём месте', async ({
   page,
 }) => {
-  // Сайт настоящий (A-272): вкладка браузера, фильм — плеером на странице.
-  const r = await page.request.post('/api/site/open', { data: { address: 'hexon-bio.com' } });
-  const { url } = (await r.json()) as { url: string };
-  const tab = await page.context().newPage();
-  await tab.goto(url);
+  // Сайт — в браузере компьютера следователя (A-288 п. 9), фильм — плеером на странице.
+  const tab = await siteInPc(page, 'hexon-bio.com');
   const viewer = tab.getByTestId('site');
   await expect(viewer).toContainText('Руководство');
   await expect(viewer).toContainText('Контакты');

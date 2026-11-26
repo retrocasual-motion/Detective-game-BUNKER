@@ -5,7 +5,8 @@ import remarkGfm from 'remark-gfm';
 import { postAction } from '../api.ts';
 import { OFFLINE } from '../lock.ts';
 import { NO_LINKS, remarkSites } from '../paperLinks.tsx';
-import { openSite } from '../site.ts';
+import { goToSite } from '../site.ts';
+import { CaseSite } from '../sites/CaseSite.tsx';
 import { useGame } from '../store.ts';
 import type { LapFile, Laptop } from './files.ts';
 
@@ -471,12 +472,11 @@ export function Printer({ lap }: { lap: Laptop }) {
 // ── Браузер ───────────────────────────────────────────────────────────────────
 
 /** Сайт — в настоящей вкладке (A-272). */
-export const SITE_ELSEWHERE = 'Сайт открывается в новой вкладке браузера.';
-
 /**
- * Браузер ноутбука: адресная строка и «Избранное» (четыре закладки, L560). Сайт открывается
- * настоящим — в новой вкладке (A-272, BR-A): в игре сайты не дублируются. Архив газеты (17) и
- * сохранённая страница — здесь, без сети.
+ * Браузер ноутбука: адресная строка и «Избранное» (четыре закладки, L560). Сайт дела открывается
+ * здесь же, в окне браузера ноутбука (A-288 п. 9), — та же страница, что на компьютере
+ * следователя; входов Адама браузер не хранит (A-219). Архив газеты (17) и сохранённая страница —
+ * здесь, без сети.
  */
 export function Browser({
   lap,
@@ -491,9 +491,9 @@ export function Browser({
   onUrl?: (url: string) => void;
 }) {
   const [url, setUrl] = useState(saved ? `file:///${saved.path}` : '');
-  const [page, setPage] = useState<{ body: string; material: string | null } | null>(
-    saved ? { body: saved.body, material: saved.material } : null,
-  );
+  const [page, setPage] = useState<
+    { body: string; material: string | null } | { site: string } | null
+  >(saved ? { body: saved.body, material: saved.material } : null);
   const [typed, setTyped] = useState(url);
   // История страниц: круглые «назад» и «вперёд» слева от адреса (браузеры 2007–2008).
   const [hist, setHist] = useState<{ back: string[]; fwd: string[] }>({ back: [], fwd: [] });
@@ -508,7 +508,10 @@ export function Browser({
     if (start && !saved) void go(start);
   }, []);
 
-  /** `user` — переход щелчком игрока: тогда и только тогда открывается вкладка сайта. */
+  /**
+   * `user` — переход игрока: тогда и только тогда движок открывает сайт (АДРЕС, RV-65); окно из
+   * сохранения только показывает уже открытое.
+   */
   const go = async (address: string, user = false) => {
     setUrl(address);
     // В сохранении у окна — до 400 знаков (RV-36): длиннее — сохранение окна отказывало.
@@ -519,8 +522,18 @@ export function Browser({
       '',
     );
     if (bare !== 'blackwood-chronicle.com') {
-      if (user) openSite(address);
-      setPage({ body: SITE_ELSEWHERE, material: null });
+      if (!user) {
+        setPage({ site: address });
+        return;
+      }
+      setPage({ body: 'Загрузка…', material: null });
+      const r = await goToSite(address);
+      if ('address' in r) {
+        setUrl(r.address);
+        setTyped(r.address);
+        onUrl?.(r.address.slice(0, 400));
+        setPage({ site: r.address });
+      } else setPage({ body: r.reply, material: null });
       return;
     }
     const r = await postAction('АДРЕС', 'браузер', address).catch(() => null);
@@ -619,8 +632,18 @@ export function Browser({
             : 'Пустая страница'}
         </span>
       </div>
-      <div className="lap-web" data-material={page?.material ?? undefined} data-testid="lap-web">
-        {page ? md(page.body) : <p className="lap-blank">Пустая страница</p>}
+      <div
+        className="lap-web"
+        data-material={page && 'body' in page ? (page.material ?? undefined) : undefined}
+        data-testid="lap-web"
+      >
+        {page && 'site' in page ? (
+          <CaseSite address={page.site} onGo={visit} />
+        ) : page ? (
+          md(page.body)
+        ) : (
+          <p className="lap-blank">Пустая страница</p>
+        )}
       </div>
     </div>
   );
