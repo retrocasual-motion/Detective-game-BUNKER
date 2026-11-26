@@ -9,7 +9,7 @@
 
 | Задание | Что | Статус |
 |---|---|---|
-| [NOTEBOOK_TASK.md](NOTEBOOK_TASK.md) | Блокнот — служебная книжка (§11, I-4): вид, появление по дуге, запись по строкам, размер почерка, имя на обложке | готово; шрифт почерка — ждёт выбора автора (п. 4) |
+| [NOTEBOOK_TASK.md](NOTEBOOK_TASK.md) | Блокнот — служебная книжка (§11, I-4): вид, появление по дуге, запись по строкам, размер почерка, имя на обложке | готово |
 | [`design/props-web/laptop47/VSCODE_TASK.md`](../design/props-web/laptop47/VSCODE_TASK.md) | Ноутбук 47 — 3D-модель из `design/props-web/laptop47` в игру | см. файл |
 | `design/props-web/phone48/VSCODE_TASK.md` | Телефон 48 — 3D-модель | черновик в ветке `claude/3d-props-9e8328`, в `main` ещё нет; ждёт приёма автором |
 | [`game/docs/ACCESS_REDESIGN_TASK.md`](../game/docs/ACCESS_REDESIGN_TASK.md) | Переделка доступов | см. файл |
