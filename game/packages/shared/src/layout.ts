@@ -146,13 +146,19 @@ export function inboxIds(state: PlayerState, materials: Material[]): string[] {
     // Лежит на столе свободно (3D-стол) — не во «Входящих».
     ...(state.desk ?? []).map((d) => d.id),
   ]);
-  return (
-    materials
-      // Свойства файла записи — под её плеером, не во «Входящих» (ручная проверка автора 21.11, Q.1).
-      .filter((m) => isReleased(m) && !hidden.has(m.id) && !isFileProps(m))
-      .map((m) => m.id)
-      .reverse()
-  );
+  const released = materials
+    // Свойства файла записи — под её плеером, не во «Входящих» (ручная проверка автора 21.11, Q.1).
+    .filter((m) => isReleased(m) && !hidden.has(m.id) && !isFileProps(m))
+    .map((m) => m.id)
+    .reverse();
+  // Газета (автор 26.11) — во «Входящих», пока её не повесили на стену и не положили на стол.
+  const paper =
+    state.opened !== undefined &&
+    materials.some((m) => m.id === NEWSPAPER_ID) &&
+    !hidden.has(NEWSPAPER_ID)
+      ? [NEWSPAPER_ID]
+      : [];
+  return [...released, ...paper];
 }
 
 /** «Свойства файла (файл 13)» и т. п. — табличка у плеера записи (A-251, F3). */
@@ -384,17 +390,8 @@ export function reconcile(state: PlayerState, materials: Material[]): PlayerStat
       onDesk.add(id);
     }
 
-  // Газета (автор 25.11): у игрока, не на стене и не на столе — ложится перед ним, под всё остальное.
-  // Сохранение до конвертов (нет `opened`) — как раньше: газета на стене.
-  if (
-    state.opened !== undefined &&
-    have.has(NEWSPAPER_ID) &&
-    !seen.has(NEWSPAPER_ID) &&
-    !onDesk.has(NEWSPAPER_ID)
-  ) {
-    desk.unshift({ id: NEWSPAPER_ID, ...NEWSPAPER_AT, layer: 0 });
-    onDesk.add(NEWSPAPER_ID);
-  }
+  // Газета (автор 26.11): в новом деле — во «Входящих» на столе, не на столе свободно (освобождает
+  // середину стола под папки); лежала на столе в прежнем сохранении — так и лежит.
 
   let z = items.reduce((max, i) => Math.max(max, i.z), 0);
   // Стартовое — на стену, кроме невскрытого (A-260) и того, что лежит на столе или в браузере.
@@ -769,7 +766,20 @@ export function openAll(state: PlayerState, materials: Material[]): PlayerState 
       const slot = startSlot(id, materials);
       return slot ? [{ id, ...slot, z: ++z, rot: hangTilt(id) }] : [];
     });
-  return bags.length ? { ...r, wall: { ...r.wall, items: [...r.wall.items, ...bags] } } : r;
+  const withBags = bags.length
+    ? { ...r, wall: { ...r.wall, items: [...r.wall.items, ...bags] } }
+    : r;
+  // Газета — на столе перед игроком, как до «Входящих» (служебный режим, автотесты).
+  const paperFree =
+    materials.some((m) => m.id === NEWSPAPER_ID) &&
+    !withBags.wall.items.some((i) => i.id === NEWSPAPER_ID) &&
+    !(withBags.desk ?? []).some((d) => d.id === NEWSPAPER_ID);
+  return paperFree
+    ? {
+        ...withBags,
+        desk: [{ id: NEWSPAPER_ID, ...NEWSPAPER_AT, layer: 0 }, ...(withBags.desk ?? [])],
+      }
+    : withBags;
 }
 
 /**

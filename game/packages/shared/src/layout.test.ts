@@ -94,7 +94,7 @@ describe('«Входящие» на столе', () => {
   it('открытое по ходу дела само на стену не вешается — ждёт во «Входящих», свежее первым', () => {
     const s = defaultState(withL);
     expect(s.wall.items.some((i) => i.id.startsWith('L'))).toBe(false);
-    expect(inboxIds(s, withL)).toEqual(['L946', 'L945']);
+    expect(inboxIds(s, withL)).toEqual(['L946', 'L945', NEWSPAPER_ID]);
   });
 
   it('свойства файла записи во «Входящие» не ложатся — они у плеера (Q.1, автор 21.11)', () => {
@@ -103,18 +103,18 @@ describe('«Входящие» на столе', () => {
       { ...mat('L971'), title: 'Свойства файла: вводный фильм VAULTLINE (файл 13)' },
       { ...mat('L970'), title: 'Свойства файлов: ролики-знакомства (файл 14)' },
     ];
-    expect(inboxIds(defaultState(props), props)).toEqual(['L946', 'L945']);
+    expect(inboxIds(defaultState(props), props)).toEqual(['L946', 'L945', NEWSPAPER_ID]);
   });
 
   it('повешенное на стену из «Входящих» уходит', () => {
     const s = defaultState(withL);
     s.wall.items.push({ id: 'L945', x: 5, y: 5, z: 999, rot: 0 });
-    expect(inboxIds(reconcile(s, withL), withL)).toEqual(['L946']);
+    expect(inboxIds(reconcile(s, withL), withL)).toEqual(['L946', NEWSPAPER_ID]);
   });
 
   it('сайты дела (A-272) во «Входящие» не ложатся: они в браузере игрока', () => {
     const web = [...withL, mat('L101'), mat('L620')];
-    expect(inboxIds(defaultState(web), web)).toEqual(['L946', 'L945']);
+    expect(inboxIds(defaultState(web), web)).toEqual(['L946', 'L945', NEWSPAPER_ID]);
   });
 });
 
@@ -317,7 +317,9 @@ describe('конверты архива (A-260)', () => {
     expect(o.opened).toEqual(['protocols']);
     const ids = ['30', '31', '32', '33', '34', '35', '36'];
     // Газета лежит на столе с начала дела (автор 25.11), высыпанное — поверх.
-    expect(o.desk?.[0]).toMatchObject({ id: NEWSPAPER_ID, ...NEWSPAPER_AT, layer: 0 });
+    // Газета — во «Входящих» (автор 26.11), не на столе.
+    expect(o.desk?.some((d) => d.id === NEWSPAPER_ID)).toBe(false);
+    expect(inboxIds(o, starting)).toContain(NEWSPAPER_ID);
     // Поверх газеты и стартовой стопки (ST-B).
     const spilled = o.desk?.filter((d) => ids.includes(d.id));
     expect(spilled?.map((d) => d.id)).toEqual(ids);
@@ -378,12 +380,8 @@ describe('конверты архива (A-260)', () => {
     const r = v5(hung);
     expect(r.wall.items.some((i) => i.id === '47')).toBe(false);
     expect(r.desk?.some((d) => d.id === '47' && d.x === undefined)).toBe(true);
-    // Конверт места не вскрыт — устройств на столе нет, только газета и стартовая стопка.
-    expect(reconcile(s, starting).desk?.map((d) => d.id)).toEqual([
-      NEWSPAPER_ID,
-      ...START_STACK,
-      '04',
-    ]);
+    // Конверт места не вскрыт — устройств на столе нет, только стартовая стопка и опись.
+    expect(reconcile(s, starting).desk?.map((d) => d.id)).toEqual([...START_STACK, '04']);
   });
 
   it('DC-B: прочитанное со стола — на стену группой под ярлыком конверта; вторая порция — без второго ярлыка', () => {
@@ -427,8 +425,13 @@ describe('конверты архива (A-260)', () => {
     expect(sealedIds({ opened: undefined }).size).toBe(0);
     expect(reconcile(legacy, starting).wall.items.some((i) => i.id === '15')).toBe(true);
     expect(reconcile(legacy, starting).desk?.some((d) => d.id === '15')).toBeFalsy();
-    // Газету со стола повесили на стену — на стол сама не возвращается.
-    const hung = hangFromDesk(reconcile(s, starting), NEWSPAPER_ID, 300, 300);
+    // Газету (лежала на столе в прежнем сохранении) повесили на стену — на стол сама не возвращается.
+    const before = {
+      ...s,
+      desk: [...(s.desk ?? []), { id: NEWSPAPER_ID, ...NEWSPAPER_AT, layer: 0 }],
+    };
+    expect(reconcile(before, starting).desk?.some((d) => d.id === NEWSPAPER_ID)).toBe(true);
+    const hung = hangFromDesk(reconcile(before, starting), NEWSPAPER_ID, 300, 300);
     expect(reconcile(hung, starting).desk?.some((d) => d.id === NEWSPAPER_ID)).toBe(false);
     expect(reconcile(hung, starting).wall.items.some((i) => i.id === NEWSPAPER_ID)).toBe(true);
   });

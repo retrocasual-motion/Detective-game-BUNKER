@@ -22,7 +22,7 @@ const pieces = (page: Page) =>
 const ids = async (page: Page) =>
   (await pieces(page))
     .map((q) => q.id)
-    .filter((id) => !START.includes(id))
+    .filter((id) => !START.includes(id) && id !== '04')
     .sort();
 
 /**
@@ -52,10 +52,10 @@ test('3D-стол (DC-B): конверт — стопкой на стол; чи�
 }) => {
   await expect.poll(() => desk(page)).toBe(true);
   // С начала дела на столе — газета (автор 25.11).
-  await expect.poll(() => ids(page)).toEqual(['15']);
+  await expect.poll(() => ids(page)).toEqual([]);
   await spill(page, 'protocols');
   const all = ['30', '31', '32', '33', '34', '35', '36'];
-  await expect.poll(() => ids(page)).toEqual(['15', ...all]);
+  await expect.poll(() => ids(page)).toEqual(all);
   await expect(page.getByTestId('wall-n:archive-protocols')).toHaveCount(0);
   await expect(page.getByTestId('inbox-30')).toHaveCount(0);
   // Стопка: все листы в одном месте, первый по описи — сверху.
@@ -87,10 +87,10 @@ test('3D-стол (DC-B): конверт — стопкой на стол; чи�
   const filed = savedPut(page);
   await page.keyboard.press('Escape');
   await filed;
-  await expect.poll(() => ids(page)).toEqual(['15', '31', '33', '34', '35', '36']);
+  await expect.poll(() => ids(page)).toEqual(['31', '33', '34', '35', '36']);
   await page.reload();
   await expect.poll(() => desk(page)).toBe(true);
-  await expect.poll(() => ids(page)).toEqual(['15', '31', '33', '34', '35', '36']);
+  await expect.poll(() => ids(page)).toEqual(['31', '33', '34', '35', '36']);
   await toWall(page);
   await expect(page.getByTestId('wall-n:archive-protocols')).toBeVisible();
   await expect(sheet(page, '30')).toBeVisible();
@@ -147,7 +147,7 @@ test('3D-стол: «Осмотр места» — папка стопкой; п
   page,
 }) => {
   await spill(page, 'scene');
-  const sheets = ['15', '18', '19', '20', '21', '22', '23', '25', '26', '27', '51'];
+  const sheets = ['18', '19', '20', '21', '22', '23', '25', '26', '27', '51'];
   await expect.poll(() => ids(page)).toEqual(sheets);
   await spill(page, 'seized');
   const devices = ['24', '47', '48', '49', '50'];

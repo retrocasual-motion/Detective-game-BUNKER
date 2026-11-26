@@ -212,13 +212,25 @@ export async function lookAtSticker(page: Page) {
  */
 export async function answerWithNewspaper(page: Page) {
   await page.getByTestId('verdict-corner').click();
-  const paper = await page.evaluate(() =>
+  // Газета — во «Входящих» (новое дело, автор 26.11) или на стене («вскрыть всё»).
+  const tray = page.getByTestId('inbox-15');
+  const onDesk = await page.evaluate(() =>
     (window as unknown as { __desk: DeskHook }).__desk.grab('15'),
   );
-  await page.mouse.click(paper?.x ?? 0, paper?.y ?? 0);
+  if (await tray.count()) await tray.click();
+  else if (onDesk) await page.mouse.click(onDesk.x, onDesk.y);
+  else {
+    await toWall(page);
+    await sheet(page, '15').click(STRIP);
+  }
   await page.getByTestId('viewer-whole-to-folder').click();
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('verdict-card')).toContainText('15');
+  const scene = page.getByTestId('scene');
+  if ((await scene.getAttribute('data-view')) === 'wall') {
+    await page.keyboard.press('ArrowDown');
+    await expect(scene).toHaveAttribute('data-moving', 'false');
+  }
 }
 
 /**

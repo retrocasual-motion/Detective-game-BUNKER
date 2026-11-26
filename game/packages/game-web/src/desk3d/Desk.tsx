@@ -568,6 +568,19 @@ export function Desk({
     const ndc = new Vector2();
     const w = window as unknown as { __desk?: unknown };
     w.__desk = {
+      // Для проверок: где каждая вещь сейчас и куда идёт (режим, высота цели и текущая).
+      motion: () =>
+        [...targets.current.entries()].map(([id, t]) => ({
+          id,
+          mode: t.mode,
+          tx: Math.round(t.pos.x),
+          tz: Math.round(t.pos.z),
+          ty: Math.round(t.pos.y),
+          cx: Math.round(t.cur.x),
+          cz: Math.round(t.cur.z),
+          cy: Math.round(t.cur.y),
+          dist: Math.round(t.pos.distanceTo(t.cur)),
+        })),
       // Видимая точка вещи: её часть, которую ничего не накрывает (на столе внахлёст).
       grab: (id: string) => {
         const pc = ps.current.find((q) => q.id === id);

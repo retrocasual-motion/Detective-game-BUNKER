@@ -329,6 +329,8 @@ export function Paper({
    * документ снизу — все документы падают… убрать»). Плавно — только когда кладут сам лист.
    */
   const resting = useRef(false);
+  /** Когда появилась (без полёта): первые полсекунды видна, только если уже на своём месте. */
+  const born = useRef(0);
   const W = piece.w * p;
   const D = piece.d * p;
   const T = piece.t * p;
@@ -379,7 +381,15 @@ export function Paper({
     let drapeMoving = false;
     const pos = lp.current;
     if (!placed.current) {
+      // Место ещё не рассчитано (стол считает цели в своём кадре) — не показывать: иначе лист
+      // появлялся в нуле сцены, над лампой, и «падал» на место (автор 26.11, снимок).
+      if (!start && target.pos.lengthSq() === 0) {
+        g.visible = false;
+        state.invalidate();
+        return;
+      }
       placed.current = true;
+      born.current = performance.now();
       pos.copy(start?.pos ?? target.pos);
       g.quaternion.copy(target.quat);
       sc.current = target.scale;
@@ -514,6 +524,13 @@ export function Paper({
       }
     }
     g.scale.setScalar(sc.current * kd);
+    // Только что появилась — не показывать, пока не на своём месте: у новой вещи цель в первом кадре
+    // ещё не та (высота стола приходит кадром позже) — был виден один кадр в воздухе (автор 26.11).
+    g.visible = !(
+      !start &&
+      performance.now() - born.current < 500 &&
+      pos.distanceToSquared(target.pos) > 1
+    );
     // Холст рисует по требованию (D3-12): пока вещь движется — следующий кадр.
     if (
       waiting ||

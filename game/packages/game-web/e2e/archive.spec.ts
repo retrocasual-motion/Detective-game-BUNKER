@@ -5,7 +5,7 @@ import { deskSettled, expect, START, savedPut, sheet, test, toWall } from './fix
 test.use({ sealed: true });
 
 type Pt = { x: number; y: number };
-/** Что на 3D-столе, кроме стартовой стопки 01–07 (ST-B). */
+/** Что на 3D-столе, кроме стартовой стопки (ST-B) и описи на планшете (OPS-A). */
 const pieces = async (page: Page) =>
   (
     await page.evaluate(() =>
@@ -13,7 +13,7 @@ const pieces = async (page: Page) =>
         (window as unknown as { __desk?: { pieces(): { id: string }[] } }).__desk?.pieces() ?? []
       ).map((q) => q.id),
     )
-  ).filter((id) => !START.includes(id));
+  ).filter((id) => !START.includes(id) && id !== '04');
 const allPieces = (page: Page) =>
   page.evaluate(() =>
     ((window as unknown as { __desk?: { pieces(): { id: string }[] } }).__desk?.pieces() ?? []).map(
@@ -81,7 +81,7 @@ test('старт (ST-B): на стене только персонажи; на �
   ] as const)
     await expect(page.getByTestId(`container-${id}`)).toHaveText(label);
   // На 3D-столе — только газета (автор 25.11).
-  await expect.poll(() => pieces(page)).toEqual(['15']);
+  await expect.poll(() => pieces(page)).toEqual([]);
 });
 
 test('щелчок по папке — она в руках: протянуть — перевернуть; обложку открывают только спереди; Esc — положить, ничего не открыто', async ({
@@ -106,7 +106,7 @@ test('щелчок по папке — она в руках: протянуть 
   await page.keyboard.press('Escape');
   await expect(held).toBeHidden();
   await expect(page.getByTestId('container-protocols')).toBeVisible();
-  await expect.poll(() => pieces(page)).toEqual(['15']);
+  await expect.poll(() => pieces(page)).toEqual([]);
 });
 
 test('RV-1: папку открывают щелчком в любом месте обложки — как конверт и пломбу', async ({
@@ -173,7 +173,7 @@ test('папка — в руки и открыть, стопкой на стол
   page,
 }) => {
   await openFolder(page, 'protocols');
-  await expect.poll(async () => (await pieces(page)).length).toBe(8);
+  await expect.poll(async () => (await pieces(page)).length).toBe(7);
   await page.waitForTimeout(1200);
   await deskSettled(page);
   const top = await grab(page, '30');
@@ -267,21 +267,18 @@ test('поиск не видит неоткрытого; после открыт
   await expect(page.getByTestId('search-25')).toBeVisible();
 });
 
-test('газета на столе — бумажный номер; сайт газеты — закладки на компьютере', async ({ page }) => {
-  await expect.poll(() => pieces(page)).toEqual(['15']);
-  await page.waitForTimeout(600);
-  await deskSettled(page);
-  const g = await grab(page, '15');
-  await page.mouse.click(g?.x ?? 0, g?.y ?? 0);
+test('газета — во «Входящих» (автор 26.11): бумажный номер; сайт газеты — закладки на компьютере', async ({
+  page,
+}) => {
+  // Середина стола свободна: газета не на столе, а в лотке.
+  await expect.poll(() => pieces(page)).toEqual([]);
+  await expect(page.getByTestId('inbox-tray')).toHaveText('Входящие · 1');
+  await page.getByTestId('inbox-15').click();
   await expect(page.getByTestId('viewer')).toContainText('номер от 16 ноября 2009');
   // Колонка «Помним» (A-262): Том — одна из трёх записей.
   await expect(page.getByTestId('viewer')).toContainText('Гарольд Финч');
   await expect(page.getByTestId('viewer')).toContainText('Вчера, 15 ноября, ему исполнилось бы 35');
-  // Газета — не стопка дела: читать подряд нечего.
-  await expect(page.getByTestId('desk-run')).toHaveCount(0);
   await page.keyboard.press('Escape');
-  // Закрыли — газета на столе, не на стене.
-  await expect.poll(() => pieces(page)).toEqual(['15']);
   await page.getByTestId('computer-monitor').click();
   await page.getByTestId('lap-icon-Браузер').dblclick();
   await page.getByTestId('pc-fav-17').click();
