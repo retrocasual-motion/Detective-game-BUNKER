@@ -104,12 +104,17 @@ describe('движок правил на сервере', () => {
   it('клиент не может повесить на стену неоткрытый материал (P-10)', async () => {
     const s = defaultState(materials);
     s.wall.items.push({ id: 'L945', x: 0, y: 0, z: 99, rot: 0 });
+    const w = { 'x-state-writer': 'page-p10-1' };
+    await app().request('/api/state', { headers: w });
     const res = await app().request('/api/state', {
       method: 'PUT',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', ...w, 'x-state-seq': '1' },
       body: JSON.stringify(s),
     });
-    expect(res.status).toBe(400);
+    // Сервер сам выкидывает неоткрытое (волна 1): сохранение проходит, материала на стене нет.
+    expect(res.status).toBe(204);
+    const got = (await (await app().request('/api/state')).json()) as PlayerState;
+    expect(got.wall.items.some((i) => i.id === 'L945')).toBe(false);
   });
 
   it('ЗВОНОК и неверный формат — 400', async () => {

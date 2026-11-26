@@ -47,19 +47,40 @@ export const canKeepalive = (body: string): boolean =>
 export const getMaterials = async (): Promise<Material[]> =>
   (await check(await call('/api/materials'))).json();
 
-export const getState = async (): Promise<PlayerState> =>
-  (await check(await call('/api/state'))).json();
+/**
+ * Номер этой страницы игры (волна 1, RV-48, DEV-A): с ним страница открывает дело и сохраняет. Дело
+ * пишет страница, открывшая его последней; прежняя получает 409. Не `randomUUID`: тот есть только
+ * в защищённом окружении (https, localhost) — по адресу локальной сети игра падала бы (RV-59).
+ */
+export const PAGE_ID = (() => {
+  const b = new Uint8Array(12);
+  crypto.getRandomValues(b);
+  return `p-${Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('')}`;
+})();
 
-/** seq — номер версии сохранения: сервер не применит запрос старее уже сохранённого. */
-export const putState = async (s: PlayerState, seq: number): Promise<void> => {
+/** Дело и кто писал его до этой страницы (номер прежней страницы — для недосланного, RV-57). */
+export const getState = async (): Promise<{ state: PlayerState; lastWriter: string }> => {
+  const res = await check(await call('/api/state', { headers: { 'x-state-writer': PAGE_ID } }));
+  return { state: await res.json(), lastWriter: res.headers.get('x-state-last-writer') ?? '' };
+};
+
+/**
+ * seq — номер сохранения этой страницы (счётчик): сервер не применит запрос старее записанного.
+ * closing — страницу закрывают: keepalive, чтобы запрос дошёл (только тогда: у keepalive предел
+ * тела 64 КБ, и браузер держит такие запросы в общей очереди — RV-56).
+ */
+export const putState = async (s: PlayerState, seq: number, closing = false): Promise<void> => {
   const body = JSON.stringify(s);
   await check(
     await call('/api/state', {
       method: 'PUT',
-      headers: { 'content-type': 'application/json', 'x-state-seq': String(seq) },
+      headers: {
+        'content-type': 'application/json',
+        'x-state-writer': PAGE_ID,
+        'x-state-seq': String(seq),
+      },
       body,
-      // keepalive — чтобы запрос дошёл, даже если страницу закрывают.
-      keepalive: canKeepalive(body),
+      keepalive: closing && canKeepalive(body),
     }),
   );
 };

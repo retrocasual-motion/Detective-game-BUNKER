@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import type { Material } from '@bunker/shared';
 import { getConnInfo } from '@hono/node-server/conninfo';
-import { and, desc, eq, gt, isNull } from 'drizzle-orm';
+import { and, desc, eq, gt, isNull, lt } from 'drizzle-orm';
 import type { Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
@@ -57,6 +57,37 @@ export async function sessionPlayer(
     .from(sessions)
     .where(and(eq(sessions.hash, hashKey(key)), gt(sessions.expiresAt, new Date(t))));
   return s?.playerId ?? null;
+}
+
+/**
+ * Продлить вход игрока, который играет (RV-57): сессия была ровно 90 дней с входа, и посреди игры
+ * сохранение вдруг получало 401. Не чаще раза в сутки — ещё SESSION_DAYS дней, cookie тоже.
+ */
+export async function renewSession(
+  c: Context,
+  db: Db,
+  key: string,
+  t: number,
+  secure: boolean,
+): Promise<void> {
+  const renewed = await db
+    .update(sessions)
+    .set({ expiresAt: new Date(t + SESSION_DAYS * 86_400_000) })
+    .where(
+      and(
+        eq(sessions.hash, hashKey(key)),
+        lt(sessions.expiresAt, new Date(t + (SESSION_DAYS - 1) * 86_400_000)),
+      ),
+    )
+    .returning({ hash: sessions.hash });
+  if (renewed.length)
+    setCookie(c, SESSION_COOKIE, key, {
+      httpOnly: true,
+      sameSite: 'Lax',
+      secure,
+      path: '/',
+      maxAge: SESSION_DAYS * 86_400,
+    });
 }
 
 interface AuthDeps {

@@ -153,7 +153,8 @@ export function App() {
       )}
       {saveProblem === 'rejected' && !elsewhere && (
         <div className="save-error save-error-hard" data-testid="save-rejected" role="alert">
-          Сервер не принял сохранение: дело изменилось в другом месте.{' '}
+          Сервер не принял последнее сохранение. Следующее изменение сохранится снова; если надпись
+          не уходит — обновите страницу.{' '}
           <button type="button" onClick={() => window.location.reload()}>
             Обновить
           </button>
@@ -164,10 +165,13 @@ export function App() {
           className="elsewhere"
           data-testid="elsewhere"
           role="alertdialog"
-          aria-label="Дело открыто в другой вкладке"
+          aria-label="Дело открыто в другом месте"
         >
           <div className="elsewhere-card">
-            <p>Дело открыто в другой вкладке. Здесь изменения не сохраняются.</p>
+            <p>
+              Дело открыто в другой вкладке или на другом устройстве. Здесь изменения не
+              сохраняются.
+            </p>
             <button
               type="button"
               className="main-menu-main"
