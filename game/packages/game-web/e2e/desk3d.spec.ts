@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { deskSettled, expect, savedPut, sheet, test, toWall } from './fixtures.ts';
+import { deskSettled, expect, START, savedPut, sheet, test, toWall } from './fixtures.ts';
 
 // Новое дело, как у игрока: конверты архива опечатаны (A-260).
 test.use({ sealed: true });
@@ -18,7 +18,12 @@ const pieces = (page: Page) =>
       window as unknown as { __desk: { pieces(): { id: string; x: number; z: number }[] } }
     ).__desk.pieces(),
   );
-const ids = async (page: Page) => (await pieces(page)).map((q) => q.id).sort();
+/** Что на столе, кроме стартовой стопки 01–07 (ST-B: она лежит с начала дела, тут не о ней). */
+const ids = async (page: Page) =>
+  (await pieces(page))
+    .map((q) => q.id)
+    .filter((id) => !START.includes(id))
+    .sort();
 
 /**
  * Открыть со стола (FM-B, DC-B; автор 25.11 — папку тоже в руки): папку или короб вещдоков — в руки

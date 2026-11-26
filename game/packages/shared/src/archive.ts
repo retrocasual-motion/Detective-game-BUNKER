@@ -96,6 +96,21 @@ export const DESK_DEVICES: ReadonlySet<string> = new Set(['24', '47', '48', '49'
  */
 export const DEVICES_ON_WALL = false;
 
+/**
+ * Стартовые листы 01–07 в новом деле (ST-B, A-288): стопкой на столе, письмо бюро 01 сверху; на стену
+ * уходят после чтения — на свои начальные места. Сохранения, где они уже на стене, — как были.
+ */
+export const START_STACK: readonly string[] = ['01', '02', '03', '04', '05', '06', '07'];
+
+/**
+ * Чья стопка лист на столе (VZ-A, A-288): папки — своя, стартовые 01–07 — своя, прочее — общая.
+ * Чтение подряд идёт по одной стопке, а не по всему столу.
+ */
+export function deskGroupOf(id: string): string {
+  if (START_STACK.includes(id)) return 'start';
+  return CONTAINERS.find((c) => c.files.includes(id))?.id ?? 'loose';
+}
+
 /** Газета на столе — бумажный номер (E44, A-260): видна, но на стене со старта не висит. */
 export const NEWSPAPER_ID = '15';
 /**

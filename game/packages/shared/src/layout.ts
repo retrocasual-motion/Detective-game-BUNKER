@@ -10,6 +10,7 @@ import {
   OFF_WALL_IDS,
   openedOf,
   SPILL_CONTAINERS,
+  START_STACK,
   sealedIds,
 } from './archive.ts';
 import { PERSONS } from './persons.ts';
@@ -163,6 +164,11 @@ export function defaultState(materials: Material[]): PlayerState {
       wall: { camera: { ...DEFAULT_WALL_CAMERA }, items: [], threads: [], notes: [] },
       // Новое дело (A-260): конверты на столе ещё опечатаны.
       opened: [],
+      // Стартовые листы — стопкой на столе, письмо бюро сверху (ST-B): место решит стол.
+      desk: START_STACK.filter((id) => materials.some((m) => m.id === id)).map((id, k) => ({
+        id,
+        layer: k + 1,
+      })),
     },
     materials,
   );
@@ -668,14 +674,35 @@ function hangGroup(
  */
 export function fileFromDesk(state: PlayerState, ids: readonly string[]): PlayerState {
   const onDesk = new Set((state.desk ?? []).map((d) => d.id));
-  const want = ids.filter((id) => onDesk.has(id));
-  let next = state;
+  const want = ids.filter((id) => onDesk.has(id) && !START_STACK.includes(id));
+  // Стартовые листы (ST-B) — на свои начальные места, рядом с карточками людей, как висели прежде.
+  let next = hangStart(
+    state,
+    ids.filter((id) => onDesk.has(id) && START_STACK.includes(id)),
+  );
   for (const c of CONTAINERS) {
     const mine = containerContents(c).filter((m) => want.includes(m));
     if (mine.length) next = hangGroup(next, mine, { id: containerLabelId(c.id), text: c.label });
   }
   const rest = want.filter((id) => !CONTAINERS.some((c) => containerContents(c).includes(id)));
   return hangGroup(next, rest, null);
+}
+
+/** Стартовые листы со стола — на начальные места стены (ST-B). */
+function hangStart(state: PlayerState, ids: string[]): PlayerState {
+  if (!ids.length) return state;
+  const gone = new Set(ids);
+  let z = state.wall.items.reduce((m, i) => Math.max(m, i.z), 0);
+  const slot = (id: string) => {
+    const k = START_STACK.indexOf(id);
+    return { x: (k % GRID_COLS) * GRID_DX, y: GRID_TOP + Math.floor(k / GRID_COLS) * GRID_DY };
+  };
+  const placed: WallItem[] = ids.map((id) => ({ id, ...slot(id), z: ++z, rot: hangTilt(id) }));
+  return {
+    ...state,
+    desk: state.desk?.filter((d) => !gone.has(d.id)),
+    wall: { ...state.wall, items: [...state.wall.items.filter((i) => !gone.has(i.id)), ...placed] },
+  };
 }
 
 /** Высыпать на стол: порядок — как в конверте, первое — снизу; места ещё нет (решит стол). */
@@ -700,7 +727,9 @@ export function hangFromDesk(state: PlayerState, id: string, x: number, y: numbe
 
 /** Вскрыть всё сразу (служебная кнопка «Подготовка», автотесты): стартовая сетка, как до конвертов. */
 export function openAll(state: PlayerState, materials: Material[]): PlayerState {
-  return reconcile({ ...state, opened: CONTAINERS.map((c) => c.id) }, materials);
+  // Стартовая стопка (ST-B) — тоже на стену, на начальные места: «всё вскрыто, как до конвертов».
+  const desk = state.desk?.filter((d) => !START_STACK.includes(d.id));
+  return reconcile({ ...state, desk, opened: CONTAINERS.map((c) => c.id) }, materials);
 }
 
 /**

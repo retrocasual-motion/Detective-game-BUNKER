@@ -1,11 +1,20 @@
 import type { Page } from '@playwright/test';
-import { deskSettled, expect, savedPut, sheet, test, toWall } from './fixtures.ts';
+import { deskSettled, expect, START, savedPut, sheet, test, toWall } from './fixtures.ts';
 
 // Новое дело, как у игрока: папки дела и пакет вещдоков на столе не открыты (A-260, FM-B).
 test.use({ sealed: true });
 
 type Pt = { x: number; y: number };
-const pieces = (page: Page) =>
+/** Что на 3D-столе, кроме стартовой стопки 01–07 (ST-B). */
+const pieces = async (page: Page) =>
+  (
+    await page.evaluate(() =>
+      (
+        (window as unknown as { __desk?: { pieces(): { id: string }[] } }).__desk?.pieces() ?? []
+      ).map((q) => q.id),
+    )
+  ).filter((id) => !START.includes(id));
+const allPieces = (page: Page) =>
   page.evaluate(() =>
     ((window as unknown as { __desk?: { pieces(): { id: string }[] } }).__desk?.pieces() ?? []).map(
       (q) => q.id,
@@ -53,10 +62,14 @@ async function drag(page: Page, dx: number, dy = 0) {
   await page.mouse.up();
 }
 
-test('старт: на стене персонажи и 01–07; на столе папки, короб вещдоков, коробка, газета; устройств нет', async ({
+test('старт (ST-B): на стене только персонажи; на столе стопка 01–07, папки, короб вещдоков, коробка, газета; устройств нет', async ({
   page,
 }) => {
-  await expect(sheet(page, '07')).toBeAttached();
+  await expect(sheet(page, '07')).toHaveCount(0);
+  await expect(sheet(page, '01')).toHaveCount(0);
+  await expect
+    .poll(async () => (await allPieces(page)).filter((id) => START.includes(id)).sort())
+    .toEqual(START);
   await expect(sheet(page, '25')).toHaveCount(0);
   await expect(sheet(page, '15')).toHaveCount(0);
   for (const [id, label] of [

@@ -106,6 +106,11 @@ export interface DeskObject {
   hit?: Box[];
   /** Части рисуются в заданном порядке — снизу вверх (телефон: корпус, выступ, кнопки, трубка). */
   ordered?: boolean;
+  /**
+   * Плоское под листами (открытая папка, VZ-A): не преграда 3D-стола и не заслонка — стопка листов
+   * лежит на нём.
+   */
+  flat?: boolean;
 }
 
 /** Плоский круг на высоте lift над столом: диск с тёмной втулкой. */
@@ -244,23 +249,27 @@ export function roomPolys(r: Room, col: Col): Poly[] {
  * Устройства — из описи (24, 47–50); пакеты 40–46 лежат в коробке.
  */
 /**
- * Папки дела (FM-B, автор 25.11; были конверты архива C4, A-260) — стопкой внахлёст, слева спереди;
- * пакет вещдоков «Изъятое» — правее. Середина стола свободна: туда ложится открытое — стопкой (DC-B).
+ * Папки дела (FM-B, автор 25.11; были конверты архива C4, A-260). У каждой своё место (VZ-A, A-288:
+ * «4 папки… лежат не одной стопкой, а каждая в своей»): открыли — папка остаётся лежать открытой, её
+ * листы — стопкой на ней. Раньше все стопки ложились в одну точку посередине (RV-4). «Документация» —
+ * справа, рядом со своей коробкой пачек (29).
  */
 type EnvelopeId = Exclude<ContainerId, 'personal' | 'bank'>;
 const ENVELOPE_AT: Record<EnvelopeId, [number, number]> = {
-  // 3D-стол (автор 24.11: «освобождаем середину стола»): стопкой у стены, между коробкой «Личные
-  // вещи» и коробом пачек; середина спереди — пустая, туда высыпается вскрытый конверт.
-  // Автор 25.11 (фото стола; «ближе к нам»): слева спереди, перед лампой и коробкой.
-  bunker: [-0.56, 0.45],
-  scene: [-0.55, 0.54],
-  protocols: [-0.54, 0.63],
+  protocols: [-0.42, 0.64],
+  scene: [-0.56, 0.34],
+  bunker: [0.42, 0.36],
   // Короб вещдоков «Изъятое» (автор 25.11: устройства в тонком конверте — «невозможно физически»)
   // — у стены посередине; вскрыли — устройства ложатся тут же.
   seized: [-0.07, 0.19],
 };
-/** Папки дела — стопкой внахлёст (FM-B, вместо конвертов A-260). */
+/** Папки дела (FM-B, вместо конвертов A-260). */
 const ENVELOPE_ORDER = ['bunker', 'scene', 'protocols'] as const;
+/**
+ * Стартовые листы 01–07 (ST-B, A-288): стопкой справа от газеты, письмо бюро сверху — рядом с ней,
+ * перед игроком.
+ */
+const START_AT: [number, number] = [0.32, 0.68];
 /** Папка-скоросшиватель: 30 × 23,5 см, закладка с названием у дальнего края. */
 const FOLDER: [number, number] = [0.3, 0.235];
 /** Короб вещдоков 42 × 32 × 20 см: в нём ноутбук, радиопост, камера, телефон, ручка. */
@@ -269,6 +278,17 @@ const SEIZED_BOX: [number, number, number] = [0.42, 0.32, 0.2];
 /** Где лежит конверт на столе (доли p: x, z): отсюда его содержимое высыпается на 3D-стол. */
 export function envelopeSpot(id: ContainerId): [number, number] {
   return id in ENVELOPE_AT ? ENVELOPE_AT[id as EnvelopeId] : ENVELOPE_AT.scene;
+}
+
+/**
+ * Где ложится стопка (VZ-A, ST-B): листы папки — на открытую папку; стартовые — своё место; прочее —
+ * null (середина стола).
+ */
+export function stackSpot(id: ContainerId | 'start' | null): [number, number] | null {
+  if (id === 'start') return START_AT;
+  return id && (ENVELOPE_ORDER as readonly string[]).includes(id)
+    ? ENVELOPE_AT[id as EnvelopeId]
+    : null;
 }
 /**
  * Где стоит компьютер следователя (дисковод под монитором), доли p: справа, у стены; правее и ближе
@@ -401,6 +421,7 @@ export function deskObjects(
     pivot: [PIVOT[0] * p, PIVOT[1] * p],
   };
   const envelopes = ENVELOPE_ORDER.filter((id) => !opened.includes(id));
+  const openFolders = ENVELOPE_ORDER.filter((id) => opened.includes(id));
   const [LX, LZ] = LAMP_AT;
   const brass = col('--color-lamp-brass');
   const shadeGreen = col('--color-lamp-shade');
@@ -484,22 +505,22 @@ export function deskObjects(
     // Папки дела (FM-B, автор 25.11; вместо конвертов A-260): не опечатаны, у каждой — закладка с
     // названием; открытая со стола уходит — листы стопкой на столе. Стопкой внахлёст: у дальних видна
     // полоска с названием — по ней и щёлкают.
-    ...envelopes.map((id, k) => {
-      const at = ENVELOPE_AT;
-      const [x, z] = at[id];
+    ...envelopes.map((id) => {
+      const [x, z] = ENVELOPE_AT[id];
       const c = CONTAINERS.find((cc) => cc.id === id);
-      const lift = k * 0.008;
-      const next = envelopes[k + 1];
-      const nearEdge = next ? at[next][1] - FOLDER[1] / 2 : z + FOLDER[1] / 2;
-      const farEdge = z - FOLDER[1] / 2;
-      // Закладки — вразбивку, как у настоящих папок (слева, посередине, справа).
-      const tabX = x + (((k % 3) - 1) * FOLDER[0]) / 3;
       return {
         key: `envelope-${id}`,
         label: `Папка «${c?.label ?? id}» — открыть`,
         boxes: [
-          box(x, z, FOLDER[0], FOLDER[1], 0.006, col('--color-case-folder'), lift),
-          box(tabX, farEdge - 0.008, 0.09, 0.018, 0.006, col('--color-case-folder'), lift),
+          box(x, z, FOLDER[0], FOLDER[1], 0.006, col('--color-case-folder')),
+          box(
+            x - FOLDER[0] / 3,
+            z - FOLDER[1] / 2 - 0.008,
+            0.09,
+            0.018,
+            0.006,
+            col('--color-case-folder'),
+          ),
           // Обрез стопки листов внутри — чуть светлее картона.
           box(
             x,
@@ -508,15 +529,37 @@ export function deskObjects(
             FOLDER[1] - 0.012,
             0.002,
             col('--color-case-folder-edge'),
-            lift + 0.006,
+            0.006,
           ),
         ],
-        hit: [box(x, (farEdge + nearEdge) / 2, FOLDER[0], nearEdge - farEdge, 0.008, '', lift)],
         hotspot: { kind: 'container' as const, id },
         tag: c?.label ?? id,
         tagInside: true,
         tagLine: true,
         testId: `container-${id}`,
+      };
+    }),
+    // Открытая папка остаётся лежать (UNP-A, A-288): плоская, листы — стопкой на ней.
+    ...openFolders.map((id) => {
+      const [x, z] = ENVELOPE_AT[id];
+      const c = CONTAINERS.find((cc) => cc.id === id);
+      return {
+        key: `folder-open-${id}`,
+        label: `Папка «${c?.label ?? id}», открыта`,
+        boxes: [
+          box(x, z, FOLDER[0], FOLDER[1], 0.002, col('--color-case-folder')),
+          box(
+            x - FOLDER[0] / 3,
+            z - FOLDER[1] / 2 - 0.008,
+            0.09,
+            0.018,
+            0.002,
+            col('--color-case-folder'),
+          ),
+        ],
+        // Ярлык не над листами: чья стопка — видно по закладке и месту.
+        flat: true,
+        testId: `folder-open-${id}`,
       };
     }),
     // Короб вещдоков «Изъятое при осмотре места» (автор 25.11; вместо пакета FM-B): картон, крышка,

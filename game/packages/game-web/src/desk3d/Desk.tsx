@@ -148,6 +148,7 @@ export function Desk({
   materials,
   items,
   spillFrom,
+  stackAt,
   wallFit,
   onRead,
   onSave,
@@ -165,6 +166,11 @@ export function Desk({
   items: readonly DeskItem[];
   /** Откуда высыпается то, у чего ещё нет места (конверт на столе), м. */
   spillFrom: (id: string) => { x: number; z: number } | null;
+  /**
+   * Где ложится стопка этого листа (VZ-A, A-288): у каждой папки своё место — на ней самой;
+   * стартовые листы — своё. null — середина стола, как прежде.
+   */
+  stackAt: (id: string) => { x: number; z: number } | null;
   wallFit: RefObject<WallFit>;
   onRead: (id: string) => void;
   /** Раскладка стола изменилась (положили, высыпали): сохранить. */
@@ -296,7 +302,15 @@ export function Desk({
       // свободное от устройств; первый по описи — сверху. Чуть неровно, как сложенные руками.
       const flat = pick(false);
       const spot = flat.length
-        ? scatter(flat.slice(0, 1), zone, SPILL_AT, 7, 0.06, [...placed, ...devs], solid)[0]
+        ? scatter(
+            flat.slice(0, 1),
+            zone,
+            stackAt(flat[0]?.id ?? '') ?? SPILL_AT,
+            7,
+            0.06,
+            [...placed, ...devs],
+            solid,
+          )[0]
         : undefined;
       const sheets: Piece[] = spot
         ? flat

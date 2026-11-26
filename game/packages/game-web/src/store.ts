@@ -7,6 +7,7 @@ import {
   type ContainerId,
   DEVICE_IDS,
   type DeskItem,
+  deskGroupOf,
   deviceOf,
   FOLDER_DOCS,
   fileFromDesk,
@@ -513,8 +514,10 @@ export const useGame = create<GameStore>((set, get) => {
         get().openViewer(materialId);
         return;
       }
+      // Подряд — по своей стопке (VZ-A): у каждой папки и у стартовых листов своя.
+      const group = deskGroupOf(materialId);
       const rest = [...(s.desk ?? [])]
-        .filter((d) => sheet(d.id) && d.id !== materialId)
+        .filter((d) => sheet(d.id) && d.id !== materialId && deskGroupOf(d.id) === group)
         .sort((a, b) => b.layer - a.layer)
         .map((d) => d.id);
       get().openViewer(materialId);

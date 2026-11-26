@@ -15,8 +15,9 @@ type Box = DeskObject['boxes'][number];
 /** Следы вещей следователя на столе (м, с поворотом) — запретная часть зоны улик. */
 export function footprints(room: Room, objs: DeskObject[], margin = 0.01): Rect[] {
   const { p } = room;
+  // Плоское (открытая папка, VZ-A) — не преграда: на нём лежит стопка.
   return objs.flatMap((o) =>
-    o.boxes.map((b) => {
+    (o.flat ? [] : o.boxes).map((b) => {
       const w = (b.max[0] - b.min[0]) / p + margin * 2;
       const d = (b.max[2] - b.min[2]) / p + margin * 2;
       const cx = (b.min[0] + b.max[0]) / 2;
@@ -78,8 +79,11 @@ export function Occluders({ room, objects }: { room: Room; objects: DeskObject[]
         />
       )}
       {objects.flatMap((o) =>
-        // biome-ignore lint/suspicious/noArrayIndexKey: коробки предмета постоянны
-        o.boxes.map((b, k) => <DepthBox key={`${o.key}-${k}`} b={b} />),
+        // Плоское под листами не заслоняет их: рисуется столом, листы — поверх.
+        (o.flat ? [] : o.boxes).map((b, k) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: коробки предмета постоянны
+          <DepthBox key={`${o.key}-${k}`} b={b} />
+        )),
       )}
     </group>
   );

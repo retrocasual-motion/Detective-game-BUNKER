@@ -54,6 +54,9 @@ const EXPECT_ERRORS = 'expect-errors';
 export const expectErrors = () =>
   base.info().annotations.push({ type: EXPECT_ERRORS, description: 'сервер ломается нарочно' });
 
+/** Стартовые листы 01–07: в новом деле — стопкой на столе (ST-B, A-288). */
+export const START = ['01', '02', '03', '04', '05', '06', '07'];
+
 /** Видимая полоска листа в лесенке колонки (шапка): сюда щёлкают, чтобы открыть. */
 export const STRIP = { position: { x: 25, y: 24 } } as const;
 

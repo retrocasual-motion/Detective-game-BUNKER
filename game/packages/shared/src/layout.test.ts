@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NEWSPAPER_AT, NEWSPAPER_ID, sealedIds } from './archive.ts';
+import { NEWSPAPER_AT, NEWSPAPER_ID, START_STACK, sealedIds } from './archive.ts';
 import {
   addExcerpt,
   arrangeWall,
@@ -41,34 +41,44 @@ const starting: Material[] = Array.from({ length: 52 }, (_, i) => String(i + 1).
 describe('defaultState', () => {
   const s = defaultState(starting);
 
-  it('вид — «Стол»; на стене персонажи и 01–07, остальное в конвертах (A-260)', () => {
+  it('ST-B: вид — «Стол»; на стене только персонажи; 01–07 — стопкой на столе, письмо 01 сверху', () => {
     expect(s.view).toBe('desk');
     expect(s.opened).toEqual([]);
-    expect(s.wall.items.map((i) => i.id).filter((id) => /^\d/.test(id))).toEqual([
-      '01',
-      '02',
-      '03',
-      '04',
-      '05',
-      '06',
-      '07',
-    ]);
-    expect(s.wall.items).toHaveLength(7 + PERSONS.length);
+    expect(s.wall.items.map((i) => i.id).filter((id) => /^\d/.test(id))).toEqual([]);
+    expect(s.wall.items).toHaveLength(PERSONS.length);
     expect(s.wall.notes).toEqual([]);
     expect(s.wall.threads).toEqual([]);
+    const stack = (s.desk ?? []).filter((d) => START_STACK.includes(d.id));
+    expect(stack.map((d) => d.id)).toEqual([...START_STACK]);
+    // Место решит стол; порядок укладки растёт — последний по описи снизу… первый (01) сверху стопки
+    // кладёт стол: он переворачивает порядок высыпанного (Desk.tsx).
+    expect(stack.every((d) => d.x === undefined)).toBe(true);
   });
 
-  it('персонажи — ряд сверху, материалы — ниже, сеткой по описи; ничего не накрыто', () => {
+  it('персонажи — ряд сверху, ничего не накрыто', () => {
     const at = new Map(s.wall.items.map((i) => [i.id, i]));
     for (const p of PERSONS) expect(at.get(p.id)?.y).toBe(0);
-    expect(at.get('01')?.y).toBe(GRID_TOP);
-    expect((at.get('02')?.x ?? 0) > (at.get('01')?.x ?? 0)).toBe(true);
     const keys = s.wall.items.map((i) => `${i.x},${i.y}`);
     expect(new Set(keys).size).toBe(keys.length);
     for (const i of s.wall.items) {
       expect(i.x).toBeGreaterThan(WALL_BOUNDS.left);
       expect(i.y + 220).toBeLessThan(WALL_BOUNDS.bottom);
     }
+  });
+
+  it('ST-B: прочитали стартовые со стола — на стену на начальные места, сеткой по описи', () => {
+    const r = fileFromDesk(s, ['01', '02']);
+    const at = new Map(r.wall.items.map((i) => [i.id, i]));
+    expect(at.get('01')?.y).toBe(GRID_TOP);
+    expect((at.get('02')?.x ?? 0) > (at.get('01')?.x ?? 0)).toBe(true);
+    expect(r.desk?.some((d) => d.id === '01' || d.id === '02')).toBe(false);
+    expect(r.desk?.some((d) => d.id === '03')).toBe(true);
+  });
+
+  it('ST-B: «вскрыть всё» — стартовые на стене, как до конвертов', () => {
+    const r = openAll(s, starting);
+    expect(r.wall.items.some((i) => i.id === '01')).toBe(true);
+    expect(r.desk?.some((d) => START_STACK.includes(d.id))).toBe(false);
   });
 
   it('одинаковое у всех', () => {
@@ -307,11 +317,12 @@ describe('конверты архива (A-260)', () => {
     const ids = ['30', '31', '32', '33', '34', '35', '36'];
     // Газета лежит на столе с начала дела (автор 25.11), высыпанное — поверх.
     expect(o.desk?.[0]).toMatchObject({ id: NEWSPAPER_ID, ...NEWSPAPER_AT, layer: 0 });
-    const spilled = o.desk?.slice(1);
+    // Поверх газеты и стартовой стопки (ST-B).
+    const spilled = o.desk?.filter((d) => ids.includes(d.id));
     expect(spilled?.map((d) => d.id)).toEqual(ids);
     // Места ещё нет — разложит стол; порядок укладки растёт.
     expect(spilled?.every((d) => d.x === undefined && d.z === undefined)).toBe(true);
-    expect(spilled?.map((d) => d.layer)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(spilled?.map((d) => d.layer)).toEqual([8, 9, 10, 11, 12, 13, 14]);
     expect(o.wall.items.some((i) => ids.includes(i.id))).toBe(false);
     expect(o.wall.notes.some((n) => n.id === containerLabelId('protocols'))).toBe(false);
     expect(inboxIds(o, starting).some((id) => ids.includes(id))).toBe(false);
@@ -366,8 +377,8 @@ describe('конверты архива (A-260)', () => {
     const r = v5(hung);
     expect(r.wall.items.some((i) => i.id === '47')).toBe(false);
     expect(r.desk?.some((d) => d.id === '47' && d.x === undefined)).toBe(true);
-    // Конверт места не вскрыт — устройств на столе нет, только газета.
-    expect(reconcile(s, starting).desk?.map((d) => d.id)).toEqual([NEWSPAPER_ID]);
+    // Конверт места не вскрыт — устройств на столе нет, только газета и стартовая стопка.
+    expect(reconcile(s, starting).desk?.map((d) => d.id)).toEqual([NEWSPAPER_ID, ...START_STACK]);
   });
 
   it('DC-B: прочитанное со стола — на стену группой под ярлыком конверта; вторая порция — без второго ярлыка', () => {
