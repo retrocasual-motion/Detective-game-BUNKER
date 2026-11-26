@@ -374,3 +374,31 @@ test('OP-A: опись дела — галочка у строки того, ч�
     /inventory-done/,
   );
 });
+
+test('RD-A: лист со стены — листы его папки подряд: «Протоколы опроса · 1 из 7»; ↑ — к стене', async ({
+  page,
+}) => {
+  await sheet(page, '30').click(STRIP);
+  await expect(page.getByTestId('desk-run-count')).toHaveText('Протоколы опроса · 1 из 7');
+  await page.getByTestId('desk-next').click();
+  await expect(page.getByTestId('desk-run-count')).toHaveText('Протоколы опроса · 2 из 7');
+  await expect(page.getByTestId('viewer-paper')).toContainText('Протокол опроса');
+  // Со стены листы никуда не уходят.
+  await page.keyboard.press('Escape');
+  await expect(sheet(page, '31')).toBeAttached();
+});
+
+test('RD-A: ↑ при открытом листе со стола — лист закрыт, взгляд на стене', async ({ page }) => {
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'desk');
+  const paper = await page.evaluate(() =>
+    (
+      window as unknown as { __desk: { grab(id: string): { x: number; y: number } | null } }
+    ).__desk.grab('15'),
+  );
+  await page.mouse.click(paper?.x ?? 0, paper?.y ?? 0);
+  await expect(page.getByTestId('viewer')).toBeVisible();
+  await page.keyboard.press('ArrowUp');
+  await expect(page.getByTestId('viewer')).toBeHidden();
+  await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'wall');
+});

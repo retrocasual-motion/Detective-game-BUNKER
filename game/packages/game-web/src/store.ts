@@ -1,9 +1,11 @@
 import {
   addExcerpt,
+  BOX_KEEPS,
   boardCamera,
   CARD_H,
   CARD_W,
   type Camera,
+  CONTAINERS,
   type ContainerId,
   DEVICE_IDS,
   type DeskItem,
@@ -13,6 +15,7 @@ import {
   fileFromDesk,
   folderItemId,
   hangFromDesk,
+  inboxIds,
   isWeb,
   type Join,
   type Material,
@@ -207,9 +210,24 @@ interface GameStore {
    * сверху вниз), какие уже открывали и какие оставить на столе. Закрыли — прочитанное, кроме
    * оставленного, висит на стене группой своего конверта.
    */
-  deskRun: { ids: string[]; read: string[]; keep: string[] } | null;
+  deskRun: {
+    ids: string[];
+    read: string[];
+    keep: string[];
+    /**
+     * Откуда читают подряд (RD-A, A-288: одно правило чтения «N из M» везде): стопка стола, лоток
+     * «Входящие», группа на стене, пакеты коробки. Прочитанное само уходит на стену — только со стола.
+     */
+    source?: 'desk' | 'inbox' | 'wall' | 'box';
+    /** Подпись полосы: «Входящие», название папки на стене, «Личные вещи». */
+    label?: string;
+  } | null;
   /** Щелчок по листу на столе: открыть и читать стол подряд (газета — просто открыть). */
   readDesk(materialId: string): void;
+  /** Письмо из «Входящих»: открыть и читать лоток подряд (RD-A). */
+  readInbox(materialId: string): void;
+  /** Лист со стены: открыть и читать подряд листы той же папки на стене (RD-A). */
+  readWall(materialId: string): void;
   /** Следующий (+1) или предыдущий (−1) лист стола. */
   deskStep(d: 1 | -1): void;
   /** Оставить открытый лист на столе (или снова отпустить на стену). */
@@ -533,6 +551,14 @@ export const useGame = create<GameStore>((set, get) => {
       const at = run ? run.ids.indexOf(get().viewerId ?? '') : -1;
       const next = run && at >= 0 ? run.ids[at + d] : undefined;
       if (!run || !next) return;
+      // Следующий пакет из коробки — тоже пакет: закрыли лист — он в руках (BOX-B).
+      if (run.source === 'box') {
+        get().readFrom(next, { type: 'bag', id: next, inBox: true });
+        set({
+          deskRun: { ...run, read: run.read.includes(next) ? run.read : [...run.read, next] },
+        });
+        return;
+      }
       get().openViewer(next);
       set({
         deskRun: { ...run, read: run.read.includes(next) ? run.read : [...run.read, next] },
@@ -550,6 +576,47 @@ export const useGame = create<GameStore>((set, get) => {
     readFrom(materialId, back) {
       get().openViewer(materialId);
       if (get().viewerId === materialId) set({ held: null, backTo: back });
+      // Пакет из коробки (BOX-B): дальше — «следующий пакет» стрелкой (RD-A).
+      if (back.type === 'bag' && back.inBox) {
+        const bags = [...BOX_KEEPS].filter((id) => get().materials.some((m) => m.id === id));
+        if (bags.length > 1)
+          set({
+            deskRun: {
+              ids: bags,
+              read: [materialId],
+              keep: [],
+              source: 'box',
+              label: 'Личные вещи',
+            },
+          });
+      }
+    },
+
+    readInbox(materialId) {
+      const s = get().state;
+      if (!s) return;
+      const ids = inboxIds(s, get().materials);
+      get().openViewer(materialId);
+      if (get().viewerId === materialId && ids.length > 1 && ids.includes(materialId))
+        set({
+          deskRun: { ids, read: [materialId], keep: [], source: 'inbox', label: 'Входящие' },
+        });
+    },
+
+    readWall(materialId) {
+      const s = get().state;
+      get().openViewer(materialId);
+      if (!s || get().viewerId !== materialId) return;
+      const group = deskGroupOf(materialId);
+      if (group === 'loose' || group === 'inventory') return;
+      const ids = s.wall.items
+        .map((i) => i.id)
+        .filter((id) => deskGroupOf(id) === group && get().materials.some((m) => m.id === id))
+        .sort();
+      if (ids.length < 2) return;
+      const label =
+        group === 'start' ? 'Начало дела' : (CONTAINERS.find((c) => c.id === group)?.label ?? '');
+      set({ deskRun: { ids, read: [materialId], keep: [], source: 'wall', label } });
     },
 
     readMaterial(materialId) {
@@ -775,7 +842,9 @@ export const useGame = create<GameStore>((set, get) => {
       const run = get().deskRun;
       if (run) {
         set({ deskRun: null });
-        const file = run.read.filter((id) => !run.keep.includes(id));
+        // На стену само уходит только прочитанное со стола (DC-B); лоток и стена — как были.
+        const file =
+          (run.source ?? 'desk') === 'desk' ? run.read.filter((id) => !run.keep.includes(id)) : [];
         if (file.length) {
           const before = onWallNow(get().state);
           get().updateState((s) => fileFromDesk(s, file));

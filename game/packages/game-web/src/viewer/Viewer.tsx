@@ -577,7 +577,7 @@ export function Viewer({ materialId }: ViewerProps) {
       {run && runAt >= 0 && (
         <div className="desk-run" data-testid="desk-run">
           <span className="desk-run-count" data-testid="desk-run-count">
-            Со стола · {runAt + 1} из {run.ids.length}
+            {run.label ?? 'Со стола'} · {runAt + 1} из {run.ids.length}
           </span>
           <span className="desk-run-nav">
             <button
@@ -603,18 +603,23 @@ export function Viewer({ materialId }: ViewerProps) {
               ›
             </button>
           </span>
-          <button
-            type="button"
-            className="tool"
-            data-testid="desk-keep"
-            aria-pressed={kept}
-            onClick={() => useGame.getState().toggleKeep()}
-          >
-            {kept ? 'Остаётся на столе' : 'Оставить на столе'}
-          </button>
-          <small className="desk-run-hint">
-            {kept ? 'Лист останется на столе.' : 'Закроете — прочитанное повиснет на стене.'}
-          </small>
+          {/* Оставить на столе и «прочитанное — на стену» — только у стопки стола (DC-B). */}
+          {(run.source ?? 'desk') === 'desk' && (
+            <>
+              <button
+                type="button"
+                className="tool"
+                data-testid="desk-keep"
+                aria-pressed={kept}
+                onClick={() => useGame.getState().toggleKeep()}
+              >
+                {kept ? 'Остаётся на столе' : 'Оставить на столе'}
+              </button>
+              <small className="desk-run-hint">
+                {kept ? 'Лист останется на столе.' : 'Закроете — прочитанное повиснет на стене.'}
+              </small>
+            </>
+          )}
         </div>
       )}
       {sheet.closeup && (

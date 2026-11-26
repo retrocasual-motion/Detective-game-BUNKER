@@ -303,3 +303,19 @@ test('OPS-A: опись — на планшете на столе отдельн
   await toWall(page);
   await expect(sheet(page, '04')).toHaveCount(0);
 });
+
+test('RD-A: пакеты из коробки — «следующий пакет» стрелкой; закрыли — в руках тот, что читали', async ({
+  page,
+}) => {
+  await page.getByTestId('container-personal').click();
+  await page.getByTestId('envelope-open').dispatchEvent('click');
+  const held = page.getByTestId('held');
+  await expect(held).toHaveAttribute('aria-label', 'Коробка «Личные вещи» · вскрыта');
+  await page.getByTestId('unpack-40').dispatchEvent('click');
+  await page.getByTestId('bag-open').click();
+  await expect(page.getByTestId('desk-run-count')).toHaveText('Личные вещи · 1 из 7');
+  await page.getByTestId('desk-next').click();
+  await expect(page.getByTestId('desk-run-count')).toHaveText('Личные вещи · 2 из 7');
+  await page.keyboard.press('Escape');
+  await expect(held).toHaveAttribute('aria-label', /Пакет · Личные вещи/);
+});

@@ -195,7 +195,8 @@ function inboxObjects(r: Room, col: Col, inbox: string[]): DeskObject[] {
         at(X - W / 2, Z, 0.004, D, 0.045, clear, 0.004),
         at(X + W / 2, Z, 0.004, D, 0.045, clear, 0.004),
       ],
-      tag: inbox.length ? `Входящие · ${inbox.length}` : 'Входящие',
+      // Пустой лоток говорит, что пуст (RD-A, RV-24): щелчок по нему раньше молчал.
+      tag: inbox.length ? `Входящие · ${inbox.length}` : 'Входящие · пусто',
       tagInside: true,
       testId: 'inbox-tray',
     },

@@ -93,6 +93,12 @@ export function App() {
       const dir = KEY_DIR[e.key];
       if (!dir || isTyping(e.target)) return;
       const g = useGame.getState();
+      // Лист открыт: ↑ — закрыть и к стене (RD-A, SC-02); ←/→ — листать (полоса «N из M»).
+      if (g.viewerId && dir === 'up' && !g.held && !g.computerOpen && g.state?.view === 'desk') {
+        g.closeViewer();
+        setView('wall');
+        return;
+      }
       // Вещь в руках — стрелки её (меню фотоаппарата), не комнаты (R3-01).
       if (g.viewerId || g.computerOpen || g.held || g.deskPhone || !g.state) return;
       const to = NAV[g.state.view][dir];
