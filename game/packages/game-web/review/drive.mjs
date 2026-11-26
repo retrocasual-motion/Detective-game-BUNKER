@@ -8,9 +8,10 @@
 // · move x y · down [right] · up [right] · drag x1 y1 x2 y2 [шаги] [пауза_мс] · wheel dy [x y]
 // · key K · keydown K · keyup K · type текст · wait мс · ui · text · eval js · console · stats
 // · tabs · tab n · url · close
-import { createRequire } from 'node:module';
+
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { createServer } from 'node:http';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -43,13 +44,20 @@ mkdirSync(join(dir, 'shots'), { recursive: true });
 const { chromium } = await import('@playwright/test');
 const browser = await chromium.launch({
   headless: !flag('headed'),
-  args: ['--ignore-gpu-blocklist', '--enable-gpu', '--use-angle=d3d11', '--enable-unsafe-swiftshader'],
+  args: [
+    '--ignore-gpu-blocklist',
+    '--enable-gpu',
+    '--use-angle=d3d11',
+    '--enable-unsafe-swiftshader',
+  ],
 });
 const context = await browser.newContext({
   baseURL: BASE,
   viewport: { width: vw, height: vh },
   reducedMotion: flag('motion') ? 'no-preference' : 'reduce',
-  ...(flag('video') ? { recordVideo: { dir: join(dir, 'video'), size: { width: vw, height: vh } } } : {}),
+  ...(flag('video')
+    ? { recordVideo: { dir: join(dir, 'video'), size: { width: vw, height: vh } } }
+    : {}),
 });
 await context.addInitScript(
   ([input, reduce]) => {
@@ -63,10 +71,13 @@ let page = await context.newPage();
 const consoleLog = [];
 const watch = (p) => {
   p.on('console', (m) => {
-    if (['error', 'warning'].includes(m.type())) consoleLog.push(`[${m.type()}] ${m.text()}`.slice(0, 500));
+    if (['error', 'warning'].includes(m.type()))
+      consoleLog.push(`[${m.type()}] ${m.text()}`.slice(0, 500));
   });
   p.on('pageerror', (e) => consoleLog.push(`[pageerror] ${e.message}`.slice(0, 500)));
-  p.on('requestfailed', (r) => consoleLog.push(`[requestfailed] ${r.url()} ${r.failure()?.errorText}`));
+  p.on('requestfailed', (r) =>
+    consoleLog.push(`[requestfailed] ${r.url()} ${r.failure()?.errorText}`),
+  );
 };
 watch(page);
 context.on('page', (p) => {
@@ -74,19 +85,31 @@ context.on('page', (p) => {
 });
 
 // Счётчики: действия, путь мыши (px), время.
-const stats = { clicks: 0, drags: 0, wheels: 0, keys: 0, moves: 0, path: 0, shots: 0, t0: Date.now() };
+const stats = {
+  clicks: 0,
+  drags: 0,
+  wheels: 0,
+  keys: 0,
+  moves: 0,
+  path: 0,
+  shots: 0,
+  t0: Date.now(),
+};
 let pos = { x: vw / 2, y: vh / 2 };
 const go = (x, y) => {
   stats.path += Math.hypot(x - pos.x, y - pos.y);
   pos = { x, y };
 };
 let n = 0;
-const log = (o) => appendFileSync(join(dir, 'actions.jsonl'), `${JSON.stringify({ t: Date.now(), ...o })}\n`);
+const log = (o) =>
+  appendFileSync(join(dir, 'actions.jsonl'), `${JSON.stringify({ t: Date.now(), ...o })}\n`);
 
 async function clone(slice) {
   const req = createRequire(join(process.cwd(), '../api/package.json'));
   const pgMod = await import(pathToFileURL(req.resolve('postgres')).href);
-  const sql = (pgMod.default ?? pgMod)('postgres://postgres:postgres@localhost:5444/bunker', { max: 1 });
+  const sql = (pgMod.default ?? pgMod)('postgres://postgres:postgres@localhost:5444/bunker', {
+    max: 1,
+  });
   try {
     const [from] = await sql`select id from players where email = ${`seed-${slice}@review.test`}`;
     const [to] = await sql`select id from players where email = ${email}`;
@@ -200,7 +223,12 @@ const C = {
         if (r.width < 1 || r.height < 1) continue;
         const cs = getComputedStyle(el);
         if (cs.visibility === 'hidden' || cs.display === 'none' || +cs.opacity === 0) continue;
-        const name = (el.getAttribute('aria-label') || el.textContent || el.getAttribute('title') || '')
+        const name = (
+          el.getAttribute('aria-label') ||
+          el.textContent ||
+          el.getAttribute('title') ||
+          ''
+        )
           .trim()
           .replace(/\s+/g, ' ')
           .slice(0, 60);
@@ -223,10 +251,23 @@ const C = {
     return out || '(пусто)';
   },
   async stats() {
-    return JSON.stringify({ ...stats, path: Math.round(stats.path), seconds: Math.round((Date.now() - stats.t0) / 1000) });
+    return JSON.stringify({
+      ...stats,
+      path: Math.round(stats.path),
+      seconds: Math.round((Date.now() - stats.t0) / 1000),
+    });
   },
   async statsreset() {
-    Object.assign(stats, { clicks: 0, drags: 0, wheels: 0, keys: 0, moves: 0, path: 0, shots: 0, t0: Date.now() });
+    Object.assign(stats, {
+      clicks: 0,
+      drags: 0,
+      wheels: 0,
+      keys: 0,
+      moves: 0,
+      path: 0,
+      shots: 0,
+      t0: Date.now(),
+    });
     return 'ok';
   },
   async tabs() {

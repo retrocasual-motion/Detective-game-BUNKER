@@ -13,5 +13,7 @@ export default defineConfig({
   retries: 0,
   reporter: 'list',
   use: { baseURL: 'http://localhost:5184', viewport, reducedMotion: 'reduce' },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], viewport, reducedMotion: 'reduce' } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], viewport, reducedMotion: 'reduce' } },
+  ],
 });

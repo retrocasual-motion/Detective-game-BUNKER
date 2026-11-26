@@ -25,7 +25,6 @@ const ALL_LOCKED = readdirSync(PACK)
   .map((f) => f.split('__')[0] as string)
   .sort();
 
-
 // ── Большая проверка RV-BC: срез сохранения. REVIEW_STOP — начало имени шага, после которого
 // тест останавливается (сохранение игрока остаётся в базе проверки).
 const STOP = process.env.REVIEW_STOP;
@@ -412,30 +411,36 @@ test('QA-C: всё дело через интерфейс — от нового 
     }
   });
 
-  await step('фильм 13 и ролики 14 — плеером со стены, «увеличить» колесом (L913, L914)', async () => {
-    for (const [id, got] of [
-      ['13', 'L913'],
-      ['14', 'L914'],
-    ] as const) {
-      await openSheet(page, id);
-      await expect(page.getByTestId('media-player')).toBeVisible();
-      await zoomOpenSheet(page);
-      await page.keyboard.press('Escape');
-      await opened(page, [got]);
-    }
-  });
+  await step(
+    'фильм 13 и ролики 14 — плеером со стены, «увеличить» колесом (L913, L914)',
+    async () => {
+      for (const [id, got] of [
+        ['13', 'L913'],
+        ['14', 'L914'],
+      ] as const) {
+        await openSheet(page, id);
+        await expect(page.getByTestId('media-player')).toBeVisible();
+        await zoomOpenSheet(page);
+        await page.keyboard.press('Escape');
+        await opened(page, [got]);
+      }
+    },
+  );
 
-  await step('радиопост 50: регистратор вплотную — снимок стойки крупно (L906), «Свойства файла» (L975)', async () => {
-    await deviceUp(page, '50', /./);
-    await page.getByTestId('device-use').click();
-    await expect(page.getByTestId('radio-strip')).toBeVisible();
-    await page.getByTestId('radio-photo-2').click();
-    await expect(page.getByTestId('radio-photo-text')).toBeVisible();
-    await page.getByTestId('media-props').click();
-    await expect(page.getByTestId('media-props-view')).toContainText('radiopost_RL2.wav');
-    await handsFree(page);
-    await opened(page, ['L906', 'L975']);
-  });
+  await step(
+    'радиопост 50: регистратор вплотную — снимок стойки крупно (L906), «Свойства файла» (L975)',
+    async () => {
+      await deviceUp(page, '50', /./);
+      await page.getByTestId('device-use').click();
+      await expect(page.getByTestId('radio-strip')).toBeVisible();
+      await page.getByTestId('radio-photo-2').click();
+      await expect(page.getByTestId('radio-photo-text')).toBeVisible();
+      await page.getByTestId('media-props').click();
+      await expect(page.getByTestId('media-props-view')).toContainText('radiopost_RL2.wav');
+      await handsFree(page);
+      await opened(page, ['L906', 'L975']);
+    },
+  );
 
   await step('«Свойства файла» записей 13, 14, 21, 49 (L971, L970, L972, L974)', async () => {
     for (const [id, file] of [
@@ -540,22 +545,25 @@ test('QA-C: всё дело через интерфейс — от нового 
     await opened(page, ['L957']);
   });
 
-  await step('П-02: картон сбоку — вытащить папку A-24 (L981, L991); папка крупно (L956)', async () => {
-    await stackInHands(page, 'П-02');
-    await edgeOn(page);
-    await page.getByTestId('stack-layer-18').click({ force: true });
-    await expect(page.getByTestId('held')).toHaveAttribute('aria-label', 'Папка A-24');
-    await handsFree(page);
-    await opened(page, ['L981', 'L991']);
-    // Папка A-24 на стене (L991) — приблизить колесом: крупный план листов (L956, F5).
-    await openSheet(page, 'F:П-02/18');
-    const paper = await page.getByTestId('viewer-paper').boundingBox();
-    if (paper) await page.mouse.move(paper.x + paper.width / 2, paper.y + paper.height / 3);
-    for (let i = 0; i < 8; i++) await page.mouse.wheel(0, -120);
-    await page.waitForTimeout(1200);
-    await page.keyboard.press('Escape');
-    await opened(page, ['L956']);
-  });
+  await step(
+    'П-02: картон сбоку — вытащить папку A-24 (L981, L991); папка крупно (L956)',
+    async () => {
+      await stackInHands(page, 'П-02');
+      await edgeOn(page);
+      await page.getByTestId('stack-layer-18').click({ force: true });
+      await expect(page.getByTestId('held')).toHaveAttribute('aria-label', 'Папка A-24');
+      await handsFree(page);
+      await opened(page, ['L981', 'L991']);
+      // Папка A-24 на стене (L991) — приблизить колесом: крупный план листов (L956, F5).
+      await openSheet(page, 'F:П-02/18');
+      const paper = await page.getByTestId('viewer-paper').boundingBox();
+      if (paper) await page.mouse.move(paper.x + paper.width / 2, paper.y + paper.height / 3);
+      for (let i = 0; i < 8; i++) await page.mouse.wheel(0, -120);
+      await page.waitForTimeout(1200);
+      await page.keyboard.press('Escape');
+      await opened(page, ['L956']);
+    },
+  );
 
   await step('обрывок из 42 — к половине 51 на стене: совместить (L990)', async () => {
     await openSheet(page, '42');
@@ -570,21 +578,24 @@ test('QA-C: всё дело через интерфейс — от нового 
     await opened(page, ['L990']);
   });
 
-  await step('телефон на столе: HealthWay, номер партии 0418 (линии ничего не открывают)', async () => {
-    await toDesk(page);
-    await handsFree(page);
-    await page.getByTestId('desk-phone').click();
-    await expect(scene(page)).toHaveAttribute('data-spot', 'phone');
-    await settle(page);
-    for (const d of '88005553120') await page.getByTestId(`dp-key-${d}`).click();
-    await page.getByTestId('dp-handset').click();
-    await expect(page.getByTestId('dp-heard')).toContainText('введите номер партии');
-    for (const d of '0418') await page.getByTestId(`dp-key-${d}`).click();
-    await expect(page.getByTestId('dp-heard')).toContainText('Партия 0418');
-    await page.getByTestId('dp-handset').click();
-    await page.keyboard.press('Escape');
-    await expect(scene(page)).toHaveAttribute('data-spot', 'desk');
-  });
+  await step(
+    'телефон на столе: HealthWay, номер партии 0418 (линии ничего не открывают)',
+    async () => {
+      await toDesk(page);
+      await handsFree(page);
+      await page.getByTestId('desk-phone').click();
+      await expect(scene(page)).toHaveAttribute('data-spot', 'phone');
+      await settle(page);
+      for (const d of '88005553120') await page.getByTestId(`dp-key-${d}`).click();
+      await page.getByTestId('dp-handset').click();
+      await expect(page.getByTestId('dp-heard')).toContainText('введите номер партии');
+      for (const d of '0418') await page.getByTestId(`dp-key-${d}`).click();
+      await expect(page.getByTestId('dp-heard')).toContainText('Партия 0418');
+      await page.getByTestId('dp-handset').click();
+      await page.keyboard.press('Escape');
+      await expect(scene(page)).toHaveAttribute('data-spot', 'desk');
+    },
+  );
 
   await step('диск сервера: конверт 52 → вскрыть → на стол → в дисковод (L214, L215)', async () => {
     await toDesk(page);
@@ -657,33 +668,36 @@ test('QA-C: всё дело через интерфейс — от нового 
     await backToGame(page);
   });
 
-  await step('VAULTLINE: вход по кодовому слову k.walsh → «Йен» (L620, PW-B), учёт анкет VL-31 (L618) и A-24/06.10.2008 (L619), хранилище (L735), архив 0417 (L736–L738)', async () => {
-    const vl = await siteByLink(page, '02', 'vaultline-program.com');
-    await fill(vl, 'vl-forgot', { login: 'k.walsh' });
-    await fill(vl, 'vl-word', { answer: 'Йен' });
-    await expect(vl).toHaveURL(/\/cabinet$/);
-    await opened(page, ['L620']);
-    await fill(vl, 'vl-registry', { program: 'VL-31' });
-    await opened(page, ['L618']);
-    await fill(vl, 'vl-registry', { program: '', code: 'A-24' });
-    await expect(vl.getByTestId('site-doc-L619')).toBeVisible();
-    await opened(page, ['L619']);
-    await fill(vl, 'vl-docs', { title: 'архив проекта' });
-    const msg = vl.getByTestId('site-vl-docs-msg');
-    await expect(msg).toContainText('docs.hexon-bio.com/vl-31');
-    const [hx] = await Promise.all([
-      page.context().waitForEvent('page'),
-      msg.locator('a.site-link').first().click(),
-    ]);
-    await expect(hx.getByTestId('site')).toHaveAttribute('data-domain', 'docs.hexon-bio.com');
-    await opened(page, ['L735']);
-    await fill(hx, 'hx-archive', { password: '0417' });
-    await expect(hx.getByTestId('site-docs')).toBeVisible();
-    await opened(page, ['L736', 'L737', 'L738']);
-    await hx.close();
-    await vl.close();
-    await backToGame(page);
-  });
+  await step(
+    'VAULTLINE: вход по кодовому слову k.walsh → «Йен» (L620, PW-B), учёт анкет VL-31 (L618) и A-24/06.10.2008 (L619), хранилище (L735), архив 0417 (L736–L738)',
+    async () => {
+      const vl = await siteByLink(page, '02', 'vaultline-program.com');
+      await fill(vl, 'vl-forgot', { login: 'k.walsh' });
+      await fill(vl, 'vl-word', { answer: 'Йен' });
+      await expect(vl).toHaveURL(/\/cabinet$/);
+      await opened(page, ['L620']);
+      await fill(vl, 'vl-registry', { program: 'VL-31' });
+      await opened(page, ['L618']);
+      await fill(vl, 'vl-registry', { program: '', code: 'A-24' });
+      await expect(vl.getByTestId('site-doc-L619')).toBeVisible();
+      await opened(page, ['L619']);
+      await fill(vl, 'vl-docs', { title: 'архив проекта' });
+      const msg = vl.getByTestId('site-vl-docs-msg');
+      await expect(msg).toContainText('docs.hexon-bio.com/vl-31');
+      const [hx] = await Promise.all([
+        page.context().waitForEvent('page'),
+        msg.locator('a.site-link').first().click(),
+      ]);
+      await expect(hx.getByTestId('site')).toHaveAttribute('data-domain', 'docs.hexon-bio.com');
+      await opened(page, ['L735']);
+      await fill(hx, 'hx-archive', { password: '0417' });
+      await expect(hx.getByTestId('site-docs')).toBeVisible();
+      await opened(page, ['L736', 'L737', 'L738']);
+      await hx.close();
+      await vl.close();
+      await backToGame(page);
+    },
+  );
 
   await step('архив номеров газеты в браузере компьютера: четыре даты (L831–L834)', async () => {
     await pcBrowser(page);
@@ -709,61 +723,70 @@ test('QA-C: всё дело через интерфейс — от нового 
     await page.keyboard.press('Escape');
   });
 
-  await step('банк: «Сообщить о смерти арендатора» 845/Коул/13.10.2009 → коробка на столе (L460–L462)', async () => {
-    const fr = await siteByAddressBar(page, 'aspen-bank.com');
-    await fill(fr, 'fr-death', { box: '845', surname: 'Коул', date: '13.10.2009' });
-    await expect(fr.getByTestId('site-fr-death-msg')).toContainText('Сообщение принято');
-    await opened(page, ['L460', 'L461', 'L462']);
-    await fr.close();
-    await backToGame(page);
-    await toDesk(page);
-    const box = page.getByTestId('container-bank');
-    await expect(box).toBeVisible();
-    await box.click();
-    await page.getByTestId('envelope-open').dispatchEvent('click');
-    await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /» · вскрыт/);
-    await page.keyboard.press('Escape');
-    await expect(page.getByTestId('held')).toBeHidden();
-    await expect(sheet(page, 'L461')).toBeAttached();
-    // Кассета с проигрывателем — на столе. Находка: на полном столе её место под коробкой 29 —
-    // щелчок по середине берёт коробку; щёлкаем по видимому краю, если он есть.
-    const free = await visiblePoint(page, 'device-L462');
-    expect
-      .soft(free, 'проигрыватель микрокассет (L462) на столе не закрыт коробкой 29')
-      .not.toBeNull();
-    if (free) await page.mouse.click(free.x, free.y);
-    else {
-      // Обход: карточка кассеты на стене — щелчок берёт вещь в руки.
-      const pt = await showOnWall(page, 'L462');
-      await page.mouse.click(pt.x, pt.y);
-    }
-    await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /микрокассет/);
-    // Кассета уже в проигрывателе (6.4): щелчок по нему — вплотную, под ним строка записи.
-    await page.getByTestId('cassette-player').click();
-    await expect(page.getByTestId('cassette-sheet')).toBeVisible();
-    await handsFree(page);
-  });
+  await step(
+    'банк: «Сообщить о смерти арендатора» 845/Коул/13.10.2009 → коробка на столе (L460–L462)',
+    async () => {
+      const fr = await siteByAddressBar(page, 'aspen-bank.com');
+      await fill(fr, 'fr-death', { box: '845', surname: 'Коул', date: '13.10.2009' });
+      await expect(fr.getByTestId('site-fr-death-msg')).toContainText('Сообщение принято');
+      await opened(page, ['L460', 'L461', 'L462']);
+      await fr.close();
+      await backToGame(page);
+      await toDesk(page);
+      const box = page.getByTestId('container-bank');
+      await expect(box).toBeVisible();
+      await box.click();
+      await page.getByTestId('envelope-open').dispatchEvent('click');
+      await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /» · вскрыт/);
+      await page.keyboard.press('Escape');
+      await expect(page.getByTestId('held')).toBeHidden();
+      await expect(sheet(page, 'L461')).toBeAttached();
+      // Кассета с проигрывателем — на столе. Находка: на полном столе её место под коробкой 29 —
+      // щелчок по середине берёт коробку; щёлкаем по видимому краю, если он есть.
+      const free = await visiblePoint(page, 'device-L462');
+      expect
+        .soft(free, 'проигрыватель микрокассет (L462) на столе не закрыт коробкой 29')
+        .not.toBeNull();
+      if (free) await page.mouse.click(free.x, free.y);
+      else {
+        // Обход: карточка кассеты на стене — щелчок берёт вещь в руки.
+        const pt = await showOnWall(page, 'L462');
+        await page.mouse.click(pt.x, pt.y);
+      }
+      await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /микрокассет/);
+      // Кассета уже в проигрывателе (6.4): щелчок по нему — вплотную, под ним строка записи.
+      await page.getByTestId('cassette-player').click();
+      await expect(page.getByTestId('cassette-sheet')).toBeVisible();
+      await handsFree(page);
+    },
+  );
 
-  await step('все 78 закрытых материалов у игрока (до решения дела — кроме L998, L999)', async () => {
-    const have = await mine(page);
-    const missing = ALL_LOCKED.filter((id) => !have.has(id) && id !== 'L998' && id !== 'L999');
-    expect.soft(missing, 'до «Решить дело» не открыты').toEqual([]);
-  });
+  await step(
+    'все 78 закрытых материалов у игрока (до решения дела — кроме L998, L999)',
+    async () => {
+      const have = await mine(page);
+      const missing = ALL_LOCKED.filter((id) => !have.has(id) && id !== 'L998' && id !== 'L999');
+      expect.soft(missing, 'до «Решить дело» не открыты').toEqual([]);
+    },
+  );
 
-  await step('«Решить дело»: предупреждение (L998) → продолжить (L999) → форма → отправить', async () => {
-    await toDesk(page);
-    await handsFree(page);
-    await page.getByTestId('solve-case').click();
-    await expect(page.getByTestId('solve-warning')).toBeVisible();
-    await opened(page, ['L998']);
-    await page.getByTestId('solve-continue').click();
-    await expect(page.getByTestId('verdict-folder')).toBeVisible();
-    await opened(page, ['L999']);
-    await page.getByTestId('verdict-person-p:moreau').click();
-    for (let k = 0; k < 5; k++) await page.getByTestId('verdict-next').click();
-    await page.getByTestId('verdict-send').click();
-    await expect(page.getByTestId('verdict-result')).toBeVisible();
-  });
+  await step(
+    '«Решить дело»: предупреждение (L998) → продолжить (L999) → форма → отправить',
+    async () => {
+      await toDesk(page);
+      await handsFree(page);
+      await page.getByTestId('solve-case').click();
+      await expect(page.getByTestId('solve-warning')).toBeVisible();
+      await opened(page, ['L998']);
+      await page.getByTestId('solve-continue').click();
+      await expect(page.getByTestId('verdict-folder')).toBeVisible();
+      await opened(page, ['L999']);
+      await page.getByTestId('verdict-person-p:moreau').click();
+      for (let k = 0; k < 5; k++) await page.getByTestId('verdict-next').click();
+      await page.getByTestId('verdict-send').click();
+      await expect(page.getByTestId('verdict-result')).toBeVisible();
+    },
+  );
 
   await step('эпилог → «Завершить дело» → титры → главное меню', async () => {
     await page.getByTestId('verdict-result-next').click();
