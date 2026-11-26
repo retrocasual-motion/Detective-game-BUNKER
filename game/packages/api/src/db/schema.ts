@@ -1,6 +1,6 @@
 import type { Progress } from '@bunker/engine';
 import type { PlayerState } from '@bunker/shared';
-import { bigint, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { bigint, integer, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const playerState = pgTable('player_state', {
   playerId: text('player_id').primaryKey(),
@@ -35,6 +35,11 @@ export const playerStateBackups = pgTable('player_state_backups', {
 export const playerProgress = pgTable('player_progress', {
   playerId: text('player_id').primaryKey(),
   progress: jsonb('progress').$type<Progress>().notNull(),
+  /**
+   * Сколько порций дела пришло (SD5-A, A-288): 1 — бумаги, 2 — и вещдоки из камеры хранения. Пишет
+   * только сервер, когда сам проверил порог; материалы второй порции до того в браузер не уходят.
+   */
+  portion: integer('portion').notNull().default(1),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

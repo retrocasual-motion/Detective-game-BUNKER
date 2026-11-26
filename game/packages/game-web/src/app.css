@@ -3047,6 +3047,17 @@ button {
 }
 
 /* Опись дела — рабочий лист (OP-A): карандашная галочка у строки, чьи материалы игрок открывал. */
+/* Вещдоки ещё в камере хранения (SD5-A): пометка карандашом у строки, как галочка. */
+.viewer-paper tr.inventory-stored td:last-child::after {
+  content: "в камере хранения";
+  display: block;
+  rotate: -3deg;
+  color: var(--color-pencil, #5d5a55);
+  font:
+    600 0.85em / 1.1 "Segoe Print",
+    "Comic Sans MS",
+    cursive;
+}
 .viewer-paper tr.inventory-done td:first-child::after {
   content: "✓";
   display: inline-block;

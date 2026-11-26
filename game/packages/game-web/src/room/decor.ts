@@ -358,6 +358,10 @@ export function deskObjects(
    * зачем папка»): пустая папка со стола уходит. Не задано — все открытые.
    */
   folders?: readonly ContainerId[],
+  /**
+   * Короба камеры хранения, которых на столе ещё нет (SD5-A): вещдоки не пришли или их ещё несут.
+   */
+  absent: readonly ContainerId[] = [],
 ): DeskObject[] {
   const { p, deskY } = r;
   const box = (
@@ -839,6 +843,8 @@ export function deskObjects(
   return all
     .filter(
       (o) =>
+        !(o.hotspot?.kind === 'container' && absent.includes(o.hotspot.id)) &&
+        !(o.key === 'bags' && absent.includes('personal')) &&
         !FREE_KEYS.has(o.key) &&
         !(DEVICE_KEYS.has(o.key) && !opened.includes('scene')) &&
         !(o.key === 'papers' && !opened.includes('bunker')),
@@ -1137,12 +1143,13 @@ export function drawObjects(
   /** Лампа: горит ли, насколько потянута цепочка (0…1). */
   lamp: LampLook = LAMP_IDLE,
   folders?: readonly ContainerId[],
+  absent: readonly ContainerId[] = [],
 ): void {
   const ctx = prepare(canvas, r);
   if (!ctx) return;
   const col = colors(canvas);
   for (const o of sortObjects(
-    deskObjects(r, col, inbox, opened, epilogue, disc, bank, drive, phone, lamp, folders),
+    deskObjects(r, col, inbox, opened, epilogue, disc, bank, drive, phone, lamp, folders, absent),
     pose.eye,
   )) {
     const boxes = o.ordered

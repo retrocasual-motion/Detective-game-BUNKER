@@ -8,11 +8,18 @@ import { test as base, expect, type Page } from '@playwright/test';
 /** Игрок автотестов: вход без письма через служебный маршрут. */
 export const E2E_EMAIL = 'e2e@bunker.test';
 
-export const test = base.extend<{ sealed: boolean; input: 'mouse' | 'trackpad' }>({
+export const test = base.extend<{
+  sealed: boolean;
+  staged: boolean;
+  input: 'mouse' | 'trackpad';
+}>({
   sealed: [false, { option: true }],
+  // Поэтапная выдача (SD5-A): `staged` — вещдоки ещё в камере хранения, как у нового игрока; иначе
+  // опечатанное дело сразу с ними (как до волны 5).
+  staged: [false, { option: true }],
   // Управление (TP-C): по умолчанию — мышь (колесо приближает), на любой системе.
   input: ['mouse', { option: true }],
-  page: async ({ page, sealed, reducedMotion, input }, use, testInfo) => {
+  page: async ({ page, sealed, staged, reducedMotion, input }, use, testInfo) => {
     // Ошибки страницы, console.error и ответы 5xx роняют тест (RV-75): раньше игра могла сыпать
     // ошибками, а тесты оставались зелёными. Тест, что ломает сервер нарочно, помечает себя
     // `expectErrors(test)`. «Failed to load resource» — эхо ответа сервера, его ловит проверка ответов.
@@ -39,6 +46,7 @@ export const test = base.extend<{ sealed: boolean; input: 'mouse' | 'trackpad' }
     await page.request.post('/api/dev/login', { data: { email: E2E_EMAIL } });
     const res = await page.request.delete('/api/state');
     expect(res.status()).toBe(204);
+    if (sealed && !staged) await page.request.post('/api/dev/delivery');
     // `play` — сразу в дело, без главного меню (MM-A); меню проверяет menu.spec.
     await page.goto(sealed ? '/?play' : '/?opened=all&play');
     await expect(page.getByTestId('room')).toBeVisible();

@@ -16,11 +16,14 @@ import {
 } from '@bunker/engine';
 import {
   defaultState,
+  deliveredBySave,
+  deliveryDue,
   EPILOGUE_ID,
   ExcerptSchema,
   type Material,
   MEDIA,
   PERSONS,
+  PORTION_2,
   readSaved,
   reconcile,
   type SiteFormId,
@@ -247,17 +250,68 @@ export function createApp({
    * Материалы игрока: стартовые и открытые им закрытые, по порядку открытия (только они уходят в
    * браузер, P-10); после заключения — эпилог.
    */
-  const playerMaterials = (progress: Progress): Material[] => [
-    ...materials,
+  /**
+   * Вторая порция у игрока (SD5-A): записана сервером — или видна по сохранению (старое дело,
+   * короба камеры хранения уже вскрыты).
+   */
+  async function delivered(pid: string): Promise<boolean> {
+    const [p] = await db
+      .select({ portion: playerProgress.portion })
+      .from(playerProgress)
+      .where(eq(playerProgress.playerId, pid));
+    if ((p?.portion ?? 1) >= 2) return true;
+    const [s] = await db
+      .select({ state: playerState.state })
+      .from(playerState)
+      .where(eq(playerState.playerId, pid));
+    return deliveredBySave(s?.state);
+  }
+  async function deliver(pid: string) {
+    await db
+      .insert(playerProgress)
+      .values({ playerId: pid, progress: emptyProgress(), portion: 2 })
+      .onConflictDoUpdate({ target: playerProgress.playerId, set: { portion: 2 } });
+  }
+
+  /** Материалы игрока: стартовые (без второй порции, пока она не пришла) и открытое. */
+  const playerMaterials = (progress: Progress, second = true): Material[] => [
+    ...(second ? materials : materials.filter((m) => !PORTION_2.has(m.id))),
     ...progress.released.flatMap((id) => lockedById.get(id) ?? []),
     // Заключение отправлено — эпилог конвертом на столе (автор 17.11).
     ...(progress.ended ? [EPILOGUE] : []),
   ];
-  const mine = async (pid: string) => playerMaterials(await loadProgress(pid));
+  const mine = async (pid: string) =>
+    playerMaterials(await loadProgress(pid), await delivered(pid));
 
   // Только чтение: «видено» отмечает сам движок на следующем действии (ответ уже доставил
   // открытое) — запись отсюда шла бы мимо очереди действий и могла затереть открытое.
   app.get('/api/materials', async (c) => c.json(await mine(c.get('player'))));
+
+  /**
+   * Звонок камеры хранения (SD5-A, A-288 п. 10): игра спрашивает, пора ли; сервер сам проверяет по
+   * сохранённому делу (открыто ≥ 70 % первой порции и ≥ 20 минут игры — или 40 минут) и только
+   * тогда отдаёт вещдоки. Рано — 409.
+   */
+  app.post('/api/delivery', async (c) => {
+    const pid = c.get('player');
+    const ok = await serial(pid, async () => {
+      if (await delivered(pid)) return true;
+      const [s] = await db
+        .select({ state: playerState.state })
+        .from(playerState)
+        .where(eq(playerState.playerId, pid));
+      const raw = (s?.state ?? {}) as { looked?: unknown; playMs?: unknown };
+      const looked = Array.isArray(raw.looked)
+        ? raw.looked.filter((x): x is string => typeof x === 'string')
+        : [];
+      const playMs = typeof raw.playMs === 'number' ? raw.playMs : 0;
+      if (!deliveryDue({ looked, playMs })) return false;
+      await deliver(pid);
+      return true;
+    });
+    if (!ok) return c.json({ error: 'рано' }, 409);
+    return c.json(materials.filter((m) => PORTION_2.has(m.id)));
+  });
 
   app.get('/api/state', async (c) => {
     const pid = c.get('player');
@@ -359,6 +413,13 @@ export function createApp({
     return c.json(await runAction(c.get('player'), parsed.data));
   });
 
+  // Вторая порция сразу — только в разработке («?opened=all», автотесты, проверки).
+  app.post('/api/dev/delivery', async (c) => {
+    if (production) return c.notFound();
+    await deliver(c.get('player'));
+    return c.body(null, 204);
+  });
+
   // Служебная строка действий — только в разработке (E2-CHECK-A): «ДЕЙСТВИЕ | ЦЕЛЬ | ЗНАЧЕНИЕ».
   app.post('/api/dev/action-line', bodyLimit({ maxSize: 64 * 1024 }), async (c) => {
     if (production || !engine) return c.notFound();
@@ -424,7 +485,7 @@ export function createApp({
       const st = caseOf(before);
       if (st.sent) return { error: 'Заключение уже отправлено.' };
       if (!st.form) return { error: 'Сначала откройте форму: «Решить дело».' };
-      const own = new Set(playerMaterials(before).map((m) => m.id));
+      const own = new Set(playerMaterials(before, await delivered(pid)).map((m) => m.id));
       const people = new Set([NOBODY, ...PERSONS.map((p) => p.id)]);
       const toEngine = (a: VerdictAnswer): EngineAnswer =>
         a === null ? null : 'card' in a ? { material: a.card.file } : a;

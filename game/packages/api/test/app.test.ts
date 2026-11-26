@@ -5,6 +5,7 @@ import {
   connectDb,
   type Db,
   migrateDb,
+  playerProgress,
   playerState,
   playerStateBackups,
 } from '../src/db/client.ts';
@@ -32,6 +33,7 @@ afterAll(async () => close());
 beforeEach(async () => {
   await db.delete(playerState);
   await db.delete(playerStateBackups);
+  await db.delete(playerProgress);
 });
 
 const app = (production = false) => createApp({ db, materials, production });
@@ -129,9 +131,76 @@ describe('API', () => {
     expect((await read()).view).toBe('desk');
   });
 
-  it('GET /api/materials → 51 материал', async () => {
+  it('GET /api/materials → 51 материал без второй порции (SD5-A): 39; вещдоков в ответе нет', async () => {
     const res = await app().request('/api/materials');
-    expect(((await res.json()) as Material[]).length).toBe(51);
+    const got = (await res.json()) as Material[];
+    expect(got.length).toBe(39);
+    for (const id of ['24', '40', '46', '47', '48', '49', '50'])
+      expect(got.some((m) => m.id === id)).toBe(false);
+  });
+
+  it('звонок камеры хранения (SD5-A): рано — 409; порог и 20 минут — вещдоки; 40 минут — в любом случае', async () => {
+    const delivery = () => app().request('/api/delivery', { method: 'POST' });
+    const base = defaultState(materials);
+    const paper = [
+      '04',
+      '01',
+      '02',
+      '03',
+      '05',
+      '06',
+      '07',
+      ...Array.from({ length: 7 }, (_, i) => String(30 + i)),
+      '22',
+      '23',
+      '25',
+      '26',
+      '27',
+      '51',
+      '18',
+      '19',
+      '20',
+      '21',
+      '08',
+      '09',
+      '10',
+      '11',
+      '12',
+    ];
+    // Открыто 70 % бумаг, но прошло 10 минут — рано.
+    await put({ ...base, looked: paper, playMs: 10 * 60_000 });
+    expect((await delivery()).status).toBe(409);
+    // 20 минут, но открыто мало — тоже рано.
+    await put({ ...base, looked: paper.slice(0, 5), playMs: 25 * 60_000 });
+    expect((await delivery()).status).toBe(409);
+    // 70 % и 20 минут — вещдоки.
+    await put({ ...base, looked: paper, playMs: 21 * 60_000 });
+    const r = await delivery();
+    expect(r.status).toBe(200);
+    expect(((await r.json()) as Material[]).map((m) => m.id).sort()).toEqual([
+      '24',
+      '40',
+      '41',
+      '42',
+      '43',
+      '44',
+      '45',
+      '46',
+      '47',
+      '48',
+      '49',
+      '50',
+    ]);
+    expect(((await (await app().request('/api/materials')).json()) as Material[]).length).toBe(51);
+    // Запасной срок: 40 минут — без порога.
+    await db.delete(playerProgress);
+    await put({ ...base, looked: [], playMs: 41 * 60_000 });
+    expect((await delivery()).status).toBe(200);
+  });
+
+  it('старое дело с вскрытыми коробами (SD5-A) — вторая порция уже пришла, без звонка', async () => {
+    await put({ ...defaultState(materials), opened: ['seized'] });
+    expect(((await (await app().request('/api/materials')).json()) as Material[]).length).toBe(51);
   });
 
   it('GET /api/state без сохранения → defaultState', async () => {

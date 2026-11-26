@@ -9,7 +9,7 @@ import {
   SERVER_LOG_ID,
 } from '@bunker/shared';
 import { useEffect, useMemo } from 'react';
-
+import { absentBoxes, startDelivery } from './delivery.ts';
 import { ArrivalNote } from './desk/ArrivalNote.tsx';
 import { Notebook } from './desk/Notebook.tsx';
 import { PlacedNote } from './desk/PlacedNote.tsx';
@@ -84,6 +84,8 @@ export function App() {
 
   useEffect(() => {
     load();
+    // Часы игры и звонок камеры хранения (SD5-A).
+    startDelivery();
     // Где дело (A-270): форма заключения открыта или заключение отправлено.
     void useVerdict.getState().load();
   }, [load]);
@@ -136,6 +138,12 @@ export function App() {
     () => (foldersKey ? (foldersKey.split(',') as ContainerId[]) : []),
     [foldersKey],
   );
+  // Короба камеры хранения, которых на столе ещё нет (SD5-A): не пришли или их ещё несут.
+  const absentKey = useGame((g) => absentBoxes(g.state, g.materials).join(','));
+  const absent = useMemo(
+    () => (absentKey ? (absentKey.split(',') as ContainerId[]) : []),
+    [absentKey],
+  );
 
   if (!view) {
     // По центру и прямо: что случилось и что игра делает сама (R5-11).
@@ -167,6 +175,7 @@ export function App() {
         inbox={inbox}
         opened={opened}
         folders={folders}
+        absent={absent}
         epilogue={epilogue}
         disc={disc}
         drive={drive}
