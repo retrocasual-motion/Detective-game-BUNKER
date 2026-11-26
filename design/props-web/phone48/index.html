@@ -26,7 +26,7 @@
   <div id="vignette"></div>
   <div id="top"><h1>Материал № 48 · телефон</h1><p>проба WEB-C: форма — кодом, поверхности — фото-карты</p></div>
   <div id="panel">
-    <div id="hint">Ведите пальцем или мышью — вещь поворачивается под лампой. Щипок или колесо — ближе и дальше.</div>
+    <div id="hint">Один палец — поворот. Два пальца — ближе-дальше и сдвиг. Мышь: колесо — ближе, зажатое колесо — сдвиг, правая кнопка — как было.</div>
     <div id="buttons"><button id="bFlip" type="button" aria-pressed="false">Перевернуть</button><button id="bSet" type="button">Карты 2K</button><button id="bHome" type="button">Как было</button></div>
   </div>
 </div>
@@ -92,10 +92,10 @@ const VIEWS = {
   screen: { q: qOf(0.93, -0.12, 0), zoom: 0.62 },
 };
 const CENTER = v3(0, D.T / 2, 0);
-const st = { q: new THREE.Quaternion(), zoom: 1, focus: new THREE.Vector3() }, tg = { q: new THREE.Quaternion(), zoom: 1, focus: new THREE.Vector3() };
+const st = { q: new THREE.Quaternion(), zoom: 1, focus: new THREE.Vector3(), pan: new THREE.Vector2() }, tg = { q: new THREE.Quaternion(), zoom: 1, focus: new THREE.Vector3(), pan: new THREE.Vector2() };
 let flipped = false;
-function applyView(v, snap) { tg.q.copy(v.q); tg.zoom = v.zoom; tg.focus.copy(v.focus || CENTER); if (snap) { st.q.copy(tg.q); st.zoom = tg.zoom; st.focus.copy(tg.focus); } invalidate(); }
-const CAM_DIR = new THREE.Vector3(0, Math.sin(0.56), Math.cos(0.56));
+function applyView(v, snap) { tg.q.copy(v.q); tg.zoom = v.zoom; tg.focus.copy(v.focus || CENTER); tg.pan.set(0, 0); if (snap) { st.q.copy(tg.q); st.zoom = tg.zoom; st.focus.copy(tg.focus); st.pan.set(0, 0); } invalidate(); }
+const CAM_DIR = new THREE.Vector3(0, Math.sin(0.56), Math.cos(0.56)), CAM_UP = new THREE.Vector3(0, Math.cos(0.56), -Math.sin(0.56));
 let fitDist = 0.4;
 function resize() {
   const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
@@ -104,18 +104,40 @@ function resize() {
 addEventListener('resize', resize); resize();
 applyView(VIEWS[params.get('view')] || VIEWS.front, true);
 if (params.get('zoom')) { st.zoom = tg.zoom = parseFloat(params.get('zoom')); }
-// управление: ведение — поворот вокруг осей экрана, колесо/щипок — ближе-дальше, правая кнопка — как было
-const ptr = new Map(); let pinch = 0;
-canvas.addEventListener('pointerdown', (e) => { if (e.button === 2) { home(); return; } canvas.setPointerCapture(e.pointerId); ptr.set(e.pointerId, [e.clientX, e.clientY]); });
+
+// управление (как в игре, этап 4): один палец / левая кнопка — поворот; два пальца — щипок (ближе-дальше) и сдвиг;
+// колесо — ближе-дальше; зажатое колесо или Shift + ведение — сдвиг; правая кнопка — как было
+const ZMIN = 0.14, ZMAX = 1.6, PAN_LIM = 0.09;
+const clampZ = (z) => Math.min(ZMAX, Math.max(ZMIN, z));
+const ptr = new Map(); let pinch = 0, mid = null, panBtn = false;
+const worldPerPx = () => 2 * Math.tan(camera.fov * Math.PI / 360) * fitDist * st.zoom / canvas.clientHeight;
+function panBy(dx, dy) {
+  const k = worldPerPx();
+  tg.pan.x = Math.max(-PAN_LIM, Math.min(PAN_LIM, tg.pan.x + dx * k)); tg.pan.y = Math.max(-PAN_LIM, Math.min(PAN_LIM, tg.pan.y - dy * k));
+  st.pan.copy(tg.pan); invalidate();   // сдвиг идёт за пальцем без запаздывания
+}
+canvas.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); });
+canvas.addEventListener('pointerdown', (e) => {
+  if (e.button === 2) { home(); return; }
+  panBtn = e.button === 1 || e.shiftKey; canvas.setPointerCapture(e.pointerId); ptr.set(e.pointerId, [e.clientX, e.clientY]); pinch = 0; mid = null;
+});
 canvas.addEventListener('pointermove', (e) => {
   const p = ptr.get(e.pointerId); if (!p) return;
-  if (ptr.size === 1) { const dx = e.clientX - p[0], dy = e.clientY - p[1], k = 0.008;
-    tg.q.premultiply(new THREE.Quaternion().setFromAxisAngle(v3(0, 1, 0), dx * k)).premultiply(new THREE.Quaternion().setFromAxisAngle(v3(1, 0, 0), dy * k)); invalidate(); }
+  const dx = e.clientX - p[0], dy = e.clientY - p[1];
   ptr.set(e.pointerId, [e.clientX, e.clientY]);
-  if (ptr.size === 2) { const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pinch) tg.zoom = Math.min(1.6, Math.max(0.22, tg.zoom * pinch / d)); pinch = d; invalidate(); }
+  if (ptr.size === 1) {
+    if (panBtn) { panBy(dx, dy); return; }
+    const k = 0.008 * Math.min(1, Math.max(0.3, st.zoom * 1.6));   // вплотную поворот медленнее
+    tg.q.premultiply(new THREE.Quaternion().setFromAxisAngle(v3(0, 1, 0), dx * k)).premultiply(new THREE.Quaternion().setFromAxisAngle(v3(1, 0, 0), dy * k)); invalidate();
+  } else if (ptr.size === 2) {
+    const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    if (pinch) { tg.zoom = clampZ(tg.zoom * pinch / d); st.zoom = tg.zoom; }
+    if (mid) panBy(m[0] - mid[0], m[1] - mid[1]);
+    pinch = d; mid = m; invalidate();
+  }
 });
-const up = (e) => { ptr.delete(e.pointerId); pinch = 0; }; canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
-canvas.addEventListener('wheel', (e) => { e.preventDefault(); tg.zoom = Math.min(1.6, Math.max(0.22, tg.zoom * Math.exp(e.deltaY * 0.0012))); invalidate(); }, { passive: false });
+const up = (e) => { ptr.delete(e.pointerId); pinch = 0; mid = null; }; canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+canvas.addEventListener('wheel', (e) => { e.preventDefault(); tg.zoom = clampZ(tg.zoom * Math.exp(e.deltaY * 0.0012)); invalidate(); }, { passive: false });
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 function home() { flipped = false; document.getElementById('bFlip').setAttribute('aria-pressed', 'false'); applyView(VIEWS.front); }
 document.getElementById('bHome').onclick = home;
@@ -130,9 +152,10 @@ let frames = 0; window.__frames = () => frames;
 function tick() {
   requestAnimationFrame(tick);
   const k = reduce ? 1 : 0.16;
-  if (st.q.angleTo(tg.q) > 1e-4 || Math.abs(st.zoom - tg.zoom) > 1e-4 || st.focus.distanceTo(tg.focus) > 1e-5) { st.q.slerp(tg.q, k); st.zoom += (tg.zoom - st.zoom) * k; st.focus.lerp(tg.focus, k); dirty = true; }
+  if (st.q.angleTo(tg.q) > 1e-4 || Math.abs(st.zoom - tg.zoom) > 1e-4 || st.focus.distanceTo(tg.focus) > 1e-5 || st.pan.distanceTo(tg.pan) > 1e-5) { st.q.slerp(tg.q, k); st.zoom += (tg.zoom - st.zoom) * k; st.focus.lerp(tg.focus, k); st.pan.lerp(tg.pan, k); dirty = true; }
   if (!dirty) return; dirty = false; frames++;
   holder.quaternion.copy(st.q);
+  holder.position.set(st.pan.x, st.pan.y * CAM_UP.y, st.pan.y * CAM_UP.z);   // сдвиг — в плоскости кадра
   inner.position.copy(st.focus).multiplyScalar(-1);
   camera.position.copy(CAM_DIR).multiplyScalar(fitDist * st.zoom); camera.lookAt(0, 0, 0);
   renderer.render(scene, camera);
