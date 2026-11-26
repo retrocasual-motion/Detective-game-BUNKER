@@ -156,7 +156,10 @@ for region in (panel, screen, pill):
 alb = fm * 0.82 + 0.12 * scr[..., None]
 def metal_gain(region, target):
     v = float(np.median(L[region])); return target / max(v, 1e-3)
-fmet = f.copy(); gm = fmet.mean(2, keepdims=True); fmet = gm + (fmet - gm) * 0.4
+# светлые крапинки пыли на металле срезаются до фона (шлифовка тоньше и слабее — она остаётся):
+# усиленные «металлом», они давали блестящую крошку вокруг кнопок
+fmed = np.dstack([med8(f[..., c], 0.4) for c in range(3)])
+fmet = np.minimum(f, fmed + 0.06); gm = fmet.mean(2, keepdims=True); fmet = gm + (fmet - gm) * 0.4
 alb_m = np.zeros_like(f)
 for region, target in ((band, 0.42), (ring, 0.74), (ear, 0.74)):
     alb_m += soft(region)[..., None] * np.clip(fmet * metal_gain(region, target), 0, 0.97)
@@ -164,18 +167,26 @@ wm = soft(band | ring | ear)[..., None]
 alb = alb * (1 - wm) + alb_m
 # отверстия динамика: тёмное в хромированной «пилюле» — не металл
 ear_hole = soft(ear & (L < 0.55 * np.median(L[ear])), 0.05)
+# пыль в щелях — мягкие серые комочки-ворсинки: только у границ деталей, без резкого края, матовые, не металл
+gapzone = np.zeros(L.shape, np.float32)
+for region in (pill, ring, inner, ear):
+    sr = soft(region, 0.22); gapzone = np.maximum(gapzone, 1 - np.abs(2 * sr - 1))
+speck = np.clip(L - med8(L, 0.4) - 0.06, 0, 1)
+lint = np.clip(blur(np.clip(speck * 10, 0, 1), 0.09) * 2.2, 0, 1) * np.clip(gapzone * 1.6, 0, 1)
+lint = np.clip(blur(lint, 0.05), 0, 1) * 0.7
+alb = alb * (1 - lint[..., None]) + np.float32([0.205, 0.21, 0.215]) * lint[..., None]
 # шероховатость
 base = np.full(L.shape, 0.10, np.float32)
 base[screen] = 0.13; base[pill] = 0.46; base[band] = 0.34; base[ring] = 0.14; base[ear] = 0.24; base[inner] = 0.08
 base = blur(base, 0.08)
 hp = L - blur(L, 0.35)
 rough = base + plastic * (0.38 * scr + 0.05 * haze) + soft(band) * np.clip(hp * 3.0, -0.10, 0.14) + ear_hole * 0.6
-rough = np.clip(rough, 0.05, 1.0)
-met = np.clip(wm[..., 0] - ear_hole, 0, 1)
+rough = np.clip(rough * (1 - lint) + 0.95 * lint, 0.05, 1.0)
+met = np.clip(wm[..., 0] - ear_hole, 0, 1) * (1 - lint)
 # рельеф: шлифовка полосы, отверстия динамика, зазоры вокруг кнопок, царапины — едва
 thin_dark = np.clip((med8(L, 0.5) - blur(L, 0.06)) / (med8(L, 0.5) + 0.05), 0, 1)
 gap = thin_dark * soft(band | pill | ring | ear, 0.3)
-h = 0.5 + soft(band) * np.clip(hp * 0.5, -0.05, 0.05) - 0.14 * blur(gap, 0.08) - 0.02 * scr * plastic
+h = 0.5 + soft(band) * np.clip(hp * 0.5, -0.05, 0.05) - 0.10 * blur(gap, 0.15) - 0.02 * scr * plastic
 nrm = normal_from(blur(h, 0.04), 1.5)
 ao = np.clip(1 - 1.6 * blur(gap, 0.12), 0.45, 1)
 save_set('front', alb, nrm, np.dstack([met, rough, ao]))     # BGR: B — металл, G — шероховатость, R — AO
@@ -283,6 +294,26 @@ for d, k in (('pack', 1), ('pack_low', 2)):
     cv2.imwrite(os.path.join(OUT, d, 'side_n.png'), cv2.cvtColor(((nn * 0.5 + 0.5) * 255).round().astype(np.uint8), cv2.COLOR_RGB2BGR))
 report['side'] = {'perimeter_mm': round(float(PERIM), 2), 'px': [SW, SH], 'px_per_cm_along': round(SW / PERIM * 10), 'px_per_cm_across': round(SH / SMM * 10)}
 
+# ------------------------------------------------------------------ боковые кнопки и заглушка
+# Одна маленькая карта на верх любой боковой кнопки (u — вдоль, v — поперёк): середина залоснена пальцами,
+# края матовые, по самому краю — мягкая серая пыль; редкие волосяные потёртости с фото.
+KW, KH, KLEN, KHGT = 512, 128, 10.0, 2.5
+ku = (np.arange(KW, dtype=np.float32) + 0.5) / KW; kv = (np.arange(KH, dtype=np.float32) + 0.5) / KH
+e_mm = np.minimum(np.minimum(ku, 1 - ku)[None, :] * KLEN, np.minimum(kv, 1 - kv)[:, None] * KHGT)
+k_grain = cv2.GaussianBlur(rs.normal(0, 1, (KH, KW)).astype(np.float32), (0, 0), 1.0)
+k_cloud = cv2.resize(cv2.GaussianBlur(rs.normal(0, 1, (6, 24)).astype(np.float32), (0, 0), 1.2), (KW, KH), interpolation=cv2.INTER_CUBIC); k_cloud /= np.abs(k_cloud).max()
+pol = np.clip((e_mm - 0.25) / 0.8, 0, 1); pol = pol * pol * (3 - 2 * pol) * (0.7 + 0.3 * k_cloud)
+kmx, kmy = np.meshgrid(ku * KLEN * (1024 / 30.0) + 300, kv * KHGT * (1024 / 30.0) + 500)
+k_hair = cv2.remap(ts.astype(np.float32), kmx.astype(np.float32) % 1024, kmy.astype(np.float32) % 1024, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+k_dust = np.clip(1 - e_mm / 0.22, 0, 1) ** 1.3 * np.clip(0.45 + 0.9 * cv2.GaussianBlur(rs.normal(0, 1, (KH, KW)).astype(np.float32), (0, 0), 3.0), 0, 1)
+k_rough = np.clip((0.36 - 0.15 * pol + 0.03 * k_grain + 0.20 * k_hair) * (1 - k_dust) + 0.95 * k_dust, 0.08, 1)
+k_alb = np.clip((0.046 + 0.004 * k_grain + 0.02 * k_hair) * (1 - k_dust) + 0.19 * k_dust, 0, 1)
+k_ao = np.clip(1 - 0.35 * np.clip(1 - e_mm / 0.15, 0, 1), 0, 1)
+for d, k in (('pack', 1), ('pack_low', 2)):
+    size = (KW // k, KH // k)
+    cv2.imwrite(os.path.join(OUT, d, 'skey_a.jpg'), cv2.resize((np.dstack([k_alb * 1.06, k_alb, k_alb]).clip(0, 1) * 255).round().astype(np.uint8), size, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 95])
+    cv2.imwrite(os.path.join(OUT, d, 'skey_orm.jpg'), cv2.resize((np.dstack([np.zeros_like(k_rough), k_rough, k_ao]) * 255).round().astype(np.uint8), size, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 95])
+
 # ------------------------------------------------------------------ ярлык бюро (вёрстка tools/label_make.html)
 if os.path.exists(os.path.join(OUT, 'src', 'label_albedo.png')):
     for d, ka_, kn_ in (('pack', 1.0, 0.5), ('pack_low', 0.5, 0.25)):
@@ -316,7 +347,8 @@ pat_s = blur(pat.astype(np.float32), 0.03)
 edge = np.clip(1 - np.minimum.reduce([X, 53 - X, Y, 104 - Y]) / 5.0, 0, 1) ** 1.5
 alb = np.full(f.shape, 0.052, np.float32) + 0.010 * pat_s[..., None] + 0.08 * scr[..., None] + 0.02 * haze[..., None]
 alb[..., 0] += 0.004                                                               # чуть холодный чёрный
-fp = f.copy(); gp = fp.mean(2, keepdims=True); fp = gp + (fp - gp) * 0.35
+fp = np.minimum(f, np.dstack([med8(f[..., c], 0.4) for c in range(3)]) + 0.06)        # крапинки пыли на накладке — не блёстки
+gp = fp.mean(2, keepdims=True); fp = gp + (fp - gp) * 0.35
 alb_p = np.clip(fp * (0.78 / max(float(np.median(L[plate])), 1e-3)), 0, 0.97)
 wp = soft(plate | mirror | lens)[..., None]
 alb = alb * (1 - wp) + alb_p * wp
