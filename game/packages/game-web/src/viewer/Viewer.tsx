@@ -1,4 +1,4 @@
-import { EPILOGUE_ID, inboxIds, PERSONS, PIECES } from '@bunker/shared';
+import { EPILOGUE_ID, inboxIds, inventoryFiles, PERSONS, PIECES } from '@bunker/shared';
 import {
   type CSSProperties,
   type MouseEvent,
@@ -53,6 +53,9 @@ const textOf = (n: TextNode): string =>
  * Широкая таблица (RV-23): лист 37 — 11 столбцов в колонке 612 px, последние три дня обрезались.
  * Признак — прикидка: самые длинные слова столбцов кеглем листа не помещаются в ширину строки листа.
  */
+/** Опись материалов дела (лист 04): рабочий лист с галочками (OP-A). */
+const INVENTORY_ID = '04';
+
 /** Строка листа на экране 1366 (замер e2e): 535 px. */
 const PAPER_LINE_PX = 535;
 const CHAR_EM = 0.58;
@@ -104,6 +107,10 @@ export function Viewer({ materialId }: ViewerProps) {
   const material = useGame((g) => g.materials.find((m) => m.id === materialId));
   // Папка, вытащенная из пачки, — только её листы из описи (до отдельного документа, DS-A).
   const excerpt = useGame((g) => g.excerpt);
+  // Что игрок открывал — галочки описи (OP-A); строкой, чтобы не перерисовывать лист на каждое изменение.
+  const lookedKey = useGame((g) =>
+    materialId === INVENTORY_ID ? (g.state?.looked ?? []).join(',') : '',
+  );
   // Обрывок, вложенный в этот материал (SRC-A): лежит в листе отдельно, его можно вынуть.
   const piece = material ? PIECES.find((p) => p.from === material.id) : undefined;
   const pieceTaken = useGame((g) => !!piece && !!g.state?.pieces?.includes(piece.key));
@@ -225,20 +232,43 @@ export function Viewer({ materialId }: ViewerProps) {
   };
   // Разбор Markdown — один раз на материал, а не на каждое движение мыши (инструменты двигаются).
   const doc = useMemo(() => {
+    const lookedSet = new Set(lookedKey ? lookedKey.split(',') : []);
     // У описи пачки строка — своя цель крупного плана: «L985 лист 19–24» (FV-A).
     const components: Components =
-      material && isBundleListing(material.id)
+      material?.id === INVENTORY_ID
         ? {
             ...PAPER,
+            // Опись дела — рабочий лист (OP-A): у строки, чьи материалы игрок открывал, — карандашная
+            // галочка. «Открывал», не «прочитал»: игра не знает, что прочитано.
             tr: ({ node, ...props }) => {
-              const first = node?.children.find(
+              const cells = (node?.children ?? []).filter(
                 (c): c is Extract<typeof c, { type: 'element' }> => c.type === 'element',
               );
-              if (first?.tagName !== 'td') return <tr {...props} />;
-              return <tr {...props} data-osmotr-target={rowTarget(material.id, textOf(first))} />;
+              const last = cells[cells.length - 1];
+              if (!last || last.tagName !== 'td') return <tr {...props} />;
+              const files = inventoryFiles(textOf(last));
+              const done = files.length > 0 && files.every((id) => lookedSet.has(id));
+              return (
+                <tr
+                  {...props}
+                  className={done ? 'inventory-done' : undefined}
+                  data-inventory={files.join(',') || undefined}
+                />
+              );
             },
           }
-        : PAPER;
+        : material && isBundleListing(material.id)
+          ? {
+              ...PAPER,
+              tr: ({ node, ...props }) => {
+                const first = node?.children.find(
+                  (c): c is Extract<typeof c, { type: 'element' }> => c.type === 'element',
+                );
+                if (first?.tagName !== 'td') return <tr {...props} />;
+                return <tr {...props} data-osmotr-target={rowTarget(material.id, textOf(first))} />;
+              },
+            }
+          : PAPER;
     const md = (text: string) => (
       <Markdown remarkPlugins={[remarkGfm, remarkBreaks, remarkSites]} components={components}>
         {unwrapLines(text)}
@@ -290,7 +320,7 @@ export function Viewer({ materialId }: ViewerProps) {
         )}
       </>
     );
-  }, [material, excerpt, piece, pieceTaken]);
+  }, [material, excerpt, piece, pieceTaken, lookedKey]);
 
   const { goTo, page } = sheet;
   // Эпилог (автор 17.11): закрыть нельзя — только «Завершить дело»; вернуться к делу — из меню.

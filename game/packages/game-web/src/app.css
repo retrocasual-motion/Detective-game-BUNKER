@@ -3013,3 +3013,14 @@ button {
   padding: 2px 1px;
   overflow-wrap: break-word;
 }
+
+/* Опись дела — рабочий лист (OP-A): карандашная галочка у строки, чьи материалы игрок открывал. */
+.viewer-paper tr.inventory-done td:first-child::after {
+  content: '✓';
+  display: inline-block;
+  margin-left: 0.3em;
+  rotate: -8deg;
+  color: var(--color-pencil, #5d5a55);
+  font: 600 1.1em / 1 'Segoe Print', 'Comic Sans MS', cursive;
+  opacity: 0.85;
+}

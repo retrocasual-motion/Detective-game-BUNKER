@@ -13,6 +13,8 @@ import {
   GRID_TOP,
   hangFromDesk,
   inboxIds,
+  inventoryFiles,
+  markLooked,
   onWall,
   openAll,
   openContainer,
@@ -529,5 +531,22 @@ describe('выписки на стене (A-272, DB-B)', () => {
     const gone = reconcile(s, starting);
     expect(gone.wall.items.some((i) => i.id === 'x:1')).toBe(false);
     expect(gone.excerpts).toEqual([]);
+  });
+});
+
+describe('опись — рабочий лист (OP-A)', () => {
+  it('строка описи называет свои файлы', () => {
+    expect(inventoryFiles('в архиве, файл 01')).toEqual(['01']);
+    expect(inventoryFiles('файлы 30–36')).toEqual(['30', '31', '32', '33', '34', '35', '36']);
+    expect(inventoryFiles('конверт «Прил. 7 · Сервер VL-31», файл 52')).toEqual(['52']);
+    expect(inventoryFiles('следствием не изымались; находятся у компании')).toEqual([]);
+  });
+
+  it('открывал — отмечено один раз; чужое не отмечается', () => {
+    const s = defaultState(starting);
+    const a = markLooked(s, '02');
+    expect(a.looked).toEqual(['02']);
+    expect(markLooked(a, '02')).toBe(a);
+    expect(markLooked(a, 'p:cole')).toBe(a);
   });
 });

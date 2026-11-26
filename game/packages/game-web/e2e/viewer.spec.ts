@@ -354,3 +354,23 @@ test('правая кнопка — как было; зажатое колесо
   await expect.poll(() => zoom.getAttribute('style')).toContain('scale(1)');
   await expect(page.getByTestId('viewer')).toBeVisible();
 });
+
+test('OP-A: опись дела — галочка у строки того, что открывали; у неоткрытого — нет', async ({
+  page,
+}) => {
+  await sheet(page, '02').click(STRIP);
+  await expect(page.getByTestId('viewer')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('viewer')).toBeHidden();
+  await pastOpenGuard(page);
+  await sheet(page, '04').click(STRIP);
+  await expect(page.getByTestId('viewer-paper')).toContainText('Опись материалов дела');
+  await expect(page.locator('tr[data-inventory="02"]')).toHaveClass(/inventory-done/);
+  // Сама опись открыта — тоже отмечена.
+  await expect(page.locator('tr[data-inventory="04"]')).toHaveClass(/inventory-done/);
+  await expect(page.locator('tr[data-inventory="03"]')).not.toHaveClass(/inventory-done/);
+  // Строка из нескольких файлов — только когда открыты все.
+  await expect(page.locator('tr[data-inventory="30,31,32,33,34,35,36"]')).not.toHaveClass(
+    /inventory-done/,
+  );
+});

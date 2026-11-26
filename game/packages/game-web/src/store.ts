@@ -16,6 +16,7 @@ import {
   isWeb,
   type Join,
   type Material,
+  markLooked,
   NEWSPAPER_ID,
   openAll,
   openContainer,
@@ -497,6 +498,8 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     hold(h) {
+      // Вещь (устройство, пакет) в руках — открывал (OP-A).
+      if (h && h.type !== 'container') get().updateState((s) => markLooked(s, h.id));
       // Вплотную к экрану — только пока эта вещь в руках (WM-B).
       set((g) => ({
         held: h,
@@ -684,6 +687,8 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     openViewer(materialId, find, excerpt) {
+      // Открывал — галочка в описи (OP-A).
+      get().updateState((s) => markLooked(s, materialId));
       // Файл устройства открывают на самом устройстве (LW-A): ноутбук — экраном к игроку.
       if (deviceOf(materialId) === '47') {
         get().openLaptop(materialId);

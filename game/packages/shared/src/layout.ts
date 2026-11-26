@@ -688,6 +688,24 @@ export function fileFromDesk(state: PlayerState, ids: readonly string[]): Player
   return hangGroup(next, rest, null);
 }
 
+/** Отметить, что материал открывали (OP-A): без повторов; тот же объект, если уже отмечен. */
+export function markLooked(state: PlayerState, id: string): PlayerState {
+  if (!/^(\d{2}|L\d{3})$/.test(id) || state.looked?.includes(id)) return state;
+  return { ...state, looked: [...(state.looked ?? []), id].slice(-400) };
+}
+
+/**
+ * Какие материалы называет строка описи дела (лист 04, OP-A): «файл 01», «файлы 30–36»,
+ * «конверт …, файл 52». Строка без файла (не изымалось, у компании) — пусто.
+ */
+export function inventoryFiles(where: string): string[] {
+  const m = /файл(?:ы)?\s+(\d{2})(?:\s*[–-]\s*(\d{2}))?/.exec(where);
+  if (!m?.[1]) return [];
+  const from = Number(m[1]);
+  const to = Number(m[2] ?? m[1]);
+  return Array.from({ length: to - from + 1 }, (_, k) => String(from + k).padStart(2, '0'));
+}
+
 /** Стартовые листы со стола — на начальные места стены (ST-B). */
 function hangStart(state: PlayerState, ids: string[]): PlayerState {
   if (!ids.length) return state;
