@@ -355,6 +355,9 @@ export function Paper({
       g.quaternion.copy(target.quat);
       sc.current = target.scale;
       target.cur.copy(pos);
+      // Появился сразу на месте (вскрыли папку, новое дело) — лежит с первого кадра, прогиб готов:
+      // ни полёта, ни «оседания» (автор 26.11: «за меньше секунды… я всё равно вижу»).
+      if (!start) resting.current = true;
     }
     const waiting = !!start && performance.now() < start.at;
     // Лежал уже в прошлом кадре (не только что положен).
