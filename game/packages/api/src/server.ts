@@ -7,9 +7,10 @@ import { connectDb, migrateDb } from './db/client.ts';
 import { env } from './env.ts';
 import { createMailer } from './mail/mailer.ts';
 import { waitForDatabase } from './startup.ts';
-import { startupProblems } from './startupCheck.ts';
+import { startupProblems, startupWarnings } from './startupCheck.ts';
 
-// Опасные настройки на внешнем адресе — не запускаться (RV-62).
+// Опасные настройки на внешнем адресе — не запускаться (RV-62); в разработке — предупредить.
+for (const w of startupWarnings(env)) console.warn(`api: внимание — ${w}`);
 const problems = startupProblems(env);
 if (problems.length) {
   for (const p of problems) console.error(`api: не запускаюсь — ${p}`);

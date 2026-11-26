@@ -17,6 +17,8 @@ export function watchGl({ gl }: { gl: WebGLRenderer }): void {
     w.__gl = [...(w.__gl ?? []).filter((r) => r.domElement.isConnected), gl];
   }
   el.addEventListener('webglcontextlost', (e) => {
+    // Холст убрали (вещь положили — R3F сам отпускает контекст): это не потеря, плашки нет.
+    if (!el.isConnected) return;
     // Разрешить браузеру вернуть изображение.
     e.preventDefault();
     useGl.setState((s) => ({ lost: s.lost + 1 }));

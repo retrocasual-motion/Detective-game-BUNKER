@@ -109,7 +109,10 @@ export function PcBrowser() {
   const want = useGame((g) => g.pcSite);
   // biome-ignore lint/correctness/useExhaustiveDependencies: только на новый переход
   useEffect(() => {
-    if (want) visit(want.address, want.letter);
+    if (!want) return;
+    visit(want.address, want.letter);
+    // Переход сделан — при следующем открытии компьютера браузер не пойдёт по старой ссылке.
+    useGame.setState({ pcSite: null });
   }, [want?.at]);
 
   return (

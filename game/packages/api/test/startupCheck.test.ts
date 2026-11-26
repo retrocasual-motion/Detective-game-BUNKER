@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isLocalUrl, startupProblems } from '../src/startupCheck.ts';
+import { isLocalUrl, startupProblems, startupWarnings } from '../src/startupCheck.ts';
 
 describe('настройки запуска (RV-62)', () => {
   it('локальные и домашние адреса — свои; домен — внешний', () => {
@@ -10,6 +10,8 @@ describe('настройки запуска (RV-62)', () => {
       'http://10.0.0.5',
       'http://172.20.1.1',
       'http://game.local',
+      'http://my-pc:5173',
+      'http://100.101.102.103:5173',
     ])
       expect(isLocalUrl(u), u).toBe(true);
     for (const u of ['https://artemwork-work.ru', 'http://8.8.8.8', 'http://172.40.0.1', 'нет'])
@@ -35,16 +37,17 @@ describe('настройки запуска (RV-62)', () => {
     ).toEqual([]);
   });
 
-  it('внешний адрес: служебные маршруты, AUTH=off, вход без почты — отказ; правильная выкладка — да', () => {
+  it('внешний адрес: AUTH=off, вход без почты — отказ; разработка — предупреждение; правильная выкладка — да', () => {
     const ext = 'https://bunker.example.org';
-    expect(
-      startupProblems({
-        production: false,
-        auth: 'link',
-        mailTransport: 'mailpit',
-        publicUrl: ext,
-      }),
-    ).toHaveLength(1);
+    // Разработка на внешнем адресе (туннель) — запускается, с предупреждением.
+    const dev = {
+      production: false,
+      auth: 'link',
+      mailTransport: 'mailpit',
+      publicUrl: ext,
+    } as const;
+    expect(startupProblems(dev)).toEqual([]);
+    expect(startupWarnings(dev)).toHaveLength(1);
     expect(
       startupProblems({ production: true, auth: 'off', mailTransport: 'none', publicUrl: ext }),
     ).toHaveLength(1);

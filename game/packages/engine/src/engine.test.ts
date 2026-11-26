@@ -221,3 +221,55 @@ describe('лимит попыток не обходится словом в це
     expect(pw('клм', 'нет', p).outcome.result).toBe('лимит');
   });
 });
+
+describe('RV-64: составная цель и «поле без паузы» (проверка Fable)', () => {
+  const cfg = { pauseMs: 120_000, unlimited: ['газет'] };
+  const two: Content = {
+    ...content,
+    rules: {
+      ...rules,
+      rules: [
+        ...rules.rules,
+        {
+          id: 'news',
+          action: 'ПАРОЛЬ',
+          target: 'газет',
+          accept: ['^01.01$'],
+          release: [],
+          ok: 'Выпуск.',
+          fail: 'Нет выпуска.',
+        },
+        {
+          id: 'phone',
+          action: 'ПАРОЛЬ',
+          target: 'телефон',
+          accept: ['^1234$'],
+          release: [],
+          ok: 'Открыт.',
+          fail: 'Неверно.',
+        },
+      ],
+    },
+  };
+  const pw = (target: string, value: string, p = emptyProgress()) =>
+    act(two, p, { action: 'ПАРОЛЬ', target, value }, 0, cfg);
+
+  it('«сейф» ×3 — пауза и для «сейф телефон», «сейф газета»', () => {
+    let p = emptyProgress();
+    for (let k = 0; k < 3; k++) p = pw('сейф', 'нет', p).progress;
+    expect(pw('сейф телефон', 'верно', p).outcome.result).toBe('лимит');
+    expect(pw('сейф газета', 'верно', p).outcome.result).toBe('лимит');
+  });
+
+  it('«сейф газета» — промах считается сейфу (слово поля без паузы не снимает лимит)', () => {
+    let p = emptyProgress();
+    for (let k = 0; k < 3; k++) p = pw('сейф газета', 'нет', p).progress;
+    expect(pw('сейф', 'верно', p).outcome.result).toBe('лимит');
+  });
+
+  it('архив газеты — без паузы, как раньше', () => {
+    let p = emptyProgress();
+    for (let k = 0; k < 6; k++) p = pw('архив газеты', '02.02', p).progress;
+    expect(pw('архив газеты', '01.01', p).outcome.result).not.toBe('лимит');
+  });
+});

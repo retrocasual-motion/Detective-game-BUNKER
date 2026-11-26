@@ -222,3 +222,23 @@ test('сайты без замков (NF-B, A-273): оператор, произ
   // На стол, стену и в поиск сайты не попадают (S5-A).
   await expect(sheet(page, 'L179')).toHaveCount(0);
 });
+
+test('ссылка из листа открыта, компьютер закрыт и открыт снова — браузер не идёт по старой ссылке (проверка Fable)', async ({
+  page,
+}) => {
+  await toWall(page);
+  await sheet(page, '02').click();
+  await page
+    .getByTestId('viewer')
+    .locator('a.site-link', { hasText: 'vaultline-program.com' })
+    .click();
+  await expect(page.getByTestId('pc-web').getByTestId('site')).toBeVisible();
+  // Лист при переходе закрыт обычным образом (не остался висеть под компьютером).
+  await expect(page.getByTestId('viewer')).toHaveCount(0);
+  await leavePc(page);
+  await page.keyboard.press('ArrowDown');
+  await page.getByTestId('computer-monitor').click();
+  await expect(page.getByTestId('pc-desktop')).toBeVisible();
+  await page.getByTestId('lap-icon-Браузер').dblclick();
+  await expect(page.getByTestId('pc-url')).toHaveValue('blackwood-chronicle.com/arhiv');
+});

@@ -19,21 +19,38 @@ export function isLocalUrl(url: string): boolean {
     return false;
   }
   if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')) return true;
+  // Имя компьютера в сети без точки (`my-pc`).
+  if (/^[a-z0-9-]+$/.test(host)) return true;
   if (host === '::1') return true;
   const ip = host.split('.').map(Number);
   if (ip.length !== 4 || ip.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return false;
   const [a = 0, b = 0] = ip;
-  return a === 127 || a === 10 || (a === 192 && b === 168) || (a === 172 && b >= 16 && b <= 31);
+  // Tailscale и другие частные сети провайдера — 100.64.0.0/10.
+  return (
+    a === 127 ||
+    a === 10 ||
+    (a === 192 && b === 168) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 100 && b >= 64 && b <= 127)
+  );
 }
 
-/** Что мешает запуску; пусто — запускать. */
+/**
+ * Предупреждения (запуску не мешают): разработка на внешнем адресе (туннель для проверки с
+ * телефона) — служебные маршруты открыты всем, кто знает адрес.
+ */
+export function startupWarnings(e: StartupEnv): string[] {
+  return !e.production && !isLocalUrl(e.publicUrl)
+    ? [
+        `PUBLIC_URL=${e.publicUrl} — внешний адрес, а NODE_ENV не production: служебные маршруты (вход под любой почтой, «Подготовка») открыты всем, кто знает адрес.`,
+      ]
+    : [];
+}
+
+/** Что мешает запуску (production на внешнем адресе); пусто — запускать. */
 export function startupProblems(e: StartupEnv): string[] {
   const out: string[] = [];
   const external = !isLocalUrl(e.publicUrl);
-  if (external && !e.production)
-    out.push(
-      `PUBLIC_URL=${e.publicUrl} — внешний адрес, а NODE_ENV не production: служебные маршруты (вход под любой почтой, «Подготовка») были бы открыты всем.`,
-    );
   if (external && e.production && e.auth === 'off')
     out.push(`AUTH=off на внешнем адресе ${e.publicUrl}: все игроки делили бы одно дело.`);
   if (external && e.production && e.auth === 'link' && e.mailTransport === 'none')

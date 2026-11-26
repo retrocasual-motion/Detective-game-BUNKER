@@ -437,6 +437,8 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     openSite(address, letter) {
+      // Лист закрыт как обычно: прочитанное подряд — на стену, найденное — снято.
+      if (get().viewerId) get().closeViewer();
       set({
         computerOpen: true,
         pcMaterial: null,
