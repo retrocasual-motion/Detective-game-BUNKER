@@ -86,7 +86,7 @@ test('у стены записка о поступлении ведёт к ст�
   await run(page, 'ОСМОТР | 45__вещи_Д_Миллер.md | увеличить');
   await close(page);
   const note = page.getByTestId('arrival-note');
-  await expect(note).toContainText('Поступило во «Входящие» на столе: L945');
+  await expect(note).toContainText('Поступило во «Входящие» на столе: Увеличение: вещи Д. Миллера');
   await note.click();
   await expect(page.getByTestId('scene')).toHaveAttribute('data-view', 'desk');
   await expect(page.getByTestId('inbox-L945')).toBeVisible();

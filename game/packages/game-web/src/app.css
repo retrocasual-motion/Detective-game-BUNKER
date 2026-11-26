@@ -1129,6 +1129,19 @@ button {
 .wall-pin:hover {
   scale: 1.35;
 }
+/* Зона захвата булавки (RV-21): не меньше 24 экранных px при любом масштабе стены — сама кнопка
+   остаётся маленькой, вокруг неё — невидимое поле. Поле — над булавкой и в стороны, не ниже её
+   верха: текст карточки (под булавкой) и ярлык щёлкаются как прежде. --cam-zoom ставит стена. */
+.wall-pin::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: max(100%, calc(24px / var(--cam-zoom, 1)));
+  height: max(0px, calc(24px / var(--cam-zoom, 1) - 100%));
+  translate: -50% 0;
+  border-radius: 50% 50% 0 0;
+}
 .wall-delete {
   position: absolute;
   top: -10px;
@@ -1230,6 +1243,19 @@ button {
   -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+/* Полоска с бумаги (CMP-C, A-288): строка, отрезанная от листа, — шрифт листа, бумага листа, без
+   линовки; источник — номер и название материала. */
+.paper-strip {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-block: calc(var(--pin-y) + var(--pin-size) / 2) 6px;
+  background: var(--color-paper-sheet);
+}
+.paper-strip .excerpt-text {
+  font: 13px / 1.35 var(--font-paper);
 }
 .excerpt-source {
   margin-top: auto;
@@ -1496,6 +1522,8 @@ button {
   stroke: var(--color-thread);
   stroke-width: 3;
   stroke-linecap: round;
+  /* Тень под нитью — край виден на пробке (RV-22: контраст нити к пробке был ≈ 2,2:1). */
+  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 60%)) drop-shadow(0 -1px 0 rgb(255 240 220 / 35%));
 }
 .board-thread-hit {
   stroke: transparent;
@@ -1931,7 +1959,8 @@ button {
   border-radius: 2px;
 }
 /* Найденное в открытом листе. */
-::highlight(case-find) {
+::highlight(case-find),
+::highlight(screen-find) {
   background-color: var(--color-find, #e8c95a);
   color: #1d1d1d;
 }
@@ -2246,8 +2275,8 @@ button {
   bottom: 4px;
   left: 50%;
   translate: -50% 0;
-  font-size: 12px;
-  opacity: 0.5;
+  font-size: 14px;
+  opacity: 0.75;
 }
 /* Крупный план (M0: деталь словами, пока нет изображений). */
 .viewer-closeup {

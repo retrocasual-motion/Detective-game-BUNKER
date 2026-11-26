@@ -14,7 +14,9 @@ import {
   FOLDER_DOCS,
   fileFromDesk,
   folderItemId,
+  GRID_DX,
   hangFromDesk,
+  hangNear,
   inboxIds,
   isWeb,
   type Join,
@@ -285,7 +287,8 @@ interface GameStore {
    */
   joinOnWall(j: Join): Promise<boolean>;
   /** Лист открыт из поиска (RD-C): что подсветить. */
-  find: { q: string; k: number } | null;
+  /** Найденное: слова, номер совпадения и чьё (`for` — материал; RV-26: устройство берёт своё). */
+  find: { q: string; k: number; for?: string } | null;
   /** Поиск по делу открыт (RD-C). */
   searchOpen: boolean;
   /** Карточка, найденная поиском, — подсвечена на стене (SR-D). */
@@ -630,9 +633,8 @@ export const useGame = create<GameStore>((set, get) => {
         const c = shownCamera(s);
         const cx = (window.innerWidth / 2 - c.x) / c.zoom;
         const cy = (window.innerHeight / 2 - c.y) / c.zoom;
-        // Несколько подряд — не стопкой: каждый следующий чуть ниже и правее.
-        const k = s.wall.items.filter((i) => i.id.startsWith('L')).length % 6;
-        return moveItem(materialId, cx - 80 + k * 30, cy - 110 + k * 30)(s);
+        // У середины видимой стены, на свободное место (WALL-A): несколько подряд — не стопкой.
+        return hangNear(s, materialId, { x: cx - CARD_W / 2, y: cy - CARD_H / 2 });
       });
       markNew(before);
     },
@@ -650,18 +652,17 @@ export const useGame = create<GameStore>((set, get) => {
       get().updateState((st) => {
         let s = fresh.length ? reconcile(st, all) : st;
         const anchor = s.wall.items.find((i) => i.id === near);
-        for (const id of ids) {
-          const m = { id };
-          if (s.wall.items.some((i) => i.id === m.id)) continue;
-          // Правее вещи-источника, рядами по три; нет её на стене — в середину видимой стены.
-          const k = s.wall.items.filter((i) => /^(L|F:)/.test(i.id)).length;
+        // Рядом с вещью-источником, на свободное место (WALL-A); нет её на стене — у середины
+        // видимой стены.
+        const mid = () => {
           const c = shownCamera(s);
-          const base = anchor ?? {
-            x: (window.innerWidth / 2 - c.x) / c.zoom - 200,
-            y: (window.innerHeight / 2 - c.y) / c.zoom - 110,
+          return {
+            x: (window.innerWidth / 2 - c.x) / c.zoom - CARD_W / 2,
+            y: (window.innerHeight / 2 - c.y) / c.zoom - CARD_H / 2,
           };
-          s = moveItem(m.id, base.x + 220 + (k % 3) * 200, base.y + Math.floor(k / 3) * 270)(s);
-        }
+        };
+        const base = anchor ? { x: anchor.x + GRID_DX, y: anchor.y } : mid();
+        for (const id of ids) s = hangNear(s, id, base);
         return s;
       });
       const added = ids.filter((id) => !before.has(id));
@@ -717,7 +718,12 @@ export const useGame = create<GameStore>((set, get) => {
     openExcerpt(id) {
       const x = get().state?.excerpts?.find((e) => e.id === id);
       if (!x) return;
-      const find = { q: x.text, k: 0 };
+      const find = { q: x.text, k: 0, for: x.material };
+      // Полоска с бумаги (CMP-C): лист открыт на выписанной строке, как найденное поиском.
+      if (x.place.kind === 'paper') {
+        get().openViewer(x.material, find);
+        return;
+      }
       if (x.place.kind === 'site') {
         const hash = `#x=${encodeURIComponent(x.text)}${x.place.letter ? `&l=${x.place.letter}` : ''}`;
         openSite(x.place.address ?? '', window, hash);
@@ -761,7 +767,9 @@ export const useGame = create<GameStore>((set, get) => {
     openViewer(materialId, find, excerpt) {
       // Открывал — галочка в описи (OP-A).
       get().updateState((s) => markLooked(s, materialId));
-      // Файл устройства открывают на самом устройстве (LW-A): ноутбук — экраном к игроку.
+      // Файл устройства открывают на самом устройстве (LW-A): ноутбук — экраном к игроку. Из поиска
+      // найденное идёт с ним — устройство подсветит своё (RV-26).
+      if (find && deviceOf(materialId)) set({ find: { ...find, for: materialId } });
       if (deviceOf(materialId) === '47') {
         get().openLaptop(materialId);
         return;

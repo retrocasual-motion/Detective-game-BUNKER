@@ -231,6 +231,20 @@ export function Viewer({ materialId }: ViewerProps) {
     window.getSelection()?.removeAllRanges();
     setSel(null);
   };
+  // Полоска с бумаги (CMP-C): только с листа дела (не эпилог, не обрывок).
+  const canStrip = materialId !== EPILOGUE_ID && /^(\d{2}|L\d{3})$/.test(materialId);
+  const toWall = () => {
+    if (!sel || !material) return;
+    useGame.getState().pinExcerpt({
+      id: `x:${crypto.randomUUID()}`,
+      text: sel.text.replace(/\s+/g, ' ').trim().slice(0, 600),
+      material: materialId,
+      source: `${material.id} · ${material.title}`.slice(0, 160),
+      place: { kind: 'paper' },
+    });
+    window.getSelection()?.removeAllRanges();
+    setSel(null);
+  };
   // Разбор Markdown — один раз на материал, а не на каждое движение мыши (инструменты двигаются).
   const doc = useMemo(() => {
     const lookedSet = new Set(lookedKey ? lookedKey.split(',') : []);
@@ -345,7 +359,7 @@ export function Viewer({ materialId }: ViewerProps) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [dismiss, goTo, page, sheet.pages, runAt]);
+  }, [goTo, page, sheet.pages, runAt]);
 
   if (!material && !person) return null;
 
@@ -627,18 +641,33 @@ export function Viewer({ materialId }: ViewerProps) {
           {sheet.closeup}
         </aside>
       )}
-      {sel && material && verdictOpen && (
-        <button
-          type="button"
-          className="to-petition"
-          data-testid="to-folder"
-          style={{ left: sel.x, top: sel.y + 6 }}
-          // Кнопка не снимает выделение, пока на неё нажимают.
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={toFolder}
-        >
-          В заключение
-        </button>
+      {sel && material && (canStrip || verdictOpen) && (
+        <div className="sel-actions" style={{ left: sel.x, top: sel.y + 6 }}>
+          {/* «На стену» с бумаги (CMP-C, A-288): полоска-выписка, щелчок по ней — лист на строке. */}
+          {canStrip && (
+            <button
+              type="button"
+              className="to-petition"
+              data-testid="to-wall"
+              // Кнопка не снимает выделение, пока на неё нажимают.
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={toWall}
+            >
+              На стену
+            </button>
+          )}
+          {verdictOpen && (
+            <button
+              type="button"
+              className="to-petition"
+              data-testid="to-folder"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={toFolder}
+            >
+              В заключение
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

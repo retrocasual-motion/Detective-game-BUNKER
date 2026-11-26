@@ -14,6 +14,7 @@ export function ArrivalNote() {
   const atWall = useGame((g) => g.state?.view === 'wall');
   const dismiss = useGame((g) => g.dismissArrival);
   const setView = useGame((g) => g.setView);
+  const materials = useGame((g) => g.materials);
 
   useEffect(() => {
     if (!arrival) return;
@@ -33,7 +34,9 @@ export function ArrivalNote() {
         dismiss();
       }}
     >
-      Поступило во «Входящие» на столе: {arrival.ids.join(', ')}
+      {/* Названиями, не номерами L… (RV-28): номер игроку ничего не говорит. */}
+      Поступило во «Входящие» на столе:{' '}
+      {arrival.ids.map((id) => materials.find((m) => m.id === id)?.title ?? id).join('; ')}
     </button>
   );
 }

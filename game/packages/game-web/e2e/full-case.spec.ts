@@ -312,6 +312,8 @@ async function siteByAddressBar(page: Page, address: string): Promise<Page> {
     page.getByTestId('pc-url').press('Enter'),
   ]);
   await expect(tab.getByTestId('site')).toBeVisible();
+  // Фокус в адресной строке: первый Esc снимает его, второй закрывает компьютер (2b-П1).
+  await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('computer')).toHaveCount(0);
   return tab;

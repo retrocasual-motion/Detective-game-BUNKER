@@ -14,7 +14,16 @@ const layers: Layer[] = [];
 let next = 1;
 let listening = false;
 
+let blurTarget: HTMLElement | null = null;
+function blurLater() {
+  blurTarget?.blur();
+  blurTarget = null;
+}
+
 function onKey(e: KeyboardEvent) {
+  // Поле остановило прошлый Esc — его снятие фокуса отменяется.
+  window.removeEventListener('keydown', blurLater);
+  blurTarget = null;
   if (e.key !== 'Escape') return;
   const top = layers[layers.length - 1];
   if (!top) return;
@@ -23,9 +32,12 @@ function onKey(e: KeyboardEvent) {
   // вместе с окном от одной клавиши.
   const t = e.target as HTMLElement | null;
   if (t?.closest?.('input, textarea, [contenteditable="true"]')) {
-    setTimeout(() => {
-      if (!e.defaultPrevented && !e.cancelBubble) t.blur();
-    }, 0);
+    // Поле взяло Esc себе — остановило его (блокнот, подпись метки), и до окна оно не дойдёт;
+    // иначе — снять фокус. Тут же, в этой же обработке клавиши: таймер страницы в фоне (сайт открыт
+    // во вкладке) мог бы опоздать. preventDefault не в счёт: его ставят и общие обработчики.
+    window.removeEventListener('keydown', blurLater);
+    blurTarget = t;
+    window.addEventListener('keydown', blurLater, { once: true });
     return;
   }
   e.preventDefault();

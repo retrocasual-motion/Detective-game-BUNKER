@@ -1,5 +1,12 @@
 import type { Camera } from '@bunker/shared';
-import { type PointerEvent, type ReactNode, useEffect, useRef, type WheelEvent } from 'react';
+import {
+  type CSSProperties,
+  type PointerEvent,
+  type ReactNode,
+  useEffect,
+  useRef,
+  type WheelEvent,
+} from 'react';
 import { wheelIntent } from '../input.ts';
 import { type Bounds, clampToBounds, minZoomFor, zoomAt } from './math.ts';
 
@@ -67,6 +74,19 @@ export function Canvas({
       const { camera: cam, onCameraChange: set, bounds: b } = latest.current;
       const r = el.current?.getBoundingClientRect();
       if (!b || !r || r.width === 0) return;
+      // Вид «всё целиком» (доска со стола, ZM-B), сохранённый на другом экране, — заново по этому
+      // экрану и по центру (RV-20): иначе доска 1333×755 оставалась в углу экрана 1920×1080.
+      const min = minZoomFor(b, r);
+      if (cam.zoom <= min * 1.02) {
+        const centred = {
+          zoom: min,
+          x: (r.width - (b.right - b.left) * min) / 2 - b.left * min,
+          y: (r.height - (b.bottom - b.top) * min) / 2 - b.top * min,
+        };
+        const near = (a: number, z: number) => Math.abs(a - z) < 0.5;
+        if (!near(centred.x, cam.x) || !near(centred.y, cam.y) || cam.zoom !== min) set(centred);
+        return;
+      }
       const c = clampToBounds(cam, b, r);
       if (c.x !== cam.x || c.y !== cam.y || c.zoom !== cam.zoom) set(c);
     };
@@ -153,7 +173,13 @@ export function Canvas({
     >
       <div
         className="canvas-world"
-        style={{ transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.zoom})` }}
+        style={
+          {
+            transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.zoom})`,
+            // Для зон захвата мелких целей (булавка, RV-21): размер в экранных px.
+            '--cam-zoom': camera.zoom,
+          } as CSSProperties
+        }
       >
         {surface && (
           <div
