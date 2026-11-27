@@ -1,0 +1,52 @@
+{
+  "_about": "Образцы формы проигрывателя микрокассет L462 (вариант DC-A, выбор автора 27.11). Фото — только образец формы и материалов, в игру не идут. Копии — bunker-media/references/real/R11_dictaphone_views/.",
+  "author_reference": "R11-00_author_reference.png — картинка автора 27.11 (вертикальный корпус «шампань», окно с кассетой, клавиши на правой грани)",
+  "commons": [
+    {
+      "file": "Sony Voice Recorder.jpg",
+      "model": "Sony M-450",
+      "license": "CC BY-SA 3.0",
+      "use": "клавиши на боковой грани, окно, решётка"
+    },
+    {
+      "file": "Sony Voice Recorder with Micro Cassettes.jpg",
+      "model": "Sony M-450",
+      "license": "CC BY-SA 3.0",
+      "use": "кассеты рядом — масштаб"
+    },
+    {
+      "file": "Sony Microcassette.jpg",
+      "model": "Sony M-679V",
+      "license": "CC0",
+      "use": "вертикальная раскладка, стрелка у окна, счётчик ленты"
+    },
+    {
+      "file": "Диктофон Sony M-740 1.JPG … 3.JPG",
+      "model": "Sony M-740",
+      "license": "CC BY-SA 4.0",
+      "use": "вариант DC-B (не выбран); значки клавиш и ползунок CUE / REVIEW"
+    },
+    {
+      "file": "Olympus s723.JPG",
+      "model": "Olympus Pearlcorder S723",
+      "license": "CC BY-SA 3.0",
+      "use": "вариант DC-C (не выбран)"
+    },
+    {
+      "file": "Olympus dictation machines S930 Pealcorder 01–03.jpg",
+      "model": "Olympus Pearlcorder S930",
+      "license": "CC BY-SA 4.0",
+      "use": "вариант DC-D (не выбран)"
+    },
+    {
+      "file": "MicrocassetteTypes.jpg",
+      "model": "микрокассеты",
+      "license": "CC BY-SA 3.0",
+      "use": "вид кассеты: втулки, полоска"
+    }
+  ],
+  "web": [
+    "https://www.bhphotovideo.com/c/product/640783-REG/Sony_M470_M_470_Microcassette_Voice_Recorder.html/specs — размеры Sony M-470: 60,2 × 110,8 × 22,3 мм",
+    "https://www.manualslib.com/manual/161361/Sony-M-470.html — инструкция Sony M-470 / M-570V: ползунок CUE / REVIEW, PAUSE, счётчик ленты, две скорости"
+  ]
+}

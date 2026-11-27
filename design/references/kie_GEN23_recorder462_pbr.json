@@ -1,0 +1,30 @@
+{
+  "_about": "GEN23 — проигрыватель микрокассет бюро с кассетой «06.10.08» (L462), путь WEB-C, 27.11: фото переда и спинки строго по ортовидам модели (design/props-web/recorder462/ortho.html#v=front&labels=0&plain=1 и #v=back&plain=1, кадр 1152×2048, поля m=1.18). Класс вещи — карманный микрокассетный диктофон 2000-х (Sony M-470 / M-679V; выбор автора DC-A, образец вида — картинка автора R11-00 и фото Wikimedia Commons в bunker-media/references/real/R11_dictaphone_views/); марок, надписей и особых примет нет. Окно кассеты и окошко счётчика на фото пустые и чёрные: кассета, катушки и счётчик — геометрия модели. Стрелка у окна — резким слоем из рисунка модели (make_maps.py). Износ — казённая техника бюро: годы в ящике стола и в руках. Запуск: design/tools/kie/kie_batch.ps1 -JobFile <этот файл>. Карты: design/props-web/recorder462/tools/make_maps.py.",
+  "outDir": "E:\\Projects\\bunker-media\\probes\\3d\\462_recorder_web\\gen23",
+  "resolution": "4K",
+  "aspect": "9:16",
+  "refs": {
+    "L_FRONT": "E:\\Projects\\bunker-media\\probes\\3d\\462_recorder_web\\gen23\\layout\\L_front_tex.jpg",
+    "L_BACK": "E:\\Projects\\bunker-media\\probes\\3d\\462_recorder_web\\gen23\\layout\\L_back_tex.jpg",
+    "A_REF": "E:\\Projects\\bunker-media\\references\\real\\R11_dictaphone_views\\R11-01_author_reference_crop.jpg",
+    "C_M450": "E:\\Projects\\bunker-media\\references\\real\\R11_dictaphone_views\\DC-A_1_sony_m450_side_keys.jpg"
+  },
+  "jobs": [
+    {
+      "label": "T1_front",
+      "refs": [
+        "L_FRONT",
+        "A_REF"
+      ],
+      "prompt": "T1 (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight orthographic product photograph of the front of a generic pocket microcassette voice recorder from the early 2000s, standing upright, on a plain flat medium grey background, with exactly the same framing and proportions as the first image. Keep exactly the outline and the position, size and shape of every part from the first image: the raised cassette door panel with rounded corners covering the upper half, in light champagne-gold metallic painted plastic; in the door the tall rectangular window with rounded corners, which must stay empty, flat and pure black; right of it the small black rectangular counter window, which must stay empty and pure black, and the tiny round dark button next to it; the lower half of the body in the same paint but a little darker, bronze-champagne; in it the slightly recessed speaker grille panel with its regular staggered pattern of small round black holes, every hole exactly where it is in the first image, same number of rows and columns; the tiny dark red indicator lamp above the grille at the right; at the right edge the side keys seen edge-on, sticking out a little: a grey post, a red record key, two translucent smoky keys and a grey slider; at the left edge the thin knurled volume wheel. Do not add, move or remove any part. Paint and materials as on the recorder in the second image: satin champagne metallic paint with very fine metallic flake, but this recorder has no branding at all. Years of office use as shared equipment of an investigation bureau, kept in a desk drawer: many fine hairline scratches in the paint, the paint rubbed slightly brighter and smoother on the door edges and on the corners of the body, dull finger smudges on the door, a little fine grey dust in the grille holes, along the door edge and around the window. No dents, no cracks, no chips, no stickers, no strap. Lit with soft completely even shadowless light: no reflections, no highlights, no gradient. Natural colours, everything sharp. No text, no letters, no numbers, no arrows, no symbols, no brand name and no logo anywhere: the door and the body are completely blank painted plastic."
+    },
+    {
+      "label": "T2_back",
+      "refs": [
+        "L_BACK",
+        "C_M450"
+      ],
+      "prompt": "T2 (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight orthographic product photograph of the back of a generic pocket microcassette voice recorder from the early 2000s, standing upright, on a plain flat medium grey background, with exactly the same framing and proportions as the first image. Keep exactly the outline and the position, size and shape of every part from the first image: the plain back shell with rounded corners in dark charcoal-grey moulded plastic with a very fine matte texture, like the plastic of the recorder in the second image; in the lower half the battery compartment lid outlined by a thin seam, with its five short horizontal raised grip ribs and the small moulded triangle below them; at the left edge the side keys seen edge-on, sticking out a little: a grey post, a red record key, two translucent smoky keys and a grey slider; at the right edge the thin knurled volume wheel. Do not add, move or remove any part. Years of office use as shared equipment of an investigation bureau, kept in a desk drawer: fine hairline scratches and light scuffs on the plastic, the texture rubbed slightly smoother and shinier in the middle of the back and on the grip ribs where the hand holds it, the corners a little polished, a little fine grey dust in the seam of the battery lid and between the ribs. No dents, no cracks, no chips, no stickers, no labels, no screws, no strap, no belt clip. Lit with soft completely even shadowless light: no reflections, no highlights, no gradient. Natural colours, everything sharp. No text, no letters, no numbers, no symbols other than the one small moulded triangle, no brand name and no logo anywhere."
+    }
+  ]
+}
