@@ -11,8 +11,8 @@
   `key_call`, `key_end`, боковые `key_volume`, `key_lock`, `key_camera`, `label_bureau_48` (ярлык бюро на спинке, `opts.label: false` — без него).
   Опции: `lowPower`, `mapSet: 'full' | 'low'`, `pbrBase` (папка карт, внутри `pack/` и `pack_low/`), `onChange`.
   `userData`: `ready`, `setScreenTexture(tex | null)`, `loadMapSet(set)`, `stats`, `dims`, `dispose()`.
-- Карты — `bunker-media/probes/3d/48_phone_web/textures/pbr/{pack,pack_low}/` (4,5 и 1,4 МБ), по 16 файлов:
-  `front_*`, `back_*`, `side_*` (полоса боков), `skey_*` (боковые кнопки), `label_*` (ярлык), `tile_*`;
+- Карты — `bunker-media/probes/3d/48_phone_web/textures/pbr/{pack,pack_low}/` (6,1 и 1,9 МБ), по 19 файлов:
+  `front_*`, `back_*`, `keys_*` (атлас кнопок), `side_*` (полоса боков), `skey_*` (боковые кнопки), `label_*` (ярлык), `tile_*`;
   цвет и ORM — jpg, нормали — png. Медиа вне git (ART-10).
 
 ## Сделать
@@ -29,8 +29,6 @@
    `setKeyPressed(name, down)` — пока указатель на кнопке, `pressKey(name)` — щелчок с клавиатуры, анимация и
    `onChange` — внутри модуля (подключить к `invalidate()`). Образец — обработчики `pointerdown/move/up` в `index.html`:
    луч до первой поверхности вещи; сдвиг указателя больше 7 пикселей — это поворот, кнопку отпустить.
-   `key_back` — группа (`key_back_ring` + `key_back_face`): имя кнопки искать вверх по родителям попавшего меша.
-   Верх кнопок и полоса под ними рисуются в модуле кодом — файлов карт для них нет.
    - `key_back` (средняя) — действие нынешней кнопки «домой»: `phoneHome.go()`; сработать при отпускании.
      Невидимую кнопку `phone-home` для клавиатуры и читалок привязать к узлу `key_back` и звать `pressKey('key_back')`.
    - `key_call` (зелёная) — открывает журнал звонков (ART-73): уже существующий экран `Recents` в

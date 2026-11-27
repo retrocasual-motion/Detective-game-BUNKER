@@ -126,6 +126,7 @@ function keyAt(e) {
   return null;
 }
 
+window.__keyAt = keyAt;   // для проверочного скрипта
 const releaseKey = () => { if (keyHeld) { phone.userData.setKeyPressed(keyHeld, false); keyHeld = null; } };
 
 const worldPerPx = () => 2 * Math.tan(camera.fov * Math.PI / 360) * fitDist * st.zoom / canvas.clientHeight;

@@ -145,9 +145,6 @@ screen = (~metal) & near(0, 0.14); panel = (~metal) & ~screen
 inner = (~metal) & (Y > 92) & (X > 20) & (X < 33)                                 # глянцевая вставка средней кнопки
 f = al.astype(np.float32) / 255.0; L = lum(al)
 scr, haze, Lm = wear(L, 0.022, 9.0)
-# у границы глянцевой панели и полосы кнопок фото несёт полоску светлых соринок — вплотную это снова «крошка»: убрать
-band_edge = np.clip((1 - np.abs(2 * soft(band, 0.45) - 1)) * 1.6, 0, 1)
-scr = scr * (1 - band_edge)
 plastic = soft(panel | screen | pill)
 # цвет: пластик — фото без царапин, чуть темнее; царапины слегка светлее; металл — осветлён до F0
 fm = np.dstack([med8(f[..., c], 0.5) for c in range(3)])
@@ -156,8 +153,6 @@ g = fm.mean(2, keepdims=True); fm = g + (fm - g) * 0.55                         
 for region in (panel, screen, pill):
     c = np.median(fm[region], 0); w_ = soft(region)[..., None]
     fm = fm * (1 - w_) + (c + (fm - c) * np.where(region is pill, 1.0, 0.22)) * w_
-cpan = np.median(fm[panel], 0)
-fm = fm * (1 - band_edge[..., None] * soft(panel)[..., None]) + cpan * band_edge[..., None] * soft(panel)[..., None]
 alb = fm * 0.82 + 0.12 * scr[..., None]
 def metal_gain(region, target):
     v = float(np.median(L[region])); return target / max(v, 1e-3)
@@ -174,7 +169,7 @@ alb = alb * (1 - wm) + alb_m
 ear_hole = soft(ear & (L < 0.55 * np.median(L[ear])), 0.05)
 # пыль в щелях — мягкие серые комочки-ворсинки: только у границ деталей, без резкого края, матовые, не металл
 gapzone = np.zeros(L.shape, np.float32)
-for region in (ear,):                                   # кнопки и полоса теперь рисуются кодом — пыль с фото нужна только у динамика
+for region in (pill, ring, inner, ear):
     sr = soft(region, 0.22); gapzone = np.maximum(gapzone, 1 - np.abs(2 * sr - 1))
 speck = np.clip(L - med8(L, 0.4) - 0.06, 0, 1)
 lint = np.clip(blur(np.clip(speck * 10, 0, 1), 0.09) * 2.2, 0, 1) * np.clip(gapzone * 1.6, 0, 1)
@@ -195,15 +190,55 @@ gap = thin_dark * soft(band | pill | ring | ear, 0.3)
 h = 0.5 + soft(band) * np.clip(hp * 0.5, -0.05, 0.05) - 0.10 * blur(gap, 0.15) - 0.02 * scr * plastic
 nrm = normal_from(blur(h, 0.04), 1.5)
 ao = np.clip(1 - 1.6 * blur(gap, 0.12), 0.45, 1)
-# Нижний миллиметр глянцевой панели (у полосы кнопок) — чистый пластик: фото там несёт край хромированной рамки
-# средней кнопки и соринки, а полоса и кнопки теперь рисуются кодом (phone48.js) — карта ниже 92 мм не используется.
-strip = np.clip((Y - 91.0) / 0.3, 0, 1)
-alb = alb * (1 - strip[..., None]) + (cpan * 0.82) * strip[..., None]
-rough = rough * (1 - strip) + 0.10 * strip; met = met * (1 - strip); ao = ao * (1 - strip) + strip
-nrm = nrm * (1 - strip[..., None]) + np.float32([0, 0, 1]) * strip[..., None]; nrm /= np.linalg.norm(nrm, axis=2, keepdims=True)
 save_set('front', alb, nrm, np.dstack([met, rough, ao]))     # BGR: B — металл, G — шероховатость, R — AO
 
-# Атлас кнопок убран 27.11: верх кнопок и полоса под ними рисуются кодом в phone48.js (фото вплотную расплывалось).
+# ---- атлас кнопок: полоса 53 × 10 мм (91,5…101,5 мм от верха) — цвет 788 пикс/см, значки с резким краем ----
+# Значки на общей карте переда (197 пикс/см) вблизи мылятся. Здесь фото увеличено вдвое, а край значка
+# собран заново: маска значка (цвет трубок, яркость стрелки) с крутым переходом, цвет — средний цвет краски.
+KY0, KY1 = 91.5, 101.5
+r0, r1 = int(round(KY0 * PXMM)), int(round(KY1 * PXMM))
+up2 = lambda a_: cv2.resize(a_, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+ka = up2(np.clip(alb[r0:r1], 0, 1)); kf = up2(f[r0:r1])                           # итоговый цвет и исходное фото
+kX, kYm = up2(X[r0:r1]), up2(Y[r0:r1])
+kb = np.dstack([cv2.medianBlur((np.clip(ka[..., c], 0, 1) * 255).astype(np.uint8), int(2.6 * PXMM * 2) | 1).astype(np.float32) / 255 for c in range(3)])
+def icon(region, measure, t0=0.30, t1=0.52):
+    d = measure(kf); d = d - np.median(d[region])
+    t = d / max(float(np.percentile(d[region], 99.6)), 1e-4)
+    m = np.clip((cv2.GaussianBlur(t, (0, 0), 0.8) - t0) / (t1 - t0), 0, 1); m = m * m * (3 - 2 * m)
+    m *= cv2.erode(region.astype(np.uint8), np.ones((int(0.5 * PXMM * 2) | 1,) * 2, np.uint8)).astype(np.float32)   # не у самого края кнопки
+    core = (t > 0.7) & region
+    col = ka[core].mean(0) if core.sum() > 50 else np.array([0.8, 0.8, 0.8], np.float32)
+    g_ = col.mean(); col = np.clip(g_ + (col - g_) * 1.6, 0, 1)                  # в общем цвете краска была обесцвечена — вернуть
+    return m, col
+kyc = 44.4 + 52                                                                    # центр ряда кнопок, мм от верха
+reg_call = (np.abs(kX - 12.5) < 5.3) & (np.abs(kYm - kyc) < 2.15)
+reg_end = (np.abs(kX - 40.5) < 5.3) & (np.abs(kYm - kyc) < 2.15)
+reg_back = (np.abs(kX - 26.5) < 3.45) & (np.abs(kYm - kyc) < 3.45)
+for region, measure in ((reg_call, lambda q: q[..., 1] - np.maximum(q[..., 0], q[..., 2])),
+                        (reg_end, lambda q: q[..., 2] - np.maximum(q[..., 0], q[..., 1])),
+                        (reg_back, lambda q: q.mean(2))):
+    m, col = icon(region, measure)
+    if region is reg_end:      # значок «питание» под красной трубкой дорисовал генератор, вблизи это клякса — убрать, остаётся трубка
+        m = m * (1 - np.clip(1.6 - np.hypot(kX - 40.5, kYm - (kyc + 0.95)) / 1.0, 0, 1))
+    if region is reg_back: col = np.clip(col * 1.3, 0, 0.9)   # стрелка — белая краска
+    near_ = cv2.GaussianBlur(cv2.dilate((m > 0.02).astype(np.uint8), np.ones((int(0.5 * PXMM * 2) | 1,) * 2, np.uint8)).astype(np.float32), (0, 0), 2)[..., None]
+    if region is reg_end:      # и сам след значка «питание» на фото закрыть чистым пластиком кнопки
+        zone = np.clip(1.9 - np.hypot(kX - 40.5, kYm - (kyc + 0.95)) / 1.0, 0, 1)[..., None]
+        near_ = np.maximum(near_, zone)
+    ka = ka * (1 - near_) + (kb * (1 - m[..., None]) + col * m[..., None]) * near_
+kn = nrm[r0:r1].copy(); ko = np.dstack([met, rough, ao])[r0:r1].copy()
+zs = np.clip(1.9 - np.hypot(X[r0:r1] - 40.5, Y[r0:r1] - (kyc + 0.95)) / 1.0, 0, 1)   # след значка «питание» — и здесь
+ko[..., 1] = ko[..., 1] * (1 - zs) + float(np.median(rough[pill])) * zs
+kn = kn * (1 - zs[..., None]) + np.float32([0, 0, 1]) * zs[..., None]; kn /= np.linalg.norm(kn, axis=2, keepdims=True)
+u8_ = lambda a_: (np.clip(a_, 0, 1) * 255).round().astype(np.uint8)
+n_img_ = lambda n_: cv2.cvtColor(((n_ * 0.5 + 0.5) * 255).round().astype(np.uint8), cv2.COLOR_RGB2BGR)
+cv2.imwrite(os.path.join(OUT, 'src', 'keys_albedo.png'), u8_(ka))
+for d, k in (('pack', 1.0), ('pack_low', 0.5)):
+    sa = (int(round(ka.shape[1] * k)), int(round(ka.shape[0] * k))); sn = (int(round(kn.shape[1] * k)), int(round(kn.shape[0] * k)))
+    cv2.imwrite(os.path.join(OUT, d, 'keys_a.jpg'), cv2.resize(u8_(ka), sa, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 95])
+    nn = cv2.resize(kn, sn, interpolation=cv2.INTER_AREA); nn /= np.linalg.norm(nn, axis=2, keepdims=True)
+    cv2.imwrite(os.path.join(OUT, d, 'keys_n.png'), n_img_(nn)); cv2.imwrite(os.path.join(OUT, d, 'keys_orm.jpg'), cv2.resize(u8_(ko), sn, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 95])
+report['keys'] = {'strip_mm': [53, KY1 - KY0], 'albedo_px': list(ka.shape[1::-1]), 'px_per_cm': round(ka.shape[0] / (KY1 - KY0) * 10)}
 report['front'].update({'scr_cover_%': round(float((scr > 0.3).mean() * 100), 2), 'haze_max': round(float(haze.max()), 3),
                         'rough_screen_p50_p95': [round(float(np.percentile(rough[screen], q)), 3) for q in (50, 95)]})
 
