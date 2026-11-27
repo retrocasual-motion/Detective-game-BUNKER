@@ -5,10 +5,10 @@
 Код — `design/props-web/laptop47/`, рабочая копия и медиа — `E:/Projects/bunker-media/probes/3d/47_laptop_web/`.
 
 ## Next Step
-Ждать автора: принять движение крышки и кнопки; по слову «собирать» — решение в `design/DECISIONS.md` и PR.
+Нет: принято автором 27.11, решение ART-91 внесено, PR открыт.
 
 ## Current Phase
-Все фазы завершены (ждёт приёма)
+Все фазы завершены
 
 ## Phases
 
