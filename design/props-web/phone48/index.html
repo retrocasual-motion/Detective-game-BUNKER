@@ -122,8 +122,10 @@ function keyAt(e) {
   const r = canvas.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   scene.updateMatrixWorld(); ray.setFromCamera(ndc, camera);
   const hit = ray.intersectObject(phone, true)[0];
-  return hit && phone.userData.keys.includes(hit.object.name) ? hit.object.name : null;
+  for (let ob = hit && hit.object; ob && ob !== phone; ob = ob.parent) if (phone.userData.keys.includes(ob.name)) return ob.name;   // кнопка может быть группой
+  return null;
 }
+
 const releaseKey = () => { if (keyHeld) { phone.userData.setKeyPressed(keyHeld, false); keyHeld = null; } };
 
 const worldPerPx = () => 2 * Math.tan(camera.fov * Math.PI / 360) * fitDist * st.zoom / canvas.clientHeight;
