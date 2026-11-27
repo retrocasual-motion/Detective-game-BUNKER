@@ -1,0 +1,22 @@
+{
+  "_about": "GEN21 — камера инженера (24), 27.11: листы ракурсов варианта CM-A (защищённая мыльница, класс Olympus Stylus Tough-8000, 2009) для выбора модели автором. Это не текстуры: у настоящей камеры в свободных источниках есть только фото спереди (Wikimedia Commons), задняя сторона, верх, низ и бока собраны по описанию раскладки — приблизительно. Марок, надписей и особых примет нет. Запуск: design/tools/kie/kie_batch.ps1 -JobFile <этот файл>.",
+  "outDir": "E:\\Projects\\bunker-media\\probes\\3d\\24_camera_web\\gen21",
+  "resolution": "4K",
+  "aspect": "16:9",
+  "refs": {
+    "R10_01": "E:\\Projects\\bunker-media\\references\\real\\R10_camera_views\\R10-01_olympus_tough8000_front.jpg",
+    "R10_02": "E:\\Projects\\bunker-media\\references\\real\\R10_camera_views\\R10-02_olympus_tough8000_in_hands.jpg"
+  },
+  "jobs": [
+    {
+      "label": "V1_six_views",
+      "refs": ["R10_01", "R10_02"],
+      "prompt": "V1 (file label, not part of the image, never draw it). Product reference sheet: six straight orthographic photographs of one and the same rugged waterproof compact digital camera from 2009, the same camera body as in the reference photographs but with all branding removed, arranged in a tidy grid on a plain flat light grey background, each view the same scale, nothing else in the frame. Views: front, back, top, bottom, left side, right side. The camera is a small flat slab about 95 mm wide, 62 mm tall and 22 mm thick, silver brushed stainless steel and aluminium body with a darker gunmetal front plate held by four visible screws, rounded corners. Front: a small rectangular lens window with a raised metal frame in the upper corner, the lens does not protrude, a narrow rectangular flash window and a small round LED lamp beside it near the top edge. Back: a 2.7 inch LCD screen on the left covering most of the back, switched off and dark; on the right a column of controls: two small zoom buttons at the top, a small round mode dial, a round four-way arrow pad with a centre button, and two small round buttons below it; a few small speaker holes. Top: a small recessed round power button and a larger round shutter button, both metal. Bottom: a tripod screw socket and a battery and memory card door with a small sliding lock. Right side: a metal strap lug and a small sealed connector cover. Left side: plain. More than a year of daily work use by an engineer in a damp underground facility: fine hairline scratches on the metal, edges and corners rubbed bright, slightly dulled finish where fingers hold it, a little fine grey dust in the seams and around the screws. No dents, no cracks, no stickers. Soft even studio light, sharp, natural colours. No text, no letters, no numbers, no brand names, no logos, no captions anywhere."
+    },
+    {
+      "label": "V2_three_quarter",
+      "refs": ["R10_01", "R10_02"],
+      "prompt": "V2 (file label, not part of the image, never draw it). Two product photographs side by side of one and the same rugged waterproof compact digital camera from 2009, the same camera body as in the reference photographs but with all branding removed, lying on a dark worn wooden office desk under a warm desk lamp from the left: on the left half a three-quarter view from the front and above, on the right half a three-quarter view from the back and above. The camera is a small flat slab about 95 mm wide, 62 mm tall and 22 mm thick, silver brushed stainless steel and aluminium body with a darker gunmetal front plate held by four visible screws, rounded corners. Front: a small rectangular lens window with a raised metal frame in the upper corner, the lens does not protrude, a narrow flash window and a small round LED lamp near the top edge. Back: a 2.7 inch LCD screen on the left, switched off and dark; on the right two small zoom buttons, a small round mode dial, a round four-way arrow pad with a centre button and two small round buttons. Top: a round power button and a larger round shutter button. More than a year of daily work use by an engineer in a damp underground facility: fine hairline scratches on the metal, edges and corners rubbed bright, a little fine grey dust in the seams and around the screws. No dents, no cracks, no stickers. Sharp, natural colours, realistic photograph. No text, no letters, no numbers, no brand names, no logos anywhere."
+    }
+  ]
+}
