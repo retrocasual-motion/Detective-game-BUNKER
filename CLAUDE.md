@@ -30,6 +30,8 @@
    DESIGN VALIDATION CHECKLIST).
 3. Для обнаружения, доступа и интерпретации улик дополнительно используй
    `bunker/docs/CLUE_INTERACTION_GUIDE.md` (этапы О/Д/И, правила CA, карточки M).
+   Любой текст для игрока (документы, улики, письма, сайты) — по
+   `bunker/docs/DOCUMENT_TEXT_PRINCIPLES.md` и его проверке в конце.
 4. Аудиты в `claude/AUDIT_*.md` и `claude/*AUDIT*.md` — предложения, не канон.
 
 Правила:
