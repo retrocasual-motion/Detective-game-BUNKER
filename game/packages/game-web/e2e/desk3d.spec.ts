@@ -237,3 +237,33 @@ test('вещь взяли и положили — плашки «изображ�
   await page.waitForTimeout(2500);
   await expect(page.getByTestId('gl-lost')).toHaveCount(0);
 });
+
+test('окно стало меньше (вышли из F11, RV-3): ручка у края — в кадре и берётся', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await spill(page, 'seized');
+  await page.waitForTimeout(1200);
+  await deskSettled(page);
+  const g = await grab(page, '49');
+  const saved = savedPut(page);
+  await page.mouse.move(g?.x ?? 0, g?.y ?? 0);
+  await page.mouse.down();
+  // К ближнему краю большого окна.
+  await page.mouse.move(g?.x ?? 0, 1065, { steps: 40 });
+  await page.waitForTimeout(1000);
+  await page.mouse.up();
+  await saved;
+  // Вышли из полноэкранного: окно ниже (панель браузера).
+  await page.setViewportSize({ width: 1920, height: 900 });
+  await expect
+    .poll(async () => {
+      const p = await grab(page, '49');
+      return !!p && p.x > 0 && p.x < 1920 && p.y > 0 && p.y < 900;
+    })
+    .toBe(true);
+  await deskSettled(page);
+  const t = await grab(page, '49');
+  await page.mouse.click(t?.x ?? 0, t?.y ?? 0);
+  await expect(page.getByTestId('held')).toBeVisible();
+});

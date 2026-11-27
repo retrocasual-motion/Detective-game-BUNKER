@@ -207,6 +207,17 @@ interface GameStore {
   /** Куда вернуться, когда лист закрыт (readFrom). */
   backTo: Held | null;
   /**
+   * Лист, из которого перешли по ссылке на сайт (автор 27.11: Esc закрывал и компьютер, и лист):
+   * закрыли компьютер — этот лист снова открыт, чтение подряд продолжается.
+   */
+  afterPc: {
+    viewerId: string;
+    find: GameStore['find'];
+    excerpt: Excerpt | null;
+    backTo: Held | null;
+    deskRun: GameStore['deskRun'];
+  } | null;
+  /**
    * Чтение со стола подряд (DC-B, автор 25.11): листы стола по порядку (с какого начали, дальше —
    * сверху вниз), какие уже открывали и какие оставить на столе. Закрыли — прочитанное, кроме
    * оставленного, висит на стене группой своего конверта.
@@ -427,6 +438,7 @@ export const useGame = create<GameStore>((set, get) => {
     foundId: null,
     wallFly: 0,
     backTo: null,
+    afterPc: null,
     deskRun: null,
 
     dismissArrival() {
@@ -438,12 +450,28 @@ export const useGame = create<GameStore>((set, get) => {
     },
 
     setComputerOpen(open) {
-      set({ computerOpen: open, pcMaterial: null });
+      // Закрыли компьютер, куда ушли по ссылке из листа, — лист снова открыт (если ничего другого
+      // поверх не открыли).
+      const back = open ? null : get().afterPc;
+      set({ computerOpen: open, pcMaterial: null, afterPc: null });
+      if (back && !get().viewerId && !get().held) set({ ...back });
     },
 
     openSite(address, letter) {
-      // Лист закрыт как обычно: прочитанное подряд — на стену, найденное — снято.
-      if (get().viewerId) get().closeViewer();
+      // Ссылка из листа: лист — под компьютером, закроют компьютер — он снова открыт (автор 27.11).
+      const g = get();
+      if (g.viewerId && !g.computerOpen)
+        set({
+          afterPc: {
+            viewerId: g.viewerId,
+            find: g.find,
+            excerpt: g.excerpt,
+            backTo: g.backTo,
+            deskRun: g.deskRun,
+          },
+          deskRun: null,
+        });
+      else if (g.viewerId) get().closeViewer();
       set({
         computerOpen: true,
         pcMaterial: null,

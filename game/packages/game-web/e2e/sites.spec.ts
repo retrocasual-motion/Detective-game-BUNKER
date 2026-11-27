@@ -32,7 +32,12 @@ test('адрес в материале — ссылка: щелчок откры
   await expect(web.getByTestId('site-form-vl-login')).toBeVisible();
   // Новой вкладки нет; сайта на стене и во «Входящих» нет.
   expect(page.context().pages().length).toBe(pages);
-  await leavePc(page);
+  // Esc — закрыт компьютер, лист 02 снова открыт (автор 27.11); ещё Esc — лист.
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('computer')).toHaveCount(0);
+  await expect(page.getByTestId('viewer')).toHaveAttribute('data-material', '02');
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('viewer')).toBeHidden();
   await expect(page.getByTestId('inbox-L101')).toHaveCount(0);
   await expect(sheet(page, 'L101')).toHaveCount(0);
 });
@@ -233,7 +238,7 @@ test('ссылка из листа открыта, компьютер закры
     .locator('a.site-link', { hasText: 'vaultline-program.com' })
     .click();
   await expect(page.getByTestId('pc-web').getByTestId('site')).toBeVisible();
-  // Лист при переходе закрыт обычным образом (не остался висеть под компьютером).
+  // Лист при переходе — под компьютером не виден; закрыли компьютер — лист снова открыт (автор 27.11).
   await expect(page.getByTestId('viewer')).toHaveCount(0);
   await leavePc(page);
   await page.keyboard.press('ArrowDown');

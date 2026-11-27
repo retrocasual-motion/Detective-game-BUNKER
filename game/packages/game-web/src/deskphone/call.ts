@@ -40,8 +40,9 @@ interface CallState {
   /**
    * Звонят на телефон на столе (SD5-A): звонок, на экранчике — «Входящий вызов»; сняли трубку —
    * `text` в трубке. Не взяли — через полминуты стихает. Занят телефон — позвонят, когда положат.
+   * `onHeard` — когда фразу дослушали (трубку держали, пока она звучит; автор 27.11).
    */
-  incoming(text: string): void;
+  incoming(text: string, onHeard?: () => void): void;
 }
 
 /** Длина набора на экранчике. */
@@ -63,6 +64,12 @@ const ms = () => {
   };
 };
 
+/**
+ * Сколько звучит фраза входящего звонка (озвучки пока нет — по длине текста, как её прочитать
+ * вслух), мс.
+ */
+export const speakMs = (text: string) => (reducedMotion() ? 300 : Math.max(4000, text.length * 60));
+
 const digits = (s: string) => s.replace(/\D/g, '').length;
 const sleep = (t: number) => new Promise((r) => setTimeout(r, t));
 
@@ -78,6 +85,9 @@ let zeroAt = 0;
 /** Что скажут во входящем звонке; звонок, ждущий, пока положат трубку. */
 let incomingText = '';
 let waitingCall = '';
+/** Кому сказать, что входящую фразу дослушали. */
+let incomingHeard: (() => void) | undefined;
+let waitingHeard: (() => void) | undefined;
 /** «0» дважды за это время — «+». */
 const PLUS_MS = 450;
 
@@ -200,6 +210,13 @@ export const useCall = create<CallState>((set, get) => {
           heard: [incomingText],
           talkFrom: Date.now(),
         });
+        // Дослушали (трубку не положили, пока фраза звучит) — сказать.
+        const my = callNo;
+        const done = incomingHeard;
+        if (done)
+          timer = setTimeout(() => {
+            if (my === callNo && get().phase === 'connected') done();
+          }, speakMs(incomingText));
         return;
       }
       if (s.offHook) {
@@ -246,18 +263,22 @@ export const useCall = create<CallState>((set, get) => {
       // Звонили, пока трубка была снята, — звонят снова.
       if (waitingCall) {
         const t = waitingCall;
+        const h = waitingHeard;
         waitingCall = '';
-        setTimeout(() => get().incoming(t), 1500);
+        waitingHeard = undefined;
+        setTimeout(() => get().incoming(t, h), 1500);
       }
     },
 
-    incoming(text) {
+    incoming(text, onHeard) {
       const s = get();
       if (s.offHook || s.phase !== 'idle') {
         waitingCall = text;
+        waitingHeard = onHeard;
         return;
       }
       incomingText = text;
+      incomingHeard = onHeard;
       clearTimer();
       set({ phase: 'incoming', number: 'Внутренний', heard: [], keys: '', menu: false });
       setTone('bell');

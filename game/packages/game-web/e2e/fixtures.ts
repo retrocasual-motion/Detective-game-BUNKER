@@ -305,4 +305,7 @@ export async function leavePc(page: Page) {
   for (let k = 0; k < 3 && (await page.getByTestId('computer').isVisible()); k++)
     await page.keyboard.press('Escape');
   await expect(page.getByTestId('computer')).toHaveCount(0);
+  // Пришли по ссылке из листа — лист снова открыт (автор 27.11): закрыть и его.
+  if (await page.getByTestId('viewer').isVisible()) await page.keyboard.press('Escape');
+  await expect(page.getByTestId('viewer')).toHaveCount(0);
 }

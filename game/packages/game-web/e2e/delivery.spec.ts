@@ -40,10 +40,19 @@ test('до звонка вещдоков нет; рано — не звонит;
   expect(await materialIds(page)).toContain('47');
   // Игрок смотрит на стол — короба ещё несут.
   await expect(page.getByTestId('container-seized')).toHaveCount(0);
-  // Снял трубку — дежурный камеры хранения.
+  // Подошёл к телефону — трубку ещё не снял: коробов нет (автор 27.11).
+  await page.getByTestId('desk-phone').click();
+  await page.waitForTimeout(800);
+  await page.keyboard.press('Escape');
+  await toWall(page);
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByTestId('container-seized')).toHaveCount(0);
+  // Снял трубку — дежурный камеры хранения; дослушал — короба несут. (Стих — звонят снова.)
+  await expect(page.getByTestId('dp-lcd')).toContainText('Входящий вызов', { timeout: 10_000 });
   await page.getByTestId('desk-phone').click();
   await page.getByTestId('dp-handset').click();
   await expect(page.getByTestId('dp-heard')).toContainText('Камера хранения');
+  await page.waitForTimeout(1500);
   await page.getByTestId('dp-handset').click();
   await page.keyboard.press('Escape');
   // Отвернулся к стене и вернулся — короба у стола.
@@ -56,9 +65,33 @@ test('до звонка вещдоков нет; рано — не звонит;
   await expect(page.getByTestId('container-seized')).toBeVisible();
 });
 
-test('не взял трубку — короба всё равно приходят', async ({ page }) => {
+test('не взял трубку — коробов нет, звонят снова (автор 27.11); положил, не дослушав, — тоже', async ({
+  page,
+}) => {
   await play(page, 41 * 60_000);
-  await expect(page.getByTestId('dp-lcd')).toContainText('Входящий вызов');
+  const lcd = page.getByTestId('dp-lcd');
+  await expect(lcd).toContainText('Входящий вызов');
+  // Стих, не взяли — коробов нет.
+  await expect(lcd).not.toContainText('Входящий вызов', { timeout: 10_000 });
+  await toWall(page);
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByTestId('container-seized')).toHaveCount(0);
+  // Звонят снова — сняли и сразу положили: коробов нет.
+  await expect(lcd).toContainText('Входящий вызов', { timeout: 10_000 });
+  await page.getByTestId('desk-phone').click();
+  await page.getByTestId('dp-handset').click();
+  await page.getByTestId('dp-handset').click();
+  await page.waitForTimeout(1000);
+  await page.keyboard.press('Escape');
+  await toWall(page);
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByTestId('container-seized')).toHaveCount(0);
+  // И снова — дослушали: короба у стола.
+  await expect(lcd).toContainText('Входящий вызов', { timeout: 10_000 });
+  await page.getByTestId('desk-phone').click();
+  await page.getByTestId('dp-handset').click();
+  await page.waitForTimeout(1500);
+  await page.keyboard.press('Escape');
   await toWall(page);
   await page.keyboard.press('ArrowDown');
   await expect(page.getByTestId('container-seized')).toBeVisible();

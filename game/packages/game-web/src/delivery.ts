@@ -11,6 +11,7 @@ import {
 import { askDelivery } from './api.ts';
 import { useCall } from './deskphone/call.ts';
 import { useMenu } from './menu/menu-store.ts';
+import { reducedMotion } from './motion.ts';
 import { useGame } from './store.ts';
 
 /**
@@ -18,8 +19,8 @@ import { useGame } from './store.ts';
  * потом — вещественные доказательства из камеры хранения бюро («Изъятое при осмотре места» и «Личные
  * вещи»). Игра считает время игры (`playMs`: идёт, пока дело открыто и видно) и, когда пора
  * (`deliveryDue`), спрашивает сервер; сервер проверяет сам и отдаёт вещдоки. Тогда звонит телефон на
- * столе — дежурный камеры хранения; трубку можно не брать. Короба появляются у стола, когда игрок на
- * стол не смотрит (`boxesIn`: false — несут, true — внесли).
+ * столе — дежурный камеры хранения. Короба вносят, когда фразу дослушали (не взяли трубку — звонят
+ * снова, автор 27.11), и только пока игрок на стол не смотрит (`boxesIn`: false — несут, true — внесли).
  */
 
 /** Шаг часов игры. */
@@ -46,7 +47,63 @@ export function absentBoxes(s: PlayerState | null, materials: readonly Material[
 
 let asking = false;
 
-/** Пора — спросить сервер; пришло — звонок и «несут» (короба появятся, когда игрок отвернётся). */
+/**
+ * Звонок дежурного (автор 27.11, вместо «не взяли трубку — короба всё равно»): вещдоки вносят, только
+ * когда трубку сняли и фразу дослушали, — через `CARRY_MS`. Не взяли трубку или положили раньше —
+ * через `RING_AGAIN_MS` звонят снова.
+ */
+const CARRY_MS = () => (reducedMotion() ? 300 : 3000);
+const RING_AGAIN_MS = () => (reducedMotion() ? 3000 : 30_000);
+/** Дослушали — больше не звонят. */
+let heard = false;
+/** Дослушали и прошло `CARRY_MS` — короба можно вносить. */
+let carry = false;
+/** Не раньше этого — следующий звонок (до дослушанного). */
+let nextRing = 0;
+
+function ring(): void {
+  heard = false;
+  carry = false;
+  useCall.getState().incoming(DELIVERY_CALL, () => {
+    heard = true;
+    setTimeout(() => {
+      carry = true;
+      carryIn();
+    }, CARRY_MS());
+  });
+}
+
+/** Вещдоки пришли, а звонок ещё не дослушан. */
+function awaitingCall(): boolean {
+  const g = useGame.getState();
+  const s = g.state;
+  return (
+    !!s &&
+    !heard &&
+    s.boxesIn === false &&
+    !g.elsewhere &&
+    hasSecond(g.materials) &&
+    !deliveredBySave(s)
+  );
+}
+
+/** Внести короба — когда разрешено и игрок не смотрит на стол (стена, лист, вещь, устройство, телефон). */
+function carryIn(): void {
+  const g = useGame.getState();
+  const s = g.state;
+  if (!carry || !s || s.boxesIn !== false) return;
+  const away =
+    s.view !== 'desk' ||
+    !!g.viewerId ||
+    !!g.held ||
+    g.computerOpen ||
+    g.deskPhone ||
+    g.notebookOpen ||
+    g.searchOpen;
+  if (away) g.updateState((st) => ({ ...st, boxesIn: true }));
+}
+
+/** Пора — спросить сервер; пришло — звонок дежурного (короба — когда его дослушают). */
 export async function checkDelivery(): Promise<void> {
   const g = useGame.getState();
   const s = g.state;
@@ -61,7 +118,7 @@ export async function checkDelivery(): Promise<void> {
     const now = useGame.getState();
     now.updateState((st) => ({ ...st, boxesIn: false }));
     now.addReleased(list);
-    useCall.getState().incoming(DELIVERY_CALL);
+    ring();
   } finally {
     asking = false;
   }
@@ -134,20 +191,24 @@ export function startDelivery(): void {
     addPlayTime(TICK_MS);
   }, TICK_MS / dev.fast);
   if (dev.call) callSoon();
-  // Короба несут — внести, как только игрок не смотрит на стол (стена, лист, вещь, устройство).
-  useGame.subscribe((g) => {
-    const s = g.state;
-    if (!s || s.boxesIn !== false) return;
-    const away =
-      s.view !== 'desk' ||
-      !!g.viewerId ||
-      !!g.held ||
-      g.computerOpen ||
-      g.deskPhone ||
-      g.notebookOpen ||
-      g.searchOpen;
-    if (away) g.updateState((st) => ({ ...st, boxesIn: true }));
+  // Звонок дослушан — короба несут: внести, как только игрок не смотрит на стол.
+  useGame.subscribe(carryIn);
+  // Звонок не взяли или не дослушали — звонят снова; и после перезагрузки, пока не дослушан.
+  nextRing = Date.now() + 5000;
+  useCall.subscribe((c, was) => {
+    if (c.phase === 'idle' && was.phase !== 'idle') nextRing = Date.now() + RING_AGAIN_MS();
   });
+  setInterval(() => {
+    const c = useCall.getState();
+    if (
+      awaitingCall() &&
+      useMenu.getState().screen === 'game' &&
+      c.phase === 'idle' &&
+      !c.offHook &&
+      Date.now() >= nextRing
+    )
+      ring();
+  }, 1000);
   if (import.meta.env.DEV)
     (window as unknown as { __play?: (ms: number) => void }).__play = addPlayTime;
 }

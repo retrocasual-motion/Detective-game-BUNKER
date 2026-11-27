@@ -26,6 +26,7 @@ import {
 import { markDeskTook } from './took.ts';
 import {
   allowed,
+  cornersOf,
   drapes,
   heights,
   nearestFree,
@@ -256,6 +257,32 @@ export function Desk({
     setPieces(next);
     save(next);
   }, [blocked]);
+
+  // ── Окно стало меньше (вышли из полноэкранного, RV-3; автор 27.11: ручка ушла за край): вещь, что
+  // теперь за краем кадра, — в кадр, на ближайшее место; стопка — целиком. ──
+  // biome-ignore lint/correctness/useExhaustiveDependencies: только когда сменился кадр стола
+  useEffect(() => {
+    if (room.vp.width < 300 || room.vp.height < 200) return;
+    const d = drag.current;
+    const out = (q: Piece) => cornersOf(q).some(([x, z]) => !zone.inside(x, z));
+    const groups = new Map<string, Piece[]>();
+    for (const q of ps.current) groups.set(q.stack, [...(groups.get(q.stack) ?? []), q]);
+    const shift = new Map<string, { dx: number; dz: number }>();
+    for (const g of groups.values()) {
+      if (g.some((q) => d?.ids.includes(q.id) || flying.current.has(q.id)) || !g.some(out))
+        continue;
+      const fix = nearestFree(g, zone, 1.2, 0.01);
+      if (fix) for (const q of g) shift.set(q.id, fix);
+    }
+    if (!shift.size) return;
+    const next = ps.current.map((q) => {
+      const f = shift.get(q.id);
+      return f ? { ...q, x: q.x + f.dx, z: q.z + f.dz } : q;
+    });
+    ps.current = next;
+    setPieces(next);
+    save(next);
+  }, [zone]);
 
   // ── Сохранение → стол: что лежит, где; без места — высыпать у конверта. ──
   // biome-ignore lint/correctness/useExhaustiveDependencies: пересчёт — только когда сменился стол игрока
@@ -831,10 +858,12 @@ export function Desk({
         const z = b.z + d.off.z;
         t.mode = 'hand';
         const here = { ...pc, x, z };
-        // Смотрит вперёд — только туда, куда её несут: поднимается заранее.
+        // Смотрит вперёд — только туда, куда её несут: поднимается заранее. Только над бумагами:
+        // над устройствами вещь в руке не взлетает (автор 27.11: у приёмника всё «плавало» вверх-вниз)
+        // — она и так рисуется поверх всего; отпустили на устройстве — встаёт рядом (drop).
         const sp = Math.hypot(d.vx, d.vz);
         const lead = Math.min(0.16, sp * 0.18);
-        let under = support(pc, here);
+        let under = support(pc, here, true);
         if (sp > 0.02)
           for (const f of [0.35, 0.7, 1])
             under = Math.max(
@@ -842,7 +871,7 @@ export function Desk({
               support(
                 pc,
                 { ...here, x: x + (d.vx / sp) * lead * f, z: z + (d.vz / sp) * lead * f },
-                !(DRAPE && !DEVICE_KIND[pc.id]),
+                true,
               ),
             );
         const h = under + LIFT;
