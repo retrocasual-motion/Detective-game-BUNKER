@@ -1,0 +1,34 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:#8a8a8a}canvas{display:block}</style>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }</script>
+</head><body>
+<script type="module">
+import * as THREE from 'three';
+import { buildRecorder462 } from './recorder462.js';
+// #v=front|back|top|bottom|left|right &clay=1 &pbr=1 &m=1.18 — ортовиды для образца раскладки (m — поля кадра)
+const P = new URLSearchParams(location.hash.slice(1));
+const v = P.get('v') || 'front', clay = P.get('clay') === '1', m = parseFloat(P.get('m') || '1.18');
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+r.toneMapping = THREE.NoToneMapping; r.outputColorSpace = THREE.SRGBColorSpace; r.setPixelRatio(1); r.setSize(innerWidth, innerHeight); document.body.appendChild(r.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x8a8a8a);
+scene.add(new THREE.AmbientLight(0xffffff, clay ? 0.6 : 2.4));
+const dl = new THREE.DirectionalLight(0xffffff, clay ? 2.2 : 0.7); scene.add(dl, dl.target);
+const cam3 = buildRecorder462(THREE, { pbr: P.get('pbr') === '1', lowPower: false, labels: P.get('labels') !== '0', counter: P.get('counter') !== '0', label: false, onChange: () => { if (window.__cam) draw(); } }); scene.add(cam3);
+const D = cam3.userData.dims;
+// ровный свет без бликов: металл и глянец на время съёмки выключены, остаётся цвет
+cam3.traverse(o => { if (o.isMesh && o.material && o.material.isMeshPhysicalMaterial) { const mt = o.material; mt.metalnessMap = null; mt.metalness = 0; mt.roughness = 0.9; mt.roughnessMap = null; mt.clearcoat = 0; mt.anisotropy = 0; mt.needsUpdate = true; } });
+// plain=1 — образец для генератора: окно пустое и тёмное (кассета и счётчик — геометрия, с фото не берутся)
+if (P.get('plain') === '1') cam3.traverse(o => { if (/^(cassette_shell|cassette_label|reel_|window_glass)/.test(o.name)) o.visible = false;
+  if (o.isMesh && (o.name === 'cassette_floor' || o.name === 'counter')) o.material = new THREE.MeshBasicMaterial({ color: 0x0b0b0c }); });
+if (clay) { const mat = new THREE.MeshStandardMaterial({ color: 0x9a9a9a, roughness: 0.9 }); cam3.traverse(o => { if (o.isMesh) o.material = mat; }); }
+const ar = innerWidth / innerHeight;
+const frame = (w, h) => { let hw = w / 2 * m, hh = h / 2 * m; if (hw / hh > ar) hh = hw / ar; else hw = hh * ar; return [-hw, hw, hh, -hh]; };
+const V = { front: [[0, 0, 1], [0, 1, 0], D.W, D.H], back: [[0, 0, -1], [0, 1, 0], D.W, D.H], top: [[0, 1, 0], [0, 0, -1], D.W, D.T], bottom: [[0, -1, 0], [0, 0, 1], D.W, D.T],
+  left: [[-1, 0, 0], [0, 1, 0], D.T, D.H], right: [[1, 0, 0], [0, 1, 0], D.T, D.H] }[v];
+const [L, R, T, B] = frame(V[2], V[3]);
+const cam = new THREE.OrthographicCamera(L, R, T, B, 0.01, 5); cam.position.set(...V[0]); cam.up.set(...V[1]); cam.lookAt(0, 0, 0);
+dl.position.copy(cam.position).add(new THREE.Vector3(0.3, 0.3, 0.3)); dl.target.position.set(0, 0, 0);
+window.__cam = cam;
+function draw() { r.render(scene, cam); }
+draw(); cam3.userData.ready.then(() => { draw(); window.__ready = true; });
+</script></body></html>
