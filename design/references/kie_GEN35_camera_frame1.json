@@ -1,0 +1,11 @@
+{
+  "outDir": "E:\\Projects\\bunker-media\\design_ui\\pc\\gen",
+  "resolution": "1K",
+  "aspect": "4:3",
+  "jobs": [
+    {
+      "label": "CAM_frame1_generator_panel",
+      "prompt": "Amateur documentation photo taken in 2009 with a cheap silver compact digital camera with built-in flash fired straight on: a grey industrial electrical generator control panel on a painted concrete wall in the technical room of an underground facility, metal cabinet with a few gauges and toggle switches, cable trays, a caged ceiling light at the top edge. Harsh direct flash, bright centre and dark falloff to the corners, slight overexposed highlights on the metal, mild digital noise, 4:3 frame, slightly tilted. No people, no readable text, no logos, no brand names, no date stamp."
+    }
+  ]
+}
