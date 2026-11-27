@@ -1,0 +1,36 @@
+{
+  "_about": "GEN33 — ручка-диктофон (49): вид по выбору автора 27.11 «форма первого варианта (PN-A), цвет второго (PN-B)», без камеры (только звук; микрофон — решётка из трёх отверстий). Две картинки для решения, нужен ли экран на ручке: без экрана (как по заметке игры) и с маленьким экраном номера записи. Запуск: design/tools/kie/kie_batch.ps1 -JobFile <этот файл>. Первая картинка без экрана вышла толще нужной формы — добавлена PN-AB_no_display_v2: та же картинка, что с экраном, но экран убран.",
+  "outDir": "E:\\Projects\\bunker-media\\probes\\3d\\49_pen_web\\gen33",
+  "resolution": "2K",
+  "aspect": "16:9",
+  "refs": {
+    "FORM": "E:\\Projects\\bunker-media\\probes\\3d\\49_pen_web\\gen33\\REF_PN-A_steel.jpg",
+    "COLOR": "E:\\Projects\\bunker-media\\probes\\3d\\49_pen_web\\gen33\\REF_PN-B_black_chrome.jpg",
+    "WITH": "E:\\Projects\\bunker-media\\probes\\3d\\49_pen_web\\gen33\\REF_PN-AB_with_display.jpg"
+  },
+  "jobs": [
+    {
+      "label": "PN-AB_no_display",
+      "refs": [
+        "FORM",
+        "COLOR"
+      ],
+      "prompt": "PN-AB (file label, not part of the image, never draw it). Studio product photograph, three views of the same single object arranged in one picture on a plain flat light grey background: at the top the whole pen lying horizontally, seen exactly from the side, full length, tip to the left; below it at the left a large close-up of the upper part of the barrel showing the controls; below at the right a large close-up of the top end of the pen. The object is a metal ballpoint pen from 2009 that is also a small digital AUDIO voice recorder, about 14 centimetres long. Take the exact shape, slimness and proportions from the pen in the first reference image: a slim classic pen about 11 millimetres thick with a slightly tapered lower barrel, the same clip and the same top end. Take the colours and finish from the pen in the second reference image: a glossy black lacquered metal barrel, polished chrome clip, polished chrome top end, a thin polished chrome ring in the middle of the barrel and a polished chrome tip section. Controls on the upper barrel: three small round polished chrome push buttons in a straight row (previous, play, next); next to them a microphone made as a tiny grille of three pinholes in a short row, and one tiny dark red indicator lamp. It records sound only: there is NO camera, no lens and no glass eye anywhere on the pen. A 2.5 mm earphone jack socket in the very top end. The ballpoint tip is extended. Lightly used by a journalist for a year: a few fine hairline scratches in the lacquer and faint handling marks on the chrome, nothing more: no dirt, no grime, no dents, no rust. Soft even studio light, the chrome and the lacquer clearly read as real metal with clean soft reflections, everything sharp. No brand name and no logo anywhere on the pen. It has NO display and no screen of any kind. No text, no letters, no numbers and no icons anywhere on the pen."
+    },
+    {
+      "label": "PN-AB_with_display",
+      "refs": [
+        "FORM",
+        "COLOR"
+      ],
+      "prompt": "PN-AB-D (file label, not part of the image, never draw it). Studio product photograph, three views of the same single object arranged in one picture on a plain flat light grey background: at the top the whole pen lying horizontally, seen exactly from the side, full length, tip to the left; below it at the left a large close-up of the upper part of the barrel showing the controls; below at the right a large close-up of the top end of the pen. The object is a metal ballpoint pen from 2009 that is also a small digital AUDIO voice recorder, about 14 centimetres long. Take the exact shape, slimness and proportions from the pen in the first reference image: a slim classic pen about 11 millimetres thick with a slightly tapered lower barrel, the same clip and the same top end. Take the colours and finish from the pen in the second reference image: a glossy black lacquered metal barrel, polished chrome clip, polished chrome top end, a thin polished chrome ring in the middle of the barrel and a polished chrome tip section. Controls on the upper barrel: three small round polished chrome push buttons in a straight row (previous, play, next); next to them a microphone made as a tiny grille of three pinholes in a short row, and one tiny dark red indicator lamp. It records sound only: there is NO camera, no lens and no glass eye anywhere on the pen. A 2.5 mm earphone jack socket in the very top end. The ballpoint tip is extended. Lightly used by a journalist for a year: a few fine hairline scratches in the lacquer and faint handling marks on the chrome, nothing more: no dirt, no grime, no dents, no rust. Soft even studio light, the chrome and the lacquer clearly read as real metal with clean soft reflections, everything sharp. No brand name and no logo anywhere on the pen. Between the buttons and the clip the barrel has one very small rectangular monochrome LCD window, about 9 by 4 millimetres, with a pale grey-green background showing only two dark seven-segment digits: 04. No other text, letters or icons anywhere on the pen."
+    },
+    {
+      "label": "PN-AB_no_display_v2",
+      "refs": [
+        "WITH"
+      ],
+      "prompt": "PN-AB2 (file label, not part of the image, never draw it). Reproduce the reference image exactly: the same three views of the same slim black lacquer and chrome pen voice recorder, same layout, same framing, same light, same background, same three chrome buttons, same three-pinhole microphone and same tiny dark red lamp. Change one thing only: remove the small LCD display completely, so that in its place there is plain glossy black lacquer barrel, as if the pen never had a screen. The pen has NO display, no screen, no camera and no lens. No text, no letters, no numbers, no icons, no brand name and no logo anywhere."
+    }
+  ]
+}
