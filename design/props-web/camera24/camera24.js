@@ -546,7 +546,7 @@ export function buildCamera24(THREE, opts = {}) {
     for (let j = 0; j < NV; j++) for (let i = 0; i < NU; i++) { const a = j * (NU + 1) + i, b = a + 1, c = a + NU + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
-    mesh(g, phys({ map: M.label.a, normalMap: M.label.n, normalScale: new THREE.Vector2(1.0, 1.0), roughnessMap: M.label.r, roughness: 1, metalness: 0 }), 'label_bureau_24', true);
+    mesh(g, phys({ map: M.label.a, normalMap: M.label.n, normalScale: new THREE.Vector2(0.7, 0.7), roughnessMap: M.label.r, roughness: 1, metalness: 0 }), 'label_bureau_24', true);
     // изнанка: чистая бумага без печати — видна под отошедшим углом
     const gb = new THREE.BufferGeometry(), ib = [];
     for (let k = 0; k < idx.length; k += 3) ib.push(idx[k], idx[k + 2], idx[k + 1]);
