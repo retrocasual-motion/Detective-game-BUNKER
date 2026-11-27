@@ -1,0 +1,19 @@
+{
+  "outDir": "E:\\Projects\\bunker-media\\design_ui\\pc\\gen\\icons48b",
+  "resolution": "1K",
+  "aspect": "1:1",
+  "refs": {
+    "MENU": "E:\\Projects\\bunker-media\\references\\phone48_ui\\R_author_menu.png",
+    "MENU2": "E:\\Projects\\bunker-media\\references\\phone48_ui\\R_003.jpg"
+  },
+  "jobs": [
+    {
+      "label": "IC2_messages_v2",
+      "refs": [
+        "MENU",
+        "MENU2"
+      ],
+      "prompt": "Copy exactly the icon style of the 2009 feature phone main menu in the reference images: cheap low-detail 3D render, hard glossy plastic highlights, slightly crude shapes, strong saturated primary colours, thin dark outline, small drop shadow, no square tile. Draw ONE icon in that style: a white envelope, open at the top, with a folded white letter sheet with a few grey text lines sticking out of it, and a small yellow star sparkle (new message). Big, centred, on a perfectly flat solid magenta background (#FF00FF). No text, no letters, no logos."
+    }
+  ]
+}
