@@ -26,14 +26,21 @@ const grab = (page: Page, id: string) =>
     id,
   );
 
-/** Папка дела (FM-B; автор 25.11 — в руки, покрутить, открыть): листы стопкой на столе (DC-B). */
-async function openFolder(page: Page, id: string) {
+/**
+ * Папка дела (FM-B; автор 25.11 — в руки, покрутить, открыть): листы стопкой на столе (DC-B); открыл —
+ * сразу верхний лист в чтении (автор 27.11). Закрыть лист (`close`) — прочитанный уходит на стену.
+ */
+async function openFolder(page: Page, id: string, close = true) {
   const saved = savedPut(page);
   await page.getByTestId(`container-${id}`).click();
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /^Папка «/);
   await page.getByTestId('envelope-open').dispatchEvent('click');
   await saved;
+  await expect(page.getByTestId('viewer')).toBeVisible();
   await expect(page.getByTestId(`container-${id}`)).toHaveCount(0);
+  if (!close) return;
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('viewer')).toBeHidden();
   await expect(page.getByTestId('held')).toBeHidden();
 }
 
@@ -120,8 +127,11 @@ test('RV-1: папку открывают щелчком в любом мест�
   // Середина обложки, левее полосы, за которую тянут.
   await page.mouse.click(600, 384);
   await saved;
+  // Открыта — сразу верхний лист в чтении (автор 27.11); под ним листы уже на столе.
+  await expect(page.getByTestId('viewer')).toHaveAttribute('data-material', '22');
+  await expect.poll(async () => (await pieces(page)).includes('23')).toBe(true);
+  await page.keyboard.press('Escape');
   await expect(page.getByTestId('held')).toBeHidden();
-  await expect.poll(async () => (await pieces(page)).includes('22')).toBe(true);
 });
 
 /** Зажать в точке и протянуть настоящей мышью. */
@@ -153,12 +163,15 @@ test('OG-B: обложку папки тянут мышью — открыта; 
   // Вверх чуть-чуть — тоже не вскрыт.
   await pull(page, x, y, 0, -40);
   await expect(held).toHaveAttribute('aria-label', sealed);
-  // Дотянули — открыта: папка уходит из рук, листы — стопкой на столе (DC-B, FM-B).
+  // Дотянули — открыта: листы — стопкой на столе (DC-B, FM-B), верхний — в чтении (автор 27.11);
+  // закрыли лист — папки в руках нет.
   const saved = savedPut(page);
   await pull(page, x, y, 10, -220);
   await saved;
+  await expect(page.getByTestId('viewer')).toHaveAttribute('data-material', '30');
+  await expect.poll(async () => (await pieces(page)).includes('31')).toBe(true);
+  await page.keyboard.press('Escape');
   await expect(held).toBeHidden();
-  await expect.poll(async () => (await pieces(page)).includes('30')).toBe(true);
 
   // Коробка: тянут пломбу с крышкой вверх.
   await page.getByTestId('container-personal').click();
@@ -169,20 +182,24 @@ test('OG-B: обложку папки тянут мышью — открыта; 
   await expect(held).toHaveAttribute('aria-label', /Коробка «Личные вещи» · вскрыт/);
 });
 
-test('папка — в руки и открыть, стопкой на стол (FM-B, DC-B): прочитали и закрыли — группа на стене светится; после перезагрузки так же', async ({
+test('папка — в руки и открыть: сразу верхний лист в чтении, стопка на столе под ним (FM-B, DC-B, автор 27.11); прочитали и закрыли — группа на стене светится; после перезагрузки так же', async ({
   page,
 }) => {
-  await openFolder(page, 'protocols');
+  await openFolder(page, 'protocols', false);
+  const viewer = page.getByTestId('viewer');
+  await expect(viewer).toHaveAttribute('data-material', '30');
+  await expect(viewer).toContainText('Протокол опроса');
+  await expect(page.getByTestId('desk-run-count')).toHaveText(/1 из 7/);
+  // Папка — в руках под листом; листы уже на столе.
+  await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /^Папка «/);
   await expect.poll(async () => (await pieces(page)).length).toBe(7);
-  await page.waitForTimeout(1200);
-  await deskSettled(page);
-  const top = await grab(page, '30');
-  await page.mouse.click(top?.x ?? 0, top?.y ?? 0);
-  await expect(page.getByTestId('viewer')).toContainText('Протокол опроса');
   await page.getByTestId('desk-next').click();
   await page.getByTestId('desk-next').click();
   await page.keyboard.press('Escape');
-  await expect(page.getByTestId('viewer')).toBeHidden();
+  await expect(viewer).toBeHidden();
+  // Закрыли лист — папки в руках нет, на столе — непрочитанное.
+  await expect(page.getByTestId('held')).toBeHidden();
+  await expect.poll(async () => (await pieces(page)).length).toBe(4);
   await toWall(page);
   for (const id of ['30', '31', '32']) await expect(sheet(page, id)).toBeVisible();
   await expect(sheet(page, '33')).toHaveCount(0);
@@ -201,9 +218,11 @@ test('папка — в руки и открыть, стопкой на стол
 test('«Осмотр места» — листы; короб «Изъятое» — устройства на столе; коробка вскрывается', async ({
   page,
 }) => {
-  await openFolder(page, 'scene');
+  await openFolder(page, 'scene', false);
   await expect.poll(async () => (await pieces(page)).includes('25')).toBe(true);
   await expect.poll(async () => (await pieces(page)).includes('47')).toBe(false);
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('held')).toBeHidden();
   await openSealed(page, 'seized');
   for (const id of ['24', '47', '48', '49', '50'])
     await expect.poll(async () => (await pieces(page)).includes(id)).toBe(true);

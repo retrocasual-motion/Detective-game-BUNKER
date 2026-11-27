@@ -300,6 +300,9 @@ test.describe('новое дело', () => {
     // Папка (FM-B) — в руки и открыть: короб пачек на столе.
     await page.getByTestId('container-bunker').click();
     await page.getByTestId('envelope-open').dispatchEvent('click');
+    // Открыта — верхний лист в чтении (автор 27.11); закрыли — папки в руках нет.
+    await expect(page.getByTestId('viewer')).toBeVisible();
+    await page.keyboard.press('Escape');
     await expect(page.getByTestId('held')).toBeHidden();
     await expect(page.getByTestId('device-29')).toHaveCount(1);
   });

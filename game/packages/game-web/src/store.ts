@@ -225,6 +225,11 @@ interface GameStore {
   } | null;
   /** Щелчок по листу на столе: открыть и читать стол подряд (газета — просто открыть). */
   readDesk(materialId: string): void;
+  /**
+   * Вскрыли папку (автор 27.11): сразу читать её стопку с верхнего листа — «N из M», стрелки; листы
+   * уже на столе под листом.
+   */
+  readFolder(id: ContainerId): void;
   /** Письмо из «Входящих»: открыть и читать лоток подряд (RD-A). */
   readInbox(materialId: string): void;
   /** Лист со стены: открыть и читать подряд листы той же папки на стене (RD-A). */
@@ -534,6 +539,19 @@ export const useGame = create<GameStore>((set, get) => {
       get().openViewer(materialId);
       if (get().viewerId === materialId)
         set({ deskRun: { ids: [materialId, ...rest], read: [materialId], keep: [] } });
+    },
+
+    readFolder(id) {
+      // Порядок — как в папке (первый лист сверху, FM-B): стол раскладывает стопку так же, но позже —
+      // слои на столе в эту минуту ещё «как высыпали».
+      const onDesk = new Set((get().state?.desk ?? []).map((d) => d.id));
+      const ids = (CONTAINERS.find((c) => c.id === id)?.files ?? []).filter(
+        (f) => onDesk.has(f) && !DEVICE_IDS.has(f) && f !== NEWSPAPER_ID,
+      );
+      const first = ids[0];
+      if (!first) return;
+      get().openViewer(first);
+      if (get().viewerId === first) set({ deskRun: { ids, read: [first], keep: [] } });
     },
 
     deskStep(d) {

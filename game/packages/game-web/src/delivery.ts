@@ -1,4 +1,5 @@
 import {
+  DELIVERY,
   DELIVERY_CALL,
   deliveredBySave,
   deliveryDue,
@@ -76,16 +77,63 @@ export function addPlayTime(ms: number): void {
 
 let started = false;
 
+/**
+ * Только в разработке — проверять звонок, не дожидаясь 40 минут (автор 27.11), через адресную строку:
+ * `?call` — звонок через несколько секунд после того, как дело открыто (и после «Новое дело»);
+ * `?fast=60` — часы игры в 60 раз быстрее (20 минут — 20 секунд, 40 минут — 40 секунд): проверить
+ * сами правила 70 % / 20 / 40.
+ */
+function devClock(): { call: boolean; fast: number } {
+  if (!import.meta.env.DEV) return { call: false, fast: 1 };
+  const q = new URLSearchParams(window.location.search);
+  const fast = Number(q.get('fast'));
+  return { call: q.has('call'), fast: fast >= 1 && fast <= 600 ? fast : 1 };
+}
+
+/** Через сколько после открытия дела звонит `?call`, мс. */
+const DEV_CALL_MS = 5000;
+
+/** `?call`: как только дело открыто и вещдоков ещё нет — через пару секунд время «40 минут». */
+function callSoon(): void {
+  let timer = 0;
+  const arm = () => {
+    const g = useGame.getState();
+    const s = g.state;
+    const waiting =
+      !!s &&
+      !g.elsewhere &&
+      useMenu.getState().screen === 'game' &&
+      !hasSecond(g.materials) &&
+      !deliveredBySave(s);
+    if (!waiting) {
+      window.clearTimeout(timer);
+      timer = 0;
+      return;
+    }
+    if (timer) return;
+    timer = window.setTimeout(() => {
+      timer = 0;
+      const s2 = useGame.getState().state;
+      if (s2) addPlayTime(Math.max(0, DELIVERY.maxMs - (s2.playMs ?? 0)));
+    }, DEV_CALL_MS);
+  };
+  useGame.subscribe(arm);
+  useMenu.subscribe(arm);
+  arm();
+}
+
 /** Часы игры и «внести короба» — один раз на страницу. */
 export function startDelivery(): void {
   if (started || typeof window === 'undefined') return;
   started = true;
+  const dev = devClock();
   setInterval(() => {
     const g = useGame.getState();
     // Время — пока дело открыто и видно: не в меню, не в фоне, не в другой вкладке.
     if (document.hidden || !g.state || g.elsewhere || useMenu.getState().screen !== 'game') return;
     addPlayTime(TICK_MS);
-  }, TICK_MS);
+  }, TICK_MS / dev.fast);
+  if (dev.call) callSoon();
   // Короба несут — внести, как только игрок не смотрит на стол (стена, лист, вещь, устройство).
   useGame.subscribe((g) => {
     const s = g.state;

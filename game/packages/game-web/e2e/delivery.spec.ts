@@ -63,3 +63,11 @@ test('не взял трубку — короба всё равно приход
   await page.keyboard.press('ArrowDown');
   await expect(page.getByTestId('container-seized')).toBeVisible();
 });
+
+test('проверка звонка (только в разработке): «?call» в адресе — телефон звонит через несколько секунд', async ({
+  page,
+}) => {
+  await page.goto('/?play&call');
+  await expect(page.getByTestId('dp-lcd')).toContainText('Входящий вызов', { timeout: 20_000 });
+  expect(await materialIds(page)).toContain('47');
+});

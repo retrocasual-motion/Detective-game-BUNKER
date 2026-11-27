@@ -68,6 +68,32 @@ export default function HeldThing({ held }: { held: Held }) {
     // Вскрыли конверт архива (DC-B, автор 25.11; вместо OP-D): из рук — содержимое стопкой на стол,
     // читать — щелчком по стопке. Коробки — как прежде: вскрытая в руках (EB-A).
     const open = () => {
+      // Папка (автор 27.11): открыл — сразу чтение её стопки с верхнего листа («N из M», стрелки).
+      // Папка остаётся в руках под листом, пока лист открыт; листы тем временем уже легли на стол.
+      // Закрыл лист — папки в руках нет, стол разложен (раскладку игрок не видит).
+      if (folder) {
+        const id = held.id;
+        spilling = id;
+        const g = useGame.getState();
+        g.openContainer(id);
+        g.readFolder(id);
+        const done = () => {
+          spilling = null;
+          const now = useGame.getState();
+          if (now.held?.type === 'container' && now.held.id === id) now.hold(null);
+        };
+        if (!useGame.getState().viewerId) {
+          // Читать нечего (все листы уже вынуты) — как прежде: стол под папкой, потом из рук.
+          setTimeout(() => afterLeaving(done), SPILL_HIDE_MS);
+          return;
+        }
+        const stop = useGame.subscribe((s) => {
+          if (s.viewerId) return;
+          stop();
+          done();
+        });
+        return;
+      }
       // Папка и короб вещдоков (автор 26.11: «мы это не должны видеть»): листы и вещи ложатся на стол,
       // пока вскрытое ещё в руках, — и только потом оно уходит из рук: под ним уже готовый стол, без
       // пустой папки и без листов, выскакивающих на место.
