@@ -6,7 +6,7 @@ base, out = sys.argv[1], sys.argv[2]; size = sys.argv[3] if len(sys.argv) > 3 el
 os.makedirs(out, exist_ok=True)
 with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_page()
-    rec = sys.argv[5] if len(sys.argv) > 5 else ''   # 'start' — значок «в начало» на красной клавише
+    rec = sys.argv[5] if len(sys.argv) > 5 else ''   # 'dot' — прежняя точка на красной клавише (по умолчанию — значок «в начало»)
     pg.goto(base + 'masks.html#size=' + size + ('&only=' + only if only else '') + ('&rec=' + rec if rec else '')); pg.wait_for_function('window.__ready === true', timeout=60000)
     for k, v in pg.evaluate('window.__masks').items():
         open(os.path.join(out, 'proc_' + k + ('_' + size if only else '') + '.png'), 'wb').write(base64.b64decode(v.split(',', 1)[1])); print('proc_' + k)

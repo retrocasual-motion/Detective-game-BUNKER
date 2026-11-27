@@ -299,7 +299,7 @@ export function buildRecorder462(THREE, opts = {}) {
   function drawRightPrint(c, s) {
     const K2 = D.keys, u = (y) => (T - y) / MM * s, v = (z) => (z / MM + 55) * s, ink = 'rgba(238,238,232,0.95)';
     c.fillStyle = ink; c.strokeStyle = ink; c.lineJoin = 'round'; c.lineWidth = 0.26 * s;
-    if (o.recMark === 'start') { const x = u(K2.y), y = v(K2.rec);   // «в начало»: две стрелки к низу вещи и черта под ними
+    if (o.recMark !== 'dot') { const x = u(K2.y), y = v(K2.rec);   // «в начало» (решение автора 27.11, RK-B): две стрелки к низу вещи и черта под ними; recMark: 'dot' — прежняя точка
       for (const k of [0, 1]) { c.beginPath(); c.moveTo(x - 1.05 * s, y - 1.75 * s + k * 1.25 * s); c.lineTo(x + 1.05 * s, y - 1.75 * s + k * 1.25 * s); c.lineTo(x, y - 0.55 * s + k * 1.25 * s); c.closePath(); c.fill(); }
       c.fillRect(x - 1.05 * s, y + 1.05 * s, 2.1 * s, 0.34 * s); }
     else { c.beginPath(); c.arc(u(K2.y), v(K2.rec), 0.95 * s, 0, 7); c.fill(); }
@@ -613,7 +613,7 @@ export function buildRecorder462(THREE, opts = {}) {
       icon(ic, g, h + 0.00003, 0, mat === mClear && ribs ? -hdK * 0.38 : 0, 0.0021);
       keys[name] = { obj: g, axis: [-1, 0, 0], travel };
     };
-    key('btn_rec', K.rec, 0.0045, mRed, 0.0016, 0.0009, 0, 0);        // красная клавиша: в игре возвращает запись в начало (решение автора 27.11)
+    key('btn_rec', K.rec, 0.0045, mRed, 0.0016, 0.0009, 0, 0);        // красная клавиша: в игре возвращает запись в начало (решение автора 27.11); значок «в начало» — в карте грани
     key('btn_play', K.play, 0.0065, mClear, 0.0019, 0.0009, 1, 5);
     key('btn_stop', K.stop, 0.0045, mClear, 0.0019, 0.0009, 2, 0);
     // ползунок перемотки: к верху вещи — вперёд, к низу — назад; сам возвращается в середину
