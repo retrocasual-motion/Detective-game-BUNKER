@@ -10,7 +10,8 @@
 //   btn_play, btn_menu, btn_home, btn_ok, pad_ring (стрелки), zoom_rocker (W / T), btn_shutter, btn_power;
 //   не нажимаются: mode_dial_*, lens_unit (кольца и шторки объектива), flash, front_plate, back_shell, band.
 //
-// opts: pbr (true), pbrBase, mapSet: 'full' | 'low', lowPower, textureSize, anisotropy, onChange — как у phone48.js.
+// opts: pbr (true), pbrBase, mapSet: 'full' | 'low', lowPower, textureSize, anisotropy, onChange — как у phone48.js;
+//   label — false: без ярлыка бюро на дне (по умолчанию ярлык есть: 48 × 12 мм, узел label_bureau_24).
 // root.userData: ready (Promise), setScreenTexture(tex | null), loadMapSet(set), stats, dims, dispose(),
 //   keys — имена кнопок: btn_up, btn_down, btn_left, btn_right, btn_ok, btn_menu, btn_home, btn_play,
 //          btn_zoom_w, btn_zoom_t, btn_shutter, btn_power;
@@ -30,7 +31,7 @@ export const CAMERA24 = {
     pad: { x: -31 * MM, z: 9.5 * MM }, menu: { x: -21.5 * MM, z: 20.5 * MM }, home: { x: -40.5 * MM, z: 20.5 * MM },
     grip: { x: -45 * MM, z: 2 * MM }, ctl: { x0: -47.5 * MM, x1: -12.5 * MM } },
   top: { shutter: -30 * MM, power: -15 * MM },
-  bottom: { tripod: 5 * MM, door: [-44 * MM, -14 * MM] },
+  bottom: { tripod: 18 * MM, door: [-40 * MM, -12 * MM], label: { x0: -40 * MM, x1: 8 * MM, y0: 6.6 * MM, y1: 18.6 * MM } },   // ярлык бюро 48 × 12 мм — поперёк дверцы
 };
 const TILE = 0.030; // метров на повтор плитки «общего» металла
 
@@ -349,7 +350,8 @@ export function buildCamera24(THREE, opts = {}) {
       back: { a: loadTex('back_a.jpg', true), n: loadTex('back_n.png', false), o: loadTex('back_orm.jpg', false) },
       ctl: { a: loadTex('ctl_a.jpg', true), n: loadTex('ctl_n.png', false), o: loadTex('ctl_orm.jpg', false) },
       side: { a: loadTex('side_a.jpg', true, true), n: loadTex('side_n.png', false, true), o: loadTex('side_orm.jpg', false, true) },
-      tile: { n: loadTex('tile_n.png', false, true), o: loadTex('tile_orm.jpg', false, true) } };
+      tile: { n: loadTex('tile_n.png', false, true), o: loadTex('tile_orm.jpg', false, true) },
+      label: o.label !== false ? { a: loadTex('label_a.jpg', true), n: loadTex('label_n.png', false), r: loadTex('label_r.jpg', false) } : null };
   } else {
     const F = drawFront(o.textureSize), B = drawBack(o.textureSize);
     root.userData.canvases = { front: F, back: B };   // для tools/export_masks.py: маски областей и слой надписей
@@ -360,15 +362,15 @@ export function buildCamera24(THREE, opts = {}) {
   const phys = (p) => { const m = new THREE.MeshPhysicalMaterial(p); disposables.push(m); return m; };
   const faceMat = (F, extra = {}) => phys(Object.assign({ map: F.a, normalMap: F.n, roughnessMap: F.o, metalnessMap: F.o, aoMap: F.o, aoMapIntensity: 0.9,
     roughness: 1, metalness: 1, normalScale: new THREE.Vector2(1, 1) }, extra));
-  const mFront = faceMat(M.front, { anisotropy: 0.45, anisotropyRotation: Math.PI / 2 });   // шлифовка вдоль ширины — блик поперёк
+  const mFront = faceMat(M.front, { anisotropy: 0.6, anisotropyRotation: Math.PI / 2 });   // шлифовка вдоль ширины — блик поперёк
   const mBack = faceMat(M.back);
   // блок кнопок: своя карта плотнее общей (полоса справа от экрана), иначе значки вплотную мылятся
   const CTL = D.back.ctl, mCtl = M.ctl ? faceMat(M.ctl) : mBack;
   const cUV = M.ctl ? (x, z) => [(CTL.x1 - x) / (CTL.x1 - CTL.x0), 1 - (z + hd) / H] : bUV;
   const mSide = M.side ? phys({ map: M.side.a, roughnessMap: M.side.o, aoMap: M.side.o, normalMap: M.side.n, normalScale: new THREE.Vector2(0.8, 0.8), roughness: 1, metalness: 1, metalnessMap: M.side.o })
     : phys({ color: new THREE.Color(0.55, 0.56, 0.58), roughness: 1.6, metalness: 1, roughnessMap: M.tile.o });
-  const mChrome = phys({ color: new THREE.Color(0.78, 0.79, 0.81), roughness: 1.1, metalness: 0.85, roughnessMap: M.tile.o, normalMap: M.tile.n, normalScale: new THREE.Vector2(0.3, 0.3) });
-  const mSatin = phys({ color: new THREE.Color(0.48, 0.49, 0.51), roughness: 1.9, metalness: 0.7, roughnessMap: M.tile.o, normalMap: M.tile.n, normalScale: new THREE.Vector2(0.4, 0.4) });
+  const mChrome = phys({ color: new THREE.Color(0.86, 0.86, 0.87), roughness: 1.0, metalness: 0.95, roughnessMap: M.tile.o, normalMap: M.tile.n, normalScale: new THREE.Vector2(0.3, 0.3) });
+  const mSatin = phys({ color: new THREE.Color(0.72, 0.72, 0.73), roughness: 1.7, metalness: 0.9, roughnessMap: M.tile.o, normalMap: M.tile.n, normalScale: new THREE.Vector2(0.4, 0.4) });
   const mDark = phys({ color: 0x030303, roughness: 0.9, metalness: 0 });
   const mBlack = phys({ color: new THREE.Color(0.012, 0.012, 0.014), roughness: 0.62, metalness: 0 });
   const mScreen = phys({ color: new THREE.Color(0.0018, 0.0020, 0.0024), roughness: 0.8, metalness: 0, specularIntensity: 0.08, emissive: new THREE.Color(0x000000) });
@@ -523,6 +525,16 @@ export function buildCamera24(THREE, opts = {}) {
     }
     const lug = chipGeo(THREE, { hw: 0.0012, hd: 0.0034, r: 0.0011, h: 0.0009, bevel: 0.00035, seg: 8 }); lug.rotateZ(Math.PI / 2); lug.translate(-hw, T / 2, -0.012); mesh(lug, mChrome, 'strap_lug');
     const slot = new THREE.PlaneGeometry(0.0036, 0.0009); slot.rotateY(-Math.PI / 2); slot.rotateX(Math.PI / 2); slot.translate(-hw - 0.00092, T / 2, -0.012); mesh(slot, mDark, 'strap_slot', false);
+  }
+
+  // ---------- ярлык бюро на дне (узкий, 48 × 12 мм, наклеен поперёк дверцы батареи и карты) ----------
+  // Текст читается, когда камеру перевернули дном к себе, объективом вверх.
+  if (M.label) {
+    const Lb = D.bottom.label, z = hd + 0.00007;
+    mesh(q4([[Lb.x0, Lb.y1, z], [Lb.x1, Lb.y1, z], [Lb.x0, Lb.y0, z], [Lb.x1, Lb.y0, z]], [0, 0, 1]),
+      phys({ map: M.label.a, normalMap: M.label.n, normalScale: new THREE.Vector2(0.6, 0.6), roughnessMap: M.label.r, roughness: 1, metalness: 0 }), 'label_bureau_24', false);
+    const e = 0.00022, sh = mesh(q4([[Lb.x0 - e, Lb.y1 + e, z - 0.00003], [Lb.x1 + e, Lb.y1 + e, z - 0.00003], [Lb.x0 - e, Lb.y0 - e, z - 0.00003], [Lb.x1 + e, Lb.y0 - e, z - 0.00003]], [0, 0, 1]), mDark, 'label_edge', false);
+    sh.raycast = () => {};   // тонкая тёмная кайма — линия прилегания бумаги
   }
 
   // ---------- нажатие ----------

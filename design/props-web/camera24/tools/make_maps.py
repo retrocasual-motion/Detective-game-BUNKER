@@ -126,15 +126,15 @@ flash = (np.abs(X - (47.5 - 8.6)) < 8.6) & (np.abs(Y - (28.5 - 20.4)) < 3.2)
 lamp = np.hypot(X - (47.5 + 43.1), Y - (28.5 - 5.5)) < 1.8
 inner = rl < 10.0                                                 # чёрное кольцо и шторки — не металл
 nonmetal = soft(flash | lamp | inner, 0.1)
-scr, haze, Lm = wear(L, 0.03, 6.0)
+scr, haze, Lm = wear(L, 0.045, 6.0)                              # автор 27.11: износа и царапин меньше
 fm = np.minimum(f, med3(f, 0.4) + 0.035)                          # светлые крапинки и белёсые царапины — не в цвет
-g = fm.mean(2, keepdims=True); fm = g + (fm - g) * 0.45
+g = fm.mean(2, keepdims=True); fm = g + (fm - g) * 0.12            # нейтральный серебристый: оттенок фото убран
 plate_med = np.median(fm[(rl > 21.5) & ~flash & ~lamp].reshape(-1, 3), 0)
-gain = 0.70 / max(float(plate_med.mean()), 1e-3)
-alb = np.clip((plate_med + (fm - plate_med) * 0.75) * gain + 0.05 * scr[..., None], 0, 0.97)   # пятна засаленности — мягче, чем на фото
+gain = 0.74 / max(float(plate_med.mean()), 1e-3)
+alb = np.clip((plate_med + (fm - plate_med) * 0.40) * gain + 0.04 * scr[..., None], 0, 0.97)   # пятна засаленности — намного мягче, чем на фото
 ringz = (rl >= 10.0) & (rl < 20.2)                                # кольца объектива — светлый хром
 ring_med = np.median(fm[ringz].reshape(-1, 3), 0)
-alb_r = np.clip((ring_med + (fm - ring_med) * 0.85) * (0.80 / max(float(ring_med.mean()), 1e-3)), 0, 0.97)
+alb_r = np.clip((ring_med + (fm - ring_med) * 0.6) * (0.86 / max(float(ring_med.mean()), 1e-3)), 0, 0.97)
 wr = soft(ringz, 0.08)[..., None]; alb = alb * (1 - wr) + alb_r * wr
 # торцы колец объектива: у самых краёв — ровный цвет кольца (фото и тело вращения совпадают не до пикселя)
 for r0_, r1_ in ((10.25, 12.35), (12.95, 14.95), (16.95, 19.7)):
@@ -143,23 +143,24 @@ for r0_, r1_ in ((10.25, 12.35), (12.95, 14.95), (16.95, 19.7)):
     alb = alb * (1 - w_[..., None]) + np.median(alb[core].reshape(-1, 3), 0) * w_[..., None]
 alb = alb * (1 - nonmetal[..., None]) + np.clip(f * 0.9, 0, 1) * nonmetal[..., None]
 Lb = np.minimum(L, med8(L, 0.4) + 0.03); hp = Lb - blur(Lb, 0.30)
-rough = 0.36 + 0.30 * scr + np.clip(hp * 2.6, -0.08, 0.10) + 0.10 * np.clip(-haze, 0, 1) - 0.05 * np.clip(haze, 0, 1)
-rough = rough * (1 - wr[..., 0]) + (0.20 + 0.25 * scr + np.clip(hp * 2.0, -0.06, 0.08)) * wr[..., 0]
+rough = 0.27 + 0.22 * scr + np.clip(hp * 1.5, -0.05, 0.06) + 0.05 * np.clip(-haze, 0, 1) - 0.03 * np.clip(haze, 0, 1)
+rough = rough * (1 - wr[..., 0]) + (0.16 + 0.16 * scr + np.clip(hp * 1.6, -0.05, 0.06)) * wr[..., 0]
 rough = np.clip(rough * (1 - nonmetal) + 0.45 * nonmetal, 0.05, 1)
 thin_dark = np.clip((med8(L, 0.5) - blur(L, 0.06)) / (med8(L, 0.5) + 0.05), 0, 1)
-h = 0.5 + np.clip(hp * 0.55, -0.05, 0.05) - 0.10 * blur(thin_dark, 0.12) - 0.02 * scr
-nrm = normal_from(blur(h, 0.04), 1.5)
+brushx = cv2.GaussianBlur(Lb, (0, 0), sigmaX=1.4 * PXMM, sigmaY=0.7) - blur(Lb, 0.5)   # одни продольные штрихи шлифовки
+h = 0.5 + np.clip(brushx * 0.9, -0.035, 0.035) * (1 - wr[..., 0]) - 0.08 * blur(thin_dark, 0.12) - 0.010 * scr
+nrm = normal_from(blur(h, 0.03), 1.2)
 ao = np.clip(1 - 1.4 * blur(thin_dark, 0.12), 0.5, 1)
 # корпус — крашеный и шлифованный алюминий: металл наполовину, иначе в тёмной комнате серебристая камера выходит чёрной;
 # кольца объектива — настоящий хром
-met = np.clip(0.55 + 0.30 * wr[..., 0], 0, 1) * (1 - nonmetal)
+met = np.clip(0.88 + 0.12 * wr[..., 0], 0, 1) * (1 - nonmetal)   # автор 27.11: «не ощущается, что металлическая… как будто кожаная» — корпус почти целиком металл
 save_face('front', alb, nrm, np.dstack([met, rough, ao]))
 report['front'].update({'scr_cover_%': round(float((scr > 0.3).mean() * 100), 2), 'rough_plate_p50_p95': [round(float(np.percentile(rough[rl > 22], q)), 3) for q in (50, 95)]})
 
 # плитка «общего» металла (кольца, кнопки сверху): потёртости с гладкого участка переда, 30 × 30 мм
 t0 = (int(6 * PXMM), int(22 * PXMM)); n = int(30 * PXMM)
 ts = seamless(cv2.resize(scr[t0[1]:t0[1] + n, t0[0]:t0[0] + n], (1024, 1024), interpolation=cv2.INTER_AREA))
-t_rough = np.clip(0.16 + 0.45 * ts, 0, 1); t_n = normal_from(0.5 - 0.03 * ts, 2.0)
+t_rough = np.clip(0.15 + 0.30 * ts, 0, 1); t_n = normal_from(0.5 - 0.03 * ts, 2.0)
 for d, s_ in (('pack', 1024), ('pack_low', 512)):
     cv2.imwrite(os.path.join(OUT, d, 'tile_orm.jpg'), u8(cv2.resize(np.dstack([np.ones_like(t_rough), t_rough, np.ones_like(t_rough)]), (s_, s_), interpolation=cv2.INTER_AREA)), [cv2.IMWRITE_JPEG_QUALITY, 95])
     cv2.imwrite(os.path.join(OUT, d, 'tile_n.png'), n_img(resize_n(t_n, (s_, s_))))
@@ -190,18 +191,27 @@ dv = np.minimum(sv, SMM - sv)[:, None]
 dust_line = cv2.resize(np.clip(rs.normal(0.5, 0.5, (1, 700)), 0, 1).astype(np.float32), (SW, 1), interpolation=cv2.INTER_CUBIC)
 grain = cv2.GaussianBlur(rs.normal(0, 1, (SH, SW)).astype(np.float32), (0, 0), 0.8)
 dust = np.clip(1 - dv / 0.35, 0, 1) ** 1.5 * np.clip(dust_line + 0.2 * corner[:1], 0, 1) * np.clip(0.6 + 0.6 * grain, 0, 1)
-s_rough = 0.34 + 0.07 * brush + 0.04 * cloud - 0.10 * corner + 0.22 * streak + 0.22 * hair
+s_rough = 0.27 + 0.06 * brush + 0.03 * cloud - 0.07 * corner + 0.12 * streak + 0.12 * hair
 s_rough = np.clip(s_rough * (1 - dust) + 0.95 * dust, 0.08, 1)
-s_alb = 0.66 + 0.03 * brush + 0.03 * corner + 0.03 * streak
+s_alb = 0.74 + 0.02 * brush + 0.02 * corner + 0.02 * streak
 s_alb = np.clip(s_alb * (1 - dust) + 0.22 * dust, 0, 1)
 s_ao = np.clip(1 - 0.35 * np.clip(1 - dv / 0.2, 0, 1), 0, 1) * np.ones((1, SW), np.float32)
-s_met = 0.6 * (1 - dust)
+s_met = 0.88 * (1 - dust)
 s_n = normal_from(0.5 + 0.03 * brush - 0.02 * streak - 0.012 * hair, 1.6)
 for d, k in (('pack', 1), ('pack_low', 2)):
     size = (SW // k, SH // k)
-    cv2.imwrite(os.path.join(OUT, d, 'side_a.jpg'), cv2.resize(u8(np.dstack([s_alb * 1.01, s_alb, s_alb * 0.99])), size, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 95])
+    cv2.imwrite(os.path.join(OUT, d, 'side_a.jpg'), cv2.resize(u8(np.dstack([s_alb, s_alb, s_alb])), size, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 95])
     cv2.imwrite(os.path.join(OUT, d, 'side_orm.jpg'), cv2.resize(u8(np.dstack([s_met, s_rough, s_ao])), size, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 95])
     cv2.imwrite(os.path.join(OUT, d, 'side_n.png'), n_img(resize_n(s_n, size)))
+
+# ------------------------------------------------------------------ ярлык бюро (вёрстка tools/label_make.html, 1920×480)
+if os.path.exists(os.path.join(OUT, 'src', 'label_albedo.png')):
+    for d, ka_, kn_ in (('pack', 1.0, 0.5), ('pack_low', 0.5, 0.25)):
+        for nm, k_, ext, q in (('albedo', ka_, 'a.jpg', 94), ('normal', kn_, 'n.png', 0), ('rough', kn_, 'r.jpg', 92)):
+            im = cv2.imread(os.path.join(OUT, 'src', f'label_{nm}.png'))
+            im = cv2.resize(im, None, fx=k_, fy=k_, interpolation=cv2.INTER_AREA) if k_ != 1 else im
+            cv2.imwrite(os.path.join(OUT, d, 'label_' + ext), im, [cv2.IMWRITE_JPEG_QUALITY, q] if q else [])
+    report['label'] = {'mm': [48, 12], 'px_per_cm_full': 400}
 
 # ------------------------------------------------------------------ зад
 photo = cv2.imread(os.path.join(GEN, 'T2_back.png')); layout = cv2.imread(os.path.join(GEN, 'layout', 'L_back.png'))
@@ -216,20 +226,20 @@ def inside_rr(cx, cz, hw_, hd_, r_):
     qx = np.abs(X - bx(cx)) - (hw_ - r_); qy = np.abs(Y - (28.5 + cz)) - (hd_ - r_)
     return -(np.hypot(np.maximum(qx, 0), np.maximum(qy, 0)) + np.minimum(np.maximum(qx, qy), 0) - r_)   # глубина внутри, мм
 B = {'zoom': (-31, -21.5), 'dial': (-36.5, -8.5), 'play': (-22, -9.5), 'pad': (-31, 9.5), 'menu': (-21.5, 20.5), 'home': (-40.5, 20.5)}
-scr, haze, Lm = wear(L, 0.03, 6.0)
-fm = np.minimum(f, med3(f, 0.4) + 0.035); g = fm.mean(2, keepdims=True); fm = g + (fm - g) * 0.4
+scr, haze, Lm = wear(L, 0.045, 6.0)
+fm = np.minimum(f, med3(f, 0.4) + 0.035); g = fm.mean(2, keepdims=True); fm = g + (fm - g) * 0.12
 body = ~glass
-shell_med = np.median(fm[body].reshape(-1, 3), 0); gain = 0.62 / max(float(shell_med.mean()), 1e-3)
-alb = np.clip((shell_med + (fm - shell_med) * 0.8) * gain + 0.05 * scr[..., None], 0, 0.97)
+shell_med = np.median(fm[body].reshape(-1, 3), 0); gain = 0.72 / max(float(shell_med.mean()), 1e-3)
+alb = np.clip((shell_med + (fm - shell_med) * 0.42) * gain + 0.04 * scr[..., None], 0, 0.97)
 gl_med = np.median(fm[glass].reshape(-1, 3), 0)
 wg = soft(glass, 0.08)[..., None]
 alb = alb * (1 - wg) + np.clip((gl_med + (fm - gl_med) * 0.35) * 0.9 + 0.10 * scr[..., None], 0, 1) * wg
 Lb = np.minimum(L, med8(L, 0.4) + 0.03); hp = Lb - blur(Lb, 0.30)
-rough = 0.42 + 0.28 * scr + np.clip(hp * 2.2, -0.08, 0.10) + 0.08 * np.clip(-haze, 0, 1) - 0.07 * np.clip(haze, 0, 1)
+rough = 0.32 + 0.20 * scr + np.clip(hp * 1.3, -0.05, 0.06) + 0.04 * np.clip(-haze, 0, 1) - 0.04 * np.clip(haze, 0, 1)
 rough = rough * (1 - wg[..., 0]) + (0.10 + 0.40 * scr + 0.10 * np.abs(haze)) * wg[..., 0]
-met = 0.5 * (1 - wg[..., 0])                                      # задняя оболочка — крашеный металл
+met = 0.86 * (1 - wg[..., 0])                                     # задняя оболочка — металл
 thin_dark = np.clip((med8(L, 0.5) - blur(L, 0.06)) / (med8(L, 0.5) + 0.05), 0, 1) * (1 - wg[..., 0])
-h = 0.5 + np.clip(hp * 0.5, -0.05, 0.05) * (1 - wg[..., 0]) - 0.10 * blur(thin_dark, 0.12) - 0.02 * scr
+h = 0.5 + np.clip(hp * 0.12, -0.012, 0.012) * (1 - wg[..., 0]) - 0.08 * blur(thin_dark, 0.12) - 0.010 * scr   # почти гладко: шум фото в рельеф не идёт
 ao = np.clip(1 - 1.4 * blur(thin_dark, 0.12), 0.5, 1)
 # ---- кнопки: ровные края и надписи ----
 # У края каждой кнопки поверхность приводится к ровному цвету самой кнопки; середина остаётся с фото (шлифовка, потёртости).
@@ -252,8 +262,8 @@ for w_, core_ in zones:
     rough = rough * (1 - w_) + float(np.median(rough[core_])) * w_; ao = ao * (1 - w_) + w_; h = h * (1 - w_) + 0.5 * w_
 btn = np.zeros(L.shape, np.float32)
 for w_, core_ in zones: btn = np.maximum(btn, soft(core_ | (w_ > 0.02), 0.1))
-met = np.maximum(met, 0.8 * btn)                                  # кнопки — сатинированный металл
-nrm = normal_from(blur(h, 0.04), 1.5)
+met = np.maximum(met, 0.92 * btn)                                 # кнопки — сатинированный металл
+nrm = normal_from(blur(h, 0.04), 1.2)
 rough = np.clip(rough, 0.05, 1)
 # надписи: слой из рисунка модели (8192 px), краска тёмно-серая, матовее металла
 Lr = cv2.imread(os.path.join(GEN, 'masks', 'proc_back_L_8192.png'), cv2.IMREAD_UNCHANGED)

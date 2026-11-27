@@ -27,7 +27,7 @@
   <div id="top"><h1>Материал № 24 · камера инженера</h1><p>проба WEB-C: форма — кодом, поверхности — фото-карты</p></div>
   <div id="panel">
     <div id="hint">Один палец — поворот. Два пальца — ближе-дальше и сдвиг. Кнопки на корпусе нажимаются. Мышь: колесо — ближе, зажатое колесо — сдвиг, правая кнопка — как было.</div>
-    <div id="buttons"><button id="bFlip" type="button" aria-pressed="false">Перевернуть</button><button id="bSet" type="button">Карты 2K</button><button id="bHome" type="button">Как было</button></div>
+    <div id="buttons"><button id="bFlip" type="button" aria-pressed="false">Перевернуть</button><button id="bLight" type="button">Свет: белый</button><button id="bHome" type="button">Как было</button></div>
   </div>
 </div>
 <script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }</script>
@@ -53,19 +53,31 @@ lamp.shadow.camera.near = 0.5; lamp.shadow.camera.far = 1.2; lamp.shadow.bias = 
 scene.add(lamp, lamp.target);
 const fill = new THREE.DirectionalLight(0x8fb0e0, 0.55); fill.position.set(0.8, 0.5, 0.1); scene.add(fill);
 scene.add(new THREE.HemisphereLight(0x39424f, 0x0a0806, 0.35));
-{ // карта окружения: тёмная комната, абажур лампы, тёплый потолок, холодное окно, стол
-  const env = new THREE.Scene();
-  env.add(new THREE.Mesh(new THREE.SphereGeometry(5, 24, 16), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.018, 0.021, 0.027), side: THREE.BackSide })));
+// Свет: «белый» — нейтральная лампа и светлая студия (чтобы оценить сам металл и цвет вещи); «лампа» — мир стола игры:
+// тёплая лампа #ffdcae, холодный заполняющий, тёмная комната. Автор 27.11: смотреть в нейтральном, в игре — как выйдет.
+const hemi = scene.children.find((o) => o.isHemisphereLight);
+let envTex = null, lightMode = params.get('light') === 'warm' ? 'warm' : 'white';
+function setLight(mode) {
+  lightMode = mode; const warm = mode === 'warm';
+  lamp.color.set(warm ? '#' + lampHex : '#ffffff'); lamp.intensity = parseFloat(params.get('li') || (warm ? '6' : '4.2')); fill.color.set(warm ? 0x8fb0e0 : 0xffffff); fill.intensity = warm ? 0.55 : 0.7;
+  hemi.color.set(warm ? 0x39424f : 0x9a9a9a); hemi.groundColor.set(warm ? 0x0a0806 : 0x3a3a3a); hemi.intensity = warm ? 0.35 : 0.6;
+  const env = new THREE.Scene(), g = (v) => [v, v, v];
+  env.add(new THREE.Mesh(new THREE.SphereGeometry(5, 24, 16), new THREE.MeshBasicMaterial({ color: warm ? new THREE.Color(0.018, 0.021, 0.027) : new THREE.Color(0.16, 0.16, 0.165), side: THREE.BackSide })));
   const panel = (pos, size, rgb) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(size[0], size[1]), new THREE.MeshBasicMaterial({ color: new THREE.Color(...rgb), side: THREE.DoubleSide })); m.position.copy(pos); m.lookAt(0, 0, 0); env.add(m); };
-  panel(LAMP_POS.clone().normalize().multiplyScalar(2.2), [1.0, 0.8], [26, 20, 15.5]);
-  panel(new THREE.Vector3(-1.2, 1.9, 0.9), [2.2, 1.2], [0.5, 0.36, 0.25]);
-  panel(new THREE.Vector3(2.4, 0.5, -1.6), [2.2, 2.6], [0.5, 0.66, 0.95]);
-  panel(new THREE.Vector3(0, -2.2, 0.4), [3, 3], [0.09, 0.06, 0.04]);
-  const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(env, 0.02).texture; scene.environmentIntensity = parseFloat(params.get('env') || '0.3'); pm.dispose();
+  panel(LAMP_POS.clone().normalize().multiplyScalar(2.2), [1.0, 0.8], warm ? [26, 20, 15.5] : g(15));          // лампа
+  panel(new THREE.Vector3(-1.2, 1.9, 0.9), [2.2, 1.2], warm ? [0.5, 0.36, 0.25] : g(2.2));                      // потолок
+  panel(new THREE.Vector3(2.4, 0.5, -1.6), [2.2, 2.6], warm ? [0.5, 0.66, 0.95] : g(1.6));                      // окно сзади-справа
+  panel(new THREE.Vector3(0, -2.2, 0.4), [3, 3], warm ? [0.09, 0.06, 0.04] : g(0.35));                          // стол снизу
+  if (!warm) { panel(new THREE.Vector3(1.6, 1.2, 1.8), [1.6, 1.2], g(3.0)); panel(new THREE.Vector3(-2.2, 0.2, -1.0), [1.6, 2.4], g(0.9)); }   // светлые стены студии
+  const pm = new THREE.PMREMGenerator(renderer), t = pm.fromScene(env, 0.02).texture; pm.dispose();
+  if (envTex) envTex.dispose(); envTex = t; scene.environment = t; scene.environmentIntensity = parseFloat(params.get('env') || (warm ? '0.3' : '0.42'));
+  const b = document.getElementById('bLight'); if (b) b.textContent = warm ? 'Свет: лампа' : 'Свет: белый';
+  if (typeof invalidate === 'function') invalidate();
 }
-let dirty = true; const invalidate = () => { dirty = true; };
+let dirty = true; function invalidate() { dirty = true; }
+setLight(lightMode);
 const phone = buildCamera24(THREE, { anisotropy: Math.min(16, renderer.capabilities.getMaxAnisotropy()), onChange: invalidate,
-  pbr: params.get('pbr') !== '0', lowPower: params.get('low') ? params.get('low') === '1' : (coarse || small), mapSet: params.get('set') || 'full' });
+  pbr: params.get('pbr') !== '0', lowPower: params.get('low') ? params.get('low') === '1' : (coarse || small), mapSet: params.get('set') || 'full', label: params.get('label') !== '0' });
 const holder = new THREE.Group(), inner = new THREE.Group(); inner.add(phone); holder.add(inner); scene.add(holder);
 const D = phone.userData.dims;
 if (params.get('screen') === 'test') { // проверка раскладки uv1 экрана — не интерфейс
@@ -87,7 +99,8 @@ const VIEWS = {
   dial: { q: qOf(-0.10, PI - 0.32, 0), zoom: 0.22, focus: v3(-0.033, 0.012, -0.011) },
   screen: { q: qOf(-0.50, PI - 0.10, 0), zoom: 0.62, focus: v3(0.012, 0, -0.011) },
   top: { q: qOf(0.75, 0.25, 0), zoom: 0.55, focus: v3(-0.015, 0.0285, 0) },
-  bottom: { q: qOf(-1.45, 0.2, 0), zoom: 0.6, focus: v3(0, -0.0285, 0) },
+  bottom: { q: qOf(-2.1, 0.25, 0), zoom: 0.6, focus: v3(0, -0.0285, 0) },
+  label: { q: qOf(-2.05, 0.15, 0), zoom: 0.36, focus: v3(-0.016, -0.0285, 0.001) },
   side: { q: qOf(-0.15, 1.35, 0), zoom: 0.6 }, corner: { q: qOf(0.25, 0.9, 0), zoom: 0.3, focus: v3(0.04, 0.022, 0.006) },
   glance: { q: qOf(0.25, 0.7, 0), zoom: 0.85 },
 };
@@ -156,12 +169,7 @@ canvas.addEventListener('wheel', (e) => { e.preventDefault(); tg.zoom = clampZ(t
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 function home() { flipped = false; document.getElementById('bFlip').setAttribute('aria-pressed', 'false'); applyView(VIEWS.front); }
 document.getElementById('bHome').onclick = home;
-// сравнение плотности карт на ходу: 2K (197 пикс/см) и 1K (98 пикс/см)
-const bSet = document.getElementById('bSet');
-const setLabel = () => { bSet.textContent = phone.userData.stats.mapSet === 'low' ? 'Карты 1K' : 'Карты 2K'; };
-bSet.onclick = () => { bSet.disabled = true; phone.userData.loadMapSet(phone.userData.stats.mapSet === 'low' ? 'full' : 'low').then(() => { bSet.disabled = false; setLabel(); invalidate(); }); };
-setLabel();
-document.getElementById('bFlip').onclick = () => { flipped = !flipped; document.getElementById('bFlip').setAttribute('aria-pressed', String(flipped)); applyView(flipped ? VIEWS.back : VIEWS.front); };
+document.getElementById('bLight').onclick = () => setLight(lightMode === 'warm' ? 'white' : 'warm');
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let frames = 0; window.__frames = () => frames;
 function tick() {
