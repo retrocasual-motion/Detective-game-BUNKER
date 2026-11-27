@@ -1,0 +1,31 @@
+{
+  "outDir": "E:\\Projects\\bunker-media\\design_ui\\pc\\gen\\icons48b",
+  "resolution": "1K",
+  "aspect": "1:1",
+  "refs": {
+    "MENU": "E:\\Projects\\bunker-media\\references\\phone48_ui\\R_author_menu.png",
+    "MENU2": "E:\\Projects\\bunker-media\\references\\phone48_ui\\R_003.jpg"
+  },
+  "jobs": [
+    {
+      "label": "IC2_calllog",
+      "refs": ["MENU", "MENU2"],
+      "prompt": "Copy exactly the icon style of the 2009 feature phone main menu in the reference images: cheap low-detail 3D render, hard glossy plastic highlights, slightly crude shapes, strong saturated primary colours, thin dark outline, small drop shadow, no square tile. Draw ONE icon in that style: a phone handset next to a small list sheet with coloured arrows (call history). Big, centred, on a perfectly flat solid magenta background (#FF00FF). No text, no letters, no logos."
+    },
+    {
+      "label": "IC2_contacts",
+      "refs": ["MENU", "MENU2"],
+      "prompt": "Copy exactly the icon style of the 2009 feature phone main menu in the reference images: cheap low-detail 3D render, hard glossy plastic highlights, slightly crude shapes, strong saturated primary colours, thin dark outline, small drop shadow, no square tile. Draw ONE icon in that style: a red phone book with a white handset symbol on the cover (phonebook). Big, centred, on a perfectly flat solid magenta background (#FF00FF). No text, no letters, no logos."
+    },
+    {
+      "label": "IC2_messages",
+      "refs": ["MENU", "MENU2"],
+      "prompt": "Copy exactly the icon style of the 2009 feature phone main menu in the reference images: cheap low-detail 3D render, hard glossy plastic highlights, slightly crude shapes, strong saturated primary colours, thin dark outline, small drop shadow, no square tile. Draw ONE icon in that style: a white envelope with a green leaf-like paper sticking out (messages). Big, centred, on a perfectly flat solid magenta background (#FF00FF). No text, no letters, no logos."
+    },
+    {
+      "label": "IC2_voicemail",
+      "refs": ["MENU", "MENU2"],
+      "prompt": "Copy exactly the icon style of the 2009 feature phone main menu in the reference images: cheap low-detail 3D render, hard glossy plastic highlights, slightly crude shapes, strong saturated primary colours, thin dark outline, small drop shadow, no square tile. Draw ONE icon in that style: a silver audio cassette tape with a blue speech bubble behind it (voicemail). Big, centred, on a perfectly flat solid magenta background (#FF00FF). No text, no letters, no logos."
+    }
+  ]
+}

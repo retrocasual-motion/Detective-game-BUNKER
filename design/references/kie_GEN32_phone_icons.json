@@ -1,0 +1,23 @@
+{
+  "outDir": "E:\\Projects\\bunker-media\\design_ui\\pc\\gen\\icons48",
+  "resolution": "1K",
+  "aspect": "1:1",
+  "jobs": [
+    {
+      "label": "IC_calllog",
+      "prompt": "A single mobile phone menu icon in the glossy 3D style of 2009 touchscreen feature phones: a shiny blue telephone handset with a small round silver clock behind it, rendered as a little 3D object with soft highlights, reflections and a gentle drop shadow, vivid saturated colours, no square tile, no background plate, centred, isolated on a perfectly flat solid magenta background (#FF00FF). No text, no letters, no logos."
+    },
+    {
+      "label": "IC_contacts",
+      "prompt": "A single mobile phone menu icon in the glossy 3D style of 2009 touchscreen feature phones: a small shiny orange address book with a white silhouette of a person on the cover and coloured index tabs on the side, rendered as a little 3D object with soft highlights, reflections and a gentle drop shadow, vivid saturated colours, no square tile, no background plate, centred, isolated on a perfectly flat solid magenta background (#FF00FF). No text, no letters, no logos."
+    },
+    {
+      "label": "IC_messages",
+      "prompt": "A single mobile phone menu icon in the glossy 3D style of 2009 touchscreen feature phones: a shiny yellow-white envelope slightly open with a green speech bubble peeking out, rendered as a little 3D object with soft highlights, reflections and a gentle drop shadow, vivid saturated colours, no square tile, no background plate, centred, isolated on a perfectly flat solid magenta background (#FF00FF). No text, no letters, no logos."
+    },
+    {
+      "label": "IC_voicemail",
+      "prompt": "A single mobile phone menu icon in the glossy 3D style of 2009 touchscreen feature phones: a small shiny dark-grey audio cassette tape with orange label and a round green play button badge in the corner, rendered as a little 3D object with soft highlights, reflections and a gentle drop shadow, vivid saturated colours, no square tile, no background plate, centred, isolated on a perfectly flat solid magenta background (#FF00FF). No text, no letters, no logos."
+    }
+  ]
+}
