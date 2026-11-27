@@ -104,3 +104,16 @@ test('проверка звонка (только в разработке): «?c
   await expect(page.getByTestId('dp-lcd')).toContainText('Входящий вызов', { timeout: 20_000 });
   expect(await materialIds(page)).toContain('47');
 });
+
+test('служебная строка «Вещдоки сейчас» (только в разработке): короба у стола сразу, без звонка', async ({
+  page,
+}) => {
+  await expect(page.getByTestId('container-seized')).toHaveCount(0);
+  await page.getByTestId('dev-line-tab').click();
+  await page.getByTestId('dev-delivery').click();
+  await expect(page.getByTestId('container-seized')).toBeVisible();
+  await expect(page.getByTestId('container-personal')).toBeVisible();
+  expect(await materialIds(page)).toContain('47');
+  await page.waitForTimeout(1500);
+  await expect(page.getByTestId('dp-lcd')).not.toContainText('Входящий');
+});

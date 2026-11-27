@@ -8,7 +8,7 @@ import {
   PORTION_2,
   PORTION_2_CONTAINERS,
 } from '@bunker/shared';
-import { askDelivery } from './api.ts';
+import { askDelivery, getMaterials } from './api.ts';
 import { useCall } from './deskphone/call.ts';
 import { useMenu } from './menu/menu-store.ts';
 import { reducedMotion } from './motion.ts';
@@ -122,6 +122,26 @@ export async function checkDelivery(): Promise<void> {
   } finally {
     asking = false;
   }
+}
+
+/**
+ * Только в разработке — кнопка «Вещдоки сейчас» в служебной строке (автор 27.11: проверять быстрее):
+ * вторая порция приходит сразу, без звонка; короба — сразу у стола.
+ */
+export async function deliverNow(): Promise<boolean> {
+  const ok = await fetch('/api/dev/delivery', { method: 'POST' })
+    .then((r) => r.ok)
+    .catch(() => false);
+  if (!ok) return false;
+  const list = await getMaterials().catch(() => null);
+  if (!list) return false;
+  heard = true;
+  carry = true;
+  const g = useGame.getState();
+  g.addReleased(list);
+  if (g.state?.boxesIn === false) g.updateState((st) => ({ ...st, boxesIn: true }));
+  if (useCall.getState().phase === 'incoming') useCall.getState().hangUp();
+  return true;
 }
 
 /** Прибавить время игры (часы игры; в разработке — `window.__play(мс)` для автотестов). */
