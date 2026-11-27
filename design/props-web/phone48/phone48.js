@@ -20,7 +20,8 @@
 //   label       — false: без ярлыка бюро на спинке (по умолчанию ярлык есть: 40 × 22,9 мм, форма как у ноутбука 47)
 //   onChange    — вызывается, когда что-то догрузилось и нужен новый кадр
 //
-// group.userData: ready (Promise), setScreenTexture(tex | null), loadMapSet(set), mapSet, stats, dims, layout, dispose()
+// group.userData: ready (Promise), setScreenTexture(tex | null), loadMapSet(set), mapSet, stats, dims, layout, dispose(),
+//                 keys (имена нажимаемых кнопок), setKeyPressed(name, down), pressKey(name, ms), keyDepth(name) — 0…1
 
 const MM = 0.001;
 export const PHONE48 = {
@@ -411,6 +412,38 @@ export function buildPhone48(THREE, opts = {}) {
     chipGeo(THREE, { hw: K.mid, hd: K.mid, r: 1.6 * MM, cz: K.z, y0: yF, h: 0.00042, bevel: 0.00016, uv: kUV }),
     chipGeo(THREE, { hw: K.mid - 0.9 * MM, hd: K.mid - 0.9 * MM, r: 1.0 * MM, cz: K.z, y0: yF + 0.00042, h: 0.00014, bevel: 0.0001, uv: kUV }),
   ]), mK, 'key_back');
+  // ---------- нажатие кнопок под экраном ----------
+  // Кнопка уходит вниз почти вровень с полосой и возвращается. Модуль только двигает кнопку: что при этом
+  // происходит в игре (средняя — «назад/домой», вызов и отбой — ничего), решает игра.
+  //   setKeyPressed(name, true|false) — держать / отпустить (палец на кнопке);
+  //   pressKey(name, ms = 120)        — короткий щелчок: нажать и отпустить.
+  // Даже самый быстрый щелчок доходит до дна и держится не меньше 90 мс — иначе его не видно.
+  const KEY_TRAVEL = { key_call: 0.00027, key_back: 0.00038, key_end: 0.00027 };   // пилюли выступают на 0,32 мм, средняя — на 0,56
+  const keyState = {};
+  for (const n of Object.keys(KEY_TRAVEL)) keyState[n] = { mesh: group.getObjectByName(n), t: 0, want: false, hold: 0 };
+  const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const raf = typeof requestAnimationFrame !== 'undefined' ? (f) => requestAnimationFrame(f) : null;
+  const calm = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let keyAnim = false, keyLast = 0;
+  const applyKey = (n) => { const k = keyState[n], e = k.t * k.t * (3 - 2 * k.t); k.mesh.position.y = -KEY_TRAVEL[n] * e; };
+  function keyStep() {
+    const t = nowMs(), dt = Math.min(50, Math.max(1, t - keyLast)); keyLast = t; let busy = false;
+    for (const n in keyState) {
+      const k = keyState[n], down = k.want || t < k.hold, target = down ? 1 : 0;
+      const speed = calm ? 1 : (down ? dt / 55 : dt / 100);                 // вниз быстрее, чем вверх
+      if (k.t !== target) { k.t = target > k.t ? Math.min(1, k.t + speed) : Math.max(0, k.t - speed); applyKey(n); busy = true; }
+      else if (down && !k.want) busy = true;                                 // щелчок: ждём конца выдержки
+    }
+    if (o.onChange) o.onChange();
+    if (busy && raf) raf(keyStep); else keyAnim = false;
+  }
+  const kickKeys = () => {
+    if (!raf) { for (const n in keyState) { keyState[n].t = keyState[n].want ? 1 : 0; applyKey(n); } if (o.onChange) o.onChange(); return; }
+    if (!keyAnim) { keyAnim = true; keyLast = nowMs(); raf(keyStep); }
+  };
+  const setKeyPressed = (name, down) => { const k = keyState[name]; if (!k) return false; k.want = !!down; if (down) k.hold = nowMs() + 90; kickKeys(); return true; };
+  const pressKey = (name, ms = 120) => { const k = keyState[name]; if (!k) return false; k.want = false; k.hold = nowMs() + Math.max(90, ms); kickKeys(); return true; };
+
   // накладка камеры на спинке, объектив и зеркальце для автопортрета
   const P = D.plate;
   mesh(chipGeo(THREE, { hw: P.hw, hd: (P.z1 - P.z0) / 2, r: 2.4 * MM, cx: P.x, cz: (P.z0 + P.z1) / 2, y0: 0, h: 0.00035, bevel: 0.00014, up: false, uv: bUV }), mBack, 'camera_plate');
@@ -507,6 +540,7 @@ export function buildPhone48(THREE, opts = {}) {
     return Promise.all(texReg.map((e) => loadInto(e.t, packUrl(e.file, set)))).then(finish);
   };
   Object.assign(group.userData, { ready, setScreenTexture, loadMapSet, mapSet, stats, dims: D, label: M.label ? LAB : null,
+    keys: Object.keys(KEY_TRAVEL), setKeyPressed, pressKey, keyDepth: (n) => (keyState[n] ? keyState[n].t : 0),
     layout: { fUV, bUV }, dispose() { for (const d of disposables) d.dispose(); } });
   return group;
 }
