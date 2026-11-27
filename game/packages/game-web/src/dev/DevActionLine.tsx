@@ -1,6 +1,7 @@
 import { arrangeWall } from '@bunker/shared';
 import { useState } from 'react';
 import { postActionLine, resetState } from '../api.ts';
+import { deliverNow } from '../delivery.ts';
 import { useGame } from '../store.ts';
 import { clearReading, loadReading, mmss, readingRows, readingTsv } from './readingLog.ts';
 
@@ -140,6 +141,22 @@ export function DevActionLine() {
             </button>
             <button type="button" data-testid="dev-reading" onClick={showReading}>
               Время чтения
+            </button>
+            <button
+              type="button"
+              data-testid="dev-delivery"
+              title="Вещдоки из камеры хранения — сразу, без звонка (короб «Изъятое» и «Личные вещи»)"
+              disabled={busy}
+              onClick={() => {
+                setBusy(true);
+                void deliverNow()
+                  .then((ok) =>
+                    note('ВЕЩДОКИ', ok ? 'Вещдоки пришли — короба у стола.' : 'Сервер не ответил.'),
+                  )
+                  .finally(() => setBusy(false));
+              }}
+            >
+              Вещдоки сейчас
             </button>
           </div>
           {reading && (

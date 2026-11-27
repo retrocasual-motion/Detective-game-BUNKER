@@ -894,4 +894,3 @@ export function boardCamera(vp: { width: number; height: number }): Camera {
     zoom: round(zoom),
   };
 }
-

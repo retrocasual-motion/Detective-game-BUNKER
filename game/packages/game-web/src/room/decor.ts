@@ -291,11 +291,6 @@ const START_AT: [number, number] = [-0.33, 0.62];
 const INVENTORY_AT: [number, number] = [-0.58, 0.62];
 /** Папка-скоросшиватель: 30 × 23,5 см, закладка с названием у дальнего края. */
 const FOLDER: [number, number] = [0.3, 0.235];
-/**
- * Открытая папка на столе (автор 26.11: «документы должны лежать в открытой папке»): по листу —
- * чуть больше стопки (лист на столе 18,7 × 26,4 см), листы внутри, а не за краем.
- */
-const OPEN_FOLDER: [number, number] = [0.25, 0.31];
 /** Короб вещдоков 42 × 32 × 20 см: в нём ноутбук, радиопост, камера, телефон, ручка. */
 const SEIZED_BOX: [number, number, number] = [0.42, 0.32, 0.2];
 
@@ -353,11 +348,8 @@ export function deskObjects(
   phone: PhoneLook = PHONE_IDLE,
   /** Лампа: горит ли, насколько потянута цепочка (0…1). */
   lamp: LampLook = LAMP_IDLE,
-  /**
-   * Открытые папки, в которых ещё лежат листы (UNP-A, автор 26.11: «все документы просмотрел —
-   * зачем папка»): пустая папка со стола уходит. Не задано — все открытые.
-   */
-  folders?: readonly ContainerId[],
+  /** Прежде — открытые папки; теперь папки рисует 3D-стол (автор 27.11), параметр не используется. */
+  _folders?: readonly ContainerId[],
   /**
    * Короба камеры хранения, которых на столе ещё нет (SD5-A): вещдоки не пришли или их ещё несут.
    */
@@ -455,9 +447,6 @@ export function deskObjects(
     pivot: [PIVOT[0] * p, PIVOT[1] * p],
   };
   const envelopes = ENVELOPE_ORDER.filter((id) => !opened.includes(id));
-  const openFolders = ENVELOPE_ORDER.filter(
-    (id) => opened.includes(id) && (!folders || folders.includes(id)),
-  );
   const [LX, LZ] = LAMP_AT;
   const brass = col('--color-lamp-brass');
   const shadeGreen = col('--color-lamp-shade');
@@ -584,26 +573,8 @@ export function deskObjects(
         testId: `container-${id}`,
       };
     }),
-    // Открытая папка остаётся лежать (UNP-A, A-288): плоская, листы — стопкой на ней.
-    ...openFolders.map((id) => {
-      const [x, z] = ENVELOPE_AT[id];
-      const c = CONTAINERS.find((cc) => cc.id === id);
-      const [w, d] = OPEN_FOLDER;
-      return {
-        key: `folder-open-${id}`,
-        label: `Папка «${c?.label ?? id}», открыта`,
-        boxes: [
-          box(x, z, w, d, 0.002, col('--color-case-folder')),
-          // Корешок слева — темнее: видно, что это раскрытая папка.
-          box(x - w / 2 + 0.008, z, 0.016, d, 0.0025, col('--color-case-folder-edge')),
-          // Закладка с названием — у дальнего края.
-          box(x - w / 4, z - d / 2 - 0.008, 0.09, 0.018, 0.002, col('--color-case-folder')),
-        ],
-        // Ярлык не над листами: чья стопка — видно по закладке и месту.
-        flat: true,
-        testId: `folder-open-${id}`,
-      };
-    }),
+    // Открытая папка (UNP-A, A-288) — вещь 3D-стола (автор 27.11: тянут — едут листы на ней),
+    // `desk3d/Desk.tsx`; здесь не рисуется.
     // Короб вещдоков «Изъятое при осмотре места» (автор 25.11; вместо пакета FM-B): картон, крышка,
     // красная лента вещдоков поперёк, белая бирка; вскрыли — устройства на столе, короб уходит.
     ...(opened.includes('seized')

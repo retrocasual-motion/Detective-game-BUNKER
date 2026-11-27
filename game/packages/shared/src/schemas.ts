@@ -285,6 +285,21 @@ export const PlayerStateSchema = z.object({
    */
   desk: z.array(DeskItemSchema).max(300).optional(),
   /**
+   * Где лежат открытые папки (автор 27.11: папку тянут — едут листы на ней): метры стола, как у
+   * `desk`. Нет записи — папка на своём месте в ряду папок.
+   */
+  folderAt: z
+    .record(
+      z.string().max(20),
+      z.object({
+        x: z.number().min(-3).max(3),
+        z: z.number().min(-3).max(3),
+        rot: z.number().min(-7).max(7),
+        layer: z.number().int().min(-1).max(1_000_000),
+      }),
+    )
+    .optional(),
+  /**
    * Что игрок открывал (OP-A, A-288): лист в просмотрщике, вещь в руках. Опись дела ставит у строки
    * карандашную галочку. «Открывал», не «прочитал» и не «важно».
    */

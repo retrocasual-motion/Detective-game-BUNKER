@@ -186,6 +186,10 @@ test('с бумаги (CMP-C): выделить строку листа → «Н
   const strip = page.locator('.paper-strip');
   await expect(strip).toContainText('845');
   await expect(strip.locator('.excerpt-source')).toContainText('25 · ');
+  // Полоска — по высоте выделенного, не во весь лист (автор 27.11); под ней ярлык листа.
+  const sh = await strip.boundingBox();
+  const full = await page.getByTestId('wall-25').boundingBox();
+  expect(sh?.height ?? 999).toBeLessThan((full?.height ?? 0) * 0.7);
   await strip.locator('.excerpt-text').click();
   await expect(page.getByTestId('viewer')).toBeVisible();
   expect(await page.evaluate(() => CSS.highlights.get('case-find')?.size ?? 0)).toBeGreaterThan(0);

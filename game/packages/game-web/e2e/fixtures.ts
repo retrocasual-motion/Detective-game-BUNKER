@@ -193,37 +193,21 @@ export async function readStack(page: Page, top: string) {
 
 export async function readFolder(page: Page, id: string, top: string) {
   // Как с клавиатуры: перед папкой на 3D-столе может лежать устройство и взять щелчок мышью
-  // (щелчок мышью по папке проверяет archive.spec). Папка — в руки, открыть (автор 25.11).
+  // (щелчок мышью по папке проверяет archive.spec). Папка — в руки, открыть (автор 25.11); открыл —
+  // сразу чтение стопки с верхнего листа (автор 27.11).
   await page.getByTestId(`container-${id}`).dispatchEvent('click');
   await expect(page.getByTestId('held')).toHaveAttribute('aria-label', /^Папка/);
   await page.getByTestId('envelope-open').dispatchEvent('click');
-  await expect(page.getByTestId('held')).toBeHidden();
-  await expect(page.getByTestId(`container-${id}`)).toHaveCount(0);
-  await deskSettled(page);
-  let last: { x: number; y: number } | null = null;
-  await expect
-    .poll(
-      async () => {
-        const now = await page.evaluate(
-          (i) => (window as unknown as { __desk?: DeskHook }).__desk?.grab(i) ?? null,
-          top,
-        );
-        const still = !!now && !!last && Math.hypot(now.x - last.x, now.y - last.y) < 0.5;
-        last = now;
-        return still;
-      },
-      { intervals: [200], timeout: 10_000 },
-    )
-    .toBe(true);
-  const pt = last as { x: number; y: number } | null;
-  await page.mouse.click(pt?.x ?? 0, pt?.y ?? 0);
   await expect(page.getByTestId('desk-run')).toBeVisible();
+  await expect(page.getByTestId('viewer')).toHaveAttribute('data-material', top);
   while (await page.getByTestId('desk-next').isEnabled())
     await page.getByTestId('desk-next').click();
   const filed = savedPut(page);
   await page.keyboard.press('Escape');
   await filed;
   await expect(page.getByTestId('viewer')).toBeHidden();
+  await expect(page.getByTestId('held')).toBeHidden();
+  await expect(page.getByTestId(`container-${id}`)).toHaveCount(0);
 }
 
 /**
@@ -321,4 +305,7 @@ export async function leavePc(page: Page) {
   for (let k = 0; k < 3 && (await page.getByTestId('computer').isVisible()); k++)
     await page.keyboard.press('Escape');
   await expect(page.getByTestId('computer')).toHaveCount(0);
+  // Пришли по ссылке из листа — лист снова открыт (автор 27.11): закрыть и его.
+  if (await page.getByTestId('viewer').isVisible()) await page.keyboard.press('Escape');
+  await expect(page.getByTestId('viewer')).toHaveCount(0);
 }

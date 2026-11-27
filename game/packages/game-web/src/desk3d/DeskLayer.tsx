@@ -2,11 +2,14 @@ import {
   CARD_H,
   CARD_W,
   CONTAINERS,
+  type ContainerId,
   containerContents,
   type DeskItem,
+  FOLDER_IDS,
   INVENTORY_ID,
   NEWSPAPER_ID,
   onWall,
+  openedOf,
   START_STACK,
 } from '@bunker/shared';
 import { Canvas, events, invalidate } from '@react-three/fiber';
@@ -16,7 +19,15 @@ import { watchGl } from '../glLost.tsx';
 import type { Pose, Room } from '../room/camera.ts';
 import { type DeskObject, envelopeSpot, stackSpot } from '../room/decor.ts';
 import { shownCamera, useGame } from '../store.ts';
-import { DEVICE_KIND, Desk, type DeskMaterial, type WallFit } from './Desk.tsx';
+import {
+  DEVICE_KIND,
+  Desk,
+  type DeskMaterial,
+  FOLDER_PREFIX,
+  type FolderOnDesk,
+  isFolderPiece,
+  type WallFit,
+} from './Desk.tsx';
 import { Occluders } from './Occluders.tsx';
 
 const NONE: readonly DeskItem[] = [];
@@ -55,6 +66,42 @@ export function DeskLayer({
   visible: boolean;
 }) {
   const items = useGame((g) => g.state?.desk ?? NONE);
+  // Открытые папки, где ещё лежат листы (UNP-A), — вещи стола (автор 27.11): где лежат — `folderAt`,
+  // иначе своё место в ряду.
+  const foldersKey = useGame((g) => {
+    const s = g.state;
+    if (!s) return '';
+    const onDesk = new Set((s.desk ?? []).map((d) => d.id));
+    return CONTAINERS.filter(
+      (c) =>
+        FOLDER_IDS.has(c.id) && openedOf(s).includes(c.id) && c.files.some((id) => onDesk.has(id)),
+    )
+      .map((c) => {
+        const at = s.folderAt?.[c.id];
+        return at ? `${c.id}@${at.x},${at.z},${at.rot},${at.layer}` : c.id;
+      })
+      .join('|');
+  });
+  const folders = useMemo<FolderOnDesk[]>(
+    () =>
+      foldersKey
+        ? foldersKey.split('|').map((k) => {
+            const [id = '', at] = k.split('@');
+            const [x, z, rot, layer] = at ? at.split(',').map(Number) : [];
+            const spot = stackSpot(id as ContainerId) ?? [0, 0];
+            return {
+              id: `${FOLDER_PREFIX}${id}`,
+              label: CONTAINERS.find((c) => c.id === id)?.label ?? id,
+              x: x ?? spot[0],
+              z: z ?? spot[1],
+              rot: rot ?? 0,
+              layer: layer ?? -1,
+            };
+          })
+        : [],
+    [foldersKey],
+  );
+  const hide = useGame((g) => g.folderReading);
   const list = useGame((g) => g.materials);
   const materials = useMemo(
     () =>
@@ -125,6 +172,10 @@ export function DeskLayer({
   // Где ложится стопка листа (VZ-A, ST-B): на свою открытую папку; стартовые — своё место.
   const stackAt = (id: string) => {
     const c = CONTAINERS.find((cc) => cc.files.includes(id));
+    // Папку двигали — стопка ложится на неё там, где она теперь (папка — сама вещь, сдвиг листа — тот
+    // же, что от своего места).
+    const moved = c ? useGame.getState().state?.folderAt?.[c.id] : undefined;
+    if (moved) return { x: moved.x, z: moved.z };
     const at = stackSpot(
       id === INVENTORY_ID ? 'inventory' : START_STACK.includes(id) ? 'start' : (c?.id ?? null),
     );
@@ -178,8 +229,20 @@ export function DeskLayer({
           spillFrom={spillFrom}
           stackAt={stackAt}
           wallFit={wallFit}
-          onRead={(id) => useGame.getState().readDesk(id)}
-          onSave={(next) => useGame.getState().setDesk(next)}
+          onRead={(id) =>
+            isFolderPiece(id)
+              ? useGame.getState().readFolder(id.slice(FOLDER_PREFIX.length) as ContainerId)
+              : useGame.getState().readDesk(id)
+          }
+          onSave={(next, placed) =>
+            useGame.getState().updateState((s) => ({
+              ...s,
+              desk: next,
+              ...(Object.keys(placed).length ? { folderAt: { ...s.folderAt, ...placed } } : {}),
+            }))
+          }
+          folders={folders}
+          hide={hide}
           onHang={(id, at) => {
             const st = useGame.getState().state;
             if (!st) return;

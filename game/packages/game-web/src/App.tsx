@@ -127,7 +127,14 @@ export function App() {
   const inboxKey = useGame((g) => (g.state ? inboxIds(g.state, g.materials).join(',') : ''));
   const inbox = useMemo(() => (inboxKey ? inboxKey.split(',') : []), [inboxKey]);
   // Строкой — по той же причине, что и «Входящие».
-  const openedKey = useGame((g) => (g.state ? openedOf(g.state).join(',') : ''));
+  // Папку только что открыли и читают (автор 27.11) — на столе она ещё закрыта: раскладку не видно.
+  const openedKey = useGame((g) =>
+    g.state
+      ? openedOf(g.state)
+          .filter((id) => id !== g.folderReading)
+          .join(',')
+      : '',
+  );
   const opened = useMemo(
     () => (openedKey ? (openedKey.split(',') as ContainerId[]) : []),
     [openedKey],

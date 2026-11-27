@@ -58,6 +58,16 @@ export interface PaperTarget {
   mode: 'hand' | 'rest' | 'air';
   /** В руке: насколько вещь ушла к доске (0 — над столом, 1 — у доски). */
   carry: number;
+  /**
+   * Лежит: к новому месту — сразу, без движения (окно меняется — стол и вещи вместе; переехала в кадр
+   * после смены окна, RS-A).
+   */
+  snap?: boolean;
+  /**
+   * Положили вместе (папка с листами, автор 27.11): одно движение на всех — одна длительность и один
+   * старт, листы ложатся вместе с папкой, а не догоняют её. Общий объект у всех вещей стопки.
+   */
+  land?: { dur: number; t0: number };
 }
 
 /**
@@ -102,17 +112,41 @@ function plain(body: string): string[] {
     .filter((l) => l && !/^-+$/.test(l));
 }
 
+/** Картон папки дела — как прежняя нарисованная папка (`--color-case-folder`). */
+const FOLDER_CARD = '#d4b77c';
+const FOLDER_EDGE = '#b89a5e';
+
 function paintFace(piece: Piece, title: string, body: string): CanvasTexture {
   const disc = piece.kind === 'disc';
   const photo = piece.kind === 'photos';
   const news = piece.kind === 'newspaper';
   const device = DEVICE_LOOK[piece.kind];
+  const folder = piece.kind === 'folder';
   return paintTexture(
     piece.w * PX,
     piece.d * PX,
-    device ? device.top : disc ? '#e4ddcc' : photo ? '#f6f4ef' : news ? NEWSPRINT : PAPER,
+    folder
+      ? FOLDER_CARD
+      : device
+        ? device.top
+        : disc
+          ? '#e4ddcc'
+          : photo
+            ? '#f6f4ef'
+            : news
+              ? NEWSPRINT
+              : PAPER,
     ({ ctx, w, h, text }) => {
       const m = w * 0.08;
+      if (folder) {
+        // Раскрытая папка дела (автор 27.11 — вещь стола): картон, корешок слева темнее, название у
+        // дальнего края — чья стопка, видно, даже когда листы лежат сверху.
+        ctx.fillStyle = FOLDER_EDGE;
+        ctx.fillRect(0, 0, w * 0.065, h);
+        ctx.fillStyle = 'rgb(0 0 0 / 0.55)';
+        text(title, w * 0.1, h * 0.012, w * 0.86, '600 26px system-ui, sans-serif', 30);
+        return;
+      }
       ctx.fillStyle = '#1d1d1d';
       if (news) {
         // Газета: название у дальнего края, черта, заголовок номера и колонки текста.
@@ -295,6 +329,7 @@ export function Paper({
   onDown,
   onOver,
   onOut,
+  hidden = false,
 }: {
   piece: Piece;
   title: string;
@@ -307,6 +342,11 @@ export function Paper({
   onDown: (id: string, e: ThreeEvent<PointerEvent>) => void;
   onOver: (id: string) => void;
   onOut: (id: string) => void;
+  /**
+   * Не показывать (автор 27.11): листы только что открытой папки лежат на столе под открытым листом —
+   * невидимы, пока лист не закрыли; тогда сразу все, в один кадр.
+   */
+  hidden?: boolean;
 }) {
   // Лист перекладывают — объект `piece` новый, а краска та же: перерисовывать не нужно.
   // biome-ignore lint/correctness/useExhaustiveDependencies: зависит только от вида и размера
@@ -347,6 +387,10 @@ export function Paper({
   const sc = useRef(1);
   const hold = useRef(0);
   const camera = useThree((st) => st.camera);
+  // Показать или спрятать — кадр сразу (холст рисует по требованию).
+  const redraw = useThree((st) => st.invalidate);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: кадр — именно когда сменилось `hidden`
+  useEffect(() => redraw(), [hidden, redraw]);
   // В руке — рисуется после всего и поверх (автор 24.11: лист, вытянутый из-под камеры, на подъёме
   // проходил сквозь неё — поднимается он плавно, а сверху оказывается сразу). Перед первой своей
   // частью очищает глубину: соседние вещи её не заслоняют, свои части — по глубине между собой.
@@ -429,14 +473,19 @@ export function Paper({
       if (onlyHeight) tween.current = null;
       else if (!tw || tw.to.distanceTo(target.pos) > 0.3) {
         const dist = pos.distanceTo(target.pos);
+        const land = target.land;
+        if (land && !land.dur) {
+          land.dur = Math.min(PLACE_MAX, PLACE_MIN + dist * 0.9);
+          land.t0 = now;
+        }
         tween.current =
-          dist > 0.3 && !still
+          (dist > 0.3 || (!!land && dist > 0.001)) && !still && !target.snap
             ? {
                 from: pos.clone(),
                 to: target.pos.clone(),
                 q0: g.quaternion.clone(),
-                t0: now,
-                dur: Math.min(PLACE_MAX, PLACE_MIN + dist * 0.9),
+                t0: land ? land.t0 : now,
+                dur: land ? land.dur : Math.min(PLACE_MAX, PLACE_MIN + dist * 0.9),
               }
             : null;
       }
@@ -535,11 +584,9 @@ export function Paper({
     g.scale.setScalar(sc.current * kd);
     // Только что появилась — не показывать, пока не на своём месте: у новой вещи цель в первом кадре
     // ещё не та (высота стола приходит кадром позже) — был виден один кадр в воздухе (автор 26.11).
-    g.visible = !(
-      !start &&
-      performance.now() - born.current < 500 &&
-      pos.distanceToSquared(target.pos) > 1
-    );
+    g.visible =
+      !hidden &&
+      !(!start && performance.now() - born.current < 500 && pos.distanceToSquared(target.pos) > 1);
     // Холст рисует по требованию (D3-12): пока вещь движется — следующий кадр.
     if (
       waiting ||

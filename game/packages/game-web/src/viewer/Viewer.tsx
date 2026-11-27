@@ -375,6 +375,7 @@ export function Viewer({ materialId }: ViewerProps) {
     <div
       className={`viewer${final ? ' viewer-final' : ''}${folderOpen ? ' viewer-with-folder' : ''}${searchOpen ? ' viewer-with-search' : ''}${notebookOpen ? ' viewer-with-notebook' : ''}`}
       data-testid="viewer"
+      data-material={materialId}
       role="dialog"
       aria-label={excerpt?.title ?? material?.title ?? person?.name}
       onPointerDown={(e) => {

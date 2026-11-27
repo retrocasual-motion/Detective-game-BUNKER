@@ -88,21 +88,62 @@ function phonePose(vp: Viewport, p: number, deskY: number): Pose {
 const rad = (d: number) => (d * Math.PI) / 180;
 const deg = (r: number) => (r * 180) / Math.PI;
 
+/**
+ * Поза стола: глаз сидящего — над столом на 50 см, на 45 см позади ближнего края (откинулся на стуле)
+ * — виден почти весь стол, ближние вещи не раздуты перспективой (RS-A, автор 19.11). Автор 25.11:
+ * камера — как была («стол очень большой, а стена далеко» при камере дальше); места на столе
+ * прибавили меньшие вещи (DESK_SCALE в decor.ts). `back` — насколько отъехать назад (доли p).
+ * Взгляд вниз ровно настолько, чтобы верх доски был у верхнего края экрана.
+ */
+function deskPose(vp: Viewport, p: number, deskY: number, boardHalfH: number, back: number): Pose {
+  const eye: Pose['eye'] = [0, deskY - 0.5 * p, 0.9 * p + (0.45 + back) * p];
+  const halfFov = deg(Math.atan(vp.height / 2 / p));
+  const toBoardTop = deg(Math.atan((eye[1] + boardHalfH) / eye[2]));
+  return { eye, rx: Math.max(0, halfFov - toBoardTop - 2.5), ry: 0 };
+}
+
+/** Где на экране (y, px) точка стола (z — доли p от стены, посередине). */
+const deskScreenY = (vp: Viewport, p: number, deskY: number, pose: Pose, z: number) =>
+  toScreen(toCamera([0, deskY, z * p], pose, p), p, vp).y;
+
+/**
+ * Ближний край стола, видный при окне 16 : 9 (доли p, RS-B, автор 27.11): при любой форме окна он в
+ * кадре — окно ниже, камера отъезжает назад; вещи стола не двигаются, когда меняют окно.
+ */
+let nearRef: number | null = null;
+export function nearRefOf(): number {
+  if (nearRef !== null) return nearRef;
+  const vp = { width: 1600, height: 900 };
+  const p = perspectiveFor(vp);
+  const boardHalfH = (BOARD_SCALE * vp.height) / 2;
+  const deskY = boardHalfH + 0.12 * p;
+  const pose = deskPose(vp, p, deskY, boardHalfH, 0);
+  let lo = 0.3;
+  let hi = 0.9;
+  for (let i = 0; i < 30; i++) {
+    const mid = (lo + hi) / 2;
+    if (deskScreenY(vp, p, deskY, pose, mid) < vp.height) lo = mid;
+    else hi = mid;
+  }
+  nearRef = lo;
+  return lo;
+}
+
 export function roomFor(vp: Viewport): Room {
   const p = perspectiveFor(vp);
   const boardHalfW = (BOARD_SCALE * vp.width) / 2;
   const boardHalfH = (BOARD_SCALE * vp.height) / 2;
   const deskY = boardHalfH + 0.12 * p;
   const deskNear = 0.9 * p;
-  // Глаз сидящего: над столом на 50 см, на 45 см позади ближнего края (откинулся на стуле) —
-  // виден почти весь стол, ближние вещи не раздуты перспективой (RS-A, автор 19.11).
-  // Автор 25.11: камера — как была («стол очень большой, а стена далеко» при камере дальше); места
-  // на столе прибавили меньшие вещи (DESK_SCALE в decor.ts).
-  const eye: Pose['eye'] = [0, deskY - 0.5 * p, deskNear + 0.45 * p];
-  // Взгляд вниз ровно настолько, чтобы верх доски был у верхнего края экрана.
-  const halfFov = deg(Math.atan(vp.height / 2 / p));
-  const toBoardTop = deg(Math.atan((eye[1] + boardHalfH) / eye[2]));
-  const rx = Math.max(0, halfFov - toBoardTop - 2.5);
+  // Окно ниже 16 : 9 (вышли из полноэкранного, панель браузера) — отъехать назад настолько, чтобы
+  // ближний край, видный при 16 : 9, остался в кадре (RS-B).
+  let back = 0;
+  let pose = deskPose(vp, p, deskY, boardHalfH, back);
+  while (back < 1.2 && deskScreenY(vp, p, deskY, pose, nearRefOf()) > vp.height) {
+    back += 0.01;
+    pose = deskPose(vp, p, deskY, boardHalfH, back);
+  }
+  const { eye, rx } = pose;
   return {
     p,
     vp,
