@@ -26,7 +26,7 @@
   <div id="vignette"></div>
   <div id="top"><h1>L462 · проигрыватель микрокассет бюро</h1><p>проба WEB-C: форма — кодом, поверхности — фото-карты</p></div>
   <div id="panel">
-    <div id="hint">Один палец — поворот. Два пальца — ближе-дальше и сдвиг. Клавиши на правой грани нажимаются: пуск, стоп, ползунок перемотки. Мышь: колесо — ближе, зажатое колесо — сдвиг, правая кнопка — как было.</div>
+    <div id="hint">Один палец — поворот. Два пальца — ближе-дальше и сдвиг. Клавиши на правой грани: пуск, стоп, красная — в начало. Перемотка — зажать место у стрелки или вести ползунок. Мышь: колесо — ближе, зажатое колесо — сдвиг, правая кнопка — как было.</div>
     <div id="buttons"><button id="bFlip" type="button" aria-pressed="false">Перевернуть</button><button id="bLight" type="button">Свет: белый</button><button id="bHome" type="button">Как было</button></div>
   </div>
 </div>
@@ -127,16 +127,23 @@ const clampZ = (z) => Math.min(ZMAX, Math.max(ZMIN, z));
 const ptr = new Map(); let pinch = 0, mid = null, panBtn = false;
 // кнопки под экраном нажимаются: луч от пальца до первой поверхности вещи; если это кнопка — она уходит вниз, пока палец на ней
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(); let keyHeld = null, downAt = null;
-function keyAt(e) {
+function hitAt(e) {
   const r = canvas.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   scene.updateMatrixWorld(); ray.setFromCamera(ndc, camera);
-  return phone.userData.keyFromHit(ray.intersectObject(phone, true)[0]);   // у кольца стрелок и качельки зума — по месту попадания
+  return ray.intersectObject(phone, true)[0];
 }
+const keyAt = (e) => phone.userData.keyFromHit(hitAt(e));   // у прорези ползунка — по месту попадания
 
 window.__keyAt = keyAt;   // для проверочного скрипта
 // лента на странице пробы: пуск — клавиша остаётся утопленной и лента идёт; стоп — отпускает; ползунок — перемотка, пока держат
-const U = phone.userData; let transport = 'stop', windDir = 0, tapeLast = 0;
-function onKeyDown(k) { if (k === 'btn_play') { transport = 'play'; U.setKeyLatched('btn_play', true); } else if (k === 'btn_stop') { transport = 'stop'; U.setKeyLatched('btn_play', false); } else if (k === 'btn_ff') windDir = 1; else if (k === 'btn_rew') windDir = -1; invalidate(); }
+const U = phone.userData; let transport = 'stop', windDir = 0, tapeLast = 0, toStart = false, slider = null;
+const T0 = U.tapeTime(), T1 = T0 + 36;   // запись на кассете: от начала (счётчик 000) 36 секунд
+// ход ползунка на экране: сколько пикселей и в какую сторону — его полный ход «вперёд» (к верху вещи)
+function sliderDir() { const o = phone.getObjectByName('wind_slider'), r = canvas.getBoundingClientRect(); scene.updateMatrixWorld();
+  const a = o.localToWorld(v3(0, 0, 0)).project(camera), b = o.localToWorld(v3(0, 0, -0.003)).project(camera); return [(b.x - a.x) / 2 * r.width, -(b.y - a.y) / 2 * r.height]; }
+function onKeyDown(k) { if (k === 'btn_play') { transport = 'play'; U.setKeyLatched('btn_play', true); } else if (k === 'btn_stop') { transport = 'stop'; U.setKeyLatched('btn_play', false); } else if (k === 'btn_ff') windDir = 1; else if (k === 'btn_rew') windDir = -1;
+  else if (k === 'btn_rec') { toStart = true; transport = 'stop'; U.setKeyLatched('btn_play', false); }   // красная: лента быстро уходит в начало записи
+  invalidate(); }
 function onKeyUp(k) { if (k === 'btn_ff' || k === 'btn_rew') windDir = 0; }
 window.__transport = () => transport;
 const releaseKey = () => { if (keyHeld) { phone.userData.setKeyPressed(keyHeld, false); onKeyUp(keyHeld); keyHeld = null; } };
@@ -152,7 +159,9 @@ canvas.addEventListener('pointerdown', (e) => {
   if (e.button === 2) { home(); return; }
   panBtn = e.button === 1 || e.shiftKey; canvas.setPointerCapture(e.pointerId); ptr.set(e.pointerId, [e.clientX, e.clientY]); pinch = 0; mid = null;
   releaseKey();
-  if (ptr.size === 1 && !panBtn) { keyHeld = keyAt(e); downAt = [e.clientX, e.clientY]; if (keyHeld) { phone.userData.setKeyPressed(keyHeld, true); onKeyDown(keyHeld); } }
+  if (ptr.size === 1 && !panBtn) { const hit = hitAt(e); keyHeld = U.keyFromHit(hit); downAt = [e.clientX, e.clientY];
+    if (keyHeld && U.sliderFromHit(hit)) { slider = { x: e.clientX, y: e.clientY, dir: sliderDir() }; keyHeld = null; }   // взят сам ползунок: дальше ведут его, вещь не вращается
+    else if (keyHeld) { U.setKeyPressed(keyHeld, true); onKeyDown(keyHeld); } }
 });
 canvas.addEventListener('pointermove', (e) => {
   const p = ptr.get(e.pointerId); if (!p) return;
@@ -160,6 +169,10 @@ canvas.addEventListener('pointermove', (e) => {
   ptr.set(e.pointerId, [e.clientX, e.clientY]);
   if (ptr.size === 1) {
     if (panBtn) { panBy(dx, dy); return; }
+    if (slider) {   // ползунок едет за пальцем вдоль своей прорези; дальше 40 % хода — перемотка в эту сторону
+      const d = slider.dir, v = Math.max(-1, Math.min(1, ((e.clientX - slider.x) * d[0] + (e.clientY - slider.y) * d[1]) / Math.max(16, d[0] * d[0] + d[1] * d[1])));
+      U.setSlider(Math.abs(v) < 0.02 ? 0.02 * Math.sign(v || 1) : v); windDir = v > 0.4 ? 1 : v < -0.4 ? -1 : 0; invalidate(); return; }
+    if (keyHeld === 'btn_ff' || keyHeld === 'btn_rew') return;   // перемотку держат: дрожание пальца — не поворот вещи
     if (keyHeld) { if (Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 7) return; releaseKey(); }   // палец поехал — это уже поворот
     const k = 0.008 * Math.min(1, Math.max(0.3, st.zoom * 1.6));   // вплотную поворот медленнее
     tg.q.premultiply(new THREE.Quaternion().setFromAxisAngle(v3(0, 1, 0), dx * k)).premultiply(new THREE.Quaternion().setFromAxisAngle(v3(1, 0, 0), dy * k)); invalidate();
@@ -170,7 +183,7 @@ canvas.addEventListener('pointermove', (e) => {
     pinch = d; mid = m; invalidate();
   }
 });
-const up = (e) => { ptr.delete(e.pointerId); pinch = 0; mid = null; releaseKey(); }; canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+const up = (e) => { ptr.delete(e.pointerId); pinch = 0; mid = null; releaseKey(); if (slider) { slider = null; windDir = 0; U.setSlider(0); invalidate(); } }; canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
 canvas.addEventListener('wheel', (e) => { e.preventDefault(); tg.zoom = clampZ(tg.zoom * Math.exp(e.deltaY * 0.0012)); invalidate(); }, { passive: false });
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 function home() { flipped = false; document.getElementById('bFlip').setAttribute('aria-pressed', 'false'); applyView(VIEWS.front); }
@@ -184,8 +197,9 @@ function tick() {
   if (st.q.angleTo(tg.q) > 1e-4 || Math.abs(st.zoom - tg.zoom) > 1e-4 || st.focus.distanceTo(tg.focus) > 1e-5 || st.pan.distanceTo(tg.pan) > 1e-5) { st.q.slerp(tg.q, k); st.zoom += (tg.zoom - st.zoom) * k; st.focus.lerp(tg.focus, k); st.pan.lerp(tg.pan, k); dirty = true; }
   { const now = performance.now(), dt = Math.min(0.1, (now - tapeLast) / 1000); tapeLast = now;
     const rate = windDir ? windDir * (transport === 'play' ? 12 : 22) : (transport === 'play' ? 1 : 0);
-    if (!!rate !== U.lampOn()) U.setLamp(!!rate);   // лампочка горит, пока лента идёт
-    if (rate) { const t0 = U.tapeTime(), t1 = Math.min(1800, Math.max(0, t0 + rate * dt)); if (t1 !== t0) U.setTapeTime(t1); else if (!windDir) { transport = 'stop'; U.setKeyLatched('btn_play', false); } } }
+    if ((!!rate || toStart) !== U.lampOn()) U.setLamp(!!rate || toStart);   // лампочка горит, пока лента идёт
+    if (toStart) { const t1 = Math.max(T0, U.tapeTime() - 90 * dt); U.setTapeTime(t1); if (t1 <= T0) toStart = false; }
+    else if (rate) { const t0 = U.tapeTime(), t1 = Math.min(T1, Math.max(T0, t0 + rate * dt)); if (t1 !== t0) U.setTapeTime(t1); else if (!windDir) { transport = 'stop'; U.setKeyLatched('btn_play', false); } } }
   if (!dirty) return; dirty = false; frames++;
   holder.quaternion.copy(st.q);
   holder.position.set(st.pan.x, st.pan.y * CAM_UP.y, st.pan.y * CAM_UP.z);   // сдвиг — в плоскости кадра

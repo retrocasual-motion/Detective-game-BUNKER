@@ -7,7 +7,8 @@
 // Оси вещи: X — вправо, если смотреть на окно с кассетой; Y — вверх; +Z — перед (окно), −Z — спинка. Центр — в середине корпуса.
 // Узлы по именам: door, window_glass (в выбор лучом не попадает), cassette_*, reel_supply / reel_takeup (катушки, вращаются),
 //   counter (счётчик ленты), grille (решётка динамика с настоящими отверстиями), volume_wheel, label_inv (наклейка бюро на спинке);
-//   нажимаемые — группы на правой грани: btn_rec, btn_play, btn_stop, wind_slider (ползунок перемотки).
+//   нажимаемые — группы на правой грани: btn_rec, btn_play, btn_stop, wind_slider (ползунок перемотки);
+//   wind_zone — невидимая площадка над прорезью ползунка: нажатие на пустое место у стрелки = перемотка в эту сторону.
 //
 // opts: pbr (true), pbrBase, mapSet: 'full' | 'low', lowPower, textureSize, anisotropy, onChange;
 //   counter — false: без счётчика ленты; label — false: без наклейки бюро.
@@ -15,7 +16,9 @@
 // root.userData: ready (Promise), loadMapSet(set), stats, dims, dispose(),
 //   keys — btn_rec, btn_play, btn_stop, btn_ff, btn_rew;
 //   setKeyPressed(name, down), pressKey(name, ms), setKeyLatched(name, on) — клавиша остаётся утопленной (пуск), keyDepth(name),
-//   keyFromHit(hit) — имя клавиши под лучом (у ползунка — по месту попадания: к верху вещи — вперёд, к низу — назад),
+//   keyFromHit(hit) — имя клавиши под лучом (у прорези ползунка — по месту попадания: к верху вещи — вперёд, к низу — назад),
+//   sliderFromHit(hit) — луч попал в сам ползунок (его берут и ведут), setSlider(v) — поставить ползунок: −1 (назад) … 0 … +1 (вперёд);
+//     0 — отпустить, он сам вернётся в середину,
 //   setTapeTime(sec) — место ленты от начала кассеты: углы катушек, толщина намотки и счётчик считаются из него,
 //   setCounterZero(sec) — где счётчик обнулён, counterValue() — число на счётчике,
 //   setLamp(on) — красная лампочка на переде (в игре — пока лента идёт), lampOn().
@@ -296,7 +299,10 @@ export function buildRecorder462(THREE, opts = {}) {
   function drawRightPrint(c, s) {
     const K2 = D.keys, u = (y) => (T - y) / MM * s, v = (z) => (z / MM + 55) * s, ink = 'rgba(238,238,232,0.95)';
     c.fillStyle = ink; c.strokeStyle = ink; c.lineJoin = 'round'; c.lineWidth = 0.26 * s;
-    c.beginPath(); c.arc(u(K2.y), v(K2.rec), 0.95 * s, 0, 7); c.fill();
+    if (o.recMark === 'start') { const x = u(K2.y), y = v(K2.rec);   // «в начало»: две стрелки к низу вещи и черта под ними
+      for (const k of [0, 1]) { c.beginPath(); c.moveTo(x - 1.05 * s, y - 1.75 * s + k * 1.25 * s); c.lineTo(x + 1.05 * s, y - 1.75 * s + k * 1.25 * s); c.lineTo(x, y - 0.55 * s + k * 1.25 * s); c.closePath(); c.fill(); }
+      c.fillRect(x - 1.05 * s, y + 1.05 * s, 2.1 * s, 0.34 * s); }
+    else { c.beginPath(); c.arc(u(K2.y), v(K2.rec), 0.95 * s, 0, 7); c.fill(); }
     { const x = u(K2.y), y = v(K2.play - 2.5 * MM); c.beginPath(); c.moveTo(x - 1.1 * s, y - 1.3 * s); c.lineTo(x + 1.4 * s, y); c.lineTo(x - 1.1 * s, y + 1.3 * s); c.closePath(); c.stroke(); }
     { const x = u(K2.y), y = v(K2.stop); c.strokeRect(x - 1.05 * s, y - 1.05 * s, 2.1 * s, 2.1 * s); }
     for (const [dz, dir] of [[-5.3, -1], [5.3, 1]]) for (const k of [0, 1]) { const x = u(K2.y + 4.9 * MM), y = v(K2.slider + dz * MM) + dir * (k - 0.5) * 1.1 * s; c.beginPath(); c.moveTo(x - 0.8 * s, y - dir * 0.5 * s); c.lineTo(x + 0.8 * s, y - dir * 0.5 * s); c.lineTo(x, y + dir * 0.5 * s); c.closePath(); c.fill(); }
@@ -607,7 +613,7 @@ export function buildRecorder462(THREE, opts = {}) {
       icon(ic, g, h + 0.00003, 0, mat === mClear && ribs ? -hdK * 0.38 : 0, 0.0021);
       keys[name] = { obj: g, axis: [-1, 0, 0], travel };
     };
-    key('btn_rec', K.rec, 0.0045, mRed, 0.0016, 0.00028, 0, 0);       // запись заперта: у кассеты-вещдока выломан язычок защиты, клавиша упирается
+    key('btn_rec', K.rec, 0.0045, mRed, 0.0016, 0.0009, 0, 0);        // красная клавиша: в игре возвращает запись в начало (решение автора 27.11)
     key('btn_play', K.play, 0.0065, mClear, 0.0019, 0.0009, 1, 5);
     key('btn_stop', K.stop, 0.0045, mClear, 0.0019, 0.0009, 2, 0);
     // ползунок перемотки: к верху вещи — вперёд, к низу — назад; сам возвращается в середину
@@ -619,6 +625,10 @@ export function buildRecorder462(THREE, opts = {}) {
       const rg = mergeGeos(THREE, rb); if (PH) setUV(rg, (x, y, z) => rUV(K.y + y, zS + z)); mesh(rg, mRight || mGrey, 'wind_slider_ribs', true, sl); }
     keys.btn_ff = { obj: sl, axis: [0, 0, -1], travel: 0.003 }; keys.btn_rew = { obj: sl, axis: [0, 0, 1], travel: 0.003 };
     sl.userData.keyFn = (p) => (p.z < 0 ? 'btn_ff' : 'btn_rew');
+    // площадка над прорезью и стрелками: пустое место у стрелки нажимается как перемотка в её сторону (ничего не рисует, только ловит луч)
+    const mZone = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }); disposables.push(mZone);
+    const xz = xP + 0.0002, zone = mesh(q4([[xz, K.y + 0.0062, zS - 0.0096], [xz, K.y + 0.0062, zS + 0.0096], [xz, K.y - 0.0062, zS - 0.0096], [xz, K.y - 0.0062, zS + 0.0096]], [1, 0, 0]), mZone, 'wind_zone', false);
+    zone.receiveShadow = false; zone.userData.keyFn = (p) => (p.z < zS ? 'btn_ff' : 'btn_rew');
     icon(3, group, xP + 0.00004, K.y + 0.0049, zS - 0.0052, 0.0013, true); icon(4, group, xP + 0.00004, K.y + 0.0049, zS + 0.0052, 0.0013, true);
   }
 
@@ -676,7 +686,7 @@ export function buildRecorder462(THREE, opts = {}) {
   }
 
   // ---------- нажатие ----------
-  const kst = {}; for (const n in keys) kst[n] = { t: 0, want: false, hold: 0, latch: false };
+  const kst = {}; for (const n in keys) kst[n] = { t: 0, want: false, hold: 0, latch: false, fix: null };   // fix — деталь держат рукой в этом положении
   const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
   const raf = typeof requestAnimationFrame !== 'undefined' ? (f) => requestAnimationFrame(f) : null;
   const calm = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -684,13 +694,14 @@ export function buildRecorder462(THREE, opts = {}) {
   const home0 = new Map(); for (const n in keys) if (!home0.has(keys[n].obj)) home0.set(keys[n].obj, keys[n].obj.position.clone());
   const applyKeys = () => {
     for (const [obj, p0] of home0) obj.position.copy(p0);
-    for (const n in keys) { const k = keys[n], e = ease(kst[n].t); if (!e) continue; k.obj.position.x += k.axis[0] * k.travel * e; k.obj.position.y += k.axis[1] * k.travel * e; k.obj.position.z += k.axis[2] * k.travel * e; }
+    for (const n in keys) { const k = keys[n], e = kst[n].fix != null ? kst[n].fix : ease(kst[n].t); if (!e) continue; k.obj.position.x += k.axis[0] * k.travel * e; k.obj.position.y += k.axis[1] * k.travel * e; k.obj.position.z += k.axis[2] * k.travel * e; }
   };
   let keyAnim = false, keyLast = 0;
   function keyStep() {
     const t = nowMs(), dt = Math.min(50, Math.max(1, t - keyLast)); keyLast = t; let busy = false;
     for (const n in kst) {
-      const k = kst[n], down = k.want || k.latch || t < k.hold, target = down ? 1 : 0, speed = calm ? 1 : (down ? dt / 55 : dt / 100);
+      const k = kst[n]; if (k.fix != null) continue;
+      const down = k.want || k.latch || t < k.hold, target = down ? 1 : 0, speed = calm ? 1 : (down ? dt / 55 : dt / 100);
       if (k.t !== target) { k.t = target > k.t ? Math.min(1, k.t + speed) : Math.max(0, k.t - speed); busy = true; }
       else if (down && !k.want && !k.latch) busy = true;
     }
@@ -701,6 +712,13 @@ export function buildRecorder462(THREE, opts = {}) {
   const setKeyPressed = (name, down) => { const k = kst[name]; if (!k) return false; k.want = !!down; if (down) k.hold = nowMs() + 90; kick(); return true; };
   const pressKey = (name, ms = 120) => { const k = kst[name]; if (!k) return false; k.want = false; k.hold = nowMs() + Math.max(90, ms); kick(); return true; };
   const setKeyLatched = (name, on) => { const k = kst[name]; if (!k) return false; k.latch = !!on; kick(); return true; };
+  // ползунок перемотки под пальцем: v от −1 (назад) до +1 (вперёд); 0 — отпустили, пружина возвращает в середину
+  const setSlider = (v) => {
+    v = Math.max(-1, Math.min(1, v || 0)); const f = kst.btn_ff, r = kst.btn_rew;
+    if (v === 0) { f.fix = r.fix = null; f.want = r.want = false; kick(); return; }
+    f.fix = Math.max(0, v); r.fix = Math.max(0, -v); f.t = f.fix; r.t = r.fix; applyKeys(); if (o.onChange) o.onChange();
+  };
+  const sliderFromHit = (hit) => { for (let ob = hit && hit.object; ob && ob !== root; ob = ob.parent) if (ob.name === 'wind_slider') return true; return false; };
   const keyFromHit = (hit) => {
     for (let ob = hit && hit.object; ob && ob !== root; ob = ob.parent) {
       if (ob.userData.keyFn) return ob.userData.keyFn(ob.worldToLocal(hit.point.clone()));
@@ -741,7 +759,7 @@ export function buildRecorder462(THREE, opts = {}) {
     return Promise.all(texReg.map((e) => loadInto(e.t, packUrl(e.file, set)))).then(finish);
   };
   Object.assign(root.userData, { ready, loadMapSet, mapSet, stats, dims: D, drawFrontPrint, drawRightPrint,
-    keys: Object.keys(keys), setKeyPressed, pressKey, setKeyLatched, keyFromHit, keyDepth: (n) => (kst[n] ? kst[n].t : 0),
+    keys: Object.keys(keys), setKeyPressed, pressKey, setKeyLatched, keyFromHit, sliderFromHit, setSlider, keyDepth: (n) => (kst[n] ? kst[n].t : 0),
     setTapeTime, setCounterZero, tapeTime: () => tapeSec, counterValue: () => counterOf(tapeSec), setLamp, lampOn: () => lampOn,
     dispose() { for (const d of disposables) d.dispose(); } });
   return root;

@@ -185,7 +185,7 @@ thin_dark = np.clip((med8(L, 0.5) - blur(L, 0.06)) / (med8(L, 0.5) + 0.05), 0, 1
 h = 0.5 + np.clip(hp * 0.4, -0.03, 0.03) - 0.08 * blur(thin_dark, 0.1) - 0.012 * scr
 ao = np.clip(1 - 1.2 * blur(thin_dark, 0.1), 0.5, 1)
 # значки клавиш: слой из рисунка модели; на красной — краска, на прозрачных — литьё (чуть светлее и выпукло)
-lp = os.path.join(GEN, 'masks', 'proc_right_L.png')
+lp = os.path.join(GEN, sys.argv[3] if len(sys.argv) > 3 else 'masks', 'proc_right_L.png')   # третий аргумент — папка слоёв печати (вариант значка)
 if os.path.exists(lp):
     Lr = cv2.imread(lp, cv2.IMREAD_UNCHANGED); assert Lr.shape[:2] == L.shape, (Lr.shape, L.shape)
     a_ = Lr[..., 3].astype(np.float32) / 255.0 * np.clip(1 - 0.5 * scr, 0.4, 1) * 0.78

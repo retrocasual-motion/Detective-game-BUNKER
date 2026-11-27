@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { buildRecorder462 } from './recorder462.js';
 const size = parseInt(new URLSearchParams(location.hash.slice(1)).get('size') || '4096');
-const c = buildRecorder462(THREE, { pbr: false, textureSize: size });
+const c = buildRecorder462(THREE, { pbr: false, textureSize: size, recMark: new URLSearchParams(location.hash.slice(1)).get('rec') || 'dot' });   // rec=start — значок «в начало» на красной клавише
 const out = {};
 const only = new URLSearchParams(location.hash.slice(1)).get('only');   // only=L — только слой надписей (его снимают крупнее)
 for (const f of ['front', 'back', 'cass', 'right']) for (const k of ['A', 'O', 'H', 'L']) if (c.userData.canvases[f][k] && (!only || k === only)) out[f + '_' + k] = c.userData.canvases[f][k].toDataURL('image/png');
