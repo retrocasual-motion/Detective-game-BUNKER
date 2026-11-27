@@ -1,0 +1,37 @@
+{
+  "_about": "GEN32 — ручка-диктофон (49, Мика), варианты формы для выбора автором 27.11: по три вида каждого варианта (целиком сбоку, кнопки крупно, верхний торец). Канон: без дисплея; в игре на самой ручке — назад, пуск, вперёд (PL-A, ART-86). Слова автора: металлическая, чтобы металл читался, износ базовый, не грязная. Образцы — настоящие металлические ручки и ручка со скрытой камерой (Wikimedia Commons, bunker-media/references/real/R12_pen_views/). Марок и надписей нет. Запуск: design/tools/kie/kie_batch.ps1 -JobFile <этот файл>.",
+  "outDir": "E:\\Projects\\bunker-media\\probes\\3d\\49_pen_web\\gen32",
+  "resolution": "2K",
+  "aspect": "16:9",
+  "refs": {
+    "STEEL": "E:\\Projects\\bunker-media\\references\\real\\R12_pen_views\\R12-02_parker_jotter_steel_commons.jpg",
+    "STEEL2": "E:\\Projects\\bunker-media\\references\\real\\R12_pen_views\\R12-03_parker_jotter_steel_side_commons.jpg",
+    "SPY": "E:\\Projects\\bunker-media\\references\\real\\R12_pen_views\\R12-01_spy_camera_pen_commons.jpg"
+  },
+  "jobs": [
+    {
+      "label": "PN-A_steel",
+      "refs": [
+        "STEEL",
+        "STEEL2"
+      ],
+      "prompt": "PN-A (file label, not part of the image, never draw it). Studio product photograph, three views of the same single object arranged in one picture on a plain flat light grey background: at the top the whole pen lying horizontally, seen exactly from the side, full length, tip to the left; below it at the left a large close-up of the upper part of the barrel showing the controls; below at the right a large close-up of the top end of the pen. The object is a metal ballpoint pen from 2009 that is also a small digital voice recorder, about 14 centimetres long. It has NO display and no screen of any kind. Controls: three small round metal push buttons in a straight row along the upper barrel (previous, play, next), a pinhole microphone and a tiny dark indicator lamp next to them, a 2.5 mm earphone jack socket in the very top end of the pen, a metal pocket clip. The ballpoint tip is extended. Lightly used by a journalist for a year: a few fine hairline scratches and faint handling marks on the metal, nothing more: no dirt, no grime, no dents, no rust. Soft even studio light, the metal clearly reads as real metal with clean soft reflections, everything sharp. No text, no letters, no numbers, no icons, no brand name and no logo anywhere on the pen. Variant: a slim classic pen made entirely of brushed stainless steel, like the steel pens in the reference images: satin brushed steel barrel about 11 millimetres thick with fine lengthwise brushing, polished steel clip and polished steel top, slightly tapered lower barrel. The three buttons are small polished steel domes set flush in the brushed barrel."
+    },
+    {
+      "label": "PN-B_black_chrome",
+      "refs": [
+        "SPY",
+        "STEEL"
+      ],
+      "prompt": "PN-B (file label, not part of the image, never draw it). Studio product photograph, three views of the same single object arranged in one picture on a plain flat light grey background: at the top the whole pen lying horizontally, seen exactly from the side, full length, tip to the left; below it at the left a large close-up of the upper part of the barrel showing the controls; below at the right a large close-up of the top end of the pen. The object is a metal ballpoint pen from 2009 that is also a small digital voice recorder, about 14 centimetres long. It has NO display and no screen of any kind. Controls: three small round metal push buttons in a straight row along the upper barrel (previous, play, next), a pinhole microphone and a tiny dark indicator lamp next to them, a 2.5 mm earphone jack socket in the very top end of the pen, a metal pocket clip. The ballpoint tip is extended. Lightly used by a journalist for a year: a few fine hairline scratches and faint handling marks on the metal, nothing more: no dirt, no grime, no dents, no rust. Soft even studio light, the metal clearly reads as real metal with clean soft reflections, everything sharp. No text, no letters, no numbers, no icons, no brand name and no logo anywhere on the pen. Variant: a thicker executive pen, about 13 millimetres thick, like the pen in the first reference image: glossy black lacquered brass barrel with polished chrome rings, polished chrome clip, chrome top end and chrome tip section. The three buttons are small polished chrome domes in the black lacquer."
+    },
+    {
+      "label": "PN-C_gunmetal",
+      "refs": [
+        "STEEL",
+        "SPY"
+      ],
+      "prompt": "PN-C (file label, not part of the image, never draw it). Studio product photograph, three views of the same single object arranged in one picture on a plain flat light grey background: at the top the whole pen lying horizontally, seen exactly from the side, full length, tip to the left; below it at the left a large close-up of the upper part of the barrel showing the controls; below at the right a large close-up of the top end of the pen. The object is a metal ballpoint pen from 2009 that is also a small digital voice recorder, about 14 centimetres long. It has NO display and no screen of any kind. Controls: three small round metal push buttons in a straight row along the upper barrel (previous, play, next), a pinhole microphone and a tiny dark indicator lamp next to them, a 2.5 mm earphone jack socket in the very top end of the pen, a metal pocket clip. The ballpoint tip is extended. Lightly used by a journalist for a year: a few fine hairline scratches and faint handling marks on the metal, nothing more: no dirt, no grime, no dents, no rust. Soft even studio light, the metal clearly reads as real metal with clean soft reflections, everything sharp. No text, no letters, no numbers, no icons, no brand name and no logo anywhere on the pen. Variant: a medium pen about 12 millimetres thick in dark gunmetal grey anodised aluminium with a satin finish, with a brushed bright steel upper section where the buttons are, a matching bright steel clip and a bright steel ring in the middle of the barrel. The three buttons are small dark domes set in the bright steel upper section."
+    }
+  ]
+}
