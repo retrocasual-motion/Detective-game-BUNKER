@@ -267,3 +267,94 @@ test('окно стало меньше (вышли из F11, RV-3): ручка �
   await page.mouse.click(t?.x ?? 0, t?.y ?? 0);
   await expect(page.getByTestId('held')).toBeVisible();
 });
+
+const folders = (page: Page) =>
+  page.evaluate(
+    () =>
+      (
+        window as unknown as { __desk?: { folders(): { id: string; x: number; z: number }[] } }
+      ).__desk?.folders() ?? [],
+  );
+
+test('пока читают только что открытую папку — на столе она закрыта; закрыли лист — открыта, листы на ней (автор 27.11)', async ({
+  page,
+}) => {
+  await spill(page, 'protocols', false);
+  // Под листом на столе — та же закрытая папка: раскладки не видно.
+  await expect(page.getByTestId('container-protocols')).toHaveCount(1);
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('viewer')).toBeHidden();
+  await expect(page.getByTestId('container-protocols')).toHaveCount(0);
+  await expect
+    .poll(async () => (await folders(page)).map((f) => f.id))
+    .toEqual(['folder:protocols']);
+});
+
+test('папка — вещь стола (автор 27.11): тянут папку — едут листы на ней; лист — один; на стену не уходит; после перезагрузки там же', async ({
+  page,
+}) => {
+  // Соседняя папка открыта — на её месте больше нет закрытой папки (она преграда), есть куда тянуть.
+  await spill(page, 'scene');
+  await spill(page, 'protocols');
+  await page.waitForTimeout(1200);
+  await deskSettled(page);
+  const sheetsOn = ['31', '32', '33', '34', '35', '36'];
+  const at = async () => new Map((await pieces(page)).map((q) => [q.id, q]));
+  const before = await at();
+  const f0 = (await folders(page)).find((f) => f.id === 'folder:protocols');
+  // Тянуть папку (за край, что не под листами).
+  const g = await grab(page, 'folder:protocols');
+  expect(g).not.toBeNull();
+  const moved = savedPut(page);
+  await page.mouse.move(g?.x ?? 0, g?.y ?? 0);
+  await page.mouse.down();
+  // К середине стола (слева — соседняя закрытая папка, сквозь неё не пройти).
+  await page.mouse.move((g?.x ?? 0) - 260, (g?.y ?? 0) - 60, { steps: 25 });
+  await page.waitForTimeout(400);
+  await page.mouse.up();
+  await moved;
+  const f1 = (await folders(page)).find((f) => f.id === 'folder:protocols');
+  const dx = (f1?.x ?? 0) - (f0?.x ?? 0);
+  const dz = (f1?.z ?? 0) - (f0?.z ?? 0);
+  expect(Math.hypot(dx, dz)).toBeGreaterThan(0.05);
+  const after = await at();
+  for (const id of sheetsOn) {
+    expect(after.get(id)?.x ?? 0).toBeCloseTo((before.get(id)?.x ?? 0) + dx, 3);
+    expect(after.get(id)?.z ?? 0).toBeCloseTo((before.get(id)?.z ?? 0) + dz, 3);
+  }
+  // Лист тянут — едет один.
+  await page.waitForTimeout(600);
+  await deskSettled(page);
+  const s = await grab(page, '31');
+  const one = savedPut(page);
+  await page.mouse.move(s?.x ?? 0, s?.y ?? 0);
+  await page.mouse.down();
+  await page.mouse.move((s?.x ?? 0) + 120, (s?.y ?? 0) - 60, { steps: 15 });
+  await page.waitForTimeout(400);
+  await page.mouse.up();
+  await one;
+  const next = await at();
+  expect(Math.hypot((next.get('31')?.x ?? 0) - (after.get('31')?.x ?? 0), 1e-9)).toBeGreaterThan(
+    0.02,
+  );
+  expect(next.get('32')?.x ?? 0).toBeCloseTo(after.get('32')?.x ?? 0, 4);
+  // Папку — к стене: не уходит, остаётся на столе.
+  await page.waitForTimeout(600);
+  await deskSettled(page);
+  const h = await grab(page, 'folder:protocols');
+  await page.mouse.move(h?.x ?? 0, h?.y ?? 0);
+  await page.mouse.down();
+  await page.mouse.move(683, 150, { steps: 25 });
+  await page.waitForTimeout(400);
+  await page.mouse.up();
+  await page.waitForTimeout(800);
+  await expect.poll(async () => (await folders(page)).length).toBe(2);
+  await toWall(page);
+  await expect(sheet(page, '33')).toHaveCount(0);
+  await page.keyboard.press('ArrowDown');
+  // После перезагрузки — там же.
+  const mine = async () => (await folders(page)).find((f) => f.id === 'folder:protocols');
+  const f2 = await mine();
+  await page.reload();
+  await expect.poll(async () => (await mine())?.x).toBeCloseTo(f2?.x ?? 0, 4);
+});

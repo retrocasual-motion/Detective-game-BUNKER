@@ -131,14 +131,10 @@ describe('открытая папка (UNP-A, автор 26.11)', () => {
       undefined,
       folders,
     ).map((o) => o.key);
-  it('лежит, пока в ней есть листы; все листы ушли — папки на столе нет', () => {
-    expect(keys(['protocols'])).toContain('folder-open-protocols');
-    expect(keys([])).not.toContain('folder-open-protocols');
-    expect(keys([])).not.toContain('envelope-protocols');
-  });
-  it('плоская: стопка листов лежит на ней, не преграда', () => {
-    const o = deskObjects(r, col, [], ['protocols']).find((x) => x.key === 'folder-open-protocols');
-    expect(o?.flat).toBe(true);
-    expect(o?.hotspot).toBeUndefined();
+  it('открытую папку рисует 3D-стол (автор 27.11: тянут — едут листы на ней); комната — нет, закрытой тоже нет', () => {
+    for (const f of [['protocols'] as ContainerId[], [] as ContainerId[]]) {
+      expect(keys(f)).not.toContain('folder-open-protocols');
+      expect(keys(f)).not.toContain('envelope-protocols');
+    }
   });
 });

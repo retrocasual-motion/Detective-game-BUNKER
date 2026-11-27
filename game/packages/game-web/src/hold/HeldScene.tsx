@@ -69,16 +69,20 @@ export default function HeldThing({ held }: { held: Held }) {
     // читать — щелчком по стопке. Коробки — как прежде: вскрытая в руках (EB-A).
     const open = () => {
       // Папка (автор 27.11): открыл — сразу чтение её стопки с верхнего листа («N из M», стрелки).
-      // Папка остаётся в руках под листом, пока лист открыт; листы тем временем уже легли на стол.
-      // Закрыл лист — папки в руках нет, стол разложен (раскладку игрок не видит).
+      // Папка остаётся в руках под листом, пока лист открыт; листы уже на столе, но невидимы.
+      // Закрыл лист — папки в руках нет, стол разложен.
       if (folder) {
         const id = held.id;
         spilling = id;
         const g = useGame.getState();
+        // Пока читают — на столе папка ещё закрыта, её листы невидимы (автор 27.11: раскладку видно
+        // было за листом); закрыли лист — всё на месте в один кадр.
+        useGame.setState({ folderReading: id });
         g.openContainer(id);
         g.readFolder(id);
         const done = () => {
           spilling = null;
+          useGame.setState({ folderReading: null });
           const now = useGame.getState();
           if (now.held?.type === 'container' && now.held.id === id) now.hold(null);
         };

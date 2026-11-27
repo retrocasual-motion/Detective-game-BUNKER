@@ -207,6 +207,11 @@ interface GameStore {
   /** Куда вернуться, когда лист закрыт (readFrom). */
   backTo: Held | null;
   /**
+   * Папку только что открыли и читают её первый лист (автор 27.11): на столе она ещё закрыта, её
+   * листы невидимы — закрыли лист, и всё на месте сразу, без раскладки на виду.
+   */
+  folderReading: ContainerId | null;
+  /**
    * Лист, из которого перешли по ссылке на сайт (автор 27.11: Esc закрывал и компьютер, и лист):
    * закрыли компьютер — этот лист снова открыт, чтение подряд продолжается.
    */
@@ -438,6 +443,7 @@ export const useGame = create<GameStore>((set, get) => {
     foundId: null,
     wallFly: 0,
     backTo: null,
+    folderReading: null,
     afterPc: null,
     deskRun: null,
 

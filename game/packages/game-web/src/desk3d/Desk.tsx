@@ -70,8 +70,6 @@ const DESK_SAFE = 0.2;
 const WALL_HYST = 6;
 /** Скорость перехода стол ↔ стена, 1/с (≈ 0,2 с, сразу с места). */
 const WALL_RATE = 15;
-/** Сколько держать, чтобы взять вместе с тем, что лежит сверху, мс. */
-const HOLD_PILE_MS = 500;
 /** Порог протяжки, px. */
 const DRAG_PX = 4;
 /** Полёт со стола на доску, мс: потом карточка — на стене игры. */
@@ -134,6 +132,20 @@ interface Drag {
   cacheKey: string;
 }
 
+/** Открытая папка дела на столе — вещь стола с id `folder:<папка>` (автор 27.11). */
+export const FOLDER_PREFIX = 'folder:';
+export const isFolderPiece = (id: string) => id.startsWith(FOLDER_PREFIX);
+/** Папка на столе: где лежит (сохранение `folderAt` или своё место в ряду). */
+export interface FolderOnDesk {
+  id: string;
+  label: string;
+  x: number;
+  z: number;
+  rot: number;
+  layer: number;
+}
+export type FolderPlaces = Record<string, { x: number; z: number; rot: number; layer: number }>;
+
 interface Press {
   id: string;
   x0: number;
@@ -166,6 +178,8 @@ export function Desk({
   pointer,
   cursorEl,
   enabled,
+  folders,
+  hide,
 }: {
   room: Room;
   pose: RefObject<Pose>;
@@ -183,8 +197,8 @@ export function Desk({
   stackAt: (id: string) => { x: number; z: number } | null;
   wallFit: RefObject<WallFit>;
   onRead: (id: string) => void;
-  /** Раскладка стола изменилась (положили, высыпали): сохранить. */
-  onSave: (items: DeskItem[]) => void;
+  /** Раскладка стола изменилась (положили, высыпали): сохранить; папки — где лежат. */
+  onSave: (items: DeskItem[], folders: FolderPlaces) => void;
   /** Вещь долетела до доски: повесить на стену игры в эту точку (px доски, середина карточки). */
   onHang: (id: string, at: { x: number; y: number }) => void;
   /** Мышь в координатах экрана — её ведёт страница (протяжка идёт и за край холста). */
@@ -196,6 +210,13 @@ export function Desk({
    * столе обрезан (`compute`), но нажатие может прийти и так — проверка здесь надёжнее.
    */
   enabled: RefObject<boolean>;
+  /** Открытые папки, где ещё лежат листы (UNP-A): вещи стола — тянут вместе с листами на них. */
+  folders: readonly FolderOnDesk[];
+  /**
+   * Папка, которую только что открыли и читают (автор 27.11): она и её листы на столе невидимы, пока
+   * открыт лист, — закрыли лист, и всё на месте сразу.
+   */
+  hide: string | null;
 }) {
   const { camera, scene, invalidate } = useThree();
   const { p } = room;
@@ -207,6 +228,7 @@ export function Desk({
   }, [room]);
 
   const [pieces, setPieces] = useState<Piece[]>([]);
+  const folderLabel = useMemo(() => new Map(folders.map((f) => [f.id, f.label])), [folders]);
   const ps = useRef<Piece[]>([]);
   ps.current = pieces;
   const targets = useRef(new Map<string, PaperTarget>());
@@ -234,9 +256,25 @@ export function Desk({
 
   // Опись (04) — на планшете с зажимом (OPS-A).
   const kindOf = (id: string) =>
-    id === INVENTORY_ID ? 'clipboard' : (DEVICE_KIND[id] ?? materials.get(id)?.kind ?? 'sheet');
+    isFolderPiece(id)
+      ? 'folder'
+      : id === INVENTORY_ID
+        ? 'clipboard'
+        : (DEVICE_KIND[id] ?? materials.get(id)?.kind ?? 'sheet');
   const save = (list: readonly Piece[]) =>
-    onSave(list.map((q) => ({ id: q.id, x: q.x, z: q.z, rot: q.rot, layer: q.layer })));
+    onSave(
+      list
+        .filter((q) => !isFolderPiece(q.id))
+        .map((q) => ({ id: q.id, x: q.x, z: q.z, rot: q.rot, layer: q.layer })),
+      Object.fromEntries(
+        list
+          .filter((q) => isFolderPiece(q.id))
+          .map((q) => [
+            q.id.slice(FOLDER_PREFIX.length),
+            { x: q.x, z: q.z, rot: q.rot, layer: q.layer },
+          ]),
+      ),
+    );
 
   // ── На столе появилась вещь следователя (эпилог, коробка из банка, короб пачек): листы и
   // устройства, что лежали на её месте, отходят на ближайшее свободное (иначе её не взять). ──
@@ -292,6 +330,27 @@ export function Desk({
     const busy = (id: string) => !!d?.ids.includes(id) || flying.current.has(id);
     const placed: Piece[] = [];
     const fresh: DeskItem[] = [];
+    // Папки — первыми и под листами: листы лежат на них.
+    for (const f of folders) {
+      const own = mine.get(f.id);
+      if (own && busy(f.id)) {
+        placed.push(own);
+        continue;
+      }
+      const [w, dd, t] = sizeOf('folder');
+      placed.push({
+        id: f.id,
+        kind: 'folder',
+        w,
+        d: dd,
+        t,
+        x: f.x,
+        z: f.z,
+        rot: f.rot,
+        layer: f.layer,
+        stack: f.id,
+      });
+    }
     for (const it of items) {
       const own = mine.get(it.id);
       if (own && busy(it.id)) placed.push(own);
@@ -423,7 +482,7 @@ export function Desk({
     }
     ps.current = next;
     setPieces(next);
-  }, [items]);
+  }, [items, folders]);
 
   const setCursor = (c: string) => {
     if (cursorEl.current) cursorEl.current.style.cursor = c;
@@ -489,18 +548,13 @@ export function Desk({
       x0: e.clientX,
       y0: e.clientY,
       t0: performance.now(),
-      pile: false,
+      // Стопку двигают только папкой (автор 27.11: «беру стопкой» удержанием — убрать): взял папку —
+      // с ней всё, что на ней лежит; лист — один.
+      pile: isFolderPiece(id),
       timer: 0,
     };
-    if (pileOf(ps.current, id).length > 1)
-      st.timer = window.setTimeout(() => {
-        if (press.current === st && !drag.current) {
-          st.pile = true;
-          // Подсветка «беру стопкой» — сразу, и без движения мыши (RV-14: тачпад, кадр по требованию).
-          invalidate();
-        }
-      }, HOLD_PILE_MS);
     press.current = st;
+    if (st.pile) invalidate();
     setCursor('grabbing');
     const move = (ev: PointerEvent) => {
       if (ev.buttons === 0) return up();
@@ -513,7 +567,7 @@ export function Desk({
       clearTimeout(st.timer);
       press.current = null;
       if (drag.current) drop();
-      else if (!st.pile && performance.now() - st.t0 < 600) onRead(id);
+      else if (performance.now() - st.t0 < 600) onRead(id);
       setCursor(hoverId.current ? 'grab' : '');
     };
     window.addEventListener('pointermove', move);
@@ -693,7 +747,14 @@ export function Desk({
       // Высыпанное долетело (полёт из конверта — около секунды после старта, с запасом).
       settled: () => [...starts.current.values()].every((s) => performance.now() > s.at + 1500),
       pieces: () =>
-        ps.current.map((q) => ({ id: q.id, x: q.x, z: q.z, w: q.w, d: q.d, rot: q.rot })),
+        ps.current
+          .filter((q) => !isFolderPiece(q.id))
+          .map((q) => ({ id: q.id, x: q.x, z: q.z, w: q.w, d: q.d, rot: q.rot })),
+      // Папки на столе (автор 27.11) — отдельно: проверки листов их не считают.
+      folders: () =>
+        ps.current
+          .filter((q) => isFolderPiece(q.id))
+          .map((q) => ({ id: q.id, x: q.x, z: q.z, layer: q.layer })),
       blocked: () => blocked,
       board: (bx: number, by: number) => {
         const v = boardPoint(room, bx, by).project(deskCam);
@@ -744,8 +805,11 @@ export function Desk({
       }
       // Устройство на стену не уходит (DEVICES_ON_WALL): упирается в задний край стола.
       // Опись на планшете (OPS-A) — вещь стола, тоже не на стену.
+      // Папка (с листами на ней) — вещь стола, на стену не уходит.
       const toWall =
-        (DEVICES_ON_WALL || !d.ids.some((id) => DEVICE_KIND[id])) && !d.ids.includes(INVENTORY_ID);
+        (DEVICES_ON_WALL || !d.ids.some((id) => DEVICE_KIND[id])) &&
+        !d.ids.includes(INVENTORY_ID) &&
+        !d.ids.some(isFolderPiece);
       if (!toWall) d.wall = null;
       else if (!d.wall && m.y < line && bp) d.wall = bp;
       else if (d.wall && m.y > line + WALL_HYST) d.wall = null;
@@ -932,7 +996,7 @@ export function Desk({
           <Paper
             key={pc.id}
             piece={pc}
-            title={m?.title ?? pc.id}
+            title={m?.title ?? folderLabel.get(pc.id) ?? pc.id}
             body={m?.body ?? ''}
             p={p}
             target={target(pc.id)}
@@ -940,6 +1004,7 @@ export function Desk({
             onDown={onDown}
             onOver={onOver}
             onOut={onOut}
+            hidden={!!hide && (pc.id === `${FOLDER_PREFIX}${hide}` || deskGroupOf(pc.id) === hide)}
           />
         );
       })}

@@ -37,11 +37,11 @@ async function openFolder(page: Page, id: string, close = true) {
   await page.getByTestId('envelope-open').dispatchEvent('click');
   await saved;
   await expect(page.getByTestId('viewer')).toBeVisible();
-  await expect(page.getByTestId(`container-${id}`)).toHaveCount(0);
   if (!close) return;
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('viewer')).toBeHidden();
   await expect(page.getByTestId('held')).toBeHidden();
+  await expect(page.getByTestId(`container-${id}`)).toHaveCount(0);
 }
 
 /** Короб вещдоков или коробку — в руки и вскрыть: короб уходит из рук, коробка остаётся вскрытой. */
