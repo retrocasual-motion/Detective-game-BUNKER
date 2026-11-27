@@ -1,0 +1,26 @@
+{
+  "_about": "GEN34 — ручка-диктофон (49), путь WEB-C: фото поверхностей для развёртки корпуса. Корпус — тело вращения с зеркальными материалами (чёрный лак, хром): фото самой ручки несло бы запечённые отражения, поэтому снимаются плоские образцы тех же материалов при ровном свете — волосяные царапины, следы пальцев, мелкие точки; из них tools/make_maps.py собирает развёртку (шероховатость, рельеф, цвет). Износ — базовый, не грязь (слова автора 27.11). Запуск: design/tools/kie/kie_batch.ps1 -JobFile <этот файл>.",
+  "outDir": "E:\\Projects\\bunker-media\\probes\\3d\\49_pen_web\\gen34",
+  "resolution": "2K",
+  "aspect": "21:9",
+  "refs": {
+    "LOOK": "E:\\Projects\\bunker-media\\probes\\3d\\49_pen_web\\gen33\\REF_PN-AB_with_display.jpg"
+  },
+  "jobs": [
+    {
+      "label": "S1_lacquer",
+      "refs": [
+        "LOOK"
+      ],
+      "prompt": "S1 (file label, not part of the image, never draw it). Top-down macro photograph of a perfectly flat panel coated with the same glossy piano-black lacquer as the pen barrel in the reference image, the panel fills the whole frame from edge to edge, about 8 by 3.5 centimetres of surface. Lit with soft completely even diffuse light from a light tent so that the black lacquer shows as a uniform deep charcoal black and every surface mark is visible: sparse fine hairline scratches in random directions, a few slightly longer scratches, two or three faint oily fingerprint smudges, a few tiny dust specks, a very slight orange-peel waviness of the lacquer. Light wear of one year of careful use, nothing more: no dirt, no chips, no cracks, no peeling. No reflections of objects, no bright highlights, no gradient, no vignette, no edges of the panel, no background visible. No text, no letters, no numbers, no logo. Everything sharp."
+    },
+    {
+      "label": "S2_chrome",
+      "aspect": "1:1",
+      "refs": [
+        "LOOK"
+      ],
+      "prompt": "S2 (file label, not part of the image, never draw it). Top-down macro photograph of a perfectly flat panel of polished chrome plating, the same chrome as on the pen clip in the reference image, the panel fills the whole frame from edge to edge, about 3 by 3 centimetres of surface. Lit with soft completely even diffuse light from a light tent so that the mirror chrome shows as a uniform light neutral grey and every surface mark is visible: fine hairline scratches in random directions, faint circular micro swirl marks from wiping, a few tiny pits and specks, one or two faint smudges. Light wear of one year of careful use, nothing more: no rust, no peeling, no dents, no dirt. No reflections of objects, no bright highlights, no gradient, no vignette, no edges of the panel, no background visible. No text, no letters, no numbers, no logo. Everything sharp."
+    }
+  ]
+}

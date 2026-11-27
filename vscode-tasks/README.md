@@ -19,6 +19,7 @@
 | [`design/props-web/phone48/VSCODE_TASK.md`](../design/props-web/phone48/VSCODE_TASK.md) | Телефон 48 — 3D-модель из `design/props-web/phone48` в игру: корпус, экран с глубиной, нажатие кнопок под экраном (средняя — «домой», зелёная — журнал звонков), ярлык бюро на спинке (ART-70–73) | готово |
 | [`design/props-web/camera24/VSCODE_TASK.md`](../design/props-web/camera24/VSCODE_TASK.md) | Камера 24 — 3D-модель из `design/props-web/camera24` в игру (класс Sony W210 / W220): металлический корпус, экран с глубиной, двенадцать нажимаемых кнопок, ярлык бюро на стороне объектива (ART-74–77) | готово |
 | [`design/props-web/recorder462/VSCODE_TASK.md`](../design/props-web/recorder462/VSCODE_TASK.md) | Проигрыватель микрокассет L462 — 3D-модель из `design/props-web/recorder462` в игру (класс Sony M-470 / M-679V, чёрный): окно с кассетой, вращающиеся втулки, клавиши на грани, счётчик ленты, лампочка, наклейка бюро (ART-87–90) | готово |
+| [`design/props-web/pen49/VSCODE_TASK.md`](../design/props-web/pen49/VSCODE_TASK.md) | Ручка-диктофон 49 — 3D-модель из `design/props-web/pen49` в игру: чёрный лак и хром, три кнопки, лампочка, флажок вещдока; номер записи — в интерфейсе | черновик, ждёт приёма автора |
 | [`game/docs/ACCESS_REDESIGN_TASK.md`](../game/docs/ACCESS_REDESIGN_TASK.md) | Переделка доступов | см. файл |
 | [`game/docs/RV_FIX_WAVES_TASK.md`](../game/docs/RV_FIX_WAVES_TASK.md) | Волны исправлений большой проверки | см. файл |
 
