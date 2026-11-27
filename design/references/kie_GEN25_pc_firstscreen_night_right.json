@@ -1,0 +1,20 @@
+{
+  "outDir": "E:\\Projects\\bunker-media\\design_ui\\pc\\gen",
+  "resolution": "2K",
+  "aspect": "16:9",
+  "refs": {
+    "DESK": "E:\\Projects\\bunker-media\\design_ui\\ui\\bg\\DESK_seated_K7_crop.png"
+  },
+  "jobs": [
+    {
+      "label": "FS-E1R_night_noir_a",
+      "refs": ["DESK"],
+      "prompt": "Keep exactly the same investigator's office, the same camera position, framing and every object exactly as in the reference image. Change only the lighting: late night, every lamp in the room is switched off, the green banker's lamp is off and its glass shade is dark. Most of the room sinks into deep shadow. Two weak light sources only: the switched-on flat LCD monitor, a soft neutral white glow (not blue) that dimly lights the nearest papers, the phone and the desk edge and fades quickly into darkness; and very faint, desaturated grey moonlight and distant street light coming from an unseen window on the RIGHT side of the room, outside the frame, falling weakly from the right across the filing cabinet, the shelf with binders and the right part of the desk, with soft blind-slat shadows. The left side of the room (coat rack and trench coat) stays almost black. Film noir mood, low key, mostly dark, muted colours, almost monochrome, subtle film grain, realistic photograph. Monitor screen is plain soft light with no content. No new objects, no visible window, no people, no text, no logos."
+    },
+    {
+      "label": "FS-E1R_night_noir_b",
+      "refs": ["DESK"],
+      "prompt": "Same office, same camera, same framing, exactly the same objects as in the reference image. Night noir version: all lamps off, the green desk lamp off and dark. The room is mostly in darkness. A faint, cold-grey light from a window off-frame on the RIGHT falls in long weak stripes through blinds onto the right side of the desk, the metal cabinet and the binders; it does not reach the left wall, where the coat rack is barely visible. The switched-on flat monitor glows with a dim neutral white light, gently lighting only the phone and papers right next to it. Low contrast highlights, deep blacks, muted desaturated palette, cinematic, realistic, slight grain. Monitor screen is plain light without content. No new objects, no visible window, no people, no text, no logos."
+    }
+  ]
+}
