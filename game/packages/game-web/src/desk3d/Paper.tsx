@@ -58,8 +58,16 @@ export interface PaperTarget {
   mode: 'hand' | 'rest' | 'air';
   /** В руке: насколько вещь ушла к доске (0 — над столом, 1 — у доски). */
   carry: number;
-  /** Лежит: к новому месту — сразу, без движения (переехала в кадр после смены окна, RS-A). */
+  /**
+   * Лежит: к новому месту — сразу, без движения (окно меняется — стол и вещи вместе; переехала в кадр
+   * после смены окна, RS-A).
+   */
   snap?: boolean;
+  /**
+   * Положили вместе (папка с листами, автор 27.11): одно движение на всех — одна длительность и один
+   * старт, листы ложатся вместе с папкой, а не догоняют её. Общий объект у всех вещей стопки.
+   */
+  land?: { dur: number; t0: number };
 }
 
 /**
@@ -465,14 +473,19 @@ export function Paper({
       if (onlyHeight) tween.current = null;
       else if (!tw || tw.to.distanceTo(target.pos) > 0.3) {
         const dist = pos.distanceTo(target.pos);
+        const land = target.land;
+        if (land && !land.dur) {
+          land.dur = Math.min(PLACE_MAX, PLACE_MIN + dist * 0.9);
+          land.t0 = now;
+        }
         tween.current =
-          dist > 0.3 && !still && !target.snap
+          (dist > 0.3 || (!!land && dist > 0.001)) && !still && !target.snap
             ? {
                 from: pos.clone(),
                 to: target.pos.clone(),
                 q0: g.quaternion.clone(),
-                t0: now,
-                dur: Math.min(PLACE_MAX, PLACE_MIN + dist * 0.9),
+                t0: land ? land.t0 : now,
+                dur: land ? land.dur : Math.min(PLACE_MAX, PLACE_MIN + dist * 0.9),
               }
             : null;
       }

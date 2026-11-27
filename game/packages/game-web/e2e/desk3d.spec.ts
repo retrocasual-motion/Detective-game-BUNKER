@@ -358,3 +358,64 @@ test('папка — вещь стола (автор 27.11): тянут папк
   await page.reload();
   await expect.poll(async () => (await mine())?.x).toBeCloseTo(f2?.x ?? 0, 4);
 });
+
+type M = { id: string; mode: string; cy: number; dist: number };
+/** Записывать положение вещей стола каждый кадр, мс (проверка движения по кадрам). */
+const sample = (page: Page, ms: number) =>
+  page.evaluate((ms) => {
+    const w = window as unknown as { __desk: { motion(): M[] }; __frames?: M[][] };
+    w.__frames = [];
+    const end = performance.now() + ms;
+    const tick = () => {
+      w.__frames?.push(w.__desk.motion());
+      if (performance.now() < end) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, ms);
+const frames = (page: Page) =>
+  page.evaluate(() => (window as unknown as { __frames: M[][] }).__frames);
+
+test.describe('движение по кадрам (автор 27.11)', () => {
+  test.use({ reducedMotion: 'no-preference' });
+
+  test('папку отпустили — листы ложатся вместе с ней, не догоняют', async ({ page }) => {
+    await spill(page, 'scene');
+    await spill(page, 'protocols');
+    await page.waitForTimeout(1500);
+    await deskSettled(page);
+    const g = await grab(page, 'folder:protocols');
+    await page.mouse.move(g?.x ?? 0, g?.y ?? 0);
+    await page.mouse.down();
+    await page.mouse.move((g?.x ?? 0) - 200, (g?.y ?? 0) - 50, { steps: 20 });
+    await page.waitForTimeout(500);
+    await sample(page, 900);
+    await page.mouse.up();
+    await page.waitForTimeout(1200);
+    const fr = await frames(page);
+    // Высота листа над папкой — та же в каждом кадре укладки (±1 px округления).
+    const gap = (f: M[], id: string) =>
+      (f.find((m) => m.id === id)?.cy ?? 0) - (f.find((m) => m.id === 'folder:protocols')?.cy ?? 0);
+    for (const id of ['31', '33', '36']) {
+      const gaps = fr.map((f) => gap(f, id));
+      expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThanOrEqual(2);
+    }
+  });
+
+  test('окно меняется — вещи стола на своих местах в каждом кадре, не доезжают', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await spill(page, 'protocols');
+    await page.waitForTimeout(1500);
+    await sample(page, 1200);
+    for (const h of [1040, 1000, 960, 920, 880]) {
+      await page.setViewportSize({ width: 1920, height: h });
+      await page.waitForTimeout(40);
+    }
+    await page.waitForTimeout(1300);
+    const lag = (await frames(page)).map((f) =>
+      Math.max(0, ...f.filter((m) => m.mode === 'rest').map((m) => m.dist)),
+    );
+    expect(Math.max(...lag)).toBeLessThanOrEqual(1);
+  });
+});

@@ -310,6 +310,16 @@ export function Desk({
   const zoneNow = useRef(zone);
   zoneNow.current = zone;
   const snap = useRef<{ ids: Set<string>; until: number }>({ ids: new Set(), until: 0 });
+  // Окно меняется (новая комната — новые px мира): всё, что лежит, — на новом месте сразу, вместе со
+  // столом; иначе вещи доезжали за столом и «шатались» (автор 27.11).
+  /** Что ложится вместе после протяжки (папка с листами): друг друга не держат по кадрам. */
+  const landing = useRef<Set<string>>(new Set());
+  const lastRoom = useRef(room);
+  const roomSnapUntil = useRef(0);
+  if (lastRoom.current !== room) {
+    lastRoom.current = room;
+    roomSnapUntil.current = performance.now() + 300;
+  }
   // biome-ignore lint/correctness/useExhaustiveDependencies: только когда сменился кадр стола
   useEffect(() => {
     if (room.vp.width < 300 || room.vp.height < 200) return;
@@ -498,6 +508,10 @@ export function Desk({
       next = [...placed, ...laid];
       save(next);
     }
+    // Ушло со стола (на стену, в руки) — его цель больше не нужна.
+    const here = new Set(next.map((q) => q.id));
+    for (const id of targets.current.keys())
+      if (!here.has(id) && !flying.current.has(id)) targets.current.delete(id);
     ps.current = next;
     setPieces(next);
   }, [items, folders]);
@@ -660,6 +674,17 @@ export function Desk({
       const b = d.base.get(q.id);
       return b ? { ...q, x: b.x + d.off.x + fx, z: b.z + d.off.z + fz } : q;
     });
+    // Положили вместе (папка с листами) — одно движение на всех: ложатся вместе (автор 27.11).
+    if (d.ids.length > 1) {
+      const land = { dur: 0, t0: 0 };
+      for (const id of d.ids) target(id).land = land;
+      const ids = new Set(d.ids);
+      landing.current = ids;
+      window.setTimeout(() => {
+        for (const id of d.ids) if (target(id).land === land) target(id).land = undefined;
+        if (landing.current === ids) landing.current = new Set();
+      }, 1500);
+    }
     ps.current = next;
     setPieces(next);
     save(next);
@@ -908,8 +933,9 @@ export function Desk({
       return c ? (c.y - deskY3) / p - q.t / 2 : 0;
     };
     // На чём лежит (или над чем идёт) вещь в этом месте: верх всего, что под ней ниже по порядку.
-    // Что в руке, под собой не считается: стопка в руке — одно целое (rel), не лесенка.
-    const inHand = new Set(d?.ids ?? []);
+    // Что в руке (и что вместе ложится после протяжки), под собой не считается: стопка — одно
+    // целое, не лесенка и не «догоняет» папку по кадру на слой.
+    const inHand = new Set([...(d?.ids ?? []), ...landing.current]);
     const support = (q: Piece, r: Rect, papersOnly = false) => {
       let top = 0;
       for (const o of onDeskNow)
@@ -1006,7 +1032,8 @@ export function Desk({
       onDesk(t, pc.x, pc.z, (hc.h.get(pc.id) ?? 0) + pc.t / 2, pc.rot);
       t.mode = 'rest';
       // Переехала в кадр после смены окна (RS-A) — сразу, без скольжения.
-      t.snap = snap.current.until > now && snap.current.ids.has(pc.id);
+      t.snap =
+        roomSnapUntil.current > now || (snap.current.until > now && snap.current.ids.has(pc.id));
       t.drape = hc.d.get(pc.id) ?? null;
       const under = support(pc, rectNow(pc), DRAPE && !DEVICE_KIND[pc.id]);
       t.minY = deskY3 + (under + pc.t / 2) * p;
