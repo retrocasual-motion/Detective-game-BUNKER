@@ -11,7 +11,7 @@
 //   не нажимаются: mode_dial_*, lens_unit (кольца и шторки объектива), flash, front_plate, back_shell, band.
 //
 // opts: pbr (true), pbrBase, mapSet: 'full' | 'low', lowPower, textureSize, anisotropy, onChange — как у phone48.js;
-//   label — false: без ярлыка бюро на дне (по умолчанию ярлык есть: 48 × 12 мм, узел label_bureau_24).
+//   label — false: без ярлыка бюро (по умолчанию ярлык есть: 38 × 21,7 мм на стороне объектива, слева от него; узел label_bureau_24).
 // root.userData: ready (Promise), setScreenTexture(tex | null), loadMapSet(set), stats, dims, dispose(),
 //   keys — имена кнопок: btn_up, btn_down, btn_left, btn_right, btn_ok, btn_menu, btn_home, btn_play,
 //          btn_zoom_w, btn_zoom_t, btn_shutter, btn_power;
@@ -31,7 +31,8 @@ export const CAMERA24 = {
     pad: { x: -31 * MM, z: 9.5 * MM }, menu: { x: -21.5 * MM, z: 20.5 * MM }, home: { x: -40.5 * MM, z: 20.5 * MM },
     grip: { x: -45 * MM, z: 2 * MM }, ctl: { x0: -47.5 * MM, x1: -12.5 * MM } },
   top: { shutter: -30 * MM, power: -15 * MM },
-  bottom: { tripod: 18 * MM, door: [-40 * MM, -12 * MM], label: { x0: -40 * MM, x1: 8 * MM, y0: 6.6 * MM, y1: 18.6 * MM } },   // ярлык бюро 48 × 12 мм — поперёк дверцы
+  bottom: { tripod: 18 * MM, door: [-40 * MM, -12 * MM] },
+  label: { x0: -44 * MM, x1: -6 * MM, zc: 6 * MM, lift: 1.2 * MM },   // ярлык бюро 38 × 21,7 мм на стороне объектива, слева от него
 };
 const TILE = 0.030; // метров на повтор плитки «общего» металла
 
@@ -527,14 +528,46 @@ export function buildCamera24(THREE, opts = {}) {
     const slot = new THREE.PlaneGeometry(0.0036, 0.0009); slot.rotateY(-Math.PI / 2); slot.rotateX(Math.PI / 2); slot.translate(-hw - 0.00092, T / 2, -0.012); mesh(slot, mDark, 'strap_slot', false);
   }
 
-  // ---------- ярлык бюро на дне (узкий, 48 × 12 мм, наклеен поперёк дверцы батареи и карты) ----------
-  // Текст читается, когда камеру перевернули дном к себе, объективом вверх.
+  // ---------- ярлык бюро на стороне объектива, слева от него (решение автора 27.11) ----------
+  // Форма бюро как у ноутбука 47 и телефона 48, 38 × 21,7 мм. Бумага не плоская: правый верхний угол отошёл по залому
+  // (залом нарисован и в карте ярлыка), левый нижний чуть приподнят, по полю лёгкая волна; под бумагой — тень.
+  const LAB = { w: D.label.x1 - D.label.x0, h: (D.label.x1 - D.label.x0) * 880 / 1540, x0: D.label.x0, z0: D.label.zc - (D.label.x1 - D.label.x0) * 880 / 1540 / 2 };
+  const labLift = (u, v) => {   // u — слева направо, v — снизу вверх (1 — верх ярлыка)
+    const t = (u - 0.779) / 0.221 + (v - 0.7125) / 0.2875 - 1, t2 = (0.14 - u) / 0.14 + (0.20 - v) / 0.20 - 1;
+    const wave = 0.00005 * (0.5 + 0.5 * Math.sin(6.3 * u + 0.7) * Math.cos(4.1 * v + 1.3)) * Math.min(1, 6 * Math.min(u, 1 - u, v, 1 - v) + 0.25);
+    return wave + (t > 0 ? D.label.lift * Math.pow(Math.min(t, 1), 1.5) : 0) + (t2 > 0 ? 0.00028 * Math.pow(Math.min(t2, 1), 1.6) : 0);
+  };
   if (M.label) {
-    const Lb = D.bottom.label, z = hd + 0.00007;
-    mesh(q4([[Lb.x0, Lb.y1, z], [Lb.x1, Lb.y1, z], [Lb.x0, Lb.y0, z], [Lb.x1, Lb.y0, z]], [0, 0, 1]),
-      phys({ map: M.label.a, normalMap: M.label.n, normalScale: new THREE.Vector2(0.6, 0.6), roughnessMap: M.label.r, roughness: 1, metalness: 0 }), 'label_bureau_24', false);
-    const e = 0.00022, sh = mesh(q4([[Lb.x0 - e, Lb.y1 + e, z - 0.00003], [Lb.x1 + e, Lb.y1 + e, z - 0.00003], [Lb.x0 - e, Lb.y0 - e, z - 0.00003], [Lb.x1 + e, Lb.y0 - e, z - 0.00003]], [0, 0, 1]), mDark, 'label_edge', false);
-    sh.raycast = () => {};   // тонкая тёмная кайма — линия прилегания бумаги
+    const NU = 44, NV = 26, pos = [], uv = [], idx = [];
+    for (let j = 0; j <= NV; j++) for (let i = 0; i <= NU; i++) {
+      const u = i / NU, v = 1 - j / NV;
+      pos.push(LAB.x0 + u * LAB.w, T + 0.00007 + labLift(u, v), LAB.z0 + (1 - v) * LAB.h); uv.push(u, v);
+    }
+    for (let j = 0; j < NV; j++) for (let i = 0; i < NU; i++) { const a = j * (NU + 1) + i, b = a + 1, c = a + NU + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+    mesh(g, phys({ map: M.label.a, normalMap: M.label.n, normalScale: new THREE.Vector2(0.7, 0.7), roughnessMap: M.label.r, roughness: 1, metalness: 0 }), 'label_bureau_24', true);
+    // изнанка: чистая бумага без печати — видна под отошедшим углом
+    const gb = new THREE.BufferGeometry(), ib = [];
+    for (let k = 0; k < idx.length; k += 3) ib.push(idx[k], idx[k + 2], idx[k + 1]);
+    gb.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); gb.setIndex(ib); gb.computeVertexNormals();
+    const lb = mesh(gb, phys({ color: 0xcfc9b8, roughness: 0.95, metalness: 0 }), 'label_back', false); lb.raycast = () => {};
+    // тень под бумагой: линия прилегания по контуру и мягкая тень там, где бумага приподнята (по той же функции подъёма)
+    const mg = 1.6 * MM, fw = LAB.w + 2 * mg, fh = LAB.h + 2 * mg, cw = 380, ch = Math.round(cw * fh / fw);
+    const cv = mkCanvas(cw, ch), c2 = cv.getContext('2d'), img = c2.createImageData(cw, ch), cl = (t) => Math.min(1, Math.max(0, t));
+    for (let py = 0; py < ch; py++) for (let px = 0; px < cw; px++) {
+      const u = ((px + 0.5) / cw * fw - mg) / LAB.w, v = 1 - ((py + 0.5) / ch * fh - mg) / LAB.h;
+      const out = Math.hypot(Math.max(0, -u, u - 1) * LAB.w, Math.max(0, -v, v - 1) * LAB.h);
+      const lf = labLift(cl(u - 0.03), cl(v - 0.05)) - 0.00005;
+      let a = Math.min(0.6, Math.max(0, lf) / (0.8 * MM)) * cl(1 - out / (Math.max(0, lf) * 1.1 + 1e-6));
+      a = Math.max(a, 0.30 * cl(1 - out / 0.00028));
+      const k = (py * cw + px) * 4; img.data[k] = img.data[k + 1] = img.data[k + 2] = 0; img.data[k + 3] = a * 255;
+    }
+    c2.putImageData(img, 0, 0);
+    const st = new THREE.CanvasTexture(cv); disposables.push(st);
+    const y = T + 0.00003, sx0 = LAB.x0 - mg, sx1 = LAB.x0 + LAB.w + mg, sz0 = LAB.z0 - mg, sz1 = LAB.z0 + LAB.h + mg;
+    const ms = new THREE.MeshBasicMaterial({ map: st, transparent: true, depthWrite: false, toneMapped: false }); disposables.push(ms);
+    const sh = mesh(q4([[sx0, y, sz0], [sx1, y, sz0], [sx0, y, sz1], [sx1, y, sz1]], [0, 1, 0]), ms, 'label_shadow', false); sh.receiveShadow = false; sh.raycast = () => {};
   }
 
   // ---------- нажатие ----------

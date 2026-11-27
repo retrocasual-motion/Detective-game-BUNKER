@@ -204,14 +204,14 @@ for d, k in (('pack', 1), ('pack_low', 2)):
     cv2.imwrite(os.path.join(OUT, d, 'side_orm.jpg'), cv2.resize(u8(np.dstack([s_met, s_rough, s_ao])), size, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 95])
     cv2.imwrite(os.path.join(OUT, d, 'side_n.png'), n_img(resize_n(s_n, size)))
 
-# ------------------------------------------------------------------ ярлык бюро (вёрстка tools/label_make.html, 1920×480)
+# ------------------------------------------------------------------ ярлык бюро (вёрстка tools/label_make.html, 1540×880)
 if os.path.exists(os.path.join(OUT, 'src', 'label_albedo.png')):
     for d, ka_, kn_ in (('pack', 1.0, 0.5), ('pack_low', 0.5, 0.25)):
         for nm, k_, ext, q in (('albedo', ka_, 'a.jpg', 94), ('normal', kn_, 'n.png', 0), ('rough', kn_, 'r.jpg', 92)):
             im = cv2.imread(os.path.join(OUT, 'src', f'label_{nm}.png'))
             im = cv2.resize(im, None, fx=k_, fy=k_, interpolation=cv2.INTER_AREA) if k_ != 1 else im
             cv2.imwrite(os.path.join(OUT, d, 'label_' + ext), im, [cv2.IMWRITE_JPEG_QUALITY, q] if q else [])
-    report['label'] = {'mm': [48, 12], 'px_per_cm_full': 400}
+    report['label'] = {'mm': [38, 21.7], 'px_per_cm_full': 405}
 
 # ------------------------------------------------------------------ зад
 photo = cv2.imread(os.path.join(GEN, 'T2_back.png')); layout = cv2.imread(os.path.join(GEN, 'layout', 'L_back.png'))
