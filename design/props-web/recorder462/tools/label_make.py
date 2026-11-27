@@ -11,7 +11,7 @@ with sync_playwright() as p:
     pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.goto(base + 'tools/label_make.html')
     pg.wait_for_function('document.documentElement.dataset.ready', timeout=30000)
-    for k, name in (('color', 'label_albedo'), ('normal', 'label_normal'), ('rough', 'label_rough'), ('cass', 'cass_albedo')):
+    for k, name in (('color', 'label_albedo'), ('normal', 'label_normal'), ('rough', 'label_rough'), ('cass', 'cass_strip'), ('cassInk', 'cass_ink')):
         d = pg.evaluate("window.__label.%s.toDataURL('image/png')" % k)
         open(os.path.join(out, '%s.png' % name), 'wb').write(base64.b64decode(d.split(',')[1]))
     print('fonts ok:', pg.evaluate("document.fonts.check('80px \"Ink Free\"')"), 'errors:', errs)

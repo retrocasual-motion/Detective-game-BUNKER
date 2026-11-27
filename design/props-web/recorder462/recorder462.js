@@ -32,7 +32,8 @@ export const RECORDER462 = {
   left: { wheel: { z: -22 * MM, r: 8 * MM, out: 1.3 * MM }, speed: 3 * MM },
   top: { mic: -13 * MM, ear: 8 * MM, pause: 19 * MM },
   back: { lid: { x0: -26 * MM, x1: 26 * MM, z0: 4 * MM, z1: 51 * MM }, label: { x0: -21 * MM, x1: 21 * MM, zc: -30 * MM, lift: 0.5 * MM } },
-  cassette: { x0: -27 * MM, x1: 6 * MM, zc: -26.5 * MM, len: 50 * MM, hubs: 10 * MM, hubX: -10.5 * MM, strip: [-26 * MM, -17.3 * MM] },
+  cassette: { x0: -27 * MM, x1: 6 * MM, zc: -26.5 * MM, len: 50 * MM, hubs: 11.725 * MM, hubX: -10.52 * MM, strip: [-26 * MM, -17.3 * MM] },   // втулки — по фото GEN24 (замер tools/make_parts.py)
+  hubR: 6.2 * MM,   // радиус вращающейся части втулки на фото кассеты
   tape: { r0: 5.6 * MM, r1: 9.6 * MM, length: 43, speed: 0.024, total: 1800 },   // намотка, длина ленты (м), скорость (м/с), секунд на сторону
 };
 const TILE = 0.030;
@@ -267,6 +268,38 @@ export function buildRecorder462(THREE, opts = {}) {
     for (const k of [0, 1]) { a.beginPath(); a.moveTo(4 * n + 106 - k * 44, 34); a.lineTo(4 * n + 66 - k * 44, 64); a.lineTo(4 * n + 106 - k * 44, 94); a.closePath(); a.fill(); } // 4 — назад
     return A;
   }
+  // Кассета лицом к зрителю, как она стоит в окне: образец раскладки для генератора и запасной рисунок.
+  // 33 × 50 мм; слева — бумажная полоска (дата кладётся вёрсткой), две втулки с намоткой, справа — кромка с лентой и прижимом.
+  function drawCassette(size) {
+    const s = size / 33, w = size, h = Math.round(50 * s), A = mkCanvas(w, h), a = A.getContext('2d'), C2 = D.cassette, T2 = D.tape;
+    const mx = (x) => (x - C2.x0) / MM * s, mz = (z) => (z - (C2.zc - C2.len / 2)) / MM * s, disc = (x, z, r, col) => { a.fillStyle = col; a.beginPath(); a.arc(mx(x), mz(z), r / MM * s, 0, 7); a.fill(); };
+    a.fillStyle = '#8a8a8a'; a.fillRect(0, 0, w, h);
+    rrect(a, 0.2 * s, 0.2 * s, w - 0.2 * s, h - 0.2 * s, 2.2 * s); a.fillStyle = '#c4c6c2'; a.fill(); a.strokeStyle = '#7d7f7c'; a.lineWidth = 0.35 * s; a.stroke();
+    rrect(a, 1.2 * s, 1.2 * s, w - 1.2 * s, h - 1.2 * s, 1.6 * s); a.strokeStyle = 'rgba(90,92,90,0.5)'; a.lineWidth = 0.2 * s; a.stroke();
+    const p = 300 / T2.total, Aq2 = T2.r1 * T2.r1 - T2.r0 * T2.r0, rT = Math.sqrt(T2.r0 * T2.r0 + p * Aq2), rS = Math.sqrt(T2.r1 * T2.r1 - p * Aq2);
+    // лента: от намоток к правой кромке, вдоль неё мимо прижима
+    a.strokeStyle = '#3a2a22'; a.lineWidth = 0.25 * s; a.beginPath(); a.moveTo(mx(C2.hubX), mz(C2.zc - C2.hubs) - rS / MM * s); a.lineTo(w - 2.2 * s, 2.6 * s); a.lineTo(w - 2.2 * s, h - 2.6 * s); a.lineTo(mx(C2.hubX), mz(C2.zc + C2.hubs) + rT / MM * s); a.stroke();
+    for (const z of [2.6, 47.4]) { a.fillStyle = '#dcdcd8'; a.beginPath(); a.arc(w - 2.6 * s, z * s, 1.3 * s, 0, 7); a.fill(); }
+    a.fillStyle = '#9a6a3c'; a.fillRect(w - 3.6 * s, 22.5 * s, 1.6 * s, 5 * s);
+    for (const [dz, r] of [[-C2.hubs, rS], [C2.hubs, rT]]) {
+      const z = C2.zc + dz; disc(C2.hubX, z, r, '#34261f'); disc(C2.hubX, z, T2.r0, '#e4e4df'); disc(C2.hubX, z, 3.3 * MM, '#2b2b2d');
+      a.fillStyle = '#e4e4df'; for (let k = 0; k < 6; k++) { a.save(); a.translate(mx(C2.hubX), mz(z)); a.rotate(k / 6 * Math.PI * 2 + (dz > 0 ? 0.4 : 0)); a.fillRect(-0.45 * s, 2.3 * s, 0.9 * s, 1.1 * s); a.restore(); }
+      disc(C2.hubX, z, 1.7 * MM, '#6d6f72');
+    }
+    // бумажная полоска вдоль левой кромки — пустая
+    a.fillStyle = '#e8e2d2'; a.fillRect(mx(C2.strip[0]), mz(C2.zc - 21 * MM), (C2.strip[1] - C2.strip[0]) / MM * s, 42 * s);
+    for (const [x, z] of [[30.3, 13], [30.3, 37]]) { a.fillStyle = '#8c8e8b'; a.beginPath(); a.arc(x * s, z * s, 0.9 * s, 0, 7); a.fill(); }
+    return A;
+  }
+  // Значки клавиш на правой грани (карта грани: слева — перед вещи, сверху — верх вещи). Отдельным слоем: make_maps.py кладёт их резкими.
+  function drawRightPrint(c, s) {
+    const K2 = D.keys, u = (y) => (T - y) / MM * s, v = (z) => (z / MM + 55) * s, ink = 'rgba(238,238,232,0.95)';
+    c.fillStyle = ink; c.strokeStyle = ink; c.lineJoin = 'round'; c.lineWidth = 0.26 * s;
+    c.beginPath(); c.arc(u(K2.y), v(K2.rec), 0.95 * s, 0, 7); c.fill();
+    { const x = u(K2.y), y = v(K2.play - 2.5 * MM); c.beginPath(); c.moveTo(x - 1.1 * s, y - 1.3 * s); c.lineTo(x + 1.4 * s, y); c.lineTo(x - 1.1 * s, y + 1.3 * s); c.closePath(); c.stroke(); }
+    { const x = u(K2.y), y = v(K2.stop); c.strokeRect(x - 1.05 * s, y - 1.05 * s, 2.1 * s, 2.1 * s); }
+    for (const [dz, dir] of [[-5.3, -1], [5.3, 1]]) for (const k of [0, 1]) { const x = u(K2.y + 4.9 * MM), y = v(K2.slider + dz * MM) + dir * (k - 0.5) * 1.1 * s; c.beginPath(); c.moveTo(x - 0.8 * s, y - dir * 0.5 * s); c.lineTo(x + 0.8 * s, y - dir * 0.5 * s); c.lineTo(x, y + dir * 0.5 * s); c.closePath(); c.fill(); }
+  }
   // запасная наклейка кассеты (без карт): полоска бумаги с датой; настоящая — вёрсткой tools/label_make.html
   function drawCassStrip() {
     const w = 256, h = 1024, A = mkCanvas(w, h), a = A.getContext('2d');
@@ -298,21 +331,34 @@ export function buildRecorder462(THREE, opts = {}) {
     M = { front: { a: loadTex('front_a.jpg', true), n: loadTex('front_n.png', false), o: loadTex('front_orm.jpg', false) },
       back: { a: loadTex('back_a.jpg', true), n: loadTex('back_n.png', false), o: loadTex('back_orm.jpg', false) },
       tile: { n: loadTex('tile_n.png', false, true), o: loadTex('tile_orm.jpg', false, true) },
-      cass: { a: loadTex('cass_a.jpg', true) },
+      cass: { a: loadTex('cass_a.jpg', true), n: loadTex('cass_n.png', false), o: loadTex('cass_orm.jpg', false) },
+      right: { a: loadTex('right_a.jpg', true), n: loadTex('right_n.png', false), o: loadTex('right_orm.jpg', false) },
+      left: { a: loadTex('left_a.jpg', true), n: loadTex('left_n.png', false), o: loadTex('left_orm.jpg', false) },
+      top: { a: loadTex('top_a.jpg', true), n: loadTex('top_n.png', false), o: loadTex('top_orm.jpg', false) },
+      glass: { a: loadTex('glass_a.jpg', false) },
       label: o.label !== false ? { a: loadTex('label_a.jpg', true), n: loadTex('label_n.png', false), r: loadTex('label_r.jpg', false) } : null };
   } else {
     const F = drawFront(o.textureSize), B = drawBack(o.textureSize), TL = drawTile();
-    root.userData.canvases = { front: F, back: B };
+    const RL = mkCanvas(Math.round(o.textureSize * 22.5 / 60), Math.round(o.textureSize * 110 / 60)); drawRightPrint(RL.getContext('2d'), o.textureSize / 60);
+    root.userData.canvases = { front: F, back: B, cass: { A: drawCassette(Math.round(o.textureSize * 33 / 60)) }, right: { L: RL } };
     M = { front: { a: canvasTex(F.A, true), n: canvasTex(F.N, false), o: canvasTex(F.O, false) },
       back: { a: canvasTex(B.A, true), n: canvasTex(B.N, false), o: canvasTex(B.O, false) },
       tile: { n: canvasTex(TL.N, false, true), o: canvasTex(TL.O, false, true) },
-      cass: { a: canvasTex(drawCassStrip(), true) }, label: null };
+      cass: { a: canvasTex(drawCassStrip(), true) }, label: null, right: null, left: null, top: null, glass: null };
   }
   const phys = (p) => { const m = new THREE.MeshPhysicalMaterial(p); disposables.push(m); return m; };
   const faceMat = (F, extra = {}) => phys(Object.assign({ map: F.a, normalMap: F.n, roughnessMap: F.o, metalnessMap: F.o, aoMap: F.o, aoMapIntensity: 0.9,
     roughness: 1, metalness: 1, normalScale: new THREE.Vector2(1, 1) }, extra));
   const mFront = faceMat(M.front, { clearcoat: 0.25, clearcoatRoughness: 0.35 });   // краска «шампань» под лаком
-  const mBack = faceMat(M.back);
+  const mBack = faceMat(M.back, { specularIntensity: 0.6 });   // тёмный пластик: блик лампы не должен высветлять грань до серого
+  // грани с фото: правая (клавиши), левая (колесо громкости), верхняя (микрофон, гнездо, пауза); карты — проекция в лоб на грань
+  const mRight = M.right ? faceMat(M.right, { clearcoat: 0.35, clearcoatRoughness: 0.25 }) : null;
+  const mLeft = M.left ? faceMat(M.left, { specularIntensity: 0.6 }) : null, mTop = M.top ? faceMat(M.top, { specularIntensity: 0.6 }) : null;
+  const mCass = M.cass && M.cass.o ? faceMat(M.cass, { clearcoat: 0.6, clearcoatRoughness: 0.18 }) : null;
+  const rUV = (y, z) => [(T - y) / T, 1 - (z + hd) / H];        // правая грань: слева — перед вещи
+  const lUV = (y, z) => [y / T, 1 - (z + hd) / H];              // левая грань: справа — перед вещи
+  const tUV = (x, y) => [(x + hw) / W, 1 - y / T];              // верхняя грань: сверху — спинка
+  const setUV = (g, fn) => { const pos = g.attributes.position, uv = g.attributes.uv; for (let i = 0; i < pos.count; i++) { const t = fn(pos.getX(i), pos.getY(i), pos.getZ(i)); uv.setXY(i, t[0], t[1]); } return g; };
   const tileRough = (k) => ({ roughness: k, roughnessMap: M.tile.o, normalMap: M.tile.n });
   const mBody = phys(Object.assign({ color: new THREE.Color(0.014, 0.015, 0.017), metalness: 0, normalScale: new THREE.Vector2(0.25, 0.25) }, tileRough(0.72)));      // тёмный литой пластик боков
   const mPod = phys(Object.assign({ color: new THREE.Color(0.010, 0.011, 0.012), metalness: 0, normalScale: new THREE.Vector2(0.12, 0.12), clearcoat: 0.6, clearcoatRoughness: 0.2 }, tileRough(0.55)));
@@ -362,8 +408,13 @@ export function buildRecorder462(THREE, opts = {}) {
     g.translate(cx, y0, cz); return g;
   };
   // деталь на боковой грани: «плитка» растёт наружу от грани. side: +1 — правая (x = +hw), −1 — левая; 'top' — верхняя грань (z = −hd)
-  const sideChip = (side, p) => {
-    const g = chipGeo(THREE, Object.assign({ y0: 0, seg: KSEG }, p));
+  // at — [координата поперёк грани, вдоль грани] центра детали в координатах вещи: по нему деталь одевается в фото своей грани
+  const sideChip = (side, p, at) => {
+    const q = Object.assign({ y0: 0, seg: KSEG }, p);
+    if (at && side === 1 && M.right) q.uv = (x, z) => rUV(at[0] - x, at[1] + z);
+    if (at && side === -1 && M.left) q.uv = (x, z) => lUV(at[0] + x, at[1] + z);
+    if (at && side === 'top' && M.top) q.uv = (x, z) => tUV(at[0] + x, at[1] + z);
+    const g = chipGeo(THREE, q);
     if (side === 'top') g.rotateX(-Math.PI / 2); else g.rotateZ(side > 0 ? -Math.PI / 2 : Math.PI / 2);
     return g;
   };
@@ -378,7 +429,27 @@ export function buildRecorder462(THREE, opts = {}) {
     sideGeo(THREE, { hw, hd, r: R, profile: backProf, seg: SEG, uvf: (x, z) => bUV(x, z) }),
   ]), mBack, 'back_shell');
   const sm = D.seam;
-  mesh(sideGeo(THREE, { hw, hd, r: R, seg: SEG, profile: [[0, fr], [0, sm - 0.00022], [0.00026, sm - 0.00008], [0.00026, sm + 0.00008], [0, sm + 0.00022], [0, T - fr]] }), mBody, 'band');
+  {
+    const bandProf = [[0, fr], [0, sm - 0.00022], [0.00026, sm - 0.00008], [0.00026, sm + 0.00008], [0, sm + 0.00022], [0, T - fr]];
+    const band = sideGeo(THREE, { hw, hd, r: R, seg: SEG, profile: bandProf });
+    if (!M.right) mesh(band, mBody, 'band');
+    else {   // каждая грань — своё фото в лоб; углы делятся пополам по 45°
+      const ng = band.toNonIndexed(); band.dispose();
+      const P2 = ng.attributes.position, N2 = ng.attributes.normal, parts = { right: [[], [], []], left: [[], [], []], top: [[], [], []], bottom: [[], [], []] };
+      for (let i = 0; i < P2.count; i += 3) {
+        const nx = N2.getX(i) + N2.getX(i + 1) + N2.getX(i + 2), nz = N2.getZ(i) + N2.getZ(i + 1) + N2.getZ(i + 2);
+        const key = Math.abs(nx) >= Math.abs(nz) ? (nx > 0 ? 'right' : 'left') : (nz < 0 ? 'top' : 'bottom'), A2 = parts[key];
+        for (let k = i; k < i + 3; k++) { const x = P2.getX(k), y = P2.getY(k), z = P2.getZ(k); A2[0].push(x, y, z); A2[1].push(N2.getX(k), N2.getY(k), N2.getZ(k));
+          const t = key === 'right' ? rUV(y, z) : key === 'left' ? lUV(y, z) : key === 'top' ? tUV(x, y) : [x / TILE, y / TILE]; A2[2].push(t[0], t[1]); }
+      }
+      ng.dispose();
+      for (const [key, mat] of [['right', mRight], ['left', mLeft || mBody], ['top', mTop || mBody], ['bottom', mBody]]) {
+        const g2 = new THREE.BufferGeometry(), A2 = parts[key];
+        g2.setAttribute('position', new THREE.Float32BufferAttribute(A2[0], 3)); g2.setAttribute('normal', new THREE.Float32BufferAttribute(A2[1], 3)); g2.setAttribute('uv', new THREE.Float32BufferAttribute(A2[2], 2));
+        mesh(g2, mat, 'band_' + key);
+      }
+    }
+  }
   mesh(sideGeo(THREE, { hw, hd, r: R, seg: SEG, profile: frontProf, uvf: (x, z) => fUV(x, z) }), mFront, 'front_bevel');
   mesh(capGeo(THREE, { hw: hw - fr, hd: hd - fr, r: R - fr, y: T, up: true, seg: SEG, uv: fUV,
     holes: [{ x0: G.x0, z0: G.z0, x1: G.x1, z1: G.z1, r: G.r }, { x0: WN.x0, z0: WN.z0, x1: WN.x1, z1: WN.z1, r: WN.r }] }), mFront, 'front_plate');
@@ -411,30 +482,46 @@ export function buildRecorder462(THREE, opts = {}) {
       capGeo(THREE, { hw: hwD - bv, hd: hdD - bv, r: DR.r - bv, cx: cxD, cz: czD, y: yD, up: true, seg: SEG, uv: fUV, holes }),
     ]), mFront, 'door');
     const wcx = (WN.x0 + WN.x1) / 2, wcz = (WN.z0 + WN.z1) / 2, whw = (WN.x1 - WN.x0) / 2, whd = (WN.z1 - WN.z0) / 2, bz = WN.bezel;
-    mesh(sideGeo(THREE, { hw: whw, hd: whd, r: WN.r, cx: wcx, cz: wcz, seg: 10, inward: true, profile: [[-bz, yGl], [-0.00012, yD - 0.00012], [0, yD]] }), mBezel, 'window_bezel', false);
+    mesh(sideGeo(THREE, { hw: whw, hd: whd, r: WN.r, cx: wcx, cz: wcz, seg: 10, inward: true, profile: [[-bz, yGl], [-0.00012, yD - 0.00012], [0, yD]], uvf: o.pbr ? (x, z) => fUV(x, z) : null }), o.pbr ? mFront : mBezel, 'window_bezel', false);
     mesh(sideGeo(THREE, { hw: whw - bz, hd: whd - bz, r: WN.r - bz, cx: wcx, cz: wcz, seg: 10, inward: true, profile: [[0, yFloor], [0, yGl]] }), mWell, 'window_well', false);
     const glass = mesh(capGeo(THREE, { hw: whw - bz, hd: whd - bz, r: WN.r - bz, cx: wcx, cz: wcz, y: yGl - 0.00005, up: true, seg: 10 }), mGlass, 'window_glass', false);
     glass.raycast = () => {}; glass.renderOrder = 3; glass.receiveShadow = false;
+    if (M.glass) {
+      const gx0 = WN.x0 + bz, gx1 = WN.x1 - bz, gz0 = WN.z0 + bz, gz1 = WN.z1 - bz, yy = yGl - 0.00003;
+      const mScr = phys({ color: new THREE.Color(0.85, 0.85, 0.83), alphaMap: M.glass.a, transparent: true, opacity: 0.55, depthWrite: false, roughness: 0.75, metalness: 0 });
+      const sc = mesh(capGeo(THREE, { hw: whw - bz, hd: whd - bz, r: WN.r - bz, cx: wcx, cz: wcz, y: yy, up: true, seg: 10, uv: (x, z) => [(x - gx0) / (gx1 - gx0), 1 - (z - gz0) / (gz1 - gz0)] }), mScr, 'window_marks', false);
+      sc.raycast = () => {}; sc.renderOrder = 4; sc.receiveShadow = false;
+    }
     mesh(q4([[WN.x0, yFloor, WN.z0], [WN.x1, yFloor, WN.z0], [WN.x0, yFloor, WN.z1], [WN.x1, yFloor, WN.z1]], [0, 1, 0]), mLiner, 'cassette_floor', false);
   }
 
-  // кассета в окне: дымчатый корпус, бумажная полоска с датой вдоль края, две катушки с лентой
+  // Кассета в окне. С картами — фото кассеты на плоскости и две втулки поверх него (они вращаются: вырезаны из того же фото,
+  // tools/make_maps.py ставит их центры точно в центры модели). Намотка на фото неподвижна: за полминуты записи её толщина
+  // меняется на десятую миллиметра. Без карт — запасная сборка из геометрии.
   const CS = D.cassette, TP = D.tape, reels = {};
-  {
-    const z0 = CS.zc - CS.len / 2, z1 = CS.zc + CS.len / 2;
+  const cz0 = CS.zc - CS.len / 2, cUV = (x, z) => [(x - CS.x0) / (CS.x1 - CS.x0), 1 - (z - cz0) / CS.len];
+  if (mCass) {
+    const z1 = cz0 + CS.len;
+    mesh(q4([[CS.x0, yCas, cz0], [CS.x1, yCas, cz0], [CS.x0, yCas, z1], [CS.x1, yCas, z1]], [0, 1, 0], [cUV(CS.x0, cz0), cUV(CS.x1, cz0), cUV(CS.x0, z1), cUV(CS.x1, z1)]), mCass, 'cassette', false);
+    for (const [name, dz] of [['reel_supply', -CS.hubs], ['reel_takeup', CS.hubs]]) {
+      const g = new THREE.Group(); g.name = name; g.position.set(CS.hubX, 0, CS.zc + dz); group.add(g);
+      const d = new THREE.CircleGeometry(D.hubR, LSEG); d.rotateX(-Math.PI / 2); d.translate(0, yCas + 0.00003, 0);
+      setUV(d, (x, y, z) => cUV(x + CS.hubX, z + CS.zc + dz));
+      mesh(d, mCass, name + '_hub', false, g);
+      reels[name] = { g, pack: null };
+    }
+  } else {
+    const z0 = cz0, z1 = cz0 + CS.len;
     const shell = mesh(q4([[CS.x0, yCas, z0], [CS.x1, yCas, z0], [CS.x0, yCas, z1], [CS.x1, yCas, z1]], [0, 1, 0]), mShell, 'cassette_shell', false); shell.renderOrder = 2; shell.raycast = () => {};
-    // полоска: по длинной стороне кассеты; текст идёт вдоль неё (кассета в окне стоит вертикально) — u поперёк, v вдоль
     const sx0 = CS.strip[0], sx1 = CS.strip[1], sz0 = CS.zc - 21 * MM, sz1 = CS.zc + 21 * MM, yS = yCas + 0.00004;
     const strip = mesh(q4([[sx0, yS, sz0], [sx1, yS, sz0], [sx0, yS, sz1], [sx1, yS, sz1]], [0, 1, 0], [[0, 1], [1, 1], [0, 0], [1, 0]]), mStrip, 'cassette_label', false); strip.renderOrder = 2;
     for (const [name, dz] of [['reel_supply', -CS.hubs], ['reel_takeup', CS.hubs]]) {
       const g = new THREE.Group(); g.name = name; g.position.set(CS.hubX, 0, CS.zc + dz); group.add(g);
-      // втулка: кольцо с тремя зубцами внутри (по ним видно вращение) и шпиндель проигрывателя
       mesh(lathe([[5.6, -3.4], [5.6, -0.25], [5.3, -0.05], [3.5, -0.05], [3.3, -0.25], [3.3, -3.4]], yCas, 0, 0), mHub, name + '_hub', false, g);
       const lugs = [];
       for (let k = 0; k < 3; k++) { const b = new THREE.BoxGeometry(0.0011, 0.003, 0.0014); b.translate(0, yCas - 0.0017, 0.0027); b.rotateY(k / 3 * Math.PI * 2 + (dz > 0 ? 0.5 : 0)); lugs.push(b); }
       mesh(mergeGeos(THREE, lugs), mHub, name + '_lugs', false, g);
       mesh(lathe([[1.9, -3.4], [1.9, -0.9], [1.6, -0.7], [0, -0.7]], yCas, 0, 0), mGrey, name + '_spindle', false, g);
-      // намотка: диск единичного радиуса, растягивается под толщину
       const pack = mesh(lathe([[1000, -3.2], [1000, -0.75], [990, -0.6], [0, -0.6]], yCas, 0, 0), mTape, name + '_tape', false, g);
       reels[name] = { g, pack };
     }
@@ -449,17 +536,23 @@ export function buildRecorder462(THREE, opts = {}) {
       const s = String(((Math.floor(n) % 1000) + 1000) % 1000).padStart(3, '0');
       for (let k = 0; k < 3; k++) {
         const x = 10 + k * 80, g2 = c2.createLinearGradient(0, 8, 0, chh - 8);
-        g2.addColorStop(0, '#3a3a38'); g2.addColorStop(0.28, '#e9e7df'); g2.addColorStop(0.72, '#e9e7df'); g2.addColorStop(1, '#3a3a38');
-        c2.fillStyle = g2; c2.fillRect(x, 8, 74, chh - 16);
-        c2.fillStyle = '#161616'; c2.font = '700 92px Arial, Helvetica, sans-serif'; c2.textAlign = 'center'; c2.textBaseline = 'middle'; c2.fillText(s[k], x + 37, chh / 2 + 5);
+        g2.addColorStop(0, '#161614'); g2.addColorStop(0.16, '#8f8a78'); g2.addColorStop(0.36, '#d9d4c0'); g2.addColorStop(0.62, '#d3ceb9'); g2.addColorStop(0.86, '#857f6d'); g2.addColorStop(1, '#141412');
+        c2.fillStyle = g2; c2.fillRect(x, 6, 74, chh - 12);
+        c2.fillStyle = '#1b1b1a'; c2.font = '700 88px "Arial Narrow", Arial, Helvetica, sans-serif'; c2.textAlign = 'center'; c2.textBaseline = 'middle';
+        c2.save(); c2.translate(x + 37, chh / 2 + 4); c2.scale(0.86, 1); c2.globalAlpha = 0.9; c2.fillText(s[k], 0, 0); c2.restore();
+        // соседние цифры барабана уходят за край окна
+        c2.save(); c2.globalAlpha = 0.35; c2.translate(x + 37, chh / 2 + 4); c2.scale(0.86, 0.5); c2.fillText(String((+s[k] + 1) % 10), 0, -196); c2.fillText(String((+s[k] + 9) % 10), 0, 196); c2.restore();
       }
+      const cr = rngFactory(77);   // мелкая грязь и потёртости барабанов — одни и те же при каждом числе
+      for (let i = 0; i < 260; i++) { c2.fillStyle = `rgba(${cr() < 0.6 ? '40,36,28' : '250,246,230'},${0.05 + cr() * 0.12})`; c2.fillRect(cr() * cw, 8 + cr() * (chh - 16), 1 + cr() * 2.5, 1 + cr() * 1.6); }
       tex.needsUpdate = true;
     };
     counterDraw(0);
     const y = yD - 0.00045;
-    mesh(q4([[CT.x0, y, CT.z0], [CT.x1, y, CT.z0], [CT.x0, y, CT.z1], [CT.x1, y, CT.z1]], [0, 1, 0], [[0, 1], [1, 1], [0, 0], [1, 0]]), phys({ map: tex, roughness: 0.55, metalness: 0 }), 'counter', false);
+    mesh(q4([[CT.x0, y, CT.z0], [CT.x1, y, CT.z0], [CT.x0, y, CT.z1], [CT.x1, y, CT.z1]], [0, 1, 0], [[0, 1], [1, 1], [0, 0], [1, 0]]), phys({ map: tex, roughness: 0.5, metalness: 0 }), 'counter', false);
+    const cg = mesh(q4([[CT.x0, yD - 0.00012, CT.z0], [CT.x1, yD - 0.00012, CT.z0], [CT.x0, yD - 0.00012, CT.z1], [CT.x1, yD - 0.00012, CT.z1]], [0, 1, 0]), mGlass, 'counter_glass', false); cg.raycast = () => {}; cg.renderOrder = 3; cg.receiveShadow = false;
     mesh(sideGeo(THREE, { hw: (CT.x1 - CT.x0) / 2, hd: (CT.z1 - CT.z0) / 2, r: 0.0006, cx: (CT.x0 + CT.x1) / 2, cz: (CT.z0 + CT.z1) / 2, seg: 4, inward: true, profile: [[0, y], [0, yD]] }), mWell, 'counter_well', false);
-    mesh(chipGeo(THREE, { hw: 0.0012, hd: 0.0012, r: 0.0012, cx: CT.reset.x, cz: CT.reset.z, y0: yD, h: 0.0005, bevel: 0.0002, seg: KSEG }), mPod, 'counter_reset');
+    mesh(chipGeo(THREE, { hw: 0.0012, hd: 0.0012, r: 0.0012, cx: CT.reset.x, cz: CT.reset.z, y0: yD, h: 0.0005, bevel: 0.0002, seg: KSEG, uv: o.pbr ? fUV : null }), o.pbr ? mFront : mPod, 'counter_reset');
   }
   { // лампочка батареи: маленькая тёмно-красная линза
     const rc = 1.6 * MM, br = 1.05 * MM, th = Math.asin(br / rc), dome = new THREE.SphereGeometry(rc, 20, 6, 0, Math.PI * 2, 0, th); dome.translate(D.led.x, T - rc * Math.cos(th) - 0.00003, D.led.z);
@@ -467,30 +560,36 @@ export function buildRecorder462(THREE, opts = {}) {
   }
 
   // ---------- клавиши на правой грани ----------
-  const keys = {}, K = D.keys;
+  // С картами все детали грани одеты в её фото (проекция в лоб): гнездо, запись, пуск, стоп, ползунок, ушко ремешка.
+  // Значки клавиш лежат в карте (слой печати); без карт — отдельные значки поверх одноцветных клавиш.
+  const keys = {}, K = D.keys, PH = !!M.right;
   const keyGroup = (name, x, y, z) => { const g = new THREE.Group(); g.name = name; g.position.set(x, y, z); group.add(g); return g; };
-  const icons = canvasTex(drawIcons(), true);
-  const mIcon = new THREE.MeshBasicMaterial({ map: icons, transparent: true, depthWrite: false, toneMapped: false, opacity: 0.85 }); disposables.push(mIcon);
-  // значок на детали правой грани: квадрат 2s × 2s, смотрит в +X. Обычный — верх значка к верху вещи (читается, когда вещь стоит);
-  // along — значок повёрнут вдоль хода ползунка: его «вправо» смотрит к верху вещи
+  const icons = PH ? null : canvasTex(drawIcons(), true);
+  const mIcon = PH ? null : new THREE.MeshBasicMaterial({ map: icons, transparent: true, depthWrite: false, toneMapped: false, opacity: 0.85 }); if (mIcon) disposables.push(mIcon);
   const icon = (k, parent, x, yc, zc, s, along) => {
+    if (PH) return;
     const u0 = k / 5, u1 = (k + 1) / 5;
     const pts = along ? [[x, yc + s, zc + s], [x, yc + s, zc - s], [x, yc - s, zc + s], [x, yc - s, zc - s]]
       : [[x, yc + s, zc - s], [x, yc - s, zc - s], [x, yc + s, zc + s], [x, yc - s, zc + s]];
-    const m = mesh(q4(pts, [1, 0, 0], [[u0, 1], [u1, 1], [u0, 0], [u1, 0]]), mIcon, null, false, parent);
+    const m = mesh(q4(pts, [1, 0, 0], [[u0, 1], [u1, 1], [u0, 0], [u1, 0]]), mIcon, 'key_icon', false, parent);
     m.raycast = () => {}; m.receiveShadow = false; m.renderOrder = 4; return m;
   };
   {
     const podC = (K.pod[0] + K.pod[1]) / 2, podH = (K.pod[1] - K.pod[0]) / 2, POD = 0.0011;
-    const pod = sideChip(1, { hw: 0.0064, hd: podH, r: 0.003, h: POD, bevel: 0.0005 }); pod.translate(hw, K.y, podC); mesh(pod, mPod, 'key_pod');
+    if (PH) {   // гнездо клавиш: верх — фото, стенка — гладкий чёрный пластик (на отвесной стенке проекция фото дала бы штрихи)
+      const wall = sideGeo(THREE, { hw: 0.0064, hd: podH, r: 0.003, profile: bevelProf(0, POD, 0.0005), seg: KSEG }); wall.rotateZ(-Math.PI / 2); wall.translate(hw, K.y, podC); mesh(wall, mPod, 'key_pod_wall');
+      // прорезь ползунка — настоящее углубление: отверстие в гнезде, стенки и тёмное дно
+      const sz = K.slider - podC, SW2 = 0.0031, SL2 = 0.0083, SD = 0.0009;
+      const cap = capGeo(THREE, { hw: 0.0059, hd: podH - 0.0005, r: 0.0025, y: POD, up: true, seg: KSEG, uv: (x, z) => rUV(K.y - x, podC + z), holes: [{ x0: -SW2, z0: sz - SL2, x1: SW2, z1: sz + SL2, r: 0.001 }] }); cap.rotateZ(-Math.PI / 2); cap.translate(hw, K.y, podC); mesh(cap, mRight, 'key_pod');
+      const sw = sideGeo(THREE, { hw: SW2, hd: SL2, r: 0.001, cz: sz, seg: 6, inward: true, profile: [[0, POD - SD], [0, POD]] }); sw.rotateZ(-Math.PI / 2); sw.translate(hw, K.y, podC); mesh(sw, mPod, 'wind_slot_wall', false);
+      const xf = hw + POD - SD; mesh(q4([[xf, K.y + SW2, K.slider - SL2], [xf, K.y + SW2, K.slider + SL2], [xf, K.y - SW2, K.slider - SL2], [xf, K.y - SW2, K.slider + SL2]], [1, 0, 0]), mDark, 'wind_slot', false).raycast = () => {};
+    } else { const pod = sideChip(1, { hw: 0.0064, hd: podH, r: 0.003, h: POD, bevel: 0.0005 }); pod.translate(hw, K.y, podC); mesh(pod, mPod, 'key_pod'); }
     const xP = hw + POD;
-    // ушко ремешка у верхнего угла (ремешка нет)
-    { const g = sideChip(1, { hw: 0.0042, hd: 0.0031, r: 0.002, h: 0.0019, bevel: 0.0008 }); g.translate(hw, K.y, K.post); mesh(g, mGrey, 'strap_post'); }
-    // запись (красная), пуск и стоп (прозрачный пластик с тёмной сердцевиной)
+    { const g = sideChip(1, { hw: 0.0042, hd: 0.0031, r: 0.002, h: 0.0019, bevel: 0.0008 }, [K.y, K.post]); g.translate(hw, K.y, K.post); mesh(g, mRight || mGrey, 'strap_post'); }
     const key = (name, zc, hdK, mat, h, travel, ic, ribs) => {
       const g = keyGroup(name, xP, K.y, zc);
-      const cap = sideChip(1, { hw: 0.0043, hd: hdK, r: 0.0012, h, bevel: 0.00045 }); mesh(cap, mat, name + '_cap', true, g);
-      if (mat === mClear) { const core = sideChip(1, { hw: 0.0031, hd: hdK - 0.0012, r: 0.0006, h: h * 0.45, bevel: 0.0001 }); mesh(core, mClearCore, name + '_core', false, g).raycast = () => {};
+      const cap = sideChip(1, { hw: 0.0043, hd: hdK, r: 0.0012, h, bevel: 0.00055 }, [K.y, zc]); mesh(cap, mRight || mat, name + '_cap', true, g);
+      if (!PH && mat === mClear) { const core = sideChip(1, { hw: 0.0031, hd: hdK - 0.0012, r: 0.0006, h: h * 0.45, bevel: 0.0001 }); mesh(core, mClearCore, name + '_core', false, g).raycast = () => {};
         if (ribs) { const rb = []; for (let k = 0; k < ribs; k++) { const b = new THREE.BoxGeometry(0.00035, 0.0062, 0.00045); b.translate(h * 0.62, 0, (k - (ribs - 1) / 2) * 0.0013 + hdK * 0.42); rb.push(b); }
           mesh(mergeGeos(THREE, rb), mClearCore, name + '_ribs', false, g).raycast = () => {}; } }
       icon(ic, g, h + 0.00003, 0, mat === mClear && ribs ? -hdK * 0.38 : 0, 0.0021);
@@ -501,10 +600,11 @@ export function buildRecorder462(THREE, opts = {}) {
     key('btn_stop', K.stop, 0.0045, mClear, 0.0019, 0.0009, 2, 0);
     // ползунок перемотки: к верху вещи — вперёд, к низу — назад; сам возвращается в середину
     const zS = K.slider, SL = 0.0085;
-    mesh(q4([[xP + 0.00002, K.y + 0.0033, zS - SL], [xP + 0.00002, K.y + 0.0033, zS + SL], [xP + 0.00002, K.y - 0.0033, zS - SL], [xP + 0.00002, K.y - 0.0033, zS + SL]], [1, 0, 0]), mDark, 'wind_slot', false).raycast = () => {};
+    if (!PH) mesh(q4([[xP + 0.00002, K.y + 0.0033, zS - SL], [xP + 0.00002, K.y + 0.0033, zS + SL], [xP + 0.00002, K.y - 0.0033, zS - SL], [xP + 0.00002, K.y - 0.0033, zS + SL]], [1, 0, 0]), mDark, 'wind_slot', false).raycast = () => {};
     const sl = keyGroup('wind_slider', xP, K.y, zS);
-    mesh(sideChip(1, { hw: 0.0031, hd: 0.0042, r: 0.0011, h: 0.0015, bevel: 0.0005 }), mGrey, 'wind_slider_cap', true, sl);
-    { const rb = []; for (let k = 0; k < 5; k++) { const b = new THREE.BoxGeometry(0.0005, 0.0052, 0.00045); b.translate(0.0016, 0, (k - 2) * 0.0014); rb.push(b); } mesh(mergeGeos(THREE, rb), mGrey, 'wind_slider_ribs', true, sl); }
+    mesh(sideChip(1, { hw: 0.0031, hd: 0.0042, r: 0.0011, h: 0.0015, bevel: 0.0005 }, [K.y, zS]), mRight || mGrey, 'wind_slider_cap', true, sl);
+    { const rb = []; for (let k = 0; k < 5; k++) { const b = new THREE.BoxGeometry(0.0005, 0.0052, 0.00045); b.translate(0.0016, 0, (k - 2) * 0.0014); rb.push(b); }
+      const rg = mergeGeos(THREE, rb); if (PH) setUV(rg, (x, y, z) => rUV(K.y + y, zS + z)); mesh(rg, mRight || mGrey, 'wind_slider_ribs', true, sl); }
     keys.btn_ff = { obj: sl, axis: [0, 0, -1], travel: 0.003 }; keys.btn_rew = { obj: sl, axis: [0, 0, 1], travel: 0.003 };
     sl.userData.keyFn = (p) => (p.z < 0 ? 'btn_ff' : 'btn_rew');
     icon(3, group, xP + 0.00004, K.y + 0.0049, zS - 0.0052, 0.0013, true); icon(4, group, xP + 0.00004, K.y + 0.0049, zS + 0.0052, 0.0013, true);
@@ -512,23 +612,27 @@ export function buildRecorder462(THREE, opts = {}) {
 
   // левая грань: колесо громкости (выступает из прорези) и переключатель скорости ленты
   {
-    const L = D.left, wy = K.y, wx = -hw + (L.wheel.r - L.wheel.out);
-    const wheel = new THREE.CylinderGeometry(L.wheel.r, L.wheel.r, 0.0032, LSEG); wheel.translate(wx, wy, L.wheel.z); mesh(wheel, mGrey, 'volume_wheel');
+    const L = D.left, wy = K.y, wx = -hw + (L.wheel.r - L.wheel.out), PL = !!M.left;
+    const wheel = new THREE.CylinderGeometry(L.wheel.r, L.wheel.r, 0.0032, LSEG); wheel.translate(wx, wy, L.wheel.z); if (PL) setUV(wheel, (x, y, z) => lUV(y, z)); mesh(wheel, mLeft || mGrey, 'volume_wheel');
     const kn = []; for (let k = 0; k < 56; k++) { const b = new THREE.BoxGeometry(0.00042, 0.003, 0.0005); b.translate(0, 0, L.wheel.r); b.rotateY(k / 56 * Math.PI * 2); b.translate(wx, wy, L.wheel.z); kn.push(b); }
-    mesh(mergeGeos(THREE, kn), mGrey, 'volume_knurl', false);
+    { const kg = mergeGeos(THREE, kn); if (PL) setUV(kg, (x, y, z) => lUV(y, z)); mesh(kg, mLeft || mGrey, 'volume_knurl', false); }
     const half = Math.sqrt(L.wheel.r * L.wheel.r - (L.wheel.r - L.wheel.out) ** 2) + 0.0008, xs = -hw - 0.00002;
-    mesh(q4([[xs, wy + 0.0021, L.wheel.z + half], [xs, wy + 0.0021, L.wheel.z - half], [xs, wy - 0.0021, L.wheel.z + half], [xs, wy - 0.0021, L.wheel.z - half]], [-1, 0, 0]), mDark, 'volume_slot', false);
-    mesh(q4([[xs, wy + 0.0016, L.speed + 0.0042], [xs, wy + 0.0016, L.speed - 0.0042], [xs, wy - 0.0016, L.speed + 0.0042], [xs, wy - 0.0016, L.speed - 0.0042]], [-1, 0, 0]), mDark, 'speed_slot', false);
-    const sw = sideChip(-1, { hw: 0.0013, hd: 0.0018, r: 0.0005, h: 0.0008, bevel: 0.0003 }); sw.translate(-hw, wy, L.speed - 0.0018); mesh(sw, mGrey, 'speed_switch');
+    if (!PL) {
+      mesh(q4([[xs, wy + 0.0021, L.wheel.z + half], [xs, wy + 0.0021, L.wheel.z - half], [xs, wy - 0.0021, L.wheel.z + half], [xs, wy - 0.0021, L.wheel.z - half]], [-1, 0, 0]), mDark, 'volume_slot', false);
+      mesh(q4([[xs, wy + 0.0016, L.speed + 0.0042], [xs, wy + 0.0016, L.speed - 0.0042], [xs, wy - 0.0016, L.speed + 0.0042], [xs, wy - 0.0016, L.speed - 0.0042]], [-1, 0, 0]), mDark, 'speed_slot', false);
+    }
+    const sw = sideChip(-1, { hw: 0.0013, hd: 0.0018, r: 0.0005, h: 0.0008, bevel: 0.0003 }, [wy, L.speed - 0.0018]); sw.translate(-hw, wy, L.speed - 0.0018); mesh(sw, mLeft || mGrey, 'speed_switch');
   }
-  // верхняя грань: щели микрофона, гнездо наушника, ползунок паузы
+  // верхняя грань: щели микрофона, гнездо наушника, ползунок паузы (с картами — на фото грани; ползунок — деталь)
   {
     const Tp = D.top, zT = -hd - 0.00002, yM = 12.5 * MM;
-    for (let k = 0; k < 3; k++) { const g = new THREE.PlaneGeometry(0.0062, 0.0007); g.rotateY(Math.PI); g.translate(Tp.mic, yM + (k - 1) * 0.0019, zT); mesh(g, mDark, 'mic_slot', false); }
-    const ring = new THREE.RingGeometry(0.00175, 0.0027, 32); ring.rotateY(Math.PI); ring.translate(Tp.ear, yM, zT - 0.00002); mesh(ring, mChrome, 'ear_ring', false);
-    const hole = new THREE.CircleGeometry(0.00175, 32); hole.rotateY(Math.PI); hole.translate(Tp.ear, yM, zT); mesh(hole, mDark, 'ear_hole', false);
-    const slot = new THREE.PlaneGeometry(0.0085, 0.0034); slot.rotateY(Math.PI); slot.translate(Tp.pause, yM, zT); mesh(slot, mDark, 'pause_slot', false);
-    const ps = sideChip('top', { hw: 0.0022, hd: 0.0014, r: 0.0005, h: 0.0009, bevel: 0.0003 }); ps.translate(Tp.pause - 0.0018, yM, -hd); mesh(ps, mGrey, 'pause_switch');
+    if (!M.top) {
+      for (let k = 0; k < 3; k++) { const g = new THREE.PlaneGeometry(0.0062, 0.0007); g.rotateY(Math.PI); g.translate(Tp.mic, yM + (k - 1) * 0.0019, zT); mesh(g, mDark, 'mic_slot', false); }
+      const ring = new THREE.RingGeometry(0.00175, 0.0027, 32); ring.rotateY(Math.PI); ring.translate(Tp.ear, yM, zT - 0.00002); mesh(ring, mChrome, 'ear_ring', false);
+      const hole = new THREE.CircleGeometry(0.00175, 32); hole.rotateY(Math.PI); hole.translate(Tp.ear, yM, zT); mesh(hole, mDark, 'ear_hole', false);
+      const slot = new THREE.PlaneGeometry(0.0085, 0.0034); slot.rotateY(Math.PI); slot.translate(Tp.pause, yM, zT); mesh(slot, mDark, 'pause_slot', false);
+    }
+    const ps = sideChip('top', { hw: 0.0022, hd: 0.0014, r: 0.0005, h: 0.0009, bevel: 0.0003 }, [Tp.pause - 0.0018, yM]); ps.translate(Tp.pause - 0.0018, yM, -hd); mesh(ps, mTop || mGrey, 'pause_switch');
   }
 
   // ---------- наклейка бюро на спинке: инвентарная, казённая (вёрстка tools/label_make.html) ----------
@@ -602,7 +706,7 @@ export function buildRecorder462(THREE, opts = {}) {
   const setTapeTime = (sec) => {
     tapeSec = Math.min(TP.total, Math.max(0, sec)); const p = tapeSec / TP.total;
     const rT = Math.sqrt(TP.r0 * TP.r0 + p * Aq), rS = Math.sqrt(TP.r1 * TP.r1 - p * Aq);
-    reels.reel_takeup.pack.scale.set(rT / 1, 1, rT / 1); reels.reel_supply.pack.scale.set(rS / 1, 1, rS / 1);
+    if (reels.reel_takeup.pack) { reels.reel_takeup.pack.scale.set(rT, 1, rT); reels.reel_supply.pack.scale.set(rS, 1, rS); }
     reels.reel_takeup.g.rotation.y = -turnsTake(p);
     reels.reel_supply.g.rotation.y = -(2 * TP.length / Aq) * (TP.r1 - rS);
     const n = counterOf(tapeSec); if (counterDraw && n !== counterShown) { counterShown = n; counterDraw(n); }
@@ -624,7 +728,7 @@ export function buildRecorder462(THREE, opts = {}) {
     mapSet = set; stats.mapSet = set; root.userData.mapSet = set;
     return Promise.all(texReg.map((e) => loadInto(e.t, packUrl(e.file, set)))).then(finish);
   };
-  Object.assign(root.userData, { ready, loadMapSet, mapSet, stats, dims: D, drawFrontPrint,
+  Object.assign(root.userData, { ready, loadMapSet, mapSet, stats, dims: D, drawFrontPrint, drawRightPrint,
     keys: Object.keys(keys), setKeyPressed, pressKey, setKeyLatched, keyFromHit, keyDepth: (n) => (kst[n] ? kst[n].t : 0),
     setTapeTime, setCounterZero, tapeTime: () => tapeSec, counterValue: () => counterOf(tapeSec),
     dispose() { for (const d of disposables) d.dispose(); } });

@@ -16,9 +16,9 @@ const dl = new THREE.DirectionalLight(0xffffff, clay ? 2.2 : 0.7); scene.add(dl,
 const cam3 = buildRecorder462(THREE, { pbr: P.get('pbr') === '1', lowPower: false, labels: P.get('labels') !== '0', counter: P.get('counter') !== '0', label: false, onChange: () => { if (window.__cam) draw(); } }); scene.add(cam3);
 const D = cam3.userData.dims;
 // ровный свет без бликов: металл и глянец на время съёмки выключены, остаётся цвет
-cam3.traverse(o => { if (o.isMesh && o.material && o.material.isMeshPhysicalMaterial) { const mt = o.material; mt.metalnessMap = null; mt.metalness = 0; mt.roughness = 0.9; mt.roughnessMap = null; mt.clearcoat = 0; mt.anisotropy = 0; mt.needsUpdate = true; } });
+cam3.traverse(o => { if (o.isMesh && o.material && o.material.isMeshPhysicalMaterial) { const mt = o.material; mt.metalnessMap = null; mt.metalness = 0; mt.roughness = 0.9; mt.roughnessMap = null; mt.clearcoat = 0; mt.anisotropy = 0; mt.transmission = 0; mt.needsUpdate = true; } });
 // plain=1 — образец для генератора: окно пустое и тёмное (кассета и счётчик — геометрия, с фото не берутся)
-if (P.get('plain') === '1') cam3.traverse(o => { if (/^(cassette_shell|cassette_label|reel_|window_glass)/.test(o.name)) o.visible = false;
+if (P.get('plain') === '1') cam3.traverse(o => { if (/^(cassette_shell|cassette_label|reel_|window_glass|key_icon)/.test(o.name)) o.visible = false;
   if (o.isMesh && (o.name === 'cassette_floor' || o.name === 'counter')) o.material = new THREE.MeshBasicMaterial({ color: 0x0b0b0c }); });
 if (clay) { const mat = new THREE.MeshStandardMaterial({ color: 0x9a9a9a, roughness: 0.9 }); cam3.traverse(o => { if (o.isMesh) o.material = mat; }); }
 const ar = innerWidth / innerHeight;

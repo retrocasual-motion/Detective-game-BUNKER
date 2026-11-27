@@ -116,7 +116,7 @@ async function build() {
   for (let i = 0; i < 24; i++) blob(q, rnd() < 0.5 ? 0 : CW, rr(0, CH), rr(20, 60), rr(60, 200), '150,125,75', rr(0.04, 0.10));
   noise(q, 7, CW, CH);
 
-  window.__label = { color: cc, normal: document.getElementById('normal'), rough: rc, cass: sc };
+  window.__label = { color: cc, normal: document.getElementById('normal'), rough: rc, cass: sc, cassInk: ink };   // cassInk — одна дата на прозрачном: её кладут на фото кассеты
   document.documentElement.dataset.ready = '1';
 }
 build();

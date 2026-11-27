@@ -1,0 +1,53 @@
+{
+  "_about": "GEN24 — проигрыватель микрокассет L462, вторая проба 27.11 (замечание автора: кассета, клавиши и окно «игрушечные», нужны фото-текстуры как у телефона и ноутбука). Фото строго по образцам модели: кассета лицом (рисунок модели, 33 × 50 мм, кадр 1152×2048), правая грань с клавишами, левая грань, верхняя грань (ortho.html#v=right|left|top&plain=1). Марок, надписей и значков на фото нет: значки клавиш и дата на кассете кладутся вёрсткой (make_maps.py). Образцы материалов: настоящие микрокассеты (Wikimedia Commons), картинка автора, фото спинки GEN23 — чтобы пластик совпал. Запуск: design/tools/kie/kie_batch.ps1 -JobFile <этот файл>.",
+  "outDir": "E:\\Projects\\bunker-media\\probes\\3d\\462_recorder_web\\gen24",
+  "resolution": "4K",
+  "aspect": "9:16",
+  "refs": {
+    "L_CASS": "E:\\Projects\\bunker-media\\probes\\3d\\462_recorder_web\\gen24\\layout\\L_cass_tex.jpg",
+    "L_RIGHT": "E:\\Projects\\bunker-media\\probes\\3d\\462_recorder_web\\gen24\\layout\\L_right_tex.jpg",
+    "L_LEFT": "E:\\Projects\\bunker-media\\probes\\3d\\462_recorder_web\\gen24\\layout\\L_left_tex.jpg",
+    "L_TOP": "E:\\Projects\\bunker-media\\probes\\3d\\462_recorder_web\\gen24\\layout\\L_top_tex.jpg",
+    "C_CASS": "E:\\Projects\\bunker-media\\references\\real\\R11_dictaphone_views\\R11-02_microcassettes_commons.jpg",
+    "A_REF": "E:\\Projects\\bunker-media\\references\\real\\R11_dictaphone_views\\R11-01_author_reference_crop.jpg",
+    "B_REF": "E:\\Projects\\bunker-media\\probes\\3d\\462_recorder_web\\gen24\\layout\\REF_back_plastic.jpg"
+  },
+  "jobs": [
+    {
+      "label": "T3_cass",
+      "refs": [
+        "L_CASS",
+        "C_CASS"
+      ],
+      "prompt": "T3 (file label, not part of the image, never draw it). Turn the first image, a flat computer layout drawing, into a real photograph. Perfectly straight orthographic macro product photograph of a used microcassette, the small 50 by 33 millimetre dictation tape cassette, standing upright on a plain flat medium grey background, with exactly the same framing and proportions as the first image. Keep exactly the outline and the position and size of every part from the first image: the clear transparent plastic shell with rounded corners and its moulded inner rim; the two white plastic hub reels, one above the other, each with six small inner teeth around a dark centre hole with a dark grey metal drive spindle in it; the dark brown magnetic tape wound around each hub, the upper tape pack large and the lower one thin, seen through the clear shell, with the fine concentric sheen of tightly wound tape; the thin strand of tape running from the packs to the right edge, past the two small white guide rollers and past the small orange-brown felt pressure pad in the middle of the right edge; the two small moulded screw posts near the right edge; the paper label strip along the whole left edge: plain cream paper, completely blank, nothing written and nothing printed on it. Do not add, move or remove any part. Plastic, hubs and tape exactly like the real microcassettes in the second image, but this cassette has no branding at all. It was kept for a year in a bank deposit box and handled a few times: fine hairline scratches and light scuffs on the clear shell, slightly cloudy plastic, a little grey dust in the corners and around the hubs, the paper strip slightly yellowed at its edges. No cracks, no stickers other than the blank paper strip. Lit with soft completely even shadowless light: no reflections, no highlights, no gradient. Natural colours, everything sharp. No text, no letters, no numbers, no symbols, no icons, no arrows, no brand name and no logo anywhere. The paper strip is completely empty and the shell has no moulded lettering and no scale marks."
+    },
+    {
+      "label": "T4_right",
+      "refs": [
+        "L_RIGHT",
+        "A_REF",
+        "B_REF"
+      ],
+      "prompt": "T4 (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight orthographic product photograph of the right-hand narrow side of a generic pocket microcassette voice recorder from the early 2000s, standing upright, on a plain flat medium grey background, with exactly the same framing and proportions as the first image. Keep exactly the outline and the position, size and shape of every part from the first image: the narrow side of the body in dark charcoal moulded plastic with a very fine matte texture, exactly the plastic of the third image, with the thin straight seam line running along its whole length; along its left edge the thin strip of the champagne-gold painted front shell; the raised glossy black control panel with rounded ends; on it, from top to bottom: the bright red opaque record key; the long key and the short key, both made of clear colourless transparent plastic like the keys in the second image, so that the darker inside of the key and its fine moulded ribs are seen through the clear plastic; the black slot with the grey ribbed slider standing in its middle; above the panel the grey rounded strap post. Do not add, move or remove any part. Years of office use as shared equipment of an investigation bureau: the red key rubbed and slightly faded on its top, the clear keys with fine scratches and slightly cloudy from thumbs, the glossy black panel with fine hairline scratches, a little fine grey dust in the gaps around every key and in the slider slot, the plastic edges polished slightly shinier. No dents, no cracks, no chips, no stickers, no strap. Lit with soft completely even shadowless light: no reflections, no highlights, no gradient. Natural colours, everything sharp. No text, no letters, no numbers, no symbols, no icons, no arrows, no brand name and no logo anywhere. The keys are completely blank."
+    },
+    {
+      "label": "T5_left",
+      "resolution": "2K",
+      "refs": [
+        "L_LEFT",
+        "B_REF"
+      ],
+      "prompt": "T5 (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight orthographic product photograph of the left-hand narrow side of a generic pocket microcassette voice recorder from the early 2000s, standing upright, on a plain flat medium grey background, with exactly the same framing and proportions as the first image. Keep exactly the outline and the position, size and shape of every part from the first image: the narrow side of the body in dark charcoal moulded plastic with a very fine matte texture, exactly the plastic of the second image, with the thin straight seam line running along its whole length; along its right edge the thin strip of the champagne-gold painted front shell; in the upper part the short black slot with the edge of the grey finely knurled volume wheel showing in it; below it the short black slot with the small grey slide switch. Do not add, move or remove any part. Years of office use as shared equipment of an investigation bureau: fine hairline scratches and light scuffs on the plastic, the edges polished slightly shinier, a little fine grey dust in both slots and in the seam. No dents, no cracks, no chips, no stickers, no strap. Lit with soft completely even shadowless light: no reflections, no highlights, no gradient. Natural colours, everything sharp. No text, no letters, no numbers, no symbols, no icons, no arrows, no brand name and no logo anywhere."
+    },
+    {
+      "label": "T6_top",
+      "resolution": "2K",
+      "aspect": "16:9",
+      "refs": [
+        "L_TOP",
+        "B_REF"
+      ],
+      "prompt": "T6 (file label, not part of the image, never draw it). Turn the first image, a computer layout render, into a real photograph. Perfectly straight orthographic product photograph of the top end of a generic pocket microcassette voice recorder from the early 2000s, seen from directly above its top edge, on a plain flat medium grey background, with exactly the same framing and proportions as the first image. Keep exactly the outline and the position, size and shape of every part from the first image: the long narrow top face with rounded ends in dark charcoal moulded plastic with a very fine matte texture, exactly the plastic of the second image, with the thin straight seam line running along it; along its lower edge the thin strip of the champagne-gold painted front shell; the three short parallel microphone slits; the round earphone jack socket with its bright metal ring and dark hole; the short black slot with the small grey slide switch in it. Do not add, move or remove any part. Years of office use as shared equipment of an investigation bureau: fine hairline scratches and light scuffs on the plastic, the edges polished slightly shinier, a little fine grey dust in the slits, around the jack and in the slot. No dents, no cracks, no chips, no stickers, no strap. Lit with soft completely even shadowless light: no reflections, no highlights, no gradient. Natural colours, everything sharp. No text, no letters, no numbers, no symbols, no icons, no arrows, no brand name and no logo anywhere."
+    }
+  ]
+}

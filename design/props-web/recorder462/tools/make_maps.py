@@ -145,8 +145,8 @@ f = f * (1 - wgr) + closed.astype(np.float32) / 255.0 * wgr
 door_only = (d_door > 2.0) & (d_win < -2.0) & (d_cnt < -2.0)
 low_only = (d_door < -2.5) & (d_gr < -2.0) & (rr_depth(-27, -52, 27, 52, 5) > 0) & (d_led < -1.0)
 door_med = np.median(f[door_only].reshape(-1, 3), 0); low_med = np.median(f[low_only].reshape(-1, 3), 0)
-for d_, mm_ in ((d_win, 0.8), (d_cnt, 0.7)):                       # окно и счётчик: внутри и у самого края — ровный цвет дверцы
-    w_ = np.clip((d_ + mm_) / 0.35, 0, 1)[..., None]; f = f * (1 - w_) + door_med * w_
+w_ = np.clip((d_win - 1.0) / 0.3, 0, 1)[..., None]; f = f * (1 - w_) + door_med * w_      # окно: фаска с фото остаётся, глубже — ровный цвет (там отверстие)
+w_ = np.clip((d_cnt + 0.7) / 0.35, 0, 1)[..., None]; f = f * (1 - w_) + door_med * w_      # счётчик: внутри и у самого края — ровный цвет дверцы
 w_ = np.clip((d_led + 0.5) / 0.4, 0, 1)[..., None]; f = f * (1 - w_) + low_med * w_
 L = lum(u8(f))
 
@@ -193,7 +193,7 @@ scr, haze, Lm = wear(L, 0.045, 5.0)
 fm = np.minimum(f, med3(f, 0.4) + 0.03)
 inner = rr_depth(-27, -52, 27, 52, 5, True) > 0
 b_med = np.median(fm[inner].reshape(-1, 3), 0)
-alb = np.clip(b_med + (fm - b_med) * 0.6 + 0.03 * scr[..., None], 0, 0.9)
+alb = np.clip((b_med + (fm - b_med) * 0.6) * 0.62 + 0.03 * scr[..., None], 0, 0.9)   # пластик темнее фото: на образце автора бока почти чёрные
 Lb = np.minimum(L, med8(L, 0.4) + 0.03); hp = Lb - blur(Lb, 0.30)
 rough = np.clip(0.50 + 0.18 * scr + np.clip(hp * 1.6, -0.06, 0.08) + 0.04 * np.clip(-haze, 0, 1) - 0.12 * np.clip(haze, 0, 1), 0.08, 1)   # затёртое рукой — глаже и блестит
 thin_dark = np.clip((med8(L, 0.5) - blur(L, 0.06)) / (med8(L, 0.5) + 0.05), 0, 1)
@@ -219,9 +219,7 @@ if os.path.exists(os.path.join(OUT, 'src', 'label_albedo.png')):
             im = cv2.imread(os.path.join(OUT, 'src', f'label_{nm}.png'))
             im = cv2.resize(im, None, fx=k2, fy=k2, interpolation=cv2.INTER_AREA) if k2 != 1 else im
             cv2.imwrite(os.path.join(OUT, d, 'label_' + ext), im, [cv2.IMWRITE_JPEG_QUALITY, q] if q else [])
-        im = cv2.imread(os.path.join(OUT, 'src', 'cass_albedo.png'))
-        cv2.imwrite(os.path.join(OUT, d, 'cass_a.jpg'), cv2.resize(im, None, fx=ka_, fy=ka_, interpolation=cv2.INTER_AREA) if ka_ != 1 else im, [cv2.IMWRITE_JPEG_QUALITY, 94])
-    report['label'] = {'mm': [42, 18], 'px_per_cm_full': 367}; report['cass'] = {'mm': [8.7, 42], 'px_per_cm_full': 400}
+    report['label'] = {'mm': [42, 18], 'px_per_cm_full': 367}   # кассета и грани — tools/make_parts.py
 report['maps'] = {'src': [MAP_W, MAP_H, round(PXMM * 10)], 'pack_front': [PACK['front'], round(PACK['front'] / 6.0)], 'pack_back': [PACK['back'], round(PACK['back'] / 6.0)]}
 json.dump(report, open(os.path.join(OUT, '_maps_report.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print(json.dumps(report, ensure_ascii=False))
