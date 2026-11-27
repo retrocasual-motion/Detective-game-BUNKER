@@ -17,7 +17,8 @@
 //   setKeyPressed(name, down), pressKey(name, ms), setKeyLatched(name, on) — клавиша остаётся утопленной (пуск), keyDepth(name),
 //   keyFromHit(hit) — имя клавиши под лучом (у ползунка — по месту попадания: к верху вещи — вперёд, к низу — назад),
 //   setTapeTime(sec) — место ленты от начала кассеты: углы катушек, толщина намотки и счётчик считаются из него,
-//   setCounterZero(sec) — где счётчик обнулён, counterValue() — число на счётчике.
+//   setCounterZero(sec) — где счётчик обнулён, counterValue() — число на счётчике,
+//   setLamp(on) — красная лампочка на переде (в игре — пока лента идёт), lampOn().
 
 const MM = 0.001;
 export const RECORDER462 = {
@@ -527,6 +528,7 @@ export function buildRecorder462(THREE, opts = {}) {
     }
   }
 
+  let mLamp = null, mHalo = null;
   // счётчик ленты: три барабана в окошке на дверце, рядом кнопка сброса (не нажимается)
   let counterDraw = null;
   if (o.counter !== false) {
@@ -556,9 +558,19 @@ export function buildRecorder462(THREE, opts = {}) {
   }
   { // лампочка батареи: маленькая тёмно-красная линза
     const rc = 1.6 * MM, br = 1.05 * MM, th = Math.asin(br / rc), dome = new THREE.SphereGeometry(rc, 20, 6, 0, Math.PI * 2, 0, th); dome.translate(D.led.x, T - rc * Math.cos(th) - 0.00003, D.led.z);
-    mesh(dome, phys({ color: new THREE.Color(0.22, 0.02, 0.02), roughness: 0.1, metalness: 0, clearcoat: 1, transparent: true, opacity: 0.7 }), 'batt_lamp', false);
+    mLamp = phys({ color: new THREE.Color(0.22, 0.02, 0.02), roughness: 0.1, metalness: 0, clearcoat: 1, transparent: true, opacity: 0.7, emissive: new THREE.Color(1.0, 0.07, 0.03), emissiveIntensity: 0 });
+    mesh(dome, mLamp, 'batt_lamp', false);
+    // свечение вокруг лампочки на краске (без постобработки): мягкое пятно, складывается с картинкой
+    const hc2 = mkCanvas(64, 64), hx = hc2.getContext('2d'), hg = hx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    hg.addColorStop(0, 'rgba(255,70,40,1)'); hg.addColorStop(0.25, 'rgba(255,40,20,0.55)'); hg.addColorStop(1, 'rgba(255,20,10,0)'); hx.fillStyle = hg; hx.fillRect(0, 0, 64, 64);
+    mHalo = new THREE.MeshBasicMaterial({ map: canvasTex(hc2, true), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, opacity: 0 }); disposables.push(mHalo);
+    const hr = 3.4 * MM, hy = T + 0.00008, hm = mesh(q4([[D.led.x - hr, hy, D.led.z - hr], [D.led.x + hr, hy, D.led.z - hr], [D.led.x - hr, hy, D.led.z + hr], [D.led.x + hr, hy, D.led.z + hr]], [0, 1, 0]), mHalo, 'batt_lamp_glow', false);
+    hm.raycast = () => {}; hm.receiveShadow = false; hm.renderOrder = 5;
   }
 
+  // лампочка: горит, пока лента идёт (воспроизведение и перемотка) — как лампа работы у диктофонов этого класса
+  let lampOn = false;
+  const setLamp = (on) => { lampOn = !!on; mLamp.emissiveIntensity = lampOn ? 2.6 : 0; mLamp.opacity = lampOn ? 0.95 : 0.7; mHalo.opacity = lampOn ? 0.5 : 0; if (o.onChange) o.onChange(); };
   // ---------- клавиши на правой грани ----------
   // С картами все детали грани одеты в её фото (проекция в лоб): гнездо, запись, пуск, стоп, ползунок, ушко ремешка.
   // Значки клавиш лежат в карте (слой печати); без карт — отдельные значки поверх одноцветных клавиш.
@@ -730,7 +742,7 @@ export function buildRecorder462(THREE, opts = {}) {
   };
   Object.assign(root.userData, { ready, loadMapSet, mapSet, stats, dims: D, drawFrontPrint, drawRightPrint,
     keys: Object.keys(keys), setKeyPressed, pressKey, setKeyLatched, keyFromHit, keyDepth: (n) => (kst[n] ? kst[n].t : 0),
-    setTapeTime, setCounterZero, tapeTime: () => tapeSec, counterValue: () => counterOf(tapeSec),
+    setTapeTime, setCounterZero, tapeTime: () => tapeSec, counterValue: () => counterOf(tapeSec), setLamp, lampOn: () => lampOn,
     dispose() { for (const d of disposables) d.dispose(); } });
   return root;
 }

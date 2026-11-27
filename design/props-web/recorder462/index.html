@@ -184,6 +184,7 @@ function tick() {
   if (st.q.angleTo(tg.q) > 1e-4 || Math.abs(st.zoom - tg.zoom) > 1e-4 || st.focus.distanceTo(tg.focus) > 1e-5 || st.pan.distanceTo(tg.pan) > 1e-5) { st.q.slerp(tg.q, k); st.zoom += (tg.zoom - st.zoom) * k; st.focus.lerp(tg.focus, k); st.pan.lerp(tg.pan, k); dirty = true; }
   { const now = performance.now(), dt = Math.min(0.1, (now - tapeLast) / 1000); tapeLast = now;
     const rate = windDir ? windDir * (transport === 'play' ? 12 : 22) : (transport === 'play' ? 1 : 0);
+    if (!!rate !== U.lampOn()) U.setLamp(!!rate);   // лампочка горит, пока лента идёт
     if (rate) { const t0 = U.tapeTime(), t1 = Math.min(1800, Math.max(0, t0 + rate * dt)); if (t1 !== t0) U.setTapeTime(t1); else if (!windDir) { transport = 'stop'; U.setKeyLatched('btn_play', false); } } }
   if (!dirty) return; dirty = false; frames++;
   holder.quaternion.copy(st.q);

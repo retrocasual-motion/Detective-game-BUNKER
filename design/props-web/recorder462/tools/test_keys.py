@@ -25,11 +25,11 @@ with sync_playwright() as p:
         pg.screenshot(path=f'{out}/press_{name}.png')
         pg.mouse.up(); pg.wait_for_timeout(450); rel = depth(name); mode = pg.evaluate('window.__transport()')
         if name == 'btn_play':       # пуск остаётся утопленным, лента идёт
-            pg.wait_for_timeout(800); t2 = tape(); ok = hit == name and held == 1 and rel == 1 and mode == 'play' and t2 > t0 + 0.8
-            note = f'лента {t0} → {t2} с, режим {mode}'
+            pg.wait_for_timeout(800); t2 = tape(); lamp = pg.evaluate('window.__phone.userData.lampOn()'); ok = hit == name and held == 1 and rel == 1 and mode == 'play' and t2 > t0 + 0.8 and lamp
+            pg.screenshot(path=f'{out}/lamp_on.png'); note = f'лента {t0} → {t2} с, режим {mode}, лампочка горит: {lamp}'
         elif name == 'btn_stop':     # стоп отпускает пуск, лента стоит
-            ta = tape(); pg.wait_for_timeout(500); tb = tape(); ok = hit == name and held == 1 and rel == 0 and depth('btn_play') == 0 and mode == 'stop' and ta == tb
-            note = f'пуск отпущен: {depth("btn_play")}, лента стоит: {ta == tb}'
+            ta = tape(); pg.wait_for_timeout(500); tb = tape(); lamp = pg.evaluate('window.__phone.userData.lampOn()'); ok = hit == name and held == 1 and rel == 0 and depth('btn_play') == 0 and mode == 'stop' and ta == tb and not lamp
+            note = f'пуск отпущен: {depth("btn_play")}, лента стоит: {ta == tb}, лампочка погасла: {not lamp}'
         elif name == 'btn_ff': ok = hit == name and held == 1 and rel == 0 and t1 > t0 + 3; note = f'лента {t0} → {t1} с'
         elif name == 'btn_rew': ok = hit == name and held == 1 and rel == 0 and t1 < t0 - 3; note = f'лента {t0} → {t1} с'
         else: ok = hit == name and held == 1 and rel == 0 and t1 == t0; note = 'запись: клавиша упирается, лента не идёт'

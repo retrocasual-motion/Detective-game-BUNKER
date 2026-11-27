@@ -22,6 +22,9 @@ import numpy as np
 import cv2
 
 GEN, OUT = sys.argv[1], sys.argv[2]
+# Цвет переда: 'black' — тёмный антрацит, как у настоящих Sony M-450 / M-679V (решение автора 27.11: «ближе к оригиналу,
+# к Sony… более чёрный»); 'champagne' — как на фото GEN23 (первый выбор автора, отменён).
+COLOR = sys.argv[3] if len(sys.argv) > 3 else 'black'
 for d in ('src', 'pack', 'pack_low'): os.makedirs(os.path.join(OUT, d), exist_ok=True)
 WMM, HMM = 60.0, 110.0
 MAP_W = 2560; MAP_H = int(round(MAP_W * HMM / WMM)); PXMM = MAP_W / WMM
@@ -102,10 +105,10 @@ def resize_n(n, size):
 def save_face(face, alb, nrm, orm):
     cv2.imwrite(os.path.join(OUT, 'src', f'{face}_albedo.png'), u8(alb)); cv2.imwrite(os.path.join(OUT, 'src', f'{face}_normal.png'), n_img(nrm)); cv2.imwrite(os.path.join(OUT, 'src', f'{face}_orm.png'), u8(orm))
     for d, ww in (('pack', PACK[face]), ('pack_low', PACK[face] // 2)):
-        size = (ww, int(round(ww * HMM / WMM)))
-        cv2.imwrite(os.path.join(OUT, d, f'{face}_a.jpg'), cv2.resize(u8(alb), size, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 94])
-        cv2.imwrite(os.path.join(OUT, d, f'{face}_orm.jpg'), cv2.resize(u8(orm), size, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 95])
-        cv2.imwrite(os.path.join(OUT, d, f'{face}_n.png'), n_img(resize_n(nrm, size)), [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        size = (ww, int(round(ww * HMM / WMM))); half = (size[0] // 2, size[1] // 2)   # цвет — полный; нормали и ORM — вдвое реже (вчетверо меньше памяти)
+        cv2.imwrite(os.path.join(OUT, d, f'{face}_a.jpg'), cv2.resize(u8(alb), size, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 90])
+        cv2.imwrite(os.path.join(OUT, d, f'{face}_orm.jpg'), cv2.resize(u8(orm), half, interpolation=cv2.INTER_AREA), [cv2.IMWRITE_JPEG_QUALITY, 90])
+        cv2.imwrite(os.path.join(OUT, d, f'{face}_n.png'), n_img(resize_n(nrm, half)), [cv2.IMWRITE_PNG_COMPRESSION, 9])
 
 ys, xs = np.mgrid[0:MAP_H, 0:MAP_W].astype(np.float32)
 X, Y = (xs + 0.5) / PXMM, (ys + 0.5) / PXMM                     # мм от левого и верхнего края карты
@@ -159,7 +162,11 @@ alb = np.clip(base + (fm - base) * 0.55 + 0.03 * scr[..., None], 0, 0.97)
 g_ = alb.mean(2, keepdims=True); alb = np.clip(g_ + (alb - g_) * 1.35, 0, 0.97)        # «шампань» теплее: тональная кривая страницы приглушает цвет
 edge_keep = soft(np.abs(d_door) < 0.9, 0.2)[..., None]              # у края дверцы тень и блик кромки с фото остаются целиком
 alb = alb * (1 - edge_keep) + np.clip(fm, 0, 0.97) * edge_keep
-# 3) шероховатость, металл, рельеф. Краска «шампань» — металлик под лаком: наполовину металл, иначе в тёмной комнате она серая.
+if COLOR == 'black':   # та же поверхность фото (царапины, потёртости, тени кромок), но краска — антрацит: яркость фото относительно своей краски
+    gn = np.clip(alb.mean(2) / np.maximum(base.mean(2), 1e-3), 0.3, 2.2)
+    tone = (0.150 * wd[..., 0] + 0.128 * (1 - wd[..., 0])) * gn ** 0.75 + 0.07 * scr                      # дверца чуть светлее низа
+    alb = np.clip(tone[..., None] * np.array([1.03, 1.0, 0.985], np.float32), 0, 0.9)                        # BGR: едва холодный
+# 3) шероховатость, металл, рельеф. Краска — металлик под лаком: частично металл, иначе в тёмной комнате она глухая.
 Lb = np.minimum(L, med8(L, 0.4) + 0.03); hp = Lb - blur(Lb, 0.30)
 rough = 0.36 + 0.20 * scr + np.clip(hp * 1.3, -0.05, 0.06) + 0.05 * np.clip(-haze, 0, 1) - 0.04 * np.clip(haze, 0, 1)
 ring = np.clip(1 - (hd - hole) / 0.35, 0, 1) * (hd >= hole - 0.05) * (d_gr > 0)     # кромка каждого отверстия: тень и пыль
@@ -168,7 +175,7 @@ dustn = cv2.GaussianBlur(rs.uniform(0, 1, X.shape).astype(np.float32), (0, 0), 0
 dust = ring * dustn * 0.32
 alb = alb * (1 - dust[..., None]) + np.array([0.33, 0.34, 0.35], np.float32) * dust[..., None]      # серая пыль в кромках (BGR)
 rough = np.clip(rough * (1 - dust) + 0.9 * dust, 0.05, 1)
-met = 0.55 * (1 - dust)
+met = (0.30 if COLOR == 'black' else 0.55) * (1 - dust)
 thin_dark = np.clip((med8(L, 0.5) - blur(L, 0.06)) / (med8(L, 0.5) + 0.05), 0, 1)
 h = 0.5 + np.clip(hp * 0.10, -0.010, 0.010) - 0.06 * blur(thin_dark, 0.12) - 0.012 * scr
 nrm = normal_from(blur(h, 0.03), 1.2)
@@ -178,6 +185,7 @@ lp = os.path.join(GEN, 'masks', 'proc_front_L.png')
 if os.path.exists(lp):
     Lr = cv2.imread(lp, cv2.IMREAD_UNCHANGED); assert Lr.shape[:2] == (MAP_H, MAP_W), Lr.shape
     a_ = Lr[..., 3].astype(np.float32) / 255.0; ink = cv2.blur(Lr[..., :3], (9, 9)).astype(np.float32) / 255.0
+    if COLOR == 'black': ink = np.full_like(ink, 0.50); a_ = a_ * 0.75                                                        # на чёрном печать светлая
     wornp = np.clip(1 - 0.5 * scr - 0.35 * np.clip(haze, 0, 1), 0.35, 1); a_ = a_ * wornp * 0.85                  # печать тоже потёрта
     alb = alb * (1 - a_[..., None]) + ink * a_[..., None]; rough = np.clip(rough * (1 - a_) + 0.6 * a_, 0, 1); met = met * (1 - a_)
 save_face('front', alb, nrm, np.dstack([met, rough, ao]))
@@ -208,8 +216,8 @@ t0 = (int(8 * PXMM), int(20 * PXMM)); n = int(30 * PXMM)
 ts = seamless(cv2.resize(scr[t0[1]:t0[1] + n, t0[0]:t0[0] + n], (1024, 1024), interpolation=cv2.INTER_AREA))
 g1 = cv2.GaussianBlur(np.pad(rs.normal(0, 1, (1024, 1024)).astype(np.float32), 16, mode='wrap'), (0, 0), 1.3)[16:-16, 16:-16]; g1 /= np.abs(g1).max()   # повторяется без шва
 t_rough = np.clip(0.48 + 0.10 * g1 + 0.22 * ts, 0, 1); t_n = normal_from(0.5 + 0.035 * g1 - 0.02 * ts, 2.0)
-for d, s_ in (('pack', 1024), ('pack_low', 512)):
-    cv2.imwrite(os.path.join(OUT, d, 'tile_orm.jpg'), u8(cv2.resize(np.dstack([np.zeros_like(t_rough), t_rough, np.ones_like(t_rough)]), (s_, s_), interpolation=cv2.INTER_AREA)), [cv2.IMWRITE_JPEG_QUALITY, 95])
+for d, s_ in (('pack', 512), ('pack_low', 256)):
+    cv2.imwrite(os.path.join(OUT, d, 'tile_orm.jpg'), u8(cv2.resize(np.dstack([np.zeros_like(t_rough), t_rough, np.ones_like(t_rough)]), (s_, s_), interpolation=cv2.INTER_AREA)), [cv2.IMWRITE_JPEG_QUALITY, 90])
     cv2.imwrite(os.path.join(OUT, d, 'tile_n.png'), n_img(resize_n(t_n, (s_, s_))))
 
 # ------------------------------------------------------------------ наклейка бюро и полоска кассеты (вёрстка tools/label_make.html)
