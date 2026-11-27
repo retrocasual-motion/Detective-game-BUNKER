@@ -1,0 +1,15 @@
+{
+  "outDir": "E:\\Projects\\bunker-media\\design_ui\\pc\\gen",
+  "resolution": "2K",
+  "aspect": "16:9",
+  "jobs": [
+    {
+      "label": "AD_coast_dusk",
+      "prompt": "Amateur snapshot taken by a middle-aged man on a compact digital camera around 2008: an empty wide sea coast at dusk, low dunes with dry grass in the foreground, calm grey sea, a long flat horizon very slightly tilted, soft fading light, muted cold colours, slight noise and softness of a 2008 compact camera, ordinary composition, not artistic. Feels quiet and far away. No people, no buildings, no boats, no text, no date stamp, no logos, no watermark."
+    },
+    {
+      "label": "AD_mountain_lake_dawn",
+      "prompt": "Amateur snapshot taken by a middle-aged man on a compact digital camera around 2008: a small still mountain lake in the Rocky Mountains at early dawn, dark pine forest on the shore, mist over the water, a distant ridge with a thin cold band of light, muted colours, slight noise and softness of a 2008 compact camera, ordinary slightly off-centre composition, not artistic. Quiet and lonely. No people, no cabins, no buildings, no boats, no text, no date stamp, no logos, no watermark."
+    }
+  ]
+}
