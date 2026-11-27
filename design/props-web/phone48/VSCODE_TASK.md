@@ -11,7 +11,7 @@
   `key_call`, `key_end`, боковые `key_volume`, `key_lock`, `key_camera`, `label_bureau_48` (ярлык бюро на спинке, `opts.label: false` — без него).
   Опции: `lowPower`, `mapSet: 'full' | 'low'`, `pbrBase` (папка карт, внутри `pack/` и `pack_low/`), `onChange`.
   `userData`: `ready`, `setScreenTexture(tex | null)`, `loadMapSet(set)`, `stats`, `dims`, `dispose()`.
-- Карты — `bunker-media/probes/3d/48_phone_web/textures/pbr/{pack,pack_low}/` (6,2 и 1,9 МБ), по 19 файлов:
+- Карты — `bunker-media/probes/3d/48_phone_web/textures/pbr/{pack,pack_low}/` (6,1 и 1,9 МБ), по 19 файлов:
   `front_*`, `back_*`, `keys_*` (атлас кнопок), `side_*` (полоса боков), `skey_*` (боковые кнопки), `label_*` (ярлык), `tile_*`;
   цвет и ORM — jpg, нормали — png. Медиа вне git (ART-10).
 

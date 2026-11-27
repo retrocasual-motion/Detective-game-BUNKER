@@ -226,7 +226,37 @@ for region, measure in ((reg_call, lambda q: q[..., 1] - np.maximum(q[..., 0], q
         zone = np.clip(1.9 - np.hypot(kX - 40.5, kYm - (kyc + 0.95)) / 1.0, 0, 1)[..., None]
         near_ = np.maximum(near_, zone)
     ka = ka * (1 - near_) + (kb * (1 - m[..., None]) + col * m[..., None]) * near_
+# ---- чистые края внутри кнопок ----
+# На фото рамка и вставка средней кнопки чуть меньше и круглее, чем у модели, поэтому в углы вставки попадал
+# край хромированной рамки, а по кромке пилюль — светлая кайма и комочки пыли: вплотную это читалось как грязь
+# плохого качества. Внутри каждой кнопки полоса у края приводится к ровному цвету самой кнопки; пыль остаётся
+# только снаружи — в зазоре на полосе. Значки и середина кнопок не трогаются.
+def inside_mm(xx, yy, cx, hw_, hd_, r_):
+    """Глубина внутри скруглённого прямоугольника, мм (отрицательная — снаружи)."""
+    qx = np.abs(xx - cx) - (hw_ - r_); qy = np.abs(yy - kyc) - (hd_ - r_)
+    return -(np.hypot(np.maximum(qx, 0), np.maximum(qy, 0)) + np.minimum(np.maximum(qx, qy), 0) - r_)
+def key_zones(xx, yy):
+    zs_ = []                                                    # (вес 0…1, маска «середина кнопки», металл)
+    for cx in (12.5, 40.5):
+        d_ = inside_mm(xx, yy, cx, 5.3, 2.15, 2.15)
+        zs_.append((np.clip(1 - d_ / 0.55, 0, 1) * (d_ > -0.05), d_ > 0.9, 0.0))
+    d_in = inside_mm(xx, yy, 26.5, 3.45, 3.45, 1.0); d_out = inside_mm(xx, yy, 26.5, 4.35, 4.35, 1.6)
+    zs_.append((np.clip(1 - d_in / 0.8, 0, 1) * (d_in > -0.05), d_in > 1.2, 0.0))                      # вставка
+    ring_ = (d_in < -0.05) & (d_out > 0.12)
+    zs_.append((cv2.GaussianBlur(ring_.astype(np.float32), (0, 0), 1.5) * 0.85 * ring_, ring_, 1.0))   # рамка: ровный хром
+    return zs_
+icon_any = np.zeros(ka.shape[:2], np.float32)
+for region, measure in ((reg_call, lambda q: q[..., 1] - np.maximum(q[..., 0], q[..., 2])), (reg_end, lambda q: q[..., 2] - np.maximum(q[..., 0], q[..., 1])), (reg_back, lambda q: q.mean(2))):
+    icon_any = np.maximum(icon_any, icon(region, measure)[0])
+for w_, core_, _ in key_zones(kX, kYm):
+    w_ = (w_ * (1 - np.clip(icon_any * 3, 0, 1)))[..., None]
+    ka = ka * (1 - w_) + np.median(ka[core_ & (icon_any < 0.05)], 0) * w_
 kn = nrm[r0:r1].copy(); ko = np.dstack([met, rough, ao])[r0:r1].copy()
+for w_, core_, metal_ in key_zones(X[r0:r1], Y[r0:r1]):
+    ko[..., 1] = ko[..., 1] * (1 - w_) + float(np.median(ko[..., 1][core_])) * w_
+    ko[..., 0] = ko[..., 0] * (1 - w_) + metal_ * w_; ko[..., 2] = ko[..., 2] * (1 - w_) + w_
+    kn = kn * (1 - w_[..., None]) + np.float32([0, 0, 1]) * w_[..., None]
+kn /= np.linalg.norm(kn, axis=2, keepdims=True)
 zs = np.clip(1.9 - np.hypot(X[r0:r1] - 40.5, Y[r0:r1] - (kyc + 0.95)) / 1.0, 0, 1)   # след значка «питание» — и здесь
 ko[..., 1] = ko[..., 1] * (1 - zs) + float(np.median(rough[pill])) * zs
 kn = kn * (1 - zs[..., None]) + np.float32([0, 0, 1]) * zs[..., None]; kn /= np.linalg.norm(kn, axis=2, keepdims=True)
