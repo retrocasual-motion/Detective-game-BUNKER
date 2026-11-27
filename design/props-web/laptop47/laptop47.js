@@ -29,7 +29,12 @@
 //   anisotropy    — анизотропная фильтрация (по умолчанию 8)
 //   onChange      — вызывается, когда что-то догрузилось (наклейка) и нужен новый кадр
 //
-// group.userData: setLidAngle(a), lidAngle, ready (Promise: карты догружены), loadMapSet(set), mapSet,
+// Нажимаемые детали — группы: btn_pad_l, btn_pad_r (кнопки тачпада: качаются на заднем крае, ход переднего края 0,3 мм),
+//                  btn_power (кнопка питания, ход 0,3 мм). Что делает кнопка в игре, решает игра: модуль только двигает деталь.
+// group.userData: setLidAngle(a) — поставить крышку сразу; animateLid(a, { ms, settle }) -> Promise — открыть или закрыть
+//                 по-настоящему: плавный разгон и остановка, в конце лёгкое покачивание петли (при закрытии — мягкая посадка);
+//                 lidMoving(); keys, setKeyPressed(name, down), pressKey(name, ms), keyDepth(name), keyFromHit(hit);
+//                 lidAngle, ready (Promise: карты догружены), loadMapSet(set), mapSet,
 //                 applyPhotoTexture(slot, texture), stats (в т. ч. texMB — расчёт видеопамяти под карты),
 //                 dims, sticker {x, z, w, h}, label {x, z, w, h}, dispose()
 
@@ -1334,6 +1339,7 @@ export function buildLaptop47(THREE, opts = {}) {
     deckTop.add(inst); allMeshes.push(inst); disposables.push(kg, depthMat);
   }
 
+  const pkeys = {};   // нажимаемые детали: имя → { obj, tilt (рад, вокруг X) | travel (м, вниз) }
   // ----- тачпад и две кнопки -----
   // В режиме фото площадка и верх кнопок берут свой участок фото верхней панели (те же UV, что у плиты).
   {
@@ -1347,14 +1353,18 @@ export function buildLaptop47(THREE, opts = {}) {
     for (const [bx0, bx1, name] of [[px0, mid - 0.0005, 'pad_button_l'], [mid + 0.0005, px1, 'pad_button_r']]) {
       const bx = (bx0 + bx1) / 2, bz = (bz0 + bz1) / 2;
       const parts = chipParts(THREE, (bx1 - bx0) / 2, (bz1 - bz0) / 2, 0.0014, PADHOLE.depth + 0.0003, 0.0006, true, 4, PBR ? (x, z) => deckUV(x + bx, z + bz) : undefined);
+      // кнопка качается на заднем крае (у площадки тачпада): ось группы — там, передний край уходит вниз на 0,3 мм
+      const kgr = new THREE.Group(); kgr.name = name === 'pad_button_l' ? 'btn_pad_l' : 'btn_pad_r'; kgr.position.set(bx, -PADHOLE.depth, bz0); deckTop.add(kgr);
       for (const [g, mat, suffix] of [[parts.side, mBtn, '_side'], [parts.cap, mBtnTop, '']]) {
-        const b = mesh(g, mat, name + suffix, deckTop);
-        b.position.set(bx, -PADHOLE.depth, bz);
+        const b = mesh(g, mat, name + suffix, kgr);
+        b.position.set(0, 0, bz - bz0);
       }
+      pkeys[kgr.name] = { obj: kgr, tilt: 0.3e-3 / (bz1 - bz0) };
     }
     // кнопка питания
-    const pb = mesh(new THREE.CylinderGeometry(0.0042, 0.0046, 0.0009, 28), std({ color: '#3a3a3d', roughness: 0.35, metalness: 0.6 }), 'power_button', deckTop);
-    pb.position.set(0.130, 0.00035, -0.0963);
+    const pg = new THREE.Group(); pg.name = 'btn_power'; pg.position.set(0.130, 0.00035, -0.0963); deckTop.add(pg);
+    mesh(new THREE.CylinderGeometry(0.0042, 0.0046, 0.0009, 28), std({ color: '#3a3a3d', roughness: 0.35, metalness: 0.6 }), 'power_button', pg);
+    pkeys.btn_power = { obj: pg, travel: 0.0003 };
   }
 
   // ----- петли: металлические бочонки на базе -----
@@ -1505,6 +1515,54 @@ export function buildLaptop47(THREE, opts = {}) {
     root.userData.lidAngle = a;
     lid.rotation.x = SLOPE - a;
   };
+  // ----- движение крышки -----
+  // Рука берёт крышку и ведёт: плавный разгон, ровный ход, плавная остановка (не «рывок и доползание»). Время — по пути:
+  // 110° ≈ 0,85 с. В конце открытия экран чуть качается на петлях (1,2°, затухает за треть секунды); при закрытии крышка
+  // последние градусы идёт быстрее и мягко садится на упоры (отскок 0,4°). Каждый кадр — o.onChange.
+  const nowT = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const rafL = typeof requestAnimationFrame !== 'undefined' ? (f) => requestAnimationFrame(f) : null;
+  const calmL = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let lidAnim = null;
+  const lidAt = (A, t) => {
+    const { from, to, ms, settle } = A, closing = to < from, d = to - from;
+    if (t < ms) {
+      const u = t / ms, s = closing ? u * u * (2.2 - 1.2 * u) : u * u * u * (u * (u * 6 - 15) + 10);   // закрытие — с ускорением к концу; открытие — плавно с обеих сторон
+      return from + d * s;
+    }
+    if (!settle) return to;
+    const ts = (t - ms) / 1000;
+    return closing ? to + 0.007 * Math.exp(-ts / 0.045) * Math.abs(Math.sin(ts * 38)) : to + 0.021 * Math.exp(-ts / 0.085) * Math.sin(ts * 34) * Math.min(1, Math.abs(d) / 0.6);
+  };
+  function lidStep() {
+    if (!lidAnim) return;
+    const A = lidAnim, t = nowT() - A.t0, done = t >= A.ms + (A.settle ? 380 : 0);
+    setLidAngle(done ? A.to : lidAt(A, t)); if (o.onChange) o.onChange();
+    if (done) { lidAnim = null; A.res(true); } else rafL(lidStep);
+  }
+  const animateLid = (to, opt = {}) => new Promise((res) => {
+    to = Math.max(0, Math.min(2.4, to)); const from = root.userData.lidAngle;
+    if (lidAnim) { lidAnim.res(false); lidAnim = null; }
+    if (!rafL || calmL || Math.abs(to - from) < 1e-3) { setLidAngle(to); if (o.onChange) o.onChange(); res(true); return; }
+    const ms = opt.ms || Math.max(280, 300 + 290 * Math.abs(to - from));
+    lidAnim = { from, to, ms, settle: opt.settle !== false, t0: nowT(), res }; rafL(lidStep);
+  });
+
+  // ----- нажатие кнопок тачпада и питания -----
+  const kst = {}; for (const n in pkeys) kst[n] = { t: 0, want: false, hold: 0 };
+  const easeK = (t) => t * t * (3 - 2 * t), home0 = new Map(); for (const n in pkeys) home0.set(pkeys[n].obj, pkeys[n].obj.position.clone());
+  const applyKeys = () => { for (const n in pkeys) { const k = pkeys[n], e = easeK(kst[n].t); if (k.tilt) k.obj.rotation.x = k.tilt * e; else k.obj.position.y = home0.get(k.obj).y - k.travel * e; } };
+  let keyAnim = false, keyLast = 0;
+  function keyStep() {
+    const t = nowT(), dt = Math.min(50, Math.max(1, t - keyLast)); keyLast = t; let busy = false;
+    for (const n in kst) { const k = kst[n], down = k.want || t < k.hold, target = down ? 1 : 0, sp = calmL ? 1 : (down ? dt / 50 : dt / 90);
+      if (k.t !== target) { k.t = target > k.t ? Math.min(1, k.t + sp) : Math.max(0, k.t - sp); busy = true; } else if (down && !k.want) busy = true; }
+    applyKeys(); if (o.onChange) o.onChange();
+    if (busy && rafL) rafL(keyStep); else keyAnim = false;
+  }
+  const kick = () => { if (!rafL) { for (const n in kst) kst[n].t = kst[n].want ? 1 : 0; applyKeys(); if (o.onChange) o.onChange(); return; } if (!keyAnim) { keyAnim = true; keyLast = nowT(); rafL(keyStep); } };
+  const setKeyPressed = (name, down) => { const k = kst[name]; if (!k) return false; k.want = !!down; if (down) k.hold = nowT() + 90; kick(); return true; };
+  const pressKey = (name, ms = 120) => { const k = kst[name]; if (!k) return false; k.want = false; k.hold = nowT() + Math.max(90, ms); kick(); return true; };
+  const keyFromHit = (hit) => { for (let ob = hit && hit.object; ob && ob !== root; ob = ob.parent) if (pkeys[ob.name]) return ob.name; return null; };
 
   // ----- подмена карты цвета грани своей текстурой (только процедурный режим, pbr: false) -----
   const photoSlots = PBR ? {} : { lid: mLid, deck: mDeck, bottom: mBottom, bezel: mBezel, left: strips.left, right: strips.right };
@@ -1558,7 +1616,8 @@ export function buildLaptop47(THREE, opts = {}) {
     return stats;
   });
   root.userData = {
-    lidAngle: 0, setLidAngle, applyPhotoTexture, ready, loadMapSet, mapSet,
+    lidAngle: 0, setLidAngle, animateLid, lidMoving: () => !!lidAnim, applyPhotoTexture, ready, loadMapSet, mapSet,
+    keys: Object.keys(pkeys), setKeyPressed, pressKey, keyFromHit, keyDepth: (n) => (kst[n] ? kst[n].t : 0),
     sticker: { x: STICKER.x, z: STICKER.z, w: STICKER.w, h: STICKER.h, scale: SS },
     label: { x: -W / 2 + LABEL.margin + LABEL.w / 2, z: LZ1 - LABEL.margin - LABEL.h / 2, w: LABEL.w, h: LABEL.h },
     dims: { W, D, HB, HF, LT, hingeY: HY, hingeZ: HZ, lidDepth: LD },
