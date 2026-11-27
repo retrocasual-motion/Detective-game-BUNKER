@@ -58,6 +58,8 @@ export interface PaperTarget {
   mode: 'hand' | 'rest' | 'air';
   /** В руке: насколько вещь ушла к доске (0 — над столом, 1 — у доски). */
   carry: number;
+  /** Лежит: к новому месту — сразу, без движения (переехала в кадр после смены окна, RS-A). */
+  snap?: boolean;
 }
 
 /**
@@ -464,7 +466,7 @@ export function Paper({
       else if (!tw || tw.to.distanceTo(target.pos) > 0.3) {
         const dist = pos.distanceTo(target.pos);
         tween.current =
-          dist > 0.3 && !still
+          dist > 0.3 && !still && !target.snap
             ? {
                 from: pos.clone(),
                 to: target.pos.clone(),

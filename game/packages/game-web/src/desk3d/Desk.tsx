@@ -70,6 +70,8 @@ const DESK_SAFE = 0.2;
 const WALL_HYST = 6;
 /** Скорость перехода стол ↔ стена, 1/с (≈ 0,2 с, сразу с места). */
 const WALL_RATE = 15;
+/** Окно перестало меняться столько, мс, — тогда вещи за краем кадра переезжают в кадр (RS-A). */
+const RESIZE_SETTLE_MS = 500;
 /** Порог протяжки, px. */
 const DRAG_PX = 4;
 /** Полёт со стола на доску, мс: потом карточка — на стене игры. */
@@ -114,6 +116,11 @@ interface Drag {
   ids: string[];
   /** Где лежали в начале протяжки. */
   base: Map<string, { x: number; z: number }>;
+  /**
+   * Высота каждой вещи над низом того, что в руке (папка с листами): стопка едет целиком, как лежала
+   * (автор 27.11, снимок: листы над папкой разошлись лесенкой в воздухе).
+   */
+  rel: Map<string, number>;
   /** Точка стола под мышью в начале (на высоте подъёма). */
   grab0: { x: number; z: number };
   /** Сдвиг, который удалось сделать (в зоне). */
@@ -296,30 +303,41 @@ export function Desk({
     save(next);
   }, [blocked]);
 
-  // ── Окно стало меньше (вышли из полноэкранного, RV-3; автор 27.11: ручка ушла за край): вещь, что
-  // теперь за краем кадра, — в кадр, на ближайшее место; стопка — целиком. ──
+  // ── Окно стало меньше (вышли из полноэкранного, RV-3; RS-A, автор 27.11): камера держит в кадре
+  // стол, видный при 16 : 9 (RS-B, room/camera.ts), — обычно двигать нечего. Что всё же за краем
+  // кадра (старое сохранение, очень узкое окно), — в кадр, на ближайшее место, стопка целиком; только
+  // когда окно перестало меняться, и сразу, без скольжения: пока тянут окно, стол не «ходит». ──
+  const zoneNow = useRef(zone);
+  zoneNow.current = zone;
+  const snap = useRef<{ ids: Set<string>; until: number }>({ ids: new Set(), until: 0 });
   // biome-ignore lint/correctness/useExhaustiveDependencies: только когда сменился кадр стола
   useEffect(() => {
     if (room.vp.width < 300 || room.vp.height < 200) return;
-    const d = drag.current;
-    const out = (q: Piece) => cornersOf(q).some(([x, z]) => !zone.inside(x, z));
-    const groups = new Map<string, Piece[]>();
-    for (const q of ps.current) groups.set(q.stack, [...(groups.get(q.stack) ?? []), q]);
-    const shift = new Map<string, { dx: number; dz: number }>();
-    for (const g of groups.values()) {
-      if (g.some((q) => d?.ids.includes(q.id) || flying.current.has(q.id)) || !g.some(out))
-        continue;
-      const fix = nearestFree(g, zone, 1.2, 0.01);
-      if (fix) for (const q of g) shift.set(q.id, fix);
-    }
-    if (!shift.size) return;
-    const next = ps.current.map((q) => {
-      const f = shift.get(q.id);
-      return f ? { ...q, x: q.x + f.dx, z: q.z + f.dz } : q;
-    });
-    ps.current = next;
-    setPieces(next);
-    save(next);
+    const timer = window.setTimeout(() => {
+      const z = zoneNow.current;
+      const d = drag.current;
+      const out = (q: Piece) => cornersOf(q).some(([x, zz]) => !z.inside(x, zz));
+      const groups = new Map<string, Piece[]>();
+      for (const q of ps.current) groups.set(q.stack, [...(groups.get(q.stack) ?? []), q]);
+      const shift = new Map<string, { dx: number; dz: number }>();
+      for (const g of groups.values()) {
+        if (g.some((q) => d?.ids.includes(q.id) || flying.current.has(q.id)) || !g.some(out))
+          continue;
+        const fix = nearestFree(g, z, 1.2, 0.01);
+        if (fix) for (const q of g) shift.set(q.id, fix);
+      }
+      if (!shift.size) return;
+      snap.current = { ids: new Set(shift.keys()), until: performance.now() + 400 };
+      const next = ps.current.map((q) => {
+        const f = shift.get(q.id);
+        return f ? { ...q, x: q.x + f.dx, z: q.z + f.dz } : q;
+      });
+      ps.current = next;
+      setPieces(next);
+      save(next);
+      invalidate();
+    }, RESIZE_SETTLE_MS);
+    return () => window.clearTimeout(timer);
   }, [zone]);
 
   // ── Сохранение → стол: что лежит, где; без места — высыпать у конверта. ──
@@ -589,9 +607,12 @@ export function Desk({
     // Взял — всегда сверху всего (автор 23.11: «под низ положить нельзя»).
     let top = Math.max(0, ...all.map((q) => q.layer));
     const layer = new Map(ids.map((id) => [id, ++top]));
+    const rest = heights(all);
+    const low = Math.min(...ids.map((id) => rest.get(id) ?? 0));
     drag.current = {
       ids,
       base: new Map(group.map((q) => [q.id, { x: q.x, z: q.z }])),
+      rel: new Map(ids.map((id) => [id, (rest.get(id) ?? 0) - low])),
       grab0,
       off: { x: 0, z: 0 },
       wall: null,
@@ -887,17 +908,53 @@ export function Desk({
       return c ? (c.y - deskY3) / p - q.t / 2 : 0;
     };
     // На чём лежит (или над чем идёт) вещь в этом месте: верх всего, что под ней ниже по порядку.
+    // Что в руке, под собой не считается: стопка в руке — одно целое (rel), не лесенка.
+    const inHand = new Set(d?.ids ?? []);
     const support = (q: Piece, r: Rect, papersOnly = false) => {
       let top = 0;
       for (const o of onDeskNow)
         if (
           o !== q &&
+          !(inHand.has(q.id) && inHand.has(o.id)) &&
           o.layer < q.layer &&
           !(papersOnly && DEVICE_KIND[o.id]) &&
           overlap(r, rectNow(o))
         )
           top = Math.max(top, bottomNow(o) + o.t);
       return top;
+    };
+    // Над чем идёт то, что в руке (низ стопки): верх бумаг под любой её вещью — здесь и чуть вперёд,
+    // куда несут (поднимается заранее). Одно на всю стопку — в этом кадре.
+    let baseNow: number | null = null;
+    const handBase = (dd: Drag, list: Piece[]) => {
+      if (baseNow !== null) return baseNow;
+      const sp = Math.hypot(dd.vx, dd.vz);
+      const lead = Math.min(0.16, sp * 0.18);
+      let under = 0;
+      for (const id of dd.ids) {
+        const q = list.find((o) => o.id === id);
+        const b = dd.base.get(id);
+        if (!q || !b) continue;
+        const here = { ...q, x: b.x + dd.off.x, z: b.z + dd.off.z };
+        const r0 = dd.rel.get(id) ?? 0;
+        under = Math.max(under, support(q, here, true) - r0);
+        if (sp > 0.02)
+          for (const f of [0.35, 0.7, 1])
+            under = Math.max(
+              under,
+              support(
+                q,
+                {
+                  ...here,
+                  x: here.x + (dd.vx / sp) * lead * f,
+                  z: here.z + (dd.vz / sp) * lead * f,
+                },
+                true,
+              ) - r0,
+            );
+      }
+      baseNow = under;
+      return under;
     };
     for (const pc of all) {
       const t = target(pc.id);
@@ -921,24 +978,10 @@ export function Desk({
         const x = b.x + d.off.x;
         const z = b.z + d.off.z;
         t.mode = 'hand';
-        const here = { ...pc, x, z };
-        // Смотрит вперёд — только туда, куда её несут: поднимается заранее. Только над бумагами:
-        // над устройствами вещь в руке не взлетает (автор 27.11: у приёмника всё «плавало» вверх-вниз)
-        // — она и так рисуется поверх всего; отпустили на устройстве — встаёт рядом (drop).
-        const sp = Math.hypot(d.vx, d.vz);
-        const lead = Math.min(0.16, sp * 0.18);
-        let under = support(pc, here, true);
-        if (sp > 0.02)
-          for (const f of [0.35, 0.7, 1])
-            under = Math.max(
-              under,
-              support(
-                pc,
-                { ...here, x: x + (d.vx / sp) * lead * f, z: z + (d.vz / sp) * lead * f },
-                true,
-              ),
-            );
-        const h = under + LIFT;
+        // Высота — общая для всего, что в руке (handBase): только над бумагами, над устройствами вещь
+        // в руке не взлетает (автор 27.11: у приёмника всё «плавало» вверх-вниз) — она и так рисуется
+        // поверх всего; отпустили на устройстве — встаёт рядом (drop).
+        const h = handBase(d, all) + LIFT + (d.rel.get(pc.id) ?? 0);
         onDesk(t, x, z, h + pc.t / 2, pc.rot);
         t.drape = null;
         t.floorY = deskY3 + support(pc, rectNow(pc), true) * p;
@@ -962,6 +1005,8 @@ export function Desk({
       t.carry = 0;
       onDesk(t, pc.x, pc.z, (hc.h.get(pc.id) ?? 0) + pc.t / 2, pc.rot);
       t.mode = 'rest';
+      // Переехала в кадр после смены окна (RS-A) — сразу, без скольжения.
+      t.snap = snap.current.until > now && snap.current.ids.has(pc.id);
       t.drape = hc.d.get(pc.id) ?? null;
       const under = support(pc, rectNow(pc), DRAPE && !DEVICE_KIND[pc.id]);
       t.minY = deskY3 + (under + pc.t / 2) * p;
