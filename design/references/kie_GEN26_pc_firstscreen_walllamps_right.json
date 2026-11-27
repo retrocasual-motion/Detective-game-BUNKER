@@ -1,0 +1,20 @@
+{
+  "outDir": "E:\\Projects\\bunker-media\\design_ui\\pc\\gen",
+  "resolution": "2K",
+  "aspect": "16:9",
+  "refs": {
+    "NIGHT": "E:\\Projects\\bunker-media\\design_ui\\pc\\gen\\FS-E1R_night_noir_b.png"
+  },
+  "jobs": [
+    {
+      "label": "FS-E2R_walllamps_from_night_b_1",
+      "refs": ["NIGHT"],
+      "prompt": "Edit this exact photo, keep everything the same: the same room, camera, framing, every object, the same dark noir night mood, the same faint cold grey light through blinds from the right, the same soft glow of the monitor, the green desk lamp still switched off with a dark shade. Only change: switch on two small warm brass picture lamps mounted on the wall just above the top edge of the cork board. They give a soft, dim amber light that falls onto the upper part of the board and fades down the board; the desk below stays dark. Keep the overall image dark and moody, muted colours, deep shadows, film grain. Monitor screen plain soft light, no content. No other new objects, no people, no text, no logos."
+    },
+    {
+      "label": "FS-E2R_walllamps_from_night_b_2",
+      "refs": ["NIGHT"],
+      "prompt": "Same photo, same night noir lighting and composition. Add only the light of two small warm wall lamps above the cork board, switched on and dim: a gentle warm pool on the board, quickly fading into darkness; the green desk lamp stays off. The grey night light from the right and the monitor glow stay exactly as they are. Overall still mostly dark and atmospheric, nothing brighter than the monitor. No other changes, no people, no text, no logos."
+    }
+  ]
+}
