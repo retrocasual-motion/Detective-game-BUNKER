@@ -1,0 +1,21 @@
+{
+  "outDir": "E:\\Projects\\bunker-media\\design_ui\\pc\\gen",
+  "resolution": "2K",
+  "aspect": "16:9",
+  "refs": {
+    "DESK": "E:\\Projects\\bunker-media\\design_ui\\ui\\bg\\DESK_seated_K7_crop.png",
+    "NIGHT": "E:\\Projects\\bunker-media\\design_ui\\pc\\gen\\FS-E1R_night_noir_b.png"
+  },
+  "jobs": [
+    {
+      "label": "FS-E2B_from_desk",
+      "refs": ["DESK", "NIGHT"],
+      "prompt": "Edit the first image (the office) and keep it exactly the same: same room, camera, framing and every object, and keep the warm light on the cork board exactly as it is in the first image, coming from above, from light sources outside the top edge of the frame; no lamps are visible on the wall. Changes: the green banker's desk lamp is switched off, its shade dark, so the desk is no longer lit by it and falls into shadow; the flat LCD monitor is switched on with a soft neutral white glow on the phone and papers next to it; add a faint cold grey night light through blinds from the right side outside the frame onto the cabinet, binders and the right part of the desk, with the same mood and colour as in the second image. Overall darker and moodier than the first image, film noir, muted colours, deep shadows, slight grain. Monitor screen plain soft light, no content. No visible lamps, no new objects, no people, no text, no logos."
+    },
+    {
+      "label": "FS-E2B_from_night",
+      "refs": ["NIGHT", "DESK"],
+      "prompt": "Edit the first image (night office) and keep it exactly the same: same room, camera, framing, objects, the same cold grey light through blinds from the right, the same monitor glow, the green desk lamp switched off. Only change: light the cork board from above with warm light the way it is lit in the second image, from light sources outside the top edge of the frame, so the board is a little brighter and readable while no lamp is visible on the wall; the light fades down the board and the desk stays in shadow. Keep the image moody, dark, muted, film grain. Monitor screen plain soft light, no content. No visible lamps, no new objects, no people, no text, no logos."
+    }
+  ]
+}

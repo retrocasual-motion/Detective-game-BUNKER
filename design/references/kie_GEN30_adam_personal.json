@@ -1,0 +1,23 @@
+{
+  "outDir": "E:\\Projects\\bunker-media\\design_ui\\pc\\gen",
+  "resolution": "2K",
+  "aspect": "16:9",
+  "jobs": [
+    {
+      "label": "PR1_old_dog_porch",
+      "prompt": "Amateur snapshot from about 2006 on a compact digital camera: an old golden retriever with a greying muzzle lying on the wooden porch steps of a modest suburban house in Colorado, late afternoon light, a worn leash hanging on the railing, slightly soft focus, ordinary off-centre composition, warm but muted colours, a little faded. Tender and quiet. No people, no text, no date stamp, no logos, no watermark."
+    },
+    {
+      "label": "PR2_lake_cabin",
+      "prompt": "Amateur snapshot from 2009 on a compact digital camera: a small old wooden cabin on the shore of a quiet mountain lake in Colorado, autumn, a short wooden dock, pine trees, overcast evening light, nobody there, the photo taken from the gravel road as if by someone who came to look at the place, slightly tilted, muted colours. Quiet, hopeful, lonely. No people, no signs, no text, no date stamp, no logos, no watermark."
+    },
+    {
+      "label": "PR3_father_son_fishing",
+      "prompt": "Old colour film photograph from the early 1970s, faded colours, rounded corners feel, grain: a man and a boy of about ten seen from behind, standing side by side at the edge of a calm river with fishing rods, the man's hand on the boy's shoulder, summer evening light, trees on the far bank. Faces not visible. Nostalgic family snapshot. No text, no date stamp, no logos, no watermark."
+    },
+    {
+      "label": "PR4_woman_beach_back",
+      "prompt": "Amateur snapshot from the late 1990s on a film point-and-shoot camera, slightly faded: a woman in a light sweater seen from behind walking alone along an empty winter beach, wind in her hair, grey sea, low sun, long shadow, ordinary composition. Faces not visible. Quiet memory of someone who is gone. No other people, no text, no date stamp, no logos, no watermark."
+    }
+  ]
+}

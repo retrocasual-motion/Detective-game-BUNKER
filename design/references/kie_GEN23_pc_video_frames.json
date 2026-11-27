@@ -1,0 +1,15 @@
+{
+  "outDir": "E:\\Projects\\bunker-media\\design_ui\\pc\\gen",
+  "resolution": "1K",
+  "aspect": "16:9",
+  "jobs": [
+    {
+      "label": "V13_hale_still",
+      "prompt": "Still frame from a corporate welcome video recorded in summer 2009 on a prosumer HD camcorder, slightly soft, mild compression, natural colours. A man about 60 years old sits behind a clean modern desk in an office with a large glass wall, mountains visible far behind through the glass in daylight. Silver grey hair combed straight back, a visible cleft chin, calm confident face, dark charcoal business suit, white shirt, dark tie. He looks into the camera with a polite practiced half smile, hands loosely folded on the desk. Medium shot, centred, eye level, bright even office light. Ordinary corporate video look, not cinematic, no film grain, no lens flare. No captions, no lower third, no readable text, no logos, no watermark."
+    },
+    {
+      "label": "V14_cole_meet01",
+      "prompt": "Still frame from a short participant introduction video recorded in 2009 on a small consumer camcorder inside an underground research facility common room. A man about 45 years old sits on a plain grey plastic chair in front of a light grey painted concrete wall; on the wall behind him, slightly above his head, a simple flat sign: three horizontal bars inside an arch shape, dark blue on white, no letters. Greying short cropped hair, a heavy jaw, thin metal-rimmed glasses, dark grey fleece jacket over a polo shirt. He looks straight into the camera, serious, matter-of-fact. Fixed camera on a tripod, medium shot from the knees up, flat fluorescent light, slightly cool white balance, mild video noise and compression, 4:3 consumer video feel cropped to 16:9. No captions, no readable text, no date stamp, no logos, no watermark."
+    }
+  ]
+}

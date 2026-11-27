@@ -1,0 +1,30 @@
+{
+  "outDir": "E:\\Projects\\bunker-media\\design_ui\\pc\\gen",
+  "resolution": "2K",
+  "aspect": "16:9",
+  "refs": {
+    "DESK": "E:\\Projects\\bunker-media\\design_ui\\ui\\bg\\DESK_seated_K7_crop.png"
+  },
+  "jobs": [
+    {
+      "label": "FS-E1_night_screen_only_a",
+      "refs": ["DESK"],
+      "prompt": "Keep exactly the same investigator's office, the same camera position, framing and every object exactly as in the reference image: cork board with pinned papers and photos, green glass banker's lamp, coat rack with trench coat, shelf with binders, metal cabinet, folders, evidence bag, black flat LCD monitor, black desk phone, letter trays, whisky glass. Change only the lighting: it is late evening, all lamps in the room are switched off, including the green desk lamp, its glass shade is dark and unlit. The only light sources are: the switched-on flat LCD monitor, whose screen glows bright cool white-blue and casts a soft cool light onto the desk, the phone, the papers and the lower part of the cork board; and faint cold blue night light from a window outside the frame on the left, falling softly across the coat, the board and the desk edge, so the room is dark but not black and everything can still be made out. Realistic photographic night interior, natural falloff, deep shadows, slight film grain. The monitor screen is plain glowing light with no readable content. No new objects, no visible window, no people, no text, no logos."
+    },
+    {
+      "label": "FS-E1_night_screen_only_b",
+      "refs": ["DESK"],
+      "prompt": "Same office, same camera, same framing and exactly the same objects as in the reference image. Night version of this exact photo: every lamp is off, the green banker's lamp is off and its shade is dark. Light comes only from the switched-on flat LCD monitor on the desk, glowing cool white, lighting the desk surface, the phone and the papers near it with a soft cool spill, plus dim bluish moonlight and street light coming from an unseen window on the left side of the room, leaving soft pale stripes on the cork board and the trench coat. Moody, atmospheric, realistic, readable shapes in the dark, not pitch black. Monitor screen shows only plain bright light, no content. No new objects, no visible window, no people, no text, no logos."
+    },
+    {
+      "label": "FS-E2_wall_lamps_screen_a",
+      "refs": ["DESK"],
+      "prompt": "Keep exactly the same investigator's office, the same camera position, framing and every object exactly as in the reference image. Change only the lighting: the green banker's desk lamp is switched off and its glass shade is dark. The only lights on are two small warm picture lamps mounted on the wall above the cork board, lighting the board from above with a warm amber wash that fades down the wall, and the switched-on flat LCD monitor on the desk, whose screen glows cool white and casts a soft cool light on the desk, the phone and the papers. The desk and the rest of the room fall into soft darkness between these two pools of light. Realistic photographic evening interior, natural falloff, slight film grain. Monitor screen is plain glowing light, no readable content. No new objects except the two wall lamps above the board, no people, no text, no logos."
+    },
+    {
+      "label": "FS-E2_wall_lamps_screen_b",
+      "refs": ["DESK"],
+      "prompt": "Same office, same camera, same framing and exactly the same objects as in the reference image, evening. Desk lamp off (green shade dark, unlit). Two warm wall lamps above the cork board are on and light the board and the top of the wall; the switched-on flat monitor glows cool white on the desk and lights the papers and phone around it. Everything else in soft warm-to-cool shadow, atmospheric, realistic photo, not too dark, shapes readable. Monitor screen is plain light without content. No new objects besides the wall lamps, no people, no text, no logos."
+    }
+  ]
+}
