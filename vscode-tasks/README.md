@@ -12,6 +12,7 @@
 | [NOTEBOOK_TASK.md](NOTEBOOK_TASK.md) | Блокнот — служебная книжка (§11, I-4): вид, появление по дуге, запись по строкам, размер почерка, имя на обложке | готово |
 | [`design/props-web/laptop47/VSCODE_TASK.md`](../design/props-web/laptop47/VSCODE_TASK.md) | Ноутбук 47 — 3D-модель из `design/props-web/laptop47` в игру | см. файл |
 | [`design/props-web/phone48/VSCODE_TASK.md`](../design/props-web/phone48/VSCODE_TASK.md) | Телефон 48 — 3D-модель из `design/props-web/phone48` в игру: корпус, экран с глубиной, нажатие кнопок под экраном (средняя — «домой», зелёная — журнал звонков), ярлык бюро на спинке (ART-70–73) | готово |
+| `design/props-web/camera24/VSCODE_TASK.md` | Камера 24 — 3D-модель (класс Sony W210 / W220): корпус, экран с глубиной, двенадцать нажимаемых кнопок | черновик; ждёт приёма автором |
 | [`game/docs/ACCESS_REDESIGN_TASK.md`](../game/docs/ACCESS_REDESIGN_TASK.md) | Переделка доступов | см. файл |
 | [`game/docs/RV_FIX_WAVES_TASK.md`](../game/docs/RV_FIX_WAVES_TASK.md) | Волны исправлений большой проверки | см. файл |
 
