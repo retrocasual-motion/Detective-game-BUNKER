@@ -51,7 +51,7 @@
     <p>проба WEB-C: форма — кодом, поверхности — фото-карты</p>
   </div>
   <div id="panel">
-    <div id="hint">Ведите пальцем или мышью — вещь поворачивается под лампой. Щипок или колесо — ближе и дальше.</div>
+    <div id="hint">Ведите пальцем или мышью — вещь поворачивается под лампой. Щипок или колесо — ближе и дальше. Кнопки тачпада и питания нажимаются.</div>
     <div id="buttons">
       <button id="bFlip" type="button" aria-pressed="false">Перевернуть</button>
       <button id="bLid" type="button" aria-pressed="true">Крышка</button>
@@ -170,6 +170,9 @@ const VIEWS = {
   portsr: { q: qOf(0.10, -1.38, 0), zoom: 0.30, lid: 0, focus: new THREE.Vector3(0.1675, 0.012, -0.045) },
   vents:  { q: qOf(1.22, 0.5, 0).multiply(qOf(0, 0, Math.PI)), zoom: 0.30, lid: 0, focus: new THREE.Vector3(-0.03, 0, 0.0) },
   sticker:{ q: qOf(0.74, 0.1, 0).multiply(qOf(0, 0, Math.PI)), zoom: 0.30, lid: 0, focus: new THREE.Vector3(stk.x, 0, stk.z) },
+  pad:    { q: qOf(0.78, 0.25, 0), zoom: 0.30, lid: LID_OPEN, focus: new THREE.Vector3(-0.012, 0.020, 0.060) },
+  hinge:  { q: qOf(0.06, 1.42, 0), zoom: 0.20, lid: 0, focus: new THREE.Vector3(-0.150, 0.024, -0.106) },
+  hingeback: { q: qOf(0.30, Math.PI - 0.5, 0), zoom: 0.26, lid: 0, focus: new THREE.Vector3(0.10, 0.022, -0.110) },
 };
 const st = { q: new THREE.Quaternion(), zoom: 1, lid: LID_OPEN, focusK: 0, focus: new THREE.Vector3() };
 const tg = { q: new THREE.Quaternion(), zoom: 1, lid: LID_OPEN, focusK: 0 };
@@ -179,7 +182,8 @@ function applyView(v, snap) {
   tg.q.copy(v.q); tg.zoom = v.zoom; tg.lid = v.lid;
   tg.focusK = v.focus ? 1 : 0;
   if (v.focus) st.focus.copy(v.focus);
-  if (snap || reduceMotion.matches) { st.q.copy(tg.q); st.zoom = tg.zoom; st.lid = tg.lid; st.focusK = tg.focusK; }
+  if (snap || reduceMotion.matches) { st.q.copy(tg.q); st.zoom = tg.zoom; st.focusK = tg.focusK; autoInit = false; laptop.userData.setLidAngle(tg.lid); }
+  else laptop.userData.animateLid(tg.lid);   // крышку ведёт модуль: плавный разгон, остановка, покачивание петли
   invalidate();
 }
 function syncButtons() {
@@ -188,12 +192,16 @@ function syncButtons() {
 }
 
 // центр кадра — середина габарита при текущем угле крышки
-const autoFocus = new THREE.Vector3();
-function computeAutoFocus(a) {
+const autoFocus = new THREE.Vector3(), autoMid = new THREE.Vector3(), autoTarget = new THREE.Vector3();
+let autoInit = false, frames = 0; window.__frames = () => frames;
+function computeAutoTarget(a) {
   const tipY = dims.hingeY + dims.lidDepth * Math.sin(a), tipZ = dims.hingeZ + dims.lidDepth * Math.cos(a);
   const top = Math.max(dims.HB + dims.LT, tipY);
   const zMin = Math.min(-dims.D / 2, tipZ), zMax = Math.max(dims.D / 2, tipZ);
-  autoFocus.set(0, top / 2, (zMin + zMax) / 2);
+  // Не полный пересчёт середины габарита, а 62 % пути к ней от середины закрытой вещи: база почти стоит на месте,
+  // открытая крышка всё равно в кадре.
+  const K = 0.62, y0 = (dims.HB + dims.LT) / 2;
+  autoTarget.set(0, y0 + (top / 2 - y0) * K, (zMin + zMax) / 2 * K);
 }
 
 const CAM_DIR = new THREE.Vector3(0, Math.sin(0.56), Math.cos(0.56));
@@ -220,10 +228,19 @@ function rotateBy(dx, dy) {
   tg.q.normalize();
   invalidate();
 }
+// кнопки тачпада и питания нажимаются: луч от указателя до первой поверхности вещи; если это кнопка — она уходит, пока указатель на ней
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(); let keyHeld = null, downAt = null;
+function keyAt(e) {
+  const r = canvas.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  scene.updateMatrixWorld(); ray.setFromCamera(ndc, camera); return laptop.userData.keyFromHit(ray.intersectObject(laptop, true)[0]);
+}
+const releaseKey = () => { if (keyHeld) { laptop.userData.setKeyPressed(keyHeld, false); keyHeld = null; } };
+window.__keyAt = keyAt; window.__laptop = laptop; window.__camera = camera; window.__q = () => tg.q.toArray();
 canvas.addEventListener('pointerdown', (e) => {
   if (e.button === 2) return;
   canvas.setPointerCapture(e.pointerId);
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  releaseKey(); if (pointers.size === 1) { keyHeld = keyAt(e); downAt = [e.clientX, e.clientY]; if (keyHeld) laptop.userData.setKeyPressed(keyHeld, true); }
   canvas.classList.add('drag');
   if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); zoom0 = tg.zoom; }
 });
@@ -233,6 +250,7 @@ canvas.addEventListener('pointermove', (e) => {
   const dx = e.clientX - p.x, dy = e.clientY - p.y;
   p.x = e.clientX; p.y = e.clientY;
   if (pointers.size === 1) {
+    if (keyHeld) { if (Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 7) return; releaseKey(); }   // указатель поехал — это уже поворот
     rotateBy(dx, dy);
     if (!moved && Math.abs(dx) + Math.abs(dy) > 2) { moved = true; hint.style.opacity = '0'; }
   } else if (pointers.size === 2) {
@@ -241,7 +259,7 @@ canvas.addEventListener('pointermove', (e) => {
     if (pinch0 > 0) { tg.zoom = THREE.MathUtils.clamp(zoom0 * pinch0 / d, 0.3, 1.5); invalidate(); }
   }
 });
-const endPointer = (e) => { pointers.delete(e.pointerId); if (!pointers.size) canvas.classList.remove('drag'); pinch0 = 0; };
+const endPointer = (e) => { pointers.delete(e.pointerId); if (!pointers.size) canvas.classList.remove('drag'); pinch0 = 0; releaseKey(); };
 canvas.addEventListener('pointerup', endPointer);
 canvas.addEventListener('pointercancel', endPointer);
 canvas.addEventListener('wheel', (e) => {
@@ -268,7 +286,7 @@ document.getElementById('bFlip').addEventListener('click', () => {
 document.getElementById('bLid').addEventListener('click', () => {
   lidOpen = flipped ? true : !lidOpen;
   if (flipped) { flipped = false; applyView(VIEWS.front, false); }
-  else { tg.lid = lidOpen ? LID_OPEN : 0; if (reduceMotion.matches) st.lid = tg.lid; invalidate(); }
+  else { tg.lid = lidOpen ? LID_OPEN : 0; laptop.userData.animateLid(tg.lid); invalidate(); }
   syncButtons();
 });
 
@@ -282,13 +300,16 @@ function frame(t) {
   const kq = snap ? 1 : 1 - Math.exp(-dt * 16), ks = snap ? 1 : 1 - Math.exp(-dt * 7);
   let moving = false;
   if (st.q.angleTo(tg.q) > 1e-4) { st.q.slerp(tg.q, kq); moving = true; } else st.q.copy(tg.q);
-  for (const key of ['zoom', 'lid', 'focusK']) {
+  for (const key of ['zoom', 'focusK']) {
     if (Math.abs(st[key] - tg[key]) > 1e-4) { st[key] += (tg[key] - st[key]) * ks; moving = true; } else st[key] = tg[key];
   }
+  // центр кадра идёт к месту для конечного угла крышки плавно (двойное сглаживание: мягкий старт и мягкая остановка),
+  // а не скачет за крышкой — база ноутбука во время открытия почти не ездит по кадру
+  computeAutoTarget(tg.lid);
+  if (!autoInit || snap) { autoMid.copy(autoTarget); autoFocus.copy(autoTarget); autoInit = true; }
+  else if (autoFocus.distanceTo(autoTarget) > 2e-5) { const kf = 1 - Math.exp(-dt * 7); autoMid.lerp(autoTarget, kf); autoFocus.lerp(autoMid, kf); moving = true; }
   if (!moving && !dirty) return;
-  dirty = false;
-  laptop.userData.setLidAngle(st.lid);
-  computeAutoFocus(st.lid);
+  dirty = false; frames++;
   tmp.copy(autoFocus).lerp(st.focus, st.focusK);
   inner.position.copy(tmp).multiplyScalar(-1);
   holder.quaternion.copy(st.q);
@@ -308,6 +329,7 @@ if (viewName && VIEWS[viewName]) {
   applyView(VIEWS.front, true);
 }
 if (params.get('zoom')) { st.zoom = tg.zoom = parseFloat(params.get('zoom')); }
+if (params.get('lid')) { tg.lid = parseFloat(params.get('lid')); laptop.userData.setLidAngle(tg.lid); autoInit = false; lidOpen = tg.lid > 0.05; syncButtons(); }   // служебное: угол крышки, рад
 laptop.userData.ready.then((s) => {
   document.documentElement.dataset.laptop47 = JSON.stringify(s);
   console.info('[laptop47]', JSON.stringify(s));
